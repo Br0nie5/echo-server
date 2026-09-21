@@ -24,7 +24,7 @@
     "deploy:server": "bash scripts/deploy_server.sh"
   },
   "devDependencies": {
-    "@types/node": "^24.13.6",
+    "@types/node": "^26.6.1",
     "concurrently": "^10.0.5",
     "dependency-cruiser": "^18.4.0",
     "orval": "^8.33.0"
