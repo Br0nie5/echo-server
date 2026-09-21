@@ -1,4 +1,4 @@
-FROM node:24-slim AS deps
+FROM node:25-slim AS deps
 WORKDIR /app
 
 # better-sqlite3 has no prebuilt binary for this platform/Node version yet,
@@ -14,7 +14,7 @@ COPY echo_backend/ ./echo_backend/
 
 RUN npm ci --omit=dev --workspace=echo_backend
 
-FROM node:24-slim
+FROM node:25-slim
 
 LABEL org.opencontainers.image.source="https://github.com/Br0nie5/echo-server"
 
