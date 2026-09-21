@@ -1,0 +1,32 @@
+{
+  "name": "echo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "workspaces": [
+    "echo_utilities",
+    "echo_frontend",
+    "echo_backend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "start": "npm run build && npm run start --workspace=echo_backend",
+    "build:docker": "npm run build && docker rm -f echo && docker build -t echo .",
+    "start:docker": "npm run build:docker && docker run --name echo -p 4000:4000 -e SERVER_NAME=\"Echo\" -e SERVER_URL=\"https://localhost:4000\" -e TLS_CERT_PATH=/certs/localhost-cert.pem -e TLS_KEY_PATH=/certs/localhost-key.pem -v ./test_logs:/watched_logs -v ./data:/app/data -v ./certs:/certs:ro echo",
+    "dev": "concurrently --names \"backend,frontend\" \"npm run dev --workspace=echo_backend\" \"npm run dev --workspace=echo_frontend\"",
+    "format": "npm run format --workspaces",
+    "lint": "npm run lint --workspaces",
+    "test:coverage": "npm run test:coverage --workspaces",
+    "open:coverage": "npm run open:coverage --workspaces",
+    "generate:types": "bash scripts/generate_types.sh",
+    "arch:check": "depcruise echo_backend/src echo_frontend/src echo_utilities/src --config .dependency-cruiser.cts",
+    "vulnerabilities:scan": "npm audit",
+    "deploy:server": "npm run build && docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/br0nie5/echo:latest . --push"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.6",
+    "concurrently": "^10.0.5",
+    "dependency-cruiser": "^18.4.0",
+    "orval": "^8.33.0"
+  }
+}

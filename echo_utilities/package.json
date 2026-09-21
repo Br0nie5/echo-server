@@ -1,0 +1,40 @@
+{
+  "name": "@echo/utilities",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "lint": "eslint . --fix",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage --coverage.thresholds.100",
+    "open:coverage": "open coverage/index.html"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@vitest/coverage-v8": "^5.0.1",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsdoc": "^63.3.3",
+    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-tsdoc": "^0.5.3",
+    "prettier": "^3.9.7",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.70.0",
+    "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "tldts": "^7.4.13",
+    "zod": "^4.6.5"
+  }
+}

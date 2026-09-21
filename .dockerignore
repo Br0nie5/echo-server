@@ -1,0 +1,40 @@
+# Node
+**/node_modules
+
+# dev database
+/data
+
+# Tests
+**/coverage
+**/__tests__
+
+# Source code (we need build, not source)
+**/src
+
+# Env
+**/.env.*
+**/env.*.json
+
+# Apps not needed files
+**/echo_frontend/index.html
+**/echo_frontend/public
+
+# Mac configs
+**/.DS_Store
+
+# Git configs
+**/.gitignore
+
+# Eslint/Prettier configs
+**/eslint.config.js
+**/prettier.config.js
+
+# Typescript configs
+**/tsconfig.json
+**/tsconfig.app.json
+**/tsconfig.node.json
+**/tsconfig.build.json
+
+# Vite configs
+**/vite.config.ts
+**/vitest.config.ts

@@ -1,0 +1,365 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Echo API",
+    "description": "Auto-generated API documentation for the Echo server",
+    "version": "1.0.0"
+  },
+  "components": {
+    "schemas": {
+      "EchoError": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "integer"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message"
+        ]
+      },
+      "AuthToken": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "True if authentication was successful."
+          },
+          "message": {
+            "type": "string",
+            "description": "Status message."
+          }
+        },
+        "required": [
+          "success"
+        ]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "The user username."
+          },
+          "password": {
+            "type": "string",
+            "description": "The user password."
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      },
+      "SignUpRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "The wanted username."
+          },
+          "password": {
+            "type": "string",
+            "description": "The wanted password."
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      },
+      "LogCategory": {
+        "type": "string",
+        "enum": [
+          "SUCCESS",
+          "INFO",
+          "WARNING",
+          "ERROR"
+        ]
+      },
+      "Log": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "groupName": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "jobId": {
+            "type": "integer"
+          },
+          "category": {
+            "$ref": "#/components/schemas/LogCategory"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "fileName",
+          "jobId",
+          "category",
+          "message"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/signup": {
+      "post": {
+        "operationId": "signUp",
+        "summary": "Sign up and set session cookie.",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignUpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthToken"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthToken"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "login",
+        "summary": "Authenticate and set session cookie.",
+        "tags": [
+          "Authentication"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthToken"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthToken"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/check": {
+      "get": {
+        "operationId": "checkAuthStatus",
+        "summary": "Check if authenticated or not.",
+        "tags": [
+          "Authentication"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthToken"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthToken"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "summary": "Clear the session cookie.",
+        "tags": [
+          "Authentication"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthToken"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/logs": {
+      "get": {
+        "operationId": "getLogs",
+        "tags": [
+          "Logs"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "in": "query",
+            "name": "fromDate",
+            "required": true
+          },
+          {
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/LogCategory"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LogCategory"
+                  },
+                  "minItems": 2
+                }
+              ]
+            },
+            "in": "query",
+            "name": "logCategories",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "logSearch",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returned Logs successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Returned Logs successfully.",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Log"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request is invalid and cannot be processed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EchoError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized, user needs to be authenticated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EchoError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while handling the request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EchoError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://localhost:4000"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Logs",
+      "description": "Everything concerning getting scripts logs"
+    },
+    {
+      "name": "Authentication",
+      "description": "Everything concerning authentication if it is enabled"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "cSpell.ignorePaths": [
+    "**/*.mock.*",
+    "**/*.snap"
+  ],
+  "cSpell.words": [
+    "autoload",
+    "buildx",
+    "dbaeumer",
+    "depcruise",
+    "esnext",
+    "luxon",
+    "nodenext",
+    "orval",
+    "testid",
+    "textnodes",
+    "tldts",
+    "typebox",
+    "unstub",
+    "uuidv",
+    "vitest"
+  ],
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  },
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "yaml.schemas": {},
+  "files.associations": {
+    ".dockerignore": "ignore"
+  }
+}

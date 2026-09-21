@@ -1,0 +1,62 @@
+name: Test Echo
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    # Weekly, to catch newly published vulnerabilities in the dependencies
+    - cron: "30 12 * * 0"
+  workflow_call:
+
+jobs:
+  test:
+    name: "Test Echo"
+    runs-on: ubuntu-26.04-arm
+
+    steps:
+      # Checkout repository
+      - uses: actions/checkout@v7.0.1
+
+      # Setup Node.js, at the version pinned in .tool-versions
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .tool-versions
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # utilities must be built before backend and frontend can type-check against it
+      - name: Build
+        run: npm run build
+
+      # Regenerates the shared types from the backend routes, and fails if that changed anything
+      - name: Types up to date
+        run: |
+          npm run generate:types
+          git diff --exit-code --stat -- openApi.json ':(glob)echo_utilities/src/**/__generated__/**'
+
+      # The scripts fix what they find, so a change in the working tree means the commit was not
+      # formatted / linted.
+      - name: Format
+        run: |
+          npm run format
+          git diff --exit-code --stat
+
+      - name: Lint
+        run: |
+          npm run lint
+          git diff --exit-code --stat
+
+      - name: Architecture check
+        run: npm run arch:check
+
+      - name: Test
+        run: npm run test:coverage
+
+      - name: Vulnerabilities scan
+        run: npm run vulnerabilities:scan
