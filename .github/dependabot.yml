@@ -26,6 +26,10 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "chore(docker)"
+    ignore:
+      # Odd-numbered Node releases never become LTS; only track even (LTS) majors
+      - dependency-name: "node"
+        versions: ["25.x", "27.x", "29.x", "31.x", "33.x"]
     groups:
       docker-images:
         patterns:
