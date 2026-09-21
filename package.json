@@ -21,7 +21,7 @@
     "generate:types": "bash scripts/generate_types.sh",
     "arch:check": "depcruise echo_backend/src echo_frontend/src echo_utilities/src --config .dependency-cruiser.cts",
     "vulnerabilities:scan": "npm audit",
-    "deploy:server": "npm run build && docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/br0nie5/echo:latest . --push"
+    "deploy:server": "bash scripts/deploy_server.sh"
   },
   "devDependencies": {
     "@types/node": "^24.13.6",

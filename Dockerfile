@@ -15,6 +15,9 @@ COPY echo_backend/ ./echo_backend/
 RUN npm ci --omit=dev --workspace=echo_backend
 
 FROM node:24-slim
+
+LABEL org.opencontainers.image.source="https://github.com/Br0nie5/echo-server"
+
 WORKDIR /app
 
 COPY --from=deps /app ./
