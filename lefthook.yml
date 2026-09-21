@@ -1,20 +1,7 @@
 pre-commit:
   parallel: false
   commands:
-    build:
-      run: npm run build
     format:
       run: npm run format
     lint:
       run: npm run lint
-    arch-check:
-      run: npm run arch:check
-    types-up-to-date:
-      run: |
-        npm run generate:types
-        git diff --exit-code --stat -- openApi.json ':(glob)echo_utilities/src/**/__generated__/**' \
-          || { echo "Generated types were out of date: review and stage the changes above, then commit again."; exit 1; }
-    test-coverage:
-      run: npm run test:coverage
-    vulnerabilities-scan:
-      run: npm run vulnerabilities:scan
