@@ -1,0 +1,44 @@
+# Dependabot configuration.
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  # npm dependencies: the root (tooling) and the three workspaces, which share the root lockfile
+  - package-ecosystem: "npm"
+    directories:
+      - "/" # Root package.json
+      - "/echo_backend"
+      - "/echo_frontend"
+      - "/echo_utilities"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      npm-dependencies:
+        patterns:
+          - "*"
+
+  # Base images of the Dockerfile
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(docker)"
+    groups:
+      docker-images:
+        patterns:
+          - "*"
+
+  # GitHub Actions used in CI workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
