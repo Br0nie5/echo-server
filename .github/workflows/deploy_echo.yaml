@@ -1,0 +1,49 @@
+name: Deploy Echo
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+*"
+
+jobs:
+  test:
+    uses: ./.github/workflows/test_echo.yaml
+
+  deploy:
+    name: "Deploy to ghcr.io"
+    needs: test
+
+    permissions:
+      contents: read
+      packages: write
+
+    runs-on: ubuntu-26.04-arm
+
+    steps:
+      # Checkout repository
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0 # all tags, to know whether this version is the highest one
+
+      # Setup Node.js, at the version pinned in .tool-versions
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .tool-versions
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # The runner is arm64, QEMU is needed to build the amd64 image
+      - uses: docker/setup-qemu-action@v4.4.0
+      - uses: docker/setup-buildx-action@v4.4.1
+
+      - uses: docker/login-action@v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Pushes the image as <version> (and latest, if it is the highest stable version)
+      - name: Deploy
+        run: npm run deploy:server -- "${{ github.ref_name }}"
