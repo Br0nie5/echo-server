@@ -19,18 +19,27 @@ import { openUsersDb } from './modules/auth/users.db.js'
 import { createSqliteUsersRepository } from './modules/auth/users.repository.js'
 import {
   createFileCheckpointStore,
-  dataDir,
   lastLogsCheckFile
-} from './modules/logs/logs.checkpoint.js'
+} from './modules/logs/cron/logs.checkpoint.js'
+import logsCron from './modules/logs/cron/logs.cron.js'
+import { createTelegramNotifier } from './modules/logs/cron/notifications/telegram.notifier.js'
 import { createLogsController } from './modules/logs/logs.controller.js'
-import logsCron from './modules/logs/logs.cron.js'
 import { createFileLogsRepository } from './modules/logs/logs.repository.js'
 import { logsRoutes } from './modules/logs/logs.routes.js'
 import { createLogsService, type LogsService } from './modules/logs/logs.service.js'
-import { createTelegramNotifier } from './modules/logs/notifications/telegram.notifier.js'
+import {
+  createFileSelfLogsSessionStore,
+  getNextSessionJobId,
+  selfLogsSessionFile
+} from './modules/logs/selfLogs/selfLogs.session.js'
+import {
+  createNoopSelfLogsWriter,
+  createSelfLogsWriter
+} from './modules/logs/selfLogs/selfLogs.writer.js'
 import { EchoErrorSchema } from './shared/schemas/errors.schemas.js'
 import { createFilesService } from './shared/services/files.service.js'
 import type { EchoBackEnv } from './shared/types/echoBackEnv.js'
+import { dataDir } from './shared/utils/dataDir.js'
 import { isOriginAllowed } from './shared/utils/isOriginAllowed.js'
 import { env as defaultEnv } from './shared/utils/parseEchoBackEnv.js'
 
@@ -177,7 +186,24 @@ export const buildServer = async (env: EchoBackEnv = defaultEnv): Promise<EchoSe
   server.addSchema(EchoErrorSchema)
 
   const filesService = createFilesService()
-  const fileLogsRepository = createFileLogsRepository(env.LOGS_DIR_PATH, filesService)
+
+  const selfLogsWriter = env.SELF_LOGS_ENABLED
+    ? await createSelfLogsWriter({
+        logsDirPath: env.LOGS_DIR_PATH,
+        serverName: env.SERVER_NAME,
+        retentionDays: env.SELF_LOGS_RETENTION_DAYS,
+        sessionJobId: await getNextSessionJobId(
+          createFileSelfLogsSessionStore(dataDir, selfLogsSessionFile)
+        ),
+        logger: server.log
+      })
+    : createNoopSelfLogsWriter()
+
+  const fileLogsRepository = createFileLogsRepository(
+    env.LOGS_DIR_PATH,
+    filesService,
+    selfLogsWriter
+  )
   const logsService = createLogsService(fileLogsRepository)
 
   const __filename = fileURLToPath(import.meta.url)

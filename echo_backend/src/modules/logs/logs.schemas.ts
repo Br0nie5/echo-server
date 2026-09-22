@@ -14,7 +14,9 @@ export const LogSchema = {
     fileName: { type: 'string' },
     jobId: { type: 'integer' },
     category: { $ref: 'LogCategory#' },
-    message: { type: 'string' }
+    message: { type: 'string' },
+    callFile: { type: 'string' },
+    callLine: { type: 'integer' }
   },
   required: ['id', 'date', 'fileName', 'jobId', 'category', 'message'],
   additionalProperties: false

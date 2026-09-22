@@ -40,6 +40,8 @@ Parsed by [parseEchoBackEnv.ts](../echo_backend/src/shared/utils/parseEchoBackEn
 | `LOGS_CRON_WATCHED_LOGS_CATEGORIES` | no* | Comma-separated subset of `SUCCESS,INFO,WARNING,ERROR`. Invalid entries are dropped. |
 | `LOGS_CRON_TELEGRAM_CHAT_ID` | no* | Telegram chat id. |
 | `LOGS_CRON_TELEGRAM_BASE_URL` | no* | `https://api.telegram.org/bot<token>`. |
+| `SELF_LOGS_ENABLED` | no | `true` or `false`, default `false`. When enabled, `.jsonl` lines the backend fails to parse are written to `LOGS_DIR_PATH/server/<SERVER_NAME>/log/parseLogFile.jsonl`, so they show up in the app like any other log. Requires that path to be writable (see the Volumes section of the [README](../README.md)). |
+| `SELF_LOGS_RETENTION_DAYS` | no | Integer, default `10`. Self-log lines older than this are pruned once at each server start. |
 
 \* The Telegram cron is registered only if **all four** `LOGS_CRON_*` variables are present and valid.
 
@@ -62,4 +64,4 @@ The built frontend does not embed configuration. It fetches `env.<mode>.json` at
 
 ## Time zone
 
-Log timestamps are parsed as **Europe/Paris** local time and Telegram messages display GMT+2. Both are currently hard-coded (see [convertToDate.ts](../echo_backend/src/shared/utils/convertToDate.ts) and [telegram.notifier.ts](../echo_backend/src/modules/logs/notifications/telegram.notifier.ts)).
+Log timestamps are parsed as **Europe/Paris** local time and Telegram messages display GMT+2. Both are currently hard-coded (see [convertToDate.ts](../echo_backend/src/shared/utils/convertToDate.ts) and [telegram.notifier.ts](../echo_backend/src/modules/logs/cron/notifications/telegram.notifier.ts)).

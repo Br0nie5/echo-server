@@ -105,6 +105,12 @@
           },
           "message": {
             "type": "string"
+          },
+          "callFile": {
+            "type": "string"
+          },
+          "callLine": {
+            "type": "integer"
           }
         },
         "required": [

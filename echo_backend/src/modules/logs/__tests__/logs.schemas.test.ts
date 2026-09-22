@@ -45,7 +45,9 @@ describe('LogSchema', () => {
       fileName: 'file1.log',
       jobId: 123,
       category: 'INFO',
-      message: 'Something happened'
+      message: 'Something happened',
+      callFile: 'file1.log.jsonl',
+      callLine: 4
     }
     expect(validateLog(log)).toBe(true)
   })
@@ -56,7 +58,9 @@ describe('LogSchema', () => {
       date: new Date().toISOString(),
       fileName: 'file1.log',
       jobId: 1,
-      category: 'INFO'
+      category: 'INFO',
+      callFile: 'file1.log.jsonl',
+      callLine: 4
       // missing 'message'
     }
     expect(validateLog(log)).toBe(false)
@@ -71,7 +75,9 @@ describe('LogSchema', () => {
       fileName: 'file1.log',
       jobId: 1,
       category: 'INVALID',
-      message: 'oops'
+      message: 'oops',
+      callFile: 'file1.log.jsonl',
+      callLine: 4
     }
     expect(validateLog(log)).toBe(false)
     expect(validateLog.errors?.[0].message).toContain('must be equal to one of the allowed values')
@@ -86,6 +92,8 @@ describe('LogSchema', () => {
       jobId: 1,
       category: 'INFO',
       message: 'test',
+      callFile: 'file1.log.jsonl',
+      callLine: 4,
       extra: 'not allowed'
     }
     expect(validateLog(log)).toBe(false)

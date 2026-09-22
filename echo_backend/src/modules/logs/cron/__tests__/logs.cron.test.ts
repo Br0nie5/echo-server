@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('node-cron')
 
-import type { LogsCronOptions } from '../../../shared/types/echoBackEnv.js'
+import type { LogsCronOptions } from '../../../../shared/types/echoBackEnv.js'
 import logsCronPlugin, {
   checkProblemLogsAndNotify,
   getProblemLogs,

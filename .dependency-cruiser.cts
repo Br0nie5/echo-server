@@ -103,9 +103,14 @@ const config: IConfiguration = {
     {
       name: 'backend-utils-and-schemas-are-leaves',
       severity: 'error',
-      comment: 'utils/ and *.schemas.ts are pure helpers and must not import routes/controllers/services/repositories.',
+      comment:
+        'utils/ and *.schemas.ts are pure helpers and must not import routes/controllers/services/repositories. utils/ may sit directly under a module (modules/logs/utils/) or one level deeper, inside a sub-feature folder (modules/logs/cron/utils/).',
       from: {
-        path: [`${BACKEND}/modules/[^/]+/utils/`, `${BACKEND}/modules/[^/]+/[^/]+\\.schemas\\.ts$`],
+        path: [
+          `${BACKEND}/modules/[^/]+/utils/`,
+          `${BACKEND}/modules/[^/]+/[^/]+/utils/`,
+          `${BACKEND}/modules/[^/]+/[^/]+\\.schemas\\.ts$`
+        ],
         pathNot: TESTS
       },
       to: { path: BACKEND_UPPER_LAYERS }

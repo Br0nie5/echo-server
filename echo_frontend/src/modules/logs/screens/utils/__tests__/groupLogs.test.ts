@@ -12,6 +12,8 @@ const buildLog = (overrides: Partial<Log>): Log => ({
   category: 'INFO',
   fileName: 'file',
   message: 'message',
+  callFile: 'file.jsonl',
+  callLine: 1,
   ...overrides
 })
 

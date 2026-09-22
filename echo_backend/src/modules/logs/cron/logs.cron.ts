@@ -3,10 +3,10 @@ import type { FastifyPluginAsync, FastifyPluginOptions } from 'fastify'
 import fastifyPlugin from 'fastify-plugin'
 import cron from 'node-cron'
 
-import type { LogsCronOptions } from '../../shared/types/echoBackEnv.js'
+import type { LogsCronOptions } from '../../../shared/types/echoBackEnv.js'
+import type { LogsService } from '../logs.service.js'
 
 import type { CheckpointStore } from './logs.checkpoint.js'
-import type { LogsService } from './logs.service.js'
 import type { LogsNotifier } from './notifications/logs.notifier.js'
 
 /** The only part of `LogsService` the cron depends on. */

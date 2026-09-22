@@ -1,14 +1,10 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+
+import { dataDir } from '../../../shared/utils/dataDir.js'
 
 import { LastLogsCheckSchema } from './utils/schemas/lastLogsCheck.schema.js'
 
-/** ESM has no `__dirname`, so it is rebuilt from the module URL. */
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-/** Directory holding the persistent data (users database, last check date), at the repository root. */
-export const dataDir = path.join(__dirname, '../../../../data')
 /** File where the date of the last logs check is stored. */
 export const lastLogsCheckFile = path.join(dataDir, 'last_logs_check.json')
 

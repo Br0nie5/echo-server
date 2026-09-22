@@ -1,7 +1,7 @@
 import type { Log } from '@echo/utilities'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { LogsCronOptions } from '../../../../shared/types/echoBackEnv.js'
+import type { LogsCronOptions } from '../../../../../shared/types/echoBackEnv.js'
 import {
   buildTelegramMessage,
   createTelegramNotifier,

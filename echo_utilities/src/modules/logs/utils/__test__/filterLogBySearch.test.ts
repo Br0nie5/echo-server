@@ -13,7 +13,9 @@ describe('filterLogBySearch', () => {
     fileName: 'log_file_name',
     jobId: 123,
     category: LogCategory.INFO,
-    message: 'some log message'
+    message: 'some log message',
+    callFile: 'check_logs.jsonl',
+    callLine: 4
   }
 
   const expectMatch = (key: LogSearchableKeys): void => {

@@ -15,7 +15,9 @@ export const LogSchema: z.ZodType<Log> = z
     fileName: z.string(),
     jobId: z.number().int(),
     category: LogCategorySchema,
-    message: z.string()
+    message: z.string(),
+    callFile: z.string().optional(),
+    callLine: z.number().int().optional()
   })
   .strict()
 

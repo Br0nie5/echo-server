@@ -25,6 +25,28 @@ const parseHttpPort = (raw: string): number => {
   return port
 }
 
+/** Parses `SELF_LOGS_ENABLED`, defaulting to `false` when unset. Throws unless it is `true` or `false`. */
+const parseSelfLogsEnabled = (raw: string | undefined): boolean => {
+  if (raw === undefined || raw === '') {
+    return false
+  }
+  if (raw === 'true') return true
+  if (raw === 'false') return false
+  throw new Error(`Invalid SELF_LOGS_ENABLED: ${raw}`)
+}
+
+/** Parses `SELF_LOGS_RETENTION_DAYS`, defaulting to `10` when unset. Throws unless it is a positive integer. */
+const parseSelfLogsRetentionDays = (raw: string | undefined): number => {
+  if (raw === undefined || raw === '') {
+    return 10
+  }
+  const days = Number(raw)
+  if (!Number.isInteger(days) || days < 1) {
+    throw new Error(`Invalid SELF_LOGS_RETENTION_DAYS: ${raw}`)
+  }
+  return days
+}
+
 /** Domain allowed by CORS and used for the cookie. IP addresses map to `localhost`, since a cookie cannot be set on an IP domain. */
 const parseAllowedDomain = ({ serverUrl }: { serverUrl: string }): string => {
   // serverUrl is already a validated URL by this point,
@@ -124,7 +146,9 @@ const parseEchoBackEnv = (processEnv: NodeJS.ProcessEnv): EchoBackEnv => {
       maxAge: 24 * 60 * 60
     },
     LOGS_CRON_OPTIONS: logsCronOptions,
-    TLS_OPTIONS: tlsOptions
+    TLS_OPTIONS: tlsOptions,
+    SELF_LOGS_ENABLED: parseSelfLogsEnabled(processEnv.SELF_LOGS_ENABLED),
+    SELF_LOGS_RETENTION_DAYS: parseSelfLogsRetentionDays(processEnv.SELF_LOGS_RETENTION_DAYS)
   }
 }
 

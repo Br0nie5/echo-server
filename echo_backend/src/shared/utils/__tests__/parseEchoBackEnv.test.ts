@@ -293,4 +293,65 @@ describe('env', () => {
       })
     })
   })
+
+  describe('SELF_LOGS_ENABLED', () => {
+    it('should default to false when unset', async () => {
+      stubRequiredEnvs()
+
+      const env = await importEnv()
+
+      expect(env.SELF_LOGS_ENABLED).toBe(false)
+    })
+
+    it('should be true when set to "true"', async () => {
+      stubRequiredEnvs()
+      vi.stubEnv('SELF_LOGS_ENABLED', 'true')
+
+      const env = await importEnv()
+
+      expect(env.SELF_LOGS_ENABLED).toBe(true)
+    })
+
+    it('should be false when set to "false"', async () => {
+      stubRequiredEnvs()
+      vi.stubEnv('SELF_LOGS_ENABLED', 'false')
+
+      const env = await importEnv()
+
+      expect(env.SELF_LOGS_ENABLED).toBe(false)
+    })
+
+    it('should throw when set to an invalid value', async () => {
+      stubRequiredEnvs()
+      vi.stubEnv('SELF_LOGS_ENABLED', 'yes')
+
+      await expect(importEnv()).rejects.toThrow('Invalid SELF_LOGS_ENABLED: yes')
+    })
+  })
+
+  describe('SELF_LOGS_RETENTION_DAYS', () => {
+    it('should default to 10 when unset', async () => {
+      stubRequiredEnvs()
+
+      const env = await importEnv()
+
+      expect(env.SELF_LOGS_RETENTION_DAYS).toBe(10)
+    })
+
+    it('should use the given value when set', async () => {
+      stubRequiredEnvs()
+      vi.stubEnv('SELF_LOGS_RETENTION_DAYS', '30')
+
+      const env = await importEnv()
+
+      expect(env.SELF_LOGS_RETENTION_DAYS).toBe(30)
+    })
+
+    it('should throw when set to a non-positive-integer value', async () => {
+      stubRequiredEnvs()
+      vi.stubEnv('SELF_LOGS_RETENTION_DAYS', '0')
+
+      await expect(importEnv()).rejects.toThrow('Invalid SELF_LOGS_RETENTION_DAYS: 0')
+    })
+  })
 })

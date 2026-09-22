@@ -12,7 +12,7 @@
     "build": "npm run build --workspaces",
     "start": "npm run build && npm run start --workspace=echo_backend",
     "build:docker": "npm run build && docker rm -f echo && docker build -t echo .",
-    "start:docker": "npm run build:docker && docker run --name echo -p 4000:4000 -e SERVER_NAME=\"Echo\" -e SERVER_URL=\"https://localhost:4000\" -e TLS_CERT_PATH=/certs/localhost-cert.pem -e TLS_KEY_PATH=/certs/localhost-key.pem -v ./test_logs:/watched_logs -v ./data:/app/data -v ./certs:/certs:ro echo",
+    "start:docker": "bash scripts/start_docker.sh",
     "dev": "concurrently --names \"backend,frontend\" \"npm run dev --workspace=echo_backend\" \"npm run dev --workspace=echo_frontend\"",
     "format": "npm run format --workspaces",
     "lint": "npm run lint --workspaces",

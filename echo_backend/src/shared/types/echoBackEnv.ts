@@ -25,4 +25,6 @@ export type EchoBackEnv = EchoEnv & {
   COOKIE_SERIALIZE_OPTIONS: CookieSerializeOptions
   LOGS_CRON_OPTIONS?: LogsCronOptions
   TLS_OPTIONS?: TlsOptions
+  SELF_LOGS_ENABLED: boolean
+  SELF_LOGS_RETENTION_DAYS: number
 }

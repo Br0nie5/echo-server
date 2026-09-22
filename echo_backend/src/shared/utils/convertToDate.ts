@@ -20,3 +20,7 @@ export const convertToDateFromISO = (dateStr: string): Date | undefined => {
   const parsedDate = DateTime.fromISO(dateStr, { zone: 'Europe/Paris' })
   return parsedDate.isValid ? parsedDate.toJSDate() : undefined
 }
+
+/** Formats `date` (now, by default) the same way log timestamps are read: `'yyyy-MM-dd HH:mm:ss.SSS'`, Europe/Paris time. */
+export const formatDateForLog = (date: Date = new Date()): string =>
+  DateTime.fromJSDate(date).setZone('Europe/Paris').toFormat('yyyy-MM-dd HH:mm:ss.SSS')

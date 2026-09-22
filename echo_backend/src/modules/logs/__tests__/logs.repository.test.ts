@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('../utils/parseLogFile.js', () => ({ parseLogFile: vi.fn() }))
 
 import { createFileLogsRepository } from '../logs.repository.js'
+import type { SelfLogsWriter } from '../selfLogs/selfLogs.writer.js'
 import { parseLogFile } from '../utils/parseLogFile.js'
 
 const mockLog = (id: string): Log => ({
@@ -12,7 +13,9 @@ const mockLog = (id: string): Log => ({
   fileName: 'f',
   jobId: 1,
   category: 'INFO',
-  message: id
+  message: id,
+  callFile: 'f.jsonl',
+  callLine: 1
 })
 
 const LOGS_DIR_PATH = '/path/to/logs'
@@ -21,7 +24,11 @@ const filesService = {
   readFile: vi.fn(),
   getFileNameWithoutExtension: vi.fn()
 }
-const LogsRepository = createFileLogsRepository(LOGS_DIR_PATH, filesService)
+const selfLogsWriter: SelfLogsWriter = {
+  isSelfLogFile: (): boolean => false,
+  logParseFailures: vi.fn()
+}
+const LogsRepository = createFileLogsRepository(LOGS_DIR_PATH, filesService, selfLogsWriter)
 
 describe('LogsRepository.findAll', () => {
   beforeEach(() => {
@@ -38,7 +45,12 @@ describe('LogsRepository.findAll', () => {
 
     expect(filesService.getAllFilesPaths).toHaveBeenCalledWith(LOGS_DIR_PATH)
     expect(parseLogFile).toHaveBeenCalledTimes(2)
-    expect(parseLogFile).toHaveBeenCalledWith('a.jsonl', LOGS_DIR_PATH, filesService)
+    expect(parseLogFile).toHaveBeenCalledWith(
+      'a.jsonl',
+      LOGS_DIR_PATH,
+      filesService,
+      selfLogsWriter
+    )
     expect(logs.map((log) => log.id)).toEqual(['a1', 'a2', 'b1'])
   })
 

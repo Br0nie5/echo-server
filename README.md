@@ -68,8 +68,15 @@ services:
       # - LOGS_CRON_WATCHED_LOGS_CATEGORIES=ERROR,WARNING
       # - LOGS_CRON_TELEGRAM_CHAT_ID=123456789
       # - LOGS_CRON_TELEGRAM_BASE_URL=https://api.telegram.org/bot<token>
+      # Optional: surface log-parsing failures in the UI, see the section below
+      # - SELF_LOGS_ENABLED=true
+      # - SELF_LOGS_RETENTION_DAYS=10
     volumes:
       - /path/to/your/logs:/watched_logs:ro
+      # Required if SELF_LOGS_ENABLED=true: a writable sub-mount, the rest of /watched_logs stays read-only.
+      # Docker mounts nested inside a read-only mount need their mountpoint to already exist in the
+      # read-only source, so first run: mkdir -p /path/to/your/logs/server
+      # - /path/to/echo/self-logs:/watched_logs/server
       - /path/to/echo/data:/app/data
     ports:
       - 4000:4000
@@ -90,6 +97,8 @@ docker run -d \
   --restart unless-stopped \
   ghcr.io/br0nie5/echo:latest
 ```
+
+If you enable `SELF_LOGS_ENABLED` (see below), also add `-e SELF_LOGS_ENABLED=true` and a writable sub-mount: `-v /path/to/echo/self-logs:/watched_logs/server`. First run `mkdir -p /path/to/your/logs/server` on the host — Docker can't create a mountpoint nested inside an already-read-only mount, so that directory must exist in the read-only source before the container starts, or it will fail with a "read-only file system" error.
 
 ## Parameters
 
@@ -116,6 +125,8 @@ Container parameters are given as `<external>:<internal>` for ports and volumes.
 | `LOGS_CRON_TELEGRAM_BASE_URL`         | _(empty)_                  | Bot API base URL, `https://api.telegram.org/bot<token>`. Treat as a secret. |
 | `TLS_CERT_PATH`                       | _(empty)_                  | Path (inside the container) to a PEM certificate. Set with `TLS_KEY_PATH` to serve HTTPS. |
 | `TLS_KEY_PATH`                        | _(empty)_                  | Path (inside the container) to the PEM private key. |
+| `SELF_LOGS_ENABLED`                   | `false`                    | When `true`, `.jsonl` lines the backend fails to parse are written to `/watched_logs/server/<SERVER_NAME>/log/parseLogFile.jsonl`, so they show up in the UI like any other log. Requires a writable sub-mount, see Volumes below. |
+| `SELF_LOGS_RETENTION_DAYS`            | `10`                       | Self-log lines older than this many days are pruned once at each server start. |
 
 The Telegram job only starts when all four `LOGS_CRON_*` variables are set and valid. Otherwise it is silently disabled.
 
@@ -124,6 +135,7 @@ The Telegram job only starts when all four `LOGS_CRON_*` variables are set and v
 | Parameter        | Function |
 | ---------------- | -------- |
 | `/watched_logs`  | The directory containing your `.jsonl` logs (subdirectories are scanned). Read-only (`:ro`) is enough. |
+| `/watched_logs/server` | Optional, only needed when `SELF_LOGS_ENABLED=true`: a writable sub-mount for the backend's own self-logs, so the rest of `/watched_logs` can stay read-only. Docker needs its mountpoint to already exist in the read-only source, so first create a `server` directory inside whatever host directory you mount at `/watched_logs` (e.g. `mkdir -p /path/to/your/logs/server`) before starting the container. |
 | `/app/data`      | Persistent state: `users.db` (SQLite, hashed passwords) and `last_logs_check.json` (Telegram checkpoint). Without this volume, the admin account is lost when the container is recreated. |
 
 ## Log file format
@@ -141,7 +153,7 @@ Echo reads every `.jsonl` file under the logs directory. Each line must be one J
 | `status`    | string | One of `SUCCESS`, `INFO`, `WARNING`, `ERROR`. |
 | `message`   | string | Free text. |
 
-Lines that are not valid JSON, do not match this shape, have an unknown `status`, or have an unparsable timestamp are skipped without error.
+Lines that are not valid JSON, do not match this shape, have an unknown `status`, or have an unparsable timestamp are skipped without error (unless `SELF_LOGS_ENABLED=true`, see below).
 
 **Grouping.** Logs are grouped by their directory. The first directory level under the logs root is dropped, any directory named `log` is ignored, and the rest are joined with `_`. For example, with the logs root mounted at `/watched_logs`:
 
@@ -151,6 +163,12 @@ Lines that are not valid JSON, do not match this shape, have an unknown `status`
 | `/watched_logs/scripts/docker/utils/log/prune.log.jsonl` | `docker_utils` |
 
 The file name (without its extension) is shown as the log source.
+
+## Self logs
+
+Set `SELF_LOGS_ENABLED=true` to have the backend report the `.jsonl` lines it fails to parse as regular log entries, so they show up in the UI instead of only in the container's own logs. Each failing line becomes a `WARNING` entry in group `<SERVER_NAME>`, source `parseLogFile`, at `/watched_logs/server/<SERVER_NAME>/log/parseLogFile.jsonl`. This needs a writable sub-mount (see Volumes above, including the one-time `mkdir -p .../server` step) since `/watched_logs` is otherwise recommended read-only. All entries written during one server run share the same `job_id`; entries older than `SELF_LOGS_RETENTION_DAYS` (default `10`) are pruned once at each start.
+
+Since every request re-scans and re-parses all `.jsonl` files, a line that still fails to parse would otherwise be reported again on every request. To avoid that, each entry also carries `call_file` (the source file name) and `call_line` (the line's position, 1-based, among the non-blank lines of that file) alongside the standard fields; a failure already reported with the same `call_file`, `call_line` and message is not written again, as long as its entry hasn't since been pruned by `SELF_LOGS_RETENTION_DAYS`.
 
 ## Authentication
 

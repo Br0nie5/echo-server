@@ -1,6 +1,6 @@
 import type { Log } from '@echo/utilities'
 
-import type { LogsCronOptions } from '../../../shared/types/echoBackEnv.js'
+import type { LogsCronOptions } from '../../../../shared/types/echoBackEnv.js'
 
 import type { LogsNotifier } from './logs.notifier.js'
 

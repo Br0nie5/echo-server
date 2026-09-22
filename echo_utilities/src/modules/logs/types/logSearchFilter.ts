@@ -1,9 +1,12 @@
 import type { Log } from './__generated__/log.js'
 
 /** The log fields a search can target with `key:`. */
-export type LogSearchableKeys = keyof Omit<Log, 'id' | 'date' | 'category'>
+export type LogSearchableKeys = keyof Omit<
+  Log,
+  'id' | 'date' | 'category' | 'callFile' | 'callLine'
+>
 
-/** Keys proposed while typing a search, and recognised by `parseLogSearchInput`. */
+/** Keys proposed while typing a search, and recognized by `parseLogSearchInput`. */
 export const logSearchSuggestions: LogSearchableKeys[] = [
   'jobId',
   'fileName',

@@ -26,7 +26,9 @@ const logMock: Log = {
   jobId: 1,
   category: LogCategory.INFO,
   message: 'some message',
-  groupName: 'group'
+  groupName: 'group',
+  callFile: 'file.jsonl',
+  callLine: 1
 }
 
 describe('useGetLogs', () => {

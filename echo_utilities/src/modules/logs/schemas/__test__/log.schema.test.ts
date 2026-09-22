@@ -11,7 +11,9 @@ const validLog: Log = {
   fileName: 'update_docker_container',
   jobId: 66,
   category: LogCategory.INFO,
-  message: 'Finished update_docker_container script.'
+  message: 'Finished update_docker_container script.',
+  callFile: 'update_docker_container.jsonl',
+  callLine: 12
 }
 
 describe('LogCategorySchema', () => {
@@ -38,7 +40,9 @@ describe('LogSchema', () => {
       fileName: validLog.fileName,
       jobId: validLog.jobId,
       category: validLog.category,
-      message: validLog.message
+      message: validLog.message,
+      callFile: validLog.callFile,
+      callLine: validLog.callLine
     }
 
     expect(LogSchema.safeParse(logWithoutGroupName).success).toBeTruthy()
@@ -51,7 +55,9 @@ describe('LogSchema', () => {
       groupName: validLog.groupName,
       fileName: validLog.fileName,
       jobId: validLog.jobId,
-      category: validLog.category
+      category: validLog.category,
+      callFile: validLog.callFile,
+      callLine: validLog.callLine
     }
 
     expect(LogSchema.safeParse(invalidLog).success).toBeFalsy()

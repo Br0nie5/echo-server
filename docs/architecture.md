@@ -43,6 +43,8 @@ Code is split by domain under `echo_backend/src/modules` (`auth`, `logs`), with 
 
 `shared/` holds cross-module code (env parsing, file service, error schemas). [server.ts](../echo_backend/src/server.ts) wires everything, registers Swagger, serves `/app` via `@fastify/static` (with an SPA fallback to `index.html`) and returns JSON 404s elsewhere.
 
+The `logs` module itself has three sub-features, each in its own subfolder following the same naming scheme: the core log retrieval at `modules/logs/` (routes/controller/service/repository, the only one with HTTP routes), `modules/logs/cron/` (the Telegram notifier cron, see below) and `modules/logs/selfLogs/` (the self-diagnostics writer). They depend on each other in one direction only (`selfLogs` ← `logs` ← `cron`), never circularly.
+
 ## Frontend layout
 
 `echo_frontend/src/modules/<domain>` is split into:
@@ -68,7 +70,7 @@ See the [README](../README.md#authentication) for behavior. Implementation: user
 
 ## Telegram cron
 
-`logs.cron.ts` schedules a job that asks `logs.service` for logs in the watched categories since the last checkpoint (`logs.checkpoint.ts`, stored in `data/last_logs_check.json`) and passes them to a `LogsNotifier` (`notifications/telegram.notifier.ts`). The notifier is an interface, so other channels can be added.
+`cron/logs.cron.ts` schedules a job that asks `logs.service` for logs in the watched categories since the last checkpoint (`cron/logs.checkpoint.ts`, stored in `data/last_logs_check.json`) and passes them to a `LogsNotifier` (`cron/notifications/telegram.notifier.ts`). The notifier is an interface, so other channels can be added.
 
 ## Enforcing the architecture
 

@@ -19,6 +19,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:42:09.465Z`,
     fileName: 'update_docker_container',
     jobId: 66,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 1,
     category: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
@@ -28,6 +30,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:42:09.453Z`,
     fileName: 'update_docker_container',
     jobId: 66,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 2,
     category: 'INFO',
     message: 'Updates for group echo has been applied.',
     groupName: 'docker_utils'
@@ -37,6 +41,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:42:09.443Z`,
     fileName: 'update_docker_container',
     jobId: 66,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 3,
     category: 'SUCCESS',
     message: "Action 'Apply echo update for active services: (echo)' succeeded on attempt 1.",
     groupName: 'docker_utils'
@@ -46,6 +52,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:42:09.127Z`,
     fileName: 'update_docker_container',
     jobId: 66,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 4,
     category: 'INFO',
     message: 'Starting updated services: echo.',
     groupName: 'docker_utils'
@@ -55,6 +63,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:58.520Z`,
     fileName: 'update_docker_container',
     jobId: 66,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 5,
     category: 'INFO',
     message: 'Applying the updates for group echo...',
     groupName: 'docker_utils'
@@ -64,6 +74,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:58.516Z`,
     fileName: 'update_docker_container',
     jobId: 66,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 6,
     category: 'WARNING',
     message: "Unused docker images couldn't be removed.",
     groupName: 'docker_utils'
@@ -73,6 +85,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:58.495Z`,
     fileName: 'update_docker_container',
     jobId: 66,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 7,
     category: 'INFO',
     message: 'Removing unused docker images...',
     groupName: 'docker_utils'
@@ -82,6 +96,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:58.490Z`,
     fileName: 'update_docker_container',
     jobId: 66,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 8,
     category: 'INFO',
     message: 'Group echo latest updates has been pulled.',
     groupName: 'docker_utils'
@@ -91,6 +107,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:53.701Z`,
     fileName: 'update_docker_container',
     jobId: 66,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 9,
     category: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
@@ -100,6 +118,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:53.694Z`,
     fileName: 'update_docker_container',
     jobId: 66,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 10,
     category: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
@@ -109,6 +129,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:53.531Z`,
     fileName: 'update_docker_container',
     jobId: 66,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 11,
     category: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
@@ -118,6 +140,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:53.461Z`,
     fileName: 'update_docker_container',
     jobId: 66,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 12,
     category: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
@@ -127,6 +151,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:53.457Z`,
     fileName: 'update_docker_container',
     jobId: 66,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 13,
     category: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'
@@ -136,6 +162,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:03.076Z`,
     fileName: 'check_logs',
     jobId: 3983,
+    callFile: 'check_logs.jsonl',
+    callLine: 14,
     category: 'INFO',
     message: 'Finished check_logs script.',
     groupName: 'utils'
@@ -145,6 +173,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:03.071Z`,
     fileName: 'check_logs',
     jobId: 3983,
+    callFile: 'check_logs.jsonl',
+    callLine: 15,
     category: 'INFO',
     message:
       'Last logs check time updated to ${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01Z.',
@@ -155,6 +185,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:03.066Z`,
     fileName: 'check_logs',
     jobId: 3983,
+    callFile: 'check_logs.jsonl',
+    callLine: 16,
     category: 'INFO',
     message: 'Updating last logs check time...',
     groupName: 'utils'
@@ -164,6 +196,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:03.062Z`,
     fileName: 'check_logs',
     jobId: 3983,
+    callFile: 'check_logs.jsonl',
+    callLine: 17,
     category: 'INFO',
     message: 'No logs to send to Telegram.',
     groupName: 'utils'
@@ -173,6 +207,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:03.058Z`,
     fileName: 'check_logs',
     jobId: 3983,
+    callFile: 'check_logs.jsonl',
+    callLine: 18,
     category: 'INFO',
     message: 'Preparing Telegram logs message...',
     groupName: 'utils'
@@ -182,6 +218,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:03.054Z`,
     fileName: 'check_logs',
     jobId: 3983,
+    callFile: 'check_logs.jsonl',
+    callLine: 19,
     category: 'INFO',
     message: 'Logs have been received and formatted.',
     groupName: 'utils'
@@ -191,6 +229,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01.478Z`,
     fileName: 'check_logs',
     jobId: 3983,
+    callFile: 'check_logs.jsonl',
+    callLine: 20,
     category: 'INFO',
     message: 'Fetching logs from API...',
     groupName: 'utils'
@@ -200,6 +240,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01.449Z`,
     fileName: 'check_logs',
     jobId: 3983,
+    callFile: 'check_logs.jsonl',
+    callLine: 21,
     category: 'INFO',
     message:
       'Last logs check time is ${formatDateToMock(date, { daysToRemove: 0 })}T13:53:01Z and current time is ${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01Z.',
@@ -210,6 +252,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01.438Z`,
     fileName: 'check_logs',
     jobId: 3983,
+    callFile: 'check_logs.jsonl',
+    callLine: 22,
     category: 'INFO',
     message: 'Getting logs check times...',
     groupName: 'utils'
@@ -219,6 +263,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01.421Z`,
     fileName: 'check_logs',
     jobId: 3983,
+    callFile: 'check_logs.jsonl',
+    callLine: 23,
     category: 'INFO',
     message: 'Starting check_logs script.',
     groupName: 'utils'
@@ -228,6 +274,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01.416Z`,
     fileName: 'check_logs',
     jobId: 3983,
+    callFile: 'check_logs.jsonl',
+    callLine: 24,
     category: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'utils'
@@ -237,6 +285,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:13:00.153Z`,
     fileName: 'not_an_undefined_filename_though',
     jobId: 1,
+    callFile: 'not_an_undefined_filename_though.jsonl',
+    callLine: 25,
     category: 'INFO',
     message: 'The only log of an undefined group name...',
     groupName: undefined
@@ -246,6 +296,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:13:00.153Z`,
     fileName: 'update_docker_container',
     jobId: 65,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 26,
     category: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
@@ -255,6 +307,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:13:00.146Z`,
     fileName: 'update_docker_container',
     jobId: 65,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 27,
     category: 'INFO',
     message: 'Updates for group echo has been applied.',
     groupName: 'docker_utils'
@@ -264,6 +318,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:13:00.142Z`,
     fileName: 'update_docker_container',
     jobId: 65,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 28,
     category: 'SUCCESS',
     message: "Action 'Apply echo update for active services: (echo)' succeeded on attempt 1.",
     groupName: 'docker_utils'
@@ -273,6 +329,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:59.855Z`,
     fileName: 'update_docker_container',
     jobId: 65,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 29,
     category: 'INFO',
     message: 'Starting updated services: echo.',
     groupName: 'docker_utils'
@@ -282,6 +340,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:49.124Z`,
     fileName: 'update_docker_container',
     jobId: 65,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 30,
     category: 'INFO',
     message: 'Applying the updates for group echo...',
     groupName: 'docker_utils'
@@ -291,6 +351,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:49.116Z`,
     fileName: 'update_docker_container',
     jobId: 65,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 31,
     category: 'INFO',
     message: 'Unused docker images are now removed.',
     groupName: 'docker_utils'
@@ -300,6 +362,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:49.078Z`,
     fileName: 'update_docker_container',
     jobId: 65,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 32,
     category: 'INFO',
     message: 'Removing unused docker images...',
     groupName: 'docker_utils'
@@ -309,6 +373,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:49.071Z`,
     fileName: 'update_docker_container',
     jobId: 65,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 33,
     category: 'INFO',
     message: 'Group echo latest updates has been pulled.',
     groupName: 'docker_utils'
@@ -318,6 +384,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:44.074Z`,
     fileName: 'update_docker_container',
     jobId: 65,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 34,
     category: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
@@ -327,6 +395,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:44.069Z`,
     fileName: 'update_docker_container',
     jobId: 65,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 35,
     category: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
@@ -336,6 +406,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:43.915Z`,
     fileName: 'update_docker_container',
     jobId: 65,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 36,
     category: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
@@ -345,6 +417,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:43.531Z`,
     fileName: 'update_docker_container',
     jobId: 65,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 37,
     category: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
@@ -354,6 +428,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:43.526Z`,
     fileName: 'update_docker_container',
     jobId: 65,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 38,
     category: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'
@@ -363,6 +439,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 1 })}T13:53:59.756Z`,
     fileName: 'update_docker_container',
     jobId: 48,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 39,
     category: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
@@ -372,6 +450,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 1 })}T13:53:59.744Z`,
     fileName: 'update_docker_container',
     jobId: 48,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 40,
     category: 'ERROR',
     message:
       'Unexpected error in \'update_docker_container\'\n  Command   : "${dockerCompose[@]}" pull\n  Exit code : 1\n  Line      : 120\n  Call stack:\n      ↳  main()  @ /scripts/docker/utils/update_docker_container.sh:120',
@@ -382,6 +462,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 1 })}T13:53:58.311Z`,
     fileName: 'update_docker_container',
     jobId: 48,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 41,
     category: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
@@ -391,6 +473,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 1 })}T13:53:58.306Z`,
     fileName: 'update_docker_container',
     jobId: 48,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 42,
     category: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
@@ -400,6 +484,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 1 })}T13:53:58.152Z`,
     fileName: 'update_docker_container',
     jobId: 48,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 43,
     category: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
@@ -409,6 +495,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 1 })}T13:53:57.981Z`,
     fileName: 'update_docker_container',
     jobId: 48,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 44,
     category: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
@@ -418,6 +506,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 1 })}T13:53:57.978Z`,
     fileName: 'update_docker_container',
     jobId: 48,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 45,
     category: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'
@@ -427,6 +517,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:12.649Z`,
     fileName: 'update_docker_container',
     jobId: 47,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 46,
     category: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
@@ -436,6 +528,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:12.642Z`,
     fileName: 'update_docker_container',
     jobId: 47,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 47,
     category: 'INFO',
     message: 'Updates for group echo has been applied.',
     groupName: 'docker_utils'
@@ -445,6 +539,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:12.637Z`,
     fileName: 'update_docker_container',
     jobId: 47,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 48,
     category: 'SUCCESS',
     message: "Action 'Apply echo update for active services: (echo)' succeeded on attempt 1.",
     groupName: 'docker_utils'
@@ -454,6 +550,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:12.385Z`,
     fileName: 'update_docker_container',
     jobId: 47,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 49,
     category: 'INFO',
     message: 'Starting updated services: echo.',
     groupName: 'docker_utils'
@@ -463,6 +561,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:01.910Z`,
     fileName: 'update_docker_container',
     jobId: 47,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 50,
     category: 'INFO',
     message: 'Applying the updates for group echo...',
     groupName: 'docker_utils'
@@ -472,6 +572,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:01.903Z`,
     fileName: 'update_docker_container',
     jobId: 47,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 51,
     category: 'INFO',
     message: 'Unused docker images are now removed.',
     groupName: 'docker_utils'
@@ -481,6 +583,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:01.875Z`,
     fileName: 'update_docker_container',
     jobId: 47,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 52,
     category: 'INFO',
     message: 'Removing unused docker images...',
     groupName: 'docker_utils'
@@ -490,6 +594,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:01.868Z`,
     fileName: 'update_docker_container',
     jobId: 47,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 53,
     category: 'INFO',
     message: 'Group echo latest updates has been pulled.',
     groupName: 'docker_utils'
@@ -499,6 +605,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:01.136Z`,
     fileName: 'update_docker_container',
     jobId: 47,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 54,
     category: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
@@ -508,6 +616,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:01.131Z`,
     fileName: 'update_docker_container',
     jobId: 47,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 55,
     category: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
@@ -517,6 +627,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:00.980Z`,
     fileName: 'update_docker_container',
     jobId: 47,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 56,
     category: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
@@ -526,6 +638,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:00.911Z`,
     fileName: 'update_docker_container',
     jobId: 47,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 57,
     category: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
@@ -535,6 +649,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:00.906Z`,
     fileName: 'update_docker_container',
     jobId: 47,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 58,
     category: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'
@@ -544,6 +660,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.489Z`,
     fileName: 'update_docker_container',
     jobId: 46,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 59,
     category: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
@@ -553,6 +671,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.478Z`,
     fileName: 'update_docker_container',
     jobId: 46,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 60,
     category: 'INFO',
     message: 'Updates for group echo has been applied.',
     groupName: 'docker_utils'
@@ -562,6 +682,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.471Z`,
     fileName: 'update_docker_container',
     jobId: 46,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 61,
     category: 'SUCCESS',
     message: "Action 'Create stopped services for echo: (echo)' succeeded on attempt 1.",
     groupName: 'docker_utils'
@@ -571,6 +693,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.314Z`,
     fileName: 'update_docker_container',
     jobId: 46,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 62,
     category: 'INFO',
     message: 'Recreating previously stopped services (without starting): echo.',
     groupName: 'docker_utils'
@@ -580,6 +704,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.146Z`,
     fileName: 'update_docker_container',
     jobId: 46,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 63,
     category: 'INFO',
     message: 'Applying the updates for group echo...',
     groupName: 'docker_utils'
@@ -589,6 +715,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.141Z`,
     fileName: 'update_docker_container',
     jobId: 46,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 64,
     category: 'INFO',
     message: 'Unused docker images are now removed.',
     groupName: 'docker_utils'
@@ -598,6 +726,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.115Z`,
     fileName: 'update_docker_container',
     jobId: 46,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 65,
     category: 'INFO',
     message: 'Removing unused docker images...',
     groupName: 'docker_utils'
@@ -607,6 +737,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.107Z`,
     fileName: 'update_docker_container',
     jobId: 46,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 66,
     category: 'INFO',
     message: 'Group echo latest updates has been pulled.',
     groupName: 'docker_utils'
@@ -616,6 +748,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:37.345Z`,
     fileName: 'update_docker_container',
     jobId: 46,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 67,
     category: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
@@ -625,6 +759,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:37.339Z`,
     fileName: 'update_docker_container',
     jobId: 46,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 68,
     category: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
@@ -634,6 +770,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:37.168Z`,
     fileName: 'update_docker_container',
     jobId: 46,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 69,
     category: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
@@ -643,6 +781,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:37.096Z`,
     fileName: 'update_docker_container',
     jobId: 46,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 70,
     category: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
@@ -652,6 +792,8 @@ export const getLogsMock = (date: Date): Log[] => [
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:37.091Z`,
     fileName: 'update_docker_container',
     jobId: 46,
+    callFile: 'update_docker_container.jsonl',
+    callLine: 71,
     category: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'
