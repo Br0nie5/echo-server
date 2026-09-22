@@ -41,6 +41,7 @@ import { createFilesService } from './shared/services/files.service.js'
 import type { EchoBackEnv } from './shared/types/echoBackEnv.js'
 import { dataDir } from './shared/utils/dataDir.js'
 import { isOriginAllowed } from './shared/utils/isOriginAllowed.js'
+import { normalizeToEchoError } from './shared/utils/normalizeToEchoError.js'
 import { env as defaultEnv } from './shared/utils/parseEchoBackEnv.js'
 
 /** Random secret regenerated at each start, so the sessions do not survive a restart. */
@@ -179,6 +180,12 @@ export const buildServer = async (env: EchoBackEnv = defaultEnv): Promise<EchoSe
   } as FastifyServerOptions<Server<typeof IncomingMessage, typeof ServerResponse>>
 
   const server = Fastify(serverOptions)
+
+  server.setErrorHandler((error, request, reply) => {
+    const echoError = normalizeToEchoError(error)
+    request.log.error({ err: error }, echoError.message)
+    reply.status(echoError.statusCode).send(echoError)
+  })
 
   await registerSecurity(server, env)
   await registerDocumentation(server, env)
