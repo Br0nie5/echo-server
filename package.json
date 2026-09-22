@@ -27,6 +27,6 @@
     "@types/node": "^24.13.6",
     "concurrently": "^10.0.5",
     "dependency-cruiser": "^18.4.0",
-    "orval": "^8.33.0"
+    "orval": "^8.34.0"
   }
 }
