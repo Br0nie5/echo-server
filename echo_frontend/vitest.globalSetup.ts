@@ -4,5 +4,5 @@
  * results (and snapshots) depending on the timezone of the machine running them.
  */
 export const setup = (): void => {
-  process.env.TZ = 'Europe/Paris'
+  process.env.TZ = 'UTC'
 }

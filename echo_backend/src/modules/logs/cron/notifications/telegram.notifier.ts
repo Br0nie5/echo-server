@@ -1,4 +1,5 @@
 import type { Log } from '@echo/utilities'
+import { DateTime } from 'luxon'
 
 import type { LogsCronOptions } from '../../../../shared/types/echoBackEnv.js'
 
@@ -6,17 +7,13 @@ import type { LogsNotifier } from './logs.notifier.js'
 
 /** Maximum length of a Telegram message. */
 const TELEGRAM_LIMIT = 4096
-/** Fixed offset applied to the dates of the messages (no daylight saving handling). */
-const DISPLAY_UTC_OFFSET_HOURS = 2
-
-/** One line of the message: `[jobId] [date GMT+offset] [category] - fileName > message`. */
-export function formatLogLine(log: Log): string {
-  const date = new Date(log.date)
-  const shifted = new Date(date.getTime() + DISPLAY_UTC_OFFSET_HOURS * 60 * 60 * 1000)
-  const formattedDate = shifted.toISOString().replace('T', ' ').substring(0, 19)
+/** One line of the message: `[jobId] [date UTC±offset] [category] - fileName > message`, the date shown in `timezone`. */
+export function formatLogLine(log: Log, timezone: string): string {
+  const date = DateTime.fromISO(log.date).setZone(timezone)
+  const offsetLabel = date.offset === 0 ? 'UTC' : `UTC${date.toFormat('Z')}`
 
   return (
-    `[${log.jobId}] [${formattedDate} GMT+${DISPLAY_UTC_OFFSET_HOURS}]` +
+    `[${log.jobId}] [${date.toFormat('yyyy-MM-dd HH:mm:ss')} ${offsetLabel}]` +
     ` [${log.category}] - ${log.fileName} > ${log.message}`
   )
 }
@@ -25,8 +22,12 @@ export function formatLogLine(log: Log): string {
  * Builds the message listing the logs, in order, as long as it fits in `TELEGRAM_LIMIT`.
  * Logs that do not fit are replaced by a footer counting them.
  */
-export function buildTelegramMessage(problemLogs: Log[], deviceName: string): string {
-  const lines = problemLogs.map(formatLogLine)
+export function buildTelegramMessage(
+  problemLogs: Log[],
+  deviceName: string,
+  timezone: string
+): string {
+  const lines = problemLogs.map((log) => formatLogLine(log, timezone))
   const totalLogs = lines.length
 
   const getOtherLogsFooterMessage = (remaining: number): string => {
@@ -68,7 +69,7 @@ export const createTelegramNotifier = (
       return
     }
 
-    const message = buildTelegramMessage(problemLogs, deviceName)
+    const message = buildTelegramMessage(problemLogs, deviceName, logsCronOptions.TELEGRAM_TIMEZONE)
 
     const url = `${logsCronOptions.TELEGRAM_BASE_URL}/sendMessage`
 

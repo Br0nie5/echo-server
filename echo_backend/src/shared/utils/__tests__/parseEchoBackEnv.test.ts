@@ -189,8 +189,34 @@ describe('env', () => {
         LOGS_CRON_SCHEDULE_REGEX: '*/30 * * * *',
         WATCHED_LOGS_CATEGORIES: ['WARNING', 'ERROR'],
         TELEGRAM_CHAT_ID: '123456789',
-        TELEGRAM_BASE_URL: 'https://api.telegram.org/bot123456789'
+        TELEGRAM_BASE_URL: 'https://api.telegram.org/bot123456789',
+        TELEGRAM_TIMEZONE: 'UTC'
       })
+    })
+
+    it('should use the given LOGS_CRON_TELEGRAM_TIMEZONE', async () => {
+      stubRequiredEnvs()
+      vi.stubEnv('LOGS_CRON_TELEGRAM_TIMEZONE', 'Europe/Paris')
+
+      const env = await importEnv()
+
+      expect(env.LOGS_CRON_OPTIONS?.TELEGRAM_TIMEZONE).toBe('Europe/Paris')
+    })
+
+    it('should read a GMT offset as the matching UTC offset', async () => {
+      stubRequiredEnvs()
+      vi.stubEnv('LOGS_CRON_TELEGRAM_TIMEZONE', 'GMT+2')
+
+      const env = await importEnv()
+
+      expect(env.LOGS_CRON_OPTIONS?.TELEGRAM_TIMEZONE).toBe('UTC+2')
+    })
+
+    it('should throw if LOGS_CRON_TELEGRAM_TIMEZONE is not a known timezone', async () => {
+      stubRequiredEnvs()
+      vi.stubEnv('LOGS_CRON_TELEGRAM_TIMEZONE', 'Mars/Olympus')
+
+      await expect(importEnv()).rejects.toThrow('Invalid LOGS_CRON_TELEGRAM_TIMEZONE: Mars/Olympus')
     })
 
     it('should not define logs cron options if required env vars are not set', async () => {

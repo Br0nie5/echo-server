@@ -40,10 +40,11 @@ Parsed by [parseEchoBackEnv.ts](../echo_backend/src/shared/utils/parseEchoBackEn
 | `LOGS_CRON_WATCHED_LOGS_CATEGORIES` | no* | Comma-separated subset of `SUCCESS,INFO,WARNING,ERROR`. Invalid entries are dropped. |
 | `LOGS_CRON_TELEGRAM_CHAT_ID` | no* | Telegram chat id. |
 | `LOGS_CRON_TELEGRAM_BASE_URL` | no* | `https://api.telegram.org/bot<token>`. |
+| `LOGS_CRON_TELEGRAM_TIMEZONE` | no | Default `UTC`. Timezone the dates of Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`). Throws at startup if unknown. |
 | `SELF_LOGS_ENABLED` | no | `true` or `false`, default `false`. When enabled, `.jsonl` lines the backend fails to parse are written to `LOGS_DIR_PATH/server/<SERVER_NAME>/log/parseLogFile.jsonl`, so they show up in the app like any other log. Requires that path to be writable (see the Volumes section of the [README](../README.md)). |
 | `SELF_LOGS_RETENTION_DAYS` | no | Integer, default `10`. Self-log lines older than this are pruned once at each server start. |
 
-\* The Telegram cron is registered only if **all four** `LOGS_CRON_*` variables are present and valid.
+\* The Telegram cron is registered only if **all four** of these `LOGS_CRON_*` variables are present and valid.
 
 The server always binds to `0.0.0.0`.
 
@@ -64,4 +65,4 @@ The built frontend does not embed configuration. It fetches `env.<mode>.json` at
 
 ## Time zone
 
-Log timestamps are parsed as **Europe/Paris** local time and Telegram messages display GMT+2. Both are currently hard-coded (see [convertToDate.ts](../echo_backend/src/shared/utils/convertToDate.ts) and [telegram.notifier.ts](../echo_backend/src/modules/logs/cron/notifications/telegram.notifier.ts)).
+The backend does not depend on a time zone. Log timestamps are read as UTC unless they carry an offset (see [convertToDate.ts](../echo_backend/src/shared/utils/convertToDate.ts)), and Telegram messages display dates in `LOGS_CRON_TELEGRAM_TIMEZONE`, UTC by default (see [telegram.notifier.ts](../echo_backend/src/modules/logs/cron/notifications/telegram.notifier.ts)). The frontend displays dates and groups logs by day in the browser's time zone.

@@ -4,7 +4,7 @@ import path from 'node:path'
 import { LogCategory } from '@echo/utilities'
 import type { FastifyBaseLogger } from 'fastify'
 
-import { convertToDateFromFormat, formatDateForLog } from '../../../shared/utils/convertToDate.js'
+import { convertToDateFromISO, formatDateForLog } from '../../../shared/utils/convertToDate.js'
 import type { RawJsonLogLine } from '../utils/schemas/rawJsonLogLine.schema.js'
 
 import { sanitizeServerNameForPath } from './utils/sanitizeServerNameForPath.js'
@@ -61,7 +61,7 @@ const pruneOldLines = (content: string, retentionDays: number): string[] => {
     .filter((line) => {
       try {
         const { timestamp } = JSON.parse(line)
-        const date = convertToDateFromFormat(timestamp)
+        const date = convertToDateFromISO(timestamp)
 
         return date === undefined || date.getTime() >= cutoff
       } catch {

@@ -323,10 +323,10 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
               class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
             >
               <button
-                aria-controls="panel-2026-04-28T10:00:00.000Z-content"
+                aria-controls="panel-2026-04-28T12:00:00.000Z-content"
                 aria-expanded="true"
                 class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
-                id="panel-2026-04-28T10:00:00.000Z-header"
+                id="panel-2026-04-28T12:00:00.000Z-header"
                 tabindex="0"
                 type="button"
               >
@@ -367,9 +367,9 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                   class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
                 >
                   <div
-                    aria-labelledby="panel-2026-04-28T10:00:00.000Z-header"
+                    aria-labelledby="panel-2026-04-28T12:00:00.000Z-header"
                     class="MuiAccordion-region css-at4ued-MuiAccordion-region"
-                    id="panel-2026-04-28T10:00:00.000Z-content"
+                    id="panel-2026-04-28T12:00:00.000Z-content"
                     role="region"
                   >
                     <div
@@ -389,10 +389,10 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                               class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
                             >
                               <button
-                                aria-controls="panel-2026-04-28T10:00:00.000Z - utils-content"
+                                aria-controls="panel-2026-04-28T12:00:00.000Z - utils-content"
                                 aria-expanded="true"
                                 class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-ol0kdg-MuiButtonBase-root-MuiAccordionSummary-root"
-                                id="panel-2026-04-28T10:00:00.000Z - utils-header"
+                                id="panel-2026-04-28T12:00:00.000Z - utils-header"
                                 tabindex="0"
                                 type="button"
                               >
@@ -433,9 +433,9 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                   class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
                                 >
                                   <div
-                                    aria-labelledby="panel-2026-04-28T10:00:00.000Z - utils-header"
+                                    aria-labelledby="panel-2026-04-28T12:00:00.000Z - utils-header"
                                     class="MuiAccordion-region css-at4ued-MuiAccordion-region"
-                                    id="panel-2026-04-28T10:00:00.000Z - utils-content"
+                                    id="panel-2026-04-28T12:00:00.000Z - utils-content"
                                     role="region"
                                   >
                                     <div
@@ -521,7 +521,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:03 - INFO
+                                                              28/04/2026, 14:23:03 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -540,7 +540,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:03 - INFO
+                                                              28/04/2026, 14:23:03 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -559,7 +559,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:03 - INFO
+                                                              28/04/2026, 14:23:03 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -578,7 +578,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:03 - INFO
+                                                              28/04/2026, 14:23:03 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -597,7 +597,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:03 - INFO
+                                                              28/04/2026, 14:23:03 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -616,7 +616,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:03 - INFO
+                                                              28/04/2026, 14:23:03 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -635,7 +635,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:01 - INFO
+                                                              28/04/2026, 14:23:01 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -654,7 +654,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:01 - INFO
+                                                              28/04/2026, 14:23:01 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -673,7 +673,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:01 - INFO
+                                                              28/04/2026, 14:23:01 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -692,7 +692,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:01 - INFO
+                                                              28/04/2026, 14:23:01 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -711,7 +711,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:01 - INFO
+                                                              28/04/2026, 14:23:01 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -747,10 +747,10 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                               class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
                             >
                               <button
-                                aria-controls="panel-2026-04-28T10:00:00.000Z - -content"
+                                aria-controls="panel-2026-04-28T12:00:00.000Z - -content"
                                 aria-expanded="true"
                                 class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-ol0kdg-MuiButtonBase-root-MuiAccordionSummary-root"
-                                id="panel-2026-04-28T10:00:00.000Z - -header"
+                                id="panel-2026-04-28T12:00:00.000Z - -header"
                                 tabindex="0"
                                 type="button"
                               >
@@ -791,9 +791,9 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                   class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
                                 >
                                   <div
-                                    aria-labelledby="panel-2026-04-28T10:00:00.000Z - -header"
+                                    aria-labelledby="panel-2026-04-28T12:00:00.000Z - -header"
                                     class="MuiAccordion-region css-at4ued-MuiAccordion-region"
-                                    id="panel-2026-04-28T10:00:00.000Z - -content"
+                                    id="panel-2026-04-28T12:00:00.000Z - -content"
                                     role="region"
                                   >
                                     <div
@@ -879,7 +879,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:13:00 - INFO
+                                                              28/04/2026, 14:13:00 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -915,10 +915,10 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                               class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
                             >
                               <button
-                                aria-controls="panel-2026-04-28T10:00:00.000Z - docker_utils-content"
+                                aria-controls="panel-2026-04-28T12:00:00.000Z - docker_utils-content"
                                 aria-expanded="true"
                                 class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-ol0kdg-MuiButtonBase-root-MuiAccordionSummary-root"
-                                id="panel-2026-04-28T10:00:00.000Z - docker_utils-header"
+                                id="panel-2026-04-28T12:00:00.000Z - docker_utils-header"
                                 tabindex="0"
                                 type="button"
                               >
@@ -959,9 +959,9 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                   class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
                                 >
                                   <div
-                                    aria-labelledby="panel-2026-04-28T10:00:00.000Z - docker_utils-header"
+                                    aria-labelledby="panel-2026-04-28T12:00:00.000Z - docker_utils-header"
                                     class="MuiAccordion-region css-at4ued-MuiAccordion-region"
-                                    id="panel-2026-04-28T10:00:00.000Z - docker_utils-content"
+                                    id="panel-2026-04-28T12:00:00.000Z - docker_utils-content"
                                     role="region"
                                   >
                                     <div
@@ -1047,7 +1047,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:13:00 - INFO
+                                                              28/04/2026, 13:13:00 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1066,7 +1066,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:13:00 - INFO
+                                                              28/04/2026, 13:13:00 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1085,7 +1085,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:13:00 - SUCCESS
+                                                              28/04/2026, 13:13:00 - SUCCESS
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1104,7 +1104,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:59 - INFO
+                                                              28/04/2026, 13:12:59 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1123,7 +1123,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:49 - INFO
+                                                              28/04/2026, 13:12:49 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1142,7 +1142,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:49 - INFO
+                                                              28/04/2026, 13:12:49 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1161,7 +1161,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:49 - INFO
+                                                              28/04/2026, 13:12:49 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1180,7 +1180,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:49 - INFO
+                                                              28/04/2026, 13:12:49 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1199,7 +1199,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:44 - INFO
+                                                              28/04/2026, 13:12:44 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1218,7 +1218,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:44 - INFO
+                                                              28/04/2026, 13:12:44 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1237,7 +1237,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:43 - INFO
+                                                              28/04/2026, 13:12:43 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1256,7 +1256,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:43 - INFO
+                                                              28/04/2026, 13:12:43 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1275,7 +1275,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:43 - INFO
+                                                              28/04/2026, 13:12:43 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1369,7 +1369,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:42:09 - INFO
+                                                              28/04/2026, 09:42:09 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1388,7 +1388,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:42:09 - INFO
+                                                              28/04/2026, 09:42:09 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1407,7 +1407,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:42:09 - SUCCESS
+                                                              28/04/2026, 09:42:09 - SUCCESS
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1426,7 +1426,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:42:09 - INFO
+                                                              28/04/2026, 09:42:09 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1445,7 +1445,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:58 - INFO
+                                                              28/04/2026, 09:41:58 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1464,7 +1464,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:58 - WARNING
+                                                              28/04/2026, 09:41:58 - WARNING
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1483,7 +1483,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:58 - INFO
+                                                              28/04/2026, 09:41:58 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1502,7 +1502,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:58 - INFO
+                                                              28/04/2026, 09:41:58 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1521,7 +1521,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:53 - INFO
+                                                              28/04/2026, 09:41:53 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1540,7 +1540,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:53 - INFO
+                                                              28/04/2026, 09:41:53 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1559,7 +1559,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:53 - INFO
+                                                              28/04/2026, 09:41:53 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1578,7 +1578,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:53 - INFO
+                                                              28/04/2026, 09:41:53 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1597,7 +1597,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:53 - INFO
+                                                              28/04/2026, 09:41:53 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -1641,10 +1641,10 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
               class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
             >
               <button
-                aria-controls="panel-2026-04-27T10:00:00.000Z-content"
+                aria-controls="panel-2026-04-27T12:00:00.000Z-content"
                 aria-expanded="false"
                 class="MuiButtonBase-root MuiAccordionSummary-root MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
-                id="panel-2026-04-27T10:00:00.000Z-header"
+                id="panel-2026-04-27T12:00:00.000Z-header"
                 tabindex="0"
                 type="button"
               >
@@ -1685,9 +1685,9 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                   class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
                 >
                   <div
-                    aria-labelledby="panel-2026-04-27T10:00:00.000Z-header"
+                    aria-labelledby="panel-2026-04-27T12:00:00.000Z-header"
                     class="MuiAccordion-region css-at4ued-MuiAccordion-region"
-                    id="panel-2026-04-27T10:00:00.000Z-content"
+                    id="panel-2026-04-27T12:00:00.000Z-content"
                     role="region"
                   >
                     <div
@@ -1710,10 +1710,10 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
               class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
             >
               <button
-                aria-controls="panel-2026-04-26T10:00:00.000Z-content"
+                aria-controls="panel-2026-04-26T12:00:00.000Z-content"
                 aria-expanded="false"
                 class="MuiButtonBase-root MuiAccordionSummary-root MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
-                id="panel-2026-04-26T10:00:00.000Z-header"
+                id="panel-2026-04-26T12:00:00.000Z-header"
                 tabindex="0"
                 type="button"
               >
@@ -1754,9 +1754,9 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
                   class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
                 >
                   <div
-                    aria-labelledby="panel-2026-04-26T10:00:00.000Z-header"
+                    aria-labelledby="panel-2026-04-26T12:00:00.000Z-header"
                     class="MuiAccordion-region css-at4ued-MuiAccordion-region"
-                    id="panel-2026-04-26T10:00:00.000Z-content"
+                    id="panel-2026-04-26T12:00:00.000Z-content"
                     role="region"
                   >
                     <div
@@ -2097,10 +2097,10 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
               class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
             >
               <button
-                aria-controls="panel-2026-04-28T10:00:00.000Z-content"
+                aria-controls="panel-2026-04-28T12:00:00.000Z-content"
                 aria-expanded="true"
                 class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
-                id="panel-2026-04-28T10:00:00.000Z-header"
+                id="panel-2026-04-28T12:00:00.000Z-header"
                 tabindex="0"
                 type="button"
               >
@@ -2141,9 +2141,9 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                   class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
                 >
                   <div
-                    aria-labelledby="panel-2026-04-28T10:00:00.000Z-header"
+                    aria-labelledby="panel-2026-04-28T12:00:00.000Z-header"
                     class="MuiAccordion-region css-at4ued-MuiAccordion-region"
-                    id="panel-2026-04-28T10:00:00.000Z-content"
+                    id="panel-2026-04-28T12:00:00.000Z-content"
                     role="region"
                   >
                     <div
@@ -2163,10 +2163,10 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                               class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
                             >
                               <button
-                                aria-controls="panel-2026-04-28T10:00:00.000Z - utils-content"
+                                aria-controls="panel-2026-04-28T12:00:00.000Z - utils-content"
                                 aria-expanded="true"
                                 class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
-                                id="panel-2026-04-28T10:00:00.000Z - utils-header"
+                                id="panel-2026-04-28T12:00:00.000Z - utils-header"
                                 tabindex="0"
                                 type="button"
                               >
@@ -2207,9 +2207,9 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                   class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
                                 >
                                   <div
-                                    aria-labelledby="panel-2026-04-28T10:00:00.000Z - utils-header"
+                                    aria-labelledby="panel-2026-04-28T12:00:00.000Z - utils-header"
                                     class="MuiAccordion-region css-at4ued-MuiAccordion-region"
-                                    id="panel-2026-04-28T10:00:00.000Z - utils-content"
+                                    id="panel-2026-04-28T12:00:00.000Z - utils-content"
                                     role="region"
                                   >
                                     <div
@@ -2295,7 +2295,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:03 - INFO
+                                                              28/04/2026, 14:23:03 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2314,7 +2314,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:03 - INFO
+                                                              28/04/2026, 14:23:03 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2333,7 +2333,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:03 - INFO
+                                                              28/04/2026, 14:23:03 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2352,7 +2352,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:03 - INFO
+                                                              28/04/2026, 14:23:03 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2371,7 +2371,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:03 - INFO
+                                                              28/04/2026, 14:23:03 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2390,7 +2390,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:03 - INFO
+                                                              28/04/2026, 14:23:03 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2409,7 +2409,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:01 - INFO
+                                                              28/04/2026, 14:23:01 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2428,7 +2428,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:01 - INFO
+                                                              28/04/2026, 14:23:01 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2447,7 +2447,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:01 - INFO
+                                                              28/04/2026, 14:23:01 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2466,7 +2466,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:01 - INFO
+                                                              28/04/2026, 14:23:01 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2485,7 +2485,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:23:01 - INFO
+                                                              28/04/2026, 14:23:01 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2521,10 +2521,10 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                               class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
                             >
                               <button
-                                aria-controls="panel-2026-04-28T10:00:00.000Z - -content"
+                                aria-controls="panel-2026-04-28T12:00:00.000Z - -content"
                                 aria-expanded="true"
                                 class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
-                                id="panel-2026-04-28T10:00:00.000Z - -header"
+                                id="panel-2026-04-28T12:00:00.000Z - -header"
                                 tabindex="0"
                                 type="button"
                               >
@@ -2565,9 +2565,9 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                   class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
                                 >
                                   <div
-                                    aria-labelledby="panel-2026-04-28T10:00:00.000Z - -header"
+                                    aria-labelledby="panel-2026-04-28T12:00:00.000Z - -header"
                                     class="MuiAccordion-region css-at4ued-MuiAccordion-region"
-                                    id="panel-2026-04-28T10:00:00.000Z - -content"
+                                    id="panel-2026-04-28T12:00:00.000Z - -content"
                                     role="region"
                                   >
                                     <div
@@ -2653,7 +2653,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 16:13:00 - INFO
+                                                              28/04/2026, 14:13:00 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2689,10 +2689,10 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                               class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
                             >
                               <button
-                                aria-controls="panel-2026-04-28T10:00:00.000Z - docker_utils-content"
+                                aria-controls="panel-2026-04-28T12:00:00.000Z - docker_utils-content"
                                 aria-expanded="true"
                                 class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
-                                id="panel-2026-04-28T10:00:00.000Z - docker_utils-header"
+                                id="panel-2026-04-28T12:00:00.000Z - docker_utils-header"
                                 tabindex="0"
                                 type="button"
                               >
@@ -2733,9 +2733,9 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                   class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
                                 >
                                   <div
-                                    aria-labelledby="panel-2026-04-28T10:00:00.000Z - docker_utils-header"
+                                    aria-labelledby="panel-2026-04-28T12:00:00.000Z - docker_utils-header"
                                     class="MuiAccordion-region css-at4ued-MuiAccordion-region"
-                                    id="panel-2026-04-28T10:00:00.000Z - docker_utils-content"
+                                    id="panel-2026-04-28T12:00:00.000Z - docker_utils-content"
                                     role="region"
                                   >
                                     <div
@@ -2821,7 +2821,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:13:00 - INFO
+                                                              28/04/2026, 13:13:00 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2840,7 +2840,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:13:00 - INFO
+                                                              28/04/2026, 13:13:00 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2859,7 +2859,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:13:00 - SUCCESS
+                                                              28/04/2026, 13:13:00 - SUCCESS
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2878,7 +2878,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:59 - INFO
+                                                              28/04/2026, 13:12:59 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2897,7 +2897,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:49 - INFO
+                                                              28/04/2026, 13:12:49 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2916,7 +2916,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:49 - INFO
+                                                              28/04/2026, 13:12:49 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2935,7 +2935,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:49 - INFO
+                                                              28/04/2026, 13:12:49 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2954,7 +2954,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:49 - INFO
+                                                              28/04/2026, 13:12:49 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2973,7 +2973,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:44 - INFO
+                                                              28/04/2026, 13:12:44 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -2992,7 +2992,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:44 - INFO
+                                                              28/04/2026, 13:12:44 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3011,7 +3011,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:43 - INFO
+                                                              28/04/2026, 13:12:43 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3030,7 +3030,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:43 - INFO
+                                                              28/04/2026, 13:12:43 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3049,7 +3049,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 15:12:43 - INFO
+                                                              28/04/2026, 13:12:43 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3143,7 +3143,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:42:09 - INFO
+                                                              28/04/2026, 09:42:09 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3162,7 +3162,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:42:09 - INFO
+                                                              28/04/2026, 09:42:09 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3181,7 +3181,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:42:09 - SUCCESS
+                                                              28/04/2026, 09:42:09 - SUCCESS
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3200,7 +3200,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:42:09 - INFO
+                                                              28/04/2026, 09:42:09 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3219,7 +3219,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:58 - INFO
+                                                              28/04/2026, 09:41:58 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3238,7 +3238,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:58 - WARNING
+                                                              28/04/2026, 09:41:58 - WARNING
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3257,7 +3257,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:58 - INFO
+                                                              28/04/2026, 09:41:58 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3276,7 +3276,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:58 - INFO
+                                                              28/04/2026, 09:41:58 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3295,7 +3295,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:53 - INFO
+                                                              28/04/2026, 09:41:53 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3314,7 +3314,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:53 - INFO
+                                                              28/04/2026, 09:41:53 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3333,7 +3333,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:53 - INFO
+                                                              28/04/2026, 09:41:53 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3352,7 +3352,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:53 - INFO
+                                                              28/04/2026, 09:41:53 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3371,7 +3371,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
                                                             >
-                                                              28/04/2026, 11:41:53 - INFO
+                                                              28/04/2026, 09:41:53 - INFO
                                                             </p>
                                                             <p
                                                               class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
@@ -3415,10 +3415,10 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
               class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
             >
               <button
-                aria-controls="panel-2026-04-27T10:00:00.000Z-content"
+                aria-controls="panel-2026-04-27T12:00:00.000Z-content"
                 aria-expanded="false"
                 class="MuiButtonBase-root MuiAccordionSummary-root MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
-                id="panel-2026-04-27T10:00:00.000Z-header"
+                id="panel-2026-04-27T12:00:00.000Z-header"
                 tabindex="0"
                 type="button"
               >
@@ -3459,9 +3459,9 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                   class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
                 >
                   <div
-                    aria-labelledby="panel-2026-04-27T10:00:00.000Z-header"
+                    aria-labelledby="panel-2026-04-27T12:00:00.000Z-header"
                     class="MuiAccordion-region css-at4ued-MuiAccordion-region"
-                    id="panel-2026-04-27T10:00:00.000Z-content"
+                    id="panel-2026-04-27T12:00:00.000Z-content"
                     role="region"
                   >
                     <div
@@ -3484,10 +3484,10 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
               class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
             >
               <button
-                aria-controls="panel-2026-04-26T10:00:00.000Z-content"
+                aria-controls="panel-2026-04-26T12:00:00.000Z-content"
                 aria-expanded="false"
                 class="MuiButtonBase-root MuiAccordionSummary-root MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
-                id="panel-2026-04-26T10:00:00.000Z-header"
+                id="panel-2026-04-26T12:00:00.000Z-header"
                 tabindex="0"
                 type="button"
               >
@@ -3528,9 +3528,9 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
                   class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
                 >
                   <div
-                    aria-labelledby="panel-2026-04-26T10:00:00.000Z-header"
+                    aria-labelledby="panel-2026-04-26T12:00:00.000Z-header"
                     class="MuiAccordion-region css-at4ued-MuiAccordion-region"
-                    id="panel-2026-04-26T10:00:00.000Z-content"
+                    id="panel-2026-04-26T12:00:00.000Z-content"
                     role="region"
                   >
                     <div

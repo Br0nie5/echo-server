@@ -7,6 +7,8 @@ export type LogsCronOptions = {
   WATCHED_LOGS_CATEGORIES: LogCategory[]
   TELEGRAM_CHAT_ID: string
   TELEGRAM_BASE_URL: string
+  /** Luxon zone the dates of the messages are shown in, `UTC` by default. */
+  TELEGRAM_TIMEZONE: string
 }
 
 /** Certificate and private key that make the server use HTTPS. */

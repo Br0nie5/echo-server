@@ -1,7 +1,7 @@
 import { isLogCategory, type Log } from '@echo/utilities'
 
 import type { FilesService } from '../../../shared/services/files.service.js'
-import { convertToDateFromFormat } from '../../../shared/utils/convertToDate.js'
+import { convertToDateFromISO } from '../../../shared/utils/convertToDate.js'
 import type { FailedLogLine, SelfLogsWriter } from '../selfLogs/selfLogs.writer.js'
 
 import { getDirectoriesLinkedName } from './getDirectoriesLinkedName.js'
@@ -42,7 +42,7 @@ export const parseRawLogLine = ({
   }
 
   const jobId = rawJsonLogLine.data.job_id
-  const date = convertToDateFromFormat(rawJsonLogLine.data.timestamp)?.toISOString()
+  const date = convertToDateFromISO(rawJsonLogLine.data.timestamp)?.toISOString()
   const category = isLogCategory(rawJsonLogLine.data.status)
     ? rawJsonLogLine.data.status
     : undefined

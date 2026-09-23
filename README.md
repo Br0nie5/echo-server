@@ -123,12 +123,13 @@ Container parameters are given as `<external>:<internal>` for ports and volumes.
 | `LOGS_CRON_WATCHED_LOGS_CATEGORIES`   | `ERROR,WARNING`            | Comma-separated categories that trigger a notification. Valid values: `SUCCESS`, `INFO`, `WARNING`, `ERROR`. |
 | `LOGS_CRON_TELEGRAM_CHAT_ID`          | _(empty)_                  | Telegram chat that receives notifications. |
 | `LOGS_CRON_TELEGRAM_BASE_URL`         | _(empty)_                  | Bot API base URL, `https://api.telegram.org/bot<token>`. Treat as a secret. |
+| `LOGS_CRON_TELEGRAM_TIMEZONE`         | `UTC`                      | Timezone the dates of Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`, follows daylight saving). An unknown value stops the server at startup. |
 | `TLS_CERT_PATH`                       | _(empty)_                  | Path (inside the container) to a PEM certificate. Set with `TLS_KEY_PATH` to serve HTTPS. |
 | `TLS_KEY_PATH`                        | _(empty)_                  | Path (inside the container) to the PEM private key. |
 | `SELF_LOGS_ENABLED`                   | `false`                    | When `true`, `.jsonl` lines the backend fails to parse are written to `/watched_logs/server/<SERVER_NAME>/log/parseLogFile.jsonl`, so they show up in the UI like any other log. Requires a writable sub-mount, see Volumes below. |
 | `SELF_LOGS_RETENTION_DAYS`            | `10`                       | Self-log lines older than this many days are pruned once at each server start. |
 
-The Telegram job only starts when all four `LOGS_CRON_*` variables are set and valid. Otherwise it is silently disabled.
+The Telegram job only starts when the four required `LOGS_CRON_*` variables (all but `LOGS_CRON_TELEGRAM_TIMEZONE`) are set and valid. Otherwise it is silently disabled.
 
 ### Volumes
 
@@ -143,13 +144,13 @@ The Telegram job only starts when all four `LOGS_CRON_*` variables are set and v
 Echo reads every `.jsonl` file under the logs directory. Each line must be one JSON object with exactly these fields:
 
 ```json
-{"job_id":1,"timestamp":"2026-09-19 16:41:09.669","status":"INFO","message":"Log file has been successfully set up."}
+{"job_id":1,"timestamp":"2026-09-19T14:41:09.669Z","status":"INFO","message":"Log file has been successfully set up."}
 ```
 
 | Field       | Type   | Notes |
 | ----------- | ------ | ----- |
 | `job_id`    | number | Identifier of the run/job that produced the line. |
-| `timestamp` | string | Format `yyyy-MM-dd HH:mm:ss.SSS`. **Interpreted as Europe/Paris time.** |
+| `timestamp` | string | ISO 8601, e.g. `2026-09-19T14:41:09.669Z` (`date -u +'%Y-%m-%dT%H:%M:%S.%3NZ'`). Read as UTC when it carries no offset. Any other format (including the former `yyyy-MM-dd HH:mm:ss.SSS`) makes the line unparsable. |
 | `status`    | string | One of `SUCCESS`, `INFO`, `WARNING`, `ERROR`. |
 | `message`   | string | Free text. |
 
@@ -193,9 +194,10 @@ environment:
   - LOGS_CRON_WATCHED_LOGS_CATEGORIES=ERROR,WARNING
   - LOGS_CRON_TELEGRAM_CHAT_ID=123456789
   - LOGS_CRON_TELEGRAM_BASE_URL=https://api.telegram.org/bot<token>
+  - LOGS_CRON_TELEGRAM_TIMEZONE=UTC+2 # optional, UTC by default
 ```
 
-On each run, Echo sends the matching logs written since the previous run. The first run only records a checkpoint (in `/app/data/last_logs_check.json`) and sends nothing. Messages are capped at Telegram's 4096 characters; overflow is summarized as "N other logs to see inside the console". Times in messages are shown as GMT+2.
+On each run, Echo sends the matching logs written since the previous run. The first run only records a checkpoint (in `/app/data/last_logs_check.json`) and sends nothing. Messages are capped at Telegram's 4096 characters; overflow is summarized as "N other logs to see inside the console". Times in messages are shown in `LOGS_CRON_TELEGRAM_TIMEZONE` (UTC by default), labeled with their offset (e.g. `2026-01-01 12:00:00 UTC+2`).
 
 ## HTTPS
 

@@ -62,6 +62,7 @@ function mockLogsCronOptions(overrides: Partial<LogsCronOptions> = {}): LogsCron
     WATCHED_LOGS_CATEGORIES: ['ERROR', 'WARNING'],
     TELEGRAM_CHAT_ID: 'chat-123',
     TELEGRAM_BASE_URL: 'https://api.telegram.org/bot-fake',
+    TELEGRAM_TIMEZONE: 'UTC',
     ...overrides
   }
 }

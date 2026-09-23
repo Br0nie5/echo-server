@@ -3,6 +3,7 @@ import { isIP } from 'net'
 
 import { getDomain, isLogCategory, parseEchoEnv } from '@echo/utilities'
 import dotenv from 'dotenv'
+import { Info } from 'luxon'
 import cron from 'node-cron'
 
 import type { EchoBackEnv, LogsCronOptions, TlsOptions } from '../types/echoBackEnv.js'
@@ -86,7 +87,20 @@ const parseTlsOptions = (
   }
 }
 
-/** Cron settings, or `undefined` (cron disabled) unless all of them are present and valid. Unknown watched categories are ignored. */
+/** Parses `LOGS_CRON_TELEGRAM_TIMEZONE`, defaulting to `UTC` when unset. Accepts a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`). Throws on an unknown zone. */
+const parseTelegramTimezone = (raw: string | undefined): string => {
+  if (raw === undefined || raw === '') {
+    return 'UTC'
+  }
+  // Luxon only knows fixed offsets as `UTC±h`, so `GMT±h` is read as its alias.
+  const timezone = raw.trim().replace(/^GMT/i, 'UTC')
+  if (!Info.normalizeZone(timezone)?.isValid) {
+    throw new Error(`Invalid LOGS_CRON_TELEGRAM_TIMEZONE: ${raw}`)
+  }
+  return timezone
+}
+
+/** Cron settings, or `undefined` (cron disabled) unless all the required ones are present and valid. Unknown watched categories are ignored. Throws on an invalid `LOGS_CRON_TELEGRAM_TIMEZONE`. */
 const parseLogsCronOptions = (processEnv: NodeJS.ProcessEnv): LogsCronOptions | undefined => {
   const LOGS_CRON_SCHEDULE_REGEX = processEnv.LOGS_CRON_SCHEDULE_REGEX
   const WATCHED_LOGS_CATEGORIES_RAW = processEnv.LOGS_CRON_WATCHED_LOGS_CATEGORIES
@@ -112,7 +126,8 @@ const parseLogsCronOptions = (processEnv: NodeJS.ProcessEnv): LogsCronOptions | 
     LOGS_CRON_SCHEDULE_REGEX,
     WATCHED_LOGS_CATEGORIES,
     TELEGRAM_CHAT_ID,
-    TELEGRAM_BASE_URL
+    TELEGRAM_BASE_URL,
+    TELEGRAM_TIMEZONE: parseTelegramTimezone(processEnv.LOGS_CRON_TELEGRAM_TIMEZONE)
   }
 }
 

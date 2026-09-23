@@ -1,26 +1,10 @@
 import { DateTime } from 'luxon'
 
-/** Parses `dateStr` with the first matching Luxon format, read as Europe/Paris time. `undefined` if none matches. */
-export const convertToDateFromFormat = (
-  dateStr: string,
-  formats = ['yyyy-MM-dd HH:mm:ss.SSS']
-): Date | undefined => {
-  for (const format of formats) {
-    const parsedDate = DateTime.fromFormat(dateStr, format, { zone: 'Europe/Paris' })
-    if (parsedDate.isValid) {
-      return parsedDate.toJSDate()
-    }
-  }
-
-  return undefined
-}
-
-/** Parses an ISO date, read as Europe/Paris time when it carries no offset. `undefined` if invalid. */
+/** Parses an ISO date, read as UTC when it carries no offset. `undefined` if invalid. */
 export const convertToDateFromISO = (dateStr: string): Date | undefined => {
-  const parsedDate = DateTime.fromISO(dateStr, { zone: 'Europe/Paris' })
+  const parsedDate = DateTime.fromISO(dateStr, { zone: 'utc' })
   return parsedDate.isValid ? parsedDate.toJSDate() : undefined
 }
 
-/** Formats `date` (now, by default) the same way log timestamps are read: `'yyyy-MM-dd HH:mm:ss.SSS'`, Europe/Paris time. */
-export const formatDateForLog = (date: Date = new Date()): string =>
-  DateTime.fromJSDate(date).setZone('Europe/Paris').toFormat('yyyy-MM-dd HH:mm:ss.SSS')
+/** Formats `date` (now, by default) the same way the log scripts write timestamps: ISO 8601 in UTC (`'yyyy-MM-ddTHH:mm:ss.SSSZ'`). */
+export const formatDateForLog = (date: Date = new Date()): string => date.toISOString()
