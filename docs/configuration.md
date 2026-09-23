@@ -56,7 +56,7 @@ The auth cookie is named `<hostname>_access_token`. Its domain and flags come fr
 | `localhost` or an IP address | not set | no |
 | a hostname, e.g. `echo.example.com` | that hostname | yes |
 
-Other flags are fixed: `httpOnly`, `sameSite=lax`, `path=/`, max age 24 hours. Because `secure` is set for real hostnames, browsers will only send the cookie over HTTPS.
+Other flags are fixed: `httpOnly`, `sameSite=lax`, `path=/`, max age 24 hours. Because `secure` is set for real hostname, browsers will only send the cookie over HTTPS.
 
 ## Frontend runtime configuration
 

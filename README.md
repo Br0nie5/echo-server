@@ -74,7 +74,7 @@ services:
     volumes:
       - /path/to/your/logs:/watched_logs:ro
       # Required if SELF_LOGS_ENABLED=true: a writable sub-mount, the rest of /watched_logs stays read-only.
-      # Docker mounts nested inside a read-only mount need their mountpoint to already exist in the
+      # Docker mounts nested inside a read-only mount need their mount point to already exist in the
       # read-only source, so first run: mkdir -p /path/to/your/logs/server
       # - /path/to/echo/self-logs:/watched_logs/server
       - /path/to/echo/data:/app/data
@@ -98,7 +98,7 @@ docker run -d \
   ghcr.io/br0nie5/echo:latest
 ```
 
-If you enable `SELF_LOGS_ENABLED` (see below), also add `-e SELF_LOGS_ENABLED=true` and a writable sub-mount: `-v /path/to/echo/self-logs:/watched_logs/server`. First run `mkdir -p /path/to/your/logs/server` on the host — Docker can't create a mountpoint nested inside an already-read-only mount, so that directory must exist in the read-only source before the container starts, or it will fail with a "read-only file system" error.
+If you enable `SELF_LOGS_ENABLED` (see below), also add `-e SELF_LOGS_ENABLED=true` and a writable sub-mount: `-v /path/to/echo/self-logs:/watched_logs/server`. First run `mkdir -p /path/to/your/logs/server` on the host — Docker can't create a mount point nested inside an already-read-only mount, so that directory must exist in the read-only source before the container starts, or it will fail with a "read-only file system" error.
 
 ## Parameters
 
@@ -135,7 +135,7 @@ The Telegram job only starts when all four `LOGS_CRON_*` variables are set and v
 | Parameter        | Function |
 | ---------------- | -------- |
 | `/watched_logs`  | The directory containing your `.jsonl` logs (subdirectories are scanned). Read-only (`:ro`) is enough. |
-| `/watched_logs/server` | Optional, only needed when `SELF_LOGS_ENABLED=true`: a writable sub-mount for the backend's own self-logs, so the rest of `/watched_logs` can stay read-only. Docker needs its mountpoint to already exist in the read-only source, so first create a `server` directory inside whatever host directory you mount at `/watched_logs` (e.g. `mkdir -p /path/to/your/logs/server`) before starting the container. |
+| `/watched_logs/server` | Optional, only needed when `SELF_LOGS_ENABLED=true`: a writable sub-mount for the backend's own self-logs, so the rest of `/watched_logs` can stay read-only. Docker needs its mount point to already exist in the read-only source, so first create a `server` directory inside whatever host directory you mount at `/watched_logs` (e.g. `mkdir -p /path/to/your/logs/server`) before starting the container. |
 | `/app/data`      | Persistent state: `users.db` (SQLite, hashed passwords) and `last_logs_check.json` (Telegram checkpoint). Without this volume, the admin account is lost when the container is recreated. |
 
 ## Log file format
@@ -195,7 +195,7 @@ environment:
   - LOGS_CRON_TELEGRAM_BASE_URL=https://api.telegram.org/bot<token>
 ```
 
-On each run, Echo sends the matching logs written since the previous run. The first run only records a checkpoint (in `/app/data/last_logs_check.json`) and sends nothing. Messages are capped at Telegram's 4096 characters; overflow is summarised as "N other logs to see inside the console". Times in messages are shown as GMT+2.
+On each run, Echo sends the matching logs written since the previous run. The first run only records a checkpoint (in `/app/data/last_logs_check.json`) and sends nothing. Messages are capped at Telegram's 4096 characters; overflow is summarized as "N other logs to see inside the console". Times in messages are shown as GMT+2.
 
 ## HTTPS
 
