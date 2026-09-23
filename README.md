@@ -144,7 +144,7 @@ The Telegram job only starts when the four required `LOGS_CRON_*` variables (all
 Echo reads every `.jsonl` file under the logs directory. Each line must be one JSON object with exactly these fields:
 
 ```json
-{"job_id":1,"timestamp":"2026-09-19T14:41:09.669Z","status":"INFO","message":"Log file has been successfully set up."}
+{"job_id":1,"timestamp":"2026-09-19T14:41:09.669Z","status":"INFO","message":"Log file has been successfully set up.","call_file":"rotate_logs.sh","call_line":12}
 ```
 
 | Field       | Type   | Notes |
@@ -153,6 +153,8 @@ Echo reads every `.jsonl` file under the logs directory. Each line must be one J
 | `timestamp` | string | ISO 8601, e.g. `2026-09-19T14:41:09.669Z` (`date -u +'%Y-%m-%dT%H:%M:%S.%3NZ'`). Read as UTC when it carries no offset. Any other format (including the former `yyyy-MM-dd HH:mm:ss.SSS`) makes the line unparsable. |
 | `status`    | string | One of `SUCCESS`, `INFO`, `WARNING`, `ERROR`. |
 | `message`   | string | Free text. |
+| `call_file` | string | Name of the file that emitted the line, e.g. `rotate_logs.sh`. |
+| `call_line` | integer | Line number in `call_file` that emitted the line. |
 
 Lines that are not valid JSON, do not match this shape, have an unknown `status`, or have an unparsable timestamp are skipped without error (unless `SELF_LOGS_ENABLED=true`, see below).
 
@@ -169,7 +171,7 @@ The file name (without its extension) is shown as the log source.
 
 Set `SELF_LOGS_ENABLED=true` to have the backend report the `.jsonl` lines it fails to parse as regular log entries, so they show up in the UI instead of only in the container's own logs. Each failing line becomes a `WARNING` entry in group `<SERVER_NAME>`, source `parseLogFile`, at `/watched_logs/server/<SERVER_NAME>/log/parseLogFile.jsonl`. This needs a writable sub-mount (see Volumes above, including the one-time `mkdir -p .../server` step) since `/watched_logs` is otherwise recommended read-only. All entries written during one server run share the same `job_id`; entries older than `SELF_LOGS_RETENTION_DAYS` (default `10`) are pruned once at each start.
 
-Since every request re-scans and re-parses all `.jsonl` files, a line that still fails to parse would otherwise be reported again on every request. To avoid that, each entry also carries `call_file` (the source file name) and `call_line` (the line's position, 1-based, among the non-blank lines of that file) alongside the standard fields; a failure already reported with the same `call_file`, `call_line` and message is not written again, as long as its entry hasn't since been pruned by `SELF_LOGS_RETENTION_DAYS`.
+Since every request re-scans and re-parses all `.jsonl` files, a line that still fails to parse would otherwise be reported again on every request. To avoid that, each entry's `call_file` is the name of the log file the failing line comes from, and its `call_line` is that line's position (1-based, among the non-blank lines of that file); a failure already reported with the same `call_file`, `call_line` and message is not written again, as long as its entry hasn't since been pruned by `SELF_LOGS_RETENTION_DAYS`.
 
 ## Authentication
 

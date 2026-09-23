@@ -42,7 +42,9 @@ Each returned log:
   "fileName": "prune",
   "jobId": 1,
   "category": "INFO",
-  "message": "Starting rotate_logs script."
+  "message": "Starting rotate_logs script.",
+  "callFile": "prune.sh",
+  "callLine": 12
 }
 ```
 
