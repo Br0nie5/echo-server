@@ -15,6 +15,6 @@ export interface Log {
   jobId: number
   category: LogCategory
   message: string
-  callFile?: string
-  callLine?: number
+  callFile: string
+  callLine: number
 }

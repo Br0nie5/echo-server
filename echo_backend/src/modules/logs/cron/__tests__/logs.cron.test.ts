@@ -19,8 +19,10 @@ function mockLog(overrides: Partial<Log> = {}): Log {
     jobId: 1,
     date: '2026-01-01T10:00:00.000Z',
     category: 'ERROR',
-    fileName: 'worker.ts',
+    fileName: 'worker',
     message: 'Something broke',
+    callFile: 'worker.sh',
+    callLine: 1,
     ...overrides
   }
 }

@@ -27,7 +27,7 @@ const logMock: Log = {
   category: LogCategory.INFO,
   message: 'some message',
   groupName: 'group',
-  callFile: 'file.jsonl',
+  callFile: 'file.sh',
   callLine: 1
 }
 

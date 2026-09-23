@@ -7,20 +7,9 @@ describe('RawJsonLogLineSchema', () => {
     const rawLine = {
       job_id: 1,
       timestamp: '2024-05-12T14:30:00.386Z',
-      status: 'INFO',
-      message: 'Ok'
-    }
-
-    expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeTruthy()
-  })
-
-  it('should accept a valid raw JSON log line with call_file and call_line', () => {
-    const rawLine = {
-      job_id: 1,
-      timestamp: '2024-05-12T14:30:00.386Z',
       status: 'WARNING',
       message: 'Ok',
-      call_file: 'check_logs.jsonl',
+      call_file: 'check_logs.sh',
       call_line: 4
     }
 
@@ -38,7 +27,9 @@ describe('RawJsonLogLineSchema', () => {
       job_id: '1',
       timestamp: '2024-05-12T14:30:00.386Z',
       status: 'INFO',
-      message: 'Ok'
+      message: 'Ok',
+      call_file: 'check_logs.sh',
+      call_line: 4
     }
 
     expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeFalsy()

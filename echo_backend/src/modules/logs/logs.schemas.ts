@@ -18,6 +18,6 @@ export const LogSchema = {
     callFile: { type: 'string' },
     callLine: { type: 'integer' }
   },
-  required: ['id', 'date', 'fileName', 'jobId', 'category', 'message'],
+  required: ['id', 'date', 'fileName', 'jobId', 'category', 'message', 'callFile', 'callLine'],
   additionalProperties: false
 } as const

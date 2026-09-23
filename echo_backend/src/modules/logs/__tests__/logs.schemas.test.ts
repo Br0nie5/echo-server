@@ -39,14 +39,14 @@ describe('LogSchema', () => {
 
   it('should accept a valid log object', () => {
     const log = {
-      id: '0 [myGroup] [file1.log] [123] Something happened',
+      id: '0 [myGroup] [file1] [123] Something happened',
       date: new Date().toISOString(),
       groupName: 'myGroup',
-      fileName: 'file1.log',
+      fileName: 'file1',
       jobId: 123,
       category: 'INFO',
       message: 'Something happened',
-      callFile: 'file1.log.jsonl',
+      callFile: 'file1.sh',
       callLine: 4
     }
     expect(validateLog(log)).toBe(true)
@@ -56,10 +56,10 @@ describe('LogSchema', () => {
     const log = {
       id: '1',
       date: new Date().toISOString(),
-      fileName: 'file1.log',
+      fileName: 'file1',
       jobId: 1,
       category: 'INFO',
-      callFile: 'file1.log.jsonl',
+      callFile: 'file1.sh',
       callLine: 4
       // missing 'message'
     }
@@ -72,11 +72,11 @@ describe('LogSchema', () => {
       id: '1',
       date: new Date().toISOString(),
       groupName: 'grp',
-      fileName: 'file1.log',
+      fileName: 'file1',
       jobId: 1,
       category: 'INVALID',
       message: 'oops',
-      callFile: 'file1.log.jsonl',
+      callFile: 'file1.sh',
       callLine: 4
     }
     expect(validateLog(log)).toBe(false)
@@ -88,11 +88,11 @@ describe('LogSchema', () => {
       id: '1',
       date: new Date().toISOString(),
       groupName: 'grp',
-      fileName: 'file1.log',
+      fileName: 'file1',
       jobId: 1,
       category: 'INFO',
       message: 'test',
-      callFile: 'file1.log.jsonl',
+      callFile: 'file1.sh',
       callLine: 4,
       extra: 'not allowed'
     }

@@ -31,7 +31,7 @@ describe('LogsController.getLogs', () => {
     {
       id: '1',
       date: new Date().toISOString(),
-      fileName: 'f.log',
+      fileName: 'f',
       groupName: 'grp',
       jobId: 1,
       category: 'INFO',

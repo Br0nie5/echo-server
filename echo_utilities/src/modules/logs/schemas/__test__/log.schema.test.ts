@@ -12,7 +12,7 @@ const validLog: Log = {
   jobId: 66,
   category: LogCategory.INFO,
   message: 'Finished update_docker_container script.',
-  callFile: 'update_docker_container.jsonl',
+  callFile: 'update_docker_container.sh',
   callLine: 12
 }
 

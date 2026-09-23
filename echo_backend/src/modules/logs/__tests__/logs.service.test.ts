@@ -23,7 +23,9 @@ describe('LogsService.getAllLastLogs', () => {
       fileName: 'f',
       id: '1',
       message: 'old log',
-      groupName: 'grp'
+      groupName: 'grp',
+      callFile: 'f.sh',
+      callLine: 1
     }
     const log2: Log = {
       date: recentDate.toISOString(),
@@ -32,7 +34,9 @@ describe('LogsService.getAllLastLogs', () => {
       fileName: 'f',
       id: '2',
       message: 'recent log',
-      groupName: 'grp'
+      groupName: 'grp',
+      callFile: 'f.sh',
+      callLine: 2
     }
 
     mockFindAll.mockResolvedValue([log1, log2])

@@ -14,7 +14,7 @@ const mockLog = (id: string): Log => ({
   jobId: 1,
   category: 'INFO',
   message: id,
-  callFile: 'f.jsonl',
+  callFile: 'f.sh',
   callLine: 1
 })
 

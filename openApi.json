@@ -119,7 +119,9 @@
           "fileName",
           "jobId",
           "category",
-          "message"
+          "message",
+          "callFile",
+          "callLine"
         ],
         "additionalProperties": false
       }

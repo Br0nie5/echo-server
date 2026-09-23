@@ -6,12 +6,12 @@ import type { SelfLogsWriter } from '../../selfLogs/selfLogs.writer.js'
 import { parseLogFile, parseRawLogLine, parseRawLogs } from '../parseLogFile.js'
 
 describe('parseRawLogLine', () => {
-  const baseProps = { groupName: 'myGroup', fileName: 'file1.jsonl' }
+  const baseProps = { groupName: 'myGroup', fileName: 'file1' }
 
   it('should parse a valid log line', () => {
     const result = parseRawLogLine({
       rawLogLine:
-        '{"job_id":123,"timestamp":"2024-05-12T14:30:00.386Z","status":"INFO","message":"Something happened","call_file":"check_logs.jsonl","call_line":4}',
+        '{"job_id":123,"timestamp":"2024-05-12T14:30:00.386Z","status":"INFO","message":"Something happened","call_file":"check_logs.sh","call_line":4}',
       rawLogIndex: 0,
       ...baseProps
     }) as Log
@@ -21,34 +21,11 @@ describe('parseRawLogLine', () => {
       message: 'Something happened',
       category: LogCategory.INFO,
       groupName: 'myGroup',
-      fileName: 'file1.jsonl',
-      callFile: 'check_logs.jsonl',
+      fileName: 'file1',
+      callFile: 'check_logs.sh',
       callLine: 4
     })
     expect(result.date).toBe('2024-05-12T14:30:00.386Z')
-  })
-
-  it('should return undefined for a timestamp in the old `yyyy-MM-dd HH:mm:ss.SSS` format', () => {
-    const result = parseRawLogLine({
-      rawLogLine:
-        '{"job_id":123,"timestamp":"2024-05-12 14:30:00.386","status":"INFO","message":"Something happened"}',
-      rawLogIndex: 0,
-      ...baseProps
-    })
-
-    expect(result).toBeUndefined()
-  })
-
-  it('should leave callFile and callLine undefined when absent', () => {
-    const result = parseRawLogLine({
-      rawLogLine:
-        '{"job_id":123,"timestamp":"2024-05-12T14:30:00.386Z","status":"INFO","message":"Something happened"}',
-      rawLogIndex: 0,
-      ...baseProps
-    }) as Log
-
-    expect(result.callFile).toBeUndefined()
-    expect(result.callLine).toBeUndefined()
   })
 
   it('should return undefined for malformed log line', () => {
@@ -63,7 +40,7 @@ describe('parseRawLogLine', () => {
   it('should return undefined for an invalid category', () => {
     const result = parseRawLogLine({
       rawLogLine:
-        '{"job_id":1,"timestamp":"2024-05-12T14:30:00.012Z","status":"INVALID","message":"Bad category"}',
+        '{"job_id":1,"timestamp":"2024-05-12T14:30:00.012Z","status":"INVALID","message":"Bad category","call_file":"f.sh","call_line":1}',
       rawLogIndex: 0,
       ...baseProps
     })
@@ -73,7 +50,7 @@ describe('parseRawLogLine', () => {
   it('should return undefined for invalid date', () => {
     const result = parseRawLogLine({
       rawLogLine:
-        '{"job_id":1,"timestamp":"9999-99-99T25:61:61.999Z","status":"INFO","message":"Impossible date"}',
+        '{"job_id":1,"timestamp":"9999-99-99T25:61:61.999Z","status":"INFO","message":"Impossible date","call_file":"f.sh","call_line":1}',
       rawLogIndex: 0,
       ...baseProps
     })
@@ -95,11 +72,11 @@ describe('parseRawLogs', () => {
   it('should separate valid logs from the raw lines that failed to parse', () => {
     const result = parseRawLogs({
       rawLogs: [
-        '{"job_id":1,"timestamp":"2024-05-12T14:30:00.123Z","status":"INFO","message":"Ok log"}',
+        '{"job_id":1,"timestamp":"2024-05-12T14:30:00.123Z","status":"INFO","message":"Ok log","call_file":"f.sh","call_line":1}',
         'bad line',
-        '{"job_id":2,"timestamp":"2024-05-12T15:30:00.456Z","status":"ERROR","message":"Another log"}'
+        '{"job_id":2,"timestamp":"2024-05-12T15:30:00.456Z","status":"ERROR","message":"Another log","call_file":"f.sh","call_line":3}'
       ],
-      fileName: 'f.log.jsonl',
+      fileName: 'f',
       groupName: 'grp'
     })
 
@@ -112,10 +89,10 @@ describe('parseRawLogs', () => {
 
 describe('parseLogFile', () => {
   const mockedLogs = [
-    '{"job_id":1,"timestamp":"2024-05-12T14:30:00.001Z","status":"INFO","message":"First log","call_file":"file.jsonl","call_line":1}',
-    '{"job_id":2,"timestamp":"2024-05-12T15:00:00.145Z","status":"ERROR","message":"Second [Test] log","call_file":"file.jsonl","call_line":2}',
-    '{"job_id":3,"timestamp":"2024-05-12 14:30:00.000","status":"INFO","message":"Old timestamp format"}',
-    '{"job_id":3,"timestamp":"2024-05-12T14:33:00.334Z","status":"INFO","message":"Log with a\\nline breaker","call_file":"file.jsonl","call_line":4}',
+    '{"job_id":1,"timestamp":"2024-05-12T14:30:00.001Z","status":"INFO","message":"First log","call_file":"file.sh","call_line":1}',
+    '{"job_id":2,"timestamp":"2024-05-12T15:00:00.145Z","status":"ERROR","message":"Second [Test] log","call_file":"file.sh","call_line":2}',
+    '{"job_id":3,"timestamp":"2024-05-12 14:30:00.000","status":"INFO","message":"Old timestamp format","call_file":"file.sh","call_line":3}',
+    '{"job_id":3,"timestamp":"2024-05-12T14:33:00.334Z","status":"INFO","message":"Log with a\\nline breaker","call_file":"file.sh","call_line":4}',
     'invalid line'
   ]
 
@@ -158,7 +135,7 @@ describe('parseLogFile', () => {
       message: 'First log',
       fileName: 'myFile',
       groupName: 'utils',
-      callFile: 'file.jsonl',
+      callFile: 'file.sh',
       callLine: 1
     })
 
@@ -166,7 +143,7 @@ describe('parseLogFile', () => {
       jobId: 2,
       category: LogCategory.ERROR,
       message: 'Second [Test] log',
-      callFile: 'file.jsonl',
+      callFile: 'file.sh',
       callLine: 2
     })
 
@@ -174,7 +151,7 @@ describe('parseLogFile', () => {
       jobId: 3,
       category: LogCategory.INFO,
       message: 'Log with a\nline breaker',
-      callFile: 'file.jsonl',
+      callFile: 'file.sh',
       callLine: 4
     })
 

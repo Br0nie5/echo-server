@@ -14,8 +14,10 @@ function mockLog(overrides: Partial<Log> = {}): Log {
     jobId: 1,
     date: '2026-01-01T10:00:00.000Z',
     category: 'ERROR',
-    fileName: 'worker.ts',
+    fileName: 'worker',
     message: 'Something broke',
+    callFile: 'worker.sh',
+    callLine: 1,
     ...overrides
   }
 }
@@ -44,13 +46,13 @@ describe('formatLogLine', () => {
   it('should format a log with its UTC date and a UTC label', () => {
     const result = formatLogLine(mockLog(), 'UTC')
 
-    expect(result).toBe('[1] [2026-01-01 10:00:00 UTC] [ERROR] - worker.ts > Something broke')
+    expect(result).toBe('[1] [2026-01-01 10:00:00 UTC] [ERROR] - worker > Something broke')
   })
 
   it('should shift the date and label it with the offset of a fixed-offset timezone', () => {
     const result = formatLogLine(mockLog(), 'UTC+2')
 
-    expect(result).toBe('[1] [2026-01-01 12:00:00 UTC+2] [ERROR] - worker.ts > Something broke')
+    expect(result).toBe('[1] [2026-01-01 12:00:00 UTC+2] [ERROR] - worker > Something broke')
   })
 
   it('should use the offset an IANA timezone has at the date of the log', () => {
@@ -80,7 +82,7 @@ describe('buildTelegramMessage', () => {
     const result = buildTelegramMessage([mockLog()], 'my-device', 'UTC')
 
     expect(result).toBe(
-      'Logs from device my-device:\n\n\n[1] [2026-01-01 10:00:00 UTC] [ERROR] - worker.ts > Something broke'
+      'Logs from device my-device:\n\n\n[1] [2026-01-01 10:00:00 UTC] [ERROR] - worker > Something broke'
     )
   })
 
