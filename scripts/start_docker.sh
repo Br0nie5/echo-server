@@ -13,13 +13,16 @@ ROOT_DIR="$(dirname "$SCRIPT_PATH")/.."
 
 cd "$ROOT_DIR"
 
-npm run build:docker
+npm run build
+docker build -t echo:dev .
 
 # Self logs need a writable /watched_logs/server. Docker can't create a mount point nested inside an
 # already read-only mount, so that directory must exist in the read-only source beforehand.
 mkdir -p ./test_logs/server
 
 docker run \
+  --rm \
+  --init \
   --name echo \
   -p 4000:4000 \
   -e SERVER_NAME="Echo" \
@@ -31,4 +34,4 @@ docker run \
   -v ./self_logs:/watched_logs/server \
   -v ./data:/app/data \
   -v ./certs:/certs:ro \
-  echo
+  echo:dev

@@ -11,7 +11,6 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "start": "npm run build && npm run start --workspace=echo_backend",
-    "build:docker": "npm run build && docker rm -f echo && docker build -t echo .",
     "start:docker": "bash scripts/start_docker.sh",
     "dev": "concurrently --names \"backend,frontend\" \"npm run dev --workspace=echo_backend\" \"npm run dev --workspace=echo_frontend\"",
     "format": "npm run format --workspaces",
