@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 
-import type { Log } from '../../types/__generated__/log.js'
-import { LogCategory } from '../../types/__generated__/logCategory.js'
-import { LogArraySchema, LogCategorySchema, LogSchema } from '../log.schema.js'
+import type { Log } from '../log.schema.js'
+import { LogArraySchema, LogSchema } from '../log.schema.js'
+import { LogCategory } from '../logCategory.schema.js'
 
 const validLog: Log = {
   id: '1',
@@ -15,18 +15,6 @@ const validLog: Log = {
   callFile: 'update_docker_container.sh',
   callLine: 12
 }
-
-describe('LogCategorySchema', () => {
-  it('should accept every LogCategory value', () => {
-    Object.values(LogCategory).forEach((category) => {
-      expect(LogCategorySchema.safeParse(category).success).toBeTruthy()
-    })
-  })
-
-  it('should reject a string that is not a LogCategory', () => {
-    expect(LogCategorySchema.safeParse('NOT_A_CATEGORY').success).toBeFalsy()
-  })
-})
 
 describe('LogSchema', () => {
   it('should accept a valid Log', () => {

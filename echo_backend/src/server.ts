@@ -23,10 +23,11 @@ import {
 } from './modules/logs/cron/logs.checkpoint.js'
 import logsCron from './modules/logs/cron/logs.cron.js'
 import { createTelegramNotifier } from './modules/logs/cron/notifications/telegram.notifier.js'
-import { createLogsController } from './modules/logs/logs.controller.js'
-import { createFileLogsRepository } from './modules/logs/logs.repository.js'
-import { logsRoutes } from './modules/logs/logs.routes.js'
-import { createLogsService, type LogsService } from './modules/logs/logs.service.js'
+import type { LogsRepository } from './modules/logs/domain/logs.repository.js'
+import { createFileLogsApi } from './modules/logs/infra/fileLogs.api.js'
+import { createFileLogsRepository } from './modules/logs/infra/fileLogs.repository.js'
+import { createLogsController } from './modules/logs/presentation/logs.controller.js'
+import { logsRoutes } from './modules/logs/presentation/logs.routes.js'
 import {
   createFileSelfLogsSessionStore,
   getNextSessionJobId,
@@ -37,7 +38,6 @@ import {
   createSelfLogsWriter
 } from './modules/logs/selfLogs/selfLogs.writer.js'
 import { EchoErrorSchema } from './shared/schemas/errors.schemas.js'
-import { createFilesService } from './shared/services/files.service.js'
 import type { EchoBackEnv } from './shared/types/echoBackEnv.js'
 import { dataDir } from './shared/utils/dataDir.js'
 import { isOriginAllowed } from './shared/utils/isOriginAllowed.js'
@@ -153,7 +153,7 @@ const registerFrontend = async (server: EchoServer, echoFrontDist: string): Prom
 const registerLogsCron = async (
   server: EchoServer,
   env: EchoBackEnv,
-  logsService: LogsService
+  logsRepository: LogsRepository
 ): Promise<void> => {
   if (env.LOGS_CRON_OPTIONS === undefined) {
     server.log.info('LOGS_CRON_OPTIONS is not set, skipping cron registration')
@@ -162,7 +162,7 @@ const registerLogsCron = async (
 
   await server.register(logsCron, {
     logsCronOptions: env.LOGS_CRON_OPTIONS,
-    logsService,
+    logsRepository,
     notifier: createTelegramNotifier(env.LOGS_CRON_OPTIONS, env.SERVER_NAME),
     checkpointStore: createFileCheckpointStore(dataDir, lastLogsCheckFile)
   })
@@ -192,8 +192,6 @@ export const buildServer = async (env: EchoBackEnv = defaultEnv): Promise<EchoSe
 
   server.addSchema(EchoErrorSchema)
 
-  const filesService = createFilesService()
-
   const selfLogsWriter = env.SELF_LOGS_ENABLED
     ? await createSelfLogsWriter({
         logsDirPath: env.LOGS_DIR_PATH,
@@ -206,12 +204,8 @@ export const buildServer = async (env: EchoBackEnv = defaultEnv): Promise<EchoSe
       })
     : createNoopSelfLogsWriter()
 
-  const fileLogsRepository = createFileLogsRepository(
-    env.LOGS_DIR_PATH,
-    filesService,
-    selfLogsWriter
-  )
-  const logsService = createLogsService(fileLogsRepository)
+  const fileLogsApi = createFileLogsApi(env.LOGS_DIR_PATH)
+  const fileLogsRepository = createFileLogsRepository(fileLogsApi, selfLogsWriter)
 
   const __filename = fileURLToPath(import.meta.url)
   const __dirname = path.dirname(__filename)
@@ -228,12 +222,12 @@ export const buildServer = async (env: EchoBackEnv = defaultEnv): Promise<EchoSe
   }
   await server.register(logsRoutes, {
     prefix: '/api',
-    controller: createLogsController(logsService),
+    controller: createLogsController(fileLogsRepository),
     hasAuthentication: env.HAS_AUTHENTICATION
   })
 
   await registerFrontend(server, path.join(__dirname, '../../echo_frontend/dist'))
-  await registerLogsCron(server, env, logsService)
+  await registerLogsCron(server, env, fileLogsRepository)
 
   return server
 }

@@ -1,4 +1,4 @@
-import type { Log } from '../types/__generated__/log.js'
+import type { Log } from '../schemas/log.schema.js'
 import type { LogSearchableKeys, LogSearchFilter } from '../types/logSearchFilter.js'
 
 /** Whether a field of the log contains `search` (already lower-cased). */

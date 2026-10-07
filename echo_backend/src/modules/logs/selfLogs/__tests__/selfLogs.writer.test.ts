@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('node:fs/promises')
 
-import { formatDateForLog } from '../../../../shared/utils/convertToDate.js'
 import { createNoopSelfLogsWriter, createSelfLogsWriter } from '../selfLogs.writer.js'
 
 const logger = { error: vi.fn() } as unknown as FastifyBaseLogger
@@ -87,13 +86,13 @@ describe('createSelfLogsWriter', () => {
   it('should prune lines older than retentionDays and keep the rest, for every jsonl file', async () => {
     const oldLine = JSON.stringify({
       job_id: 1,
-      timestamp: formatDateForLog(new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)),
+      timestamp: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
       status: 'WARNING',
       message: 'old'
     })
     const recentLine = JSON.stringify({
       job_id: 1,
-      timestamp: formatDateForLog(new Date()),
+      timestamp: new Date().toISOString(),
       status: 'WARNING',
       message: 'recent'
     })
@@ -120,7 +119,7 @@ describe('createSelfLogsWriter', () => {
   it('should write an empty file when every line has been pruned', async () => {
     const oldLine = JSON.stringify({
       job_id: 1,
-      timestamp: formatDateForLog(new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)),
+      timestamp: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
       status: 'WARNING',
       message: 'old'
     })
@@ -232,7 +231,7 @@ describe('createSelfLogsWriter', () => {
 
       const alreadyReported = JSON.stringify({
         job_id: 1,
-        timestamp: formatDateForLog(),
+        timestamp: new Date().toISOString(),
         status: 'WARNING',
         message: 'bad line',
         call_file: 'someFile',
@@ -255,7 +254,7 @@ describe('createSelfLogsWriter', () => {
 
       const alreadyReported = JSON.stringify({
         job_id: 1,
-        timestamp: formatDateForLog(),
+        timestamp: new Date().toISOString(),
         status: 'WARNING',
         message: 'bad line',
         call_file: 'someFile',
@@ -288,7 +287,7 @@ describe('createSelfLogsWriter', () => {
 
       const alreadyReported = JSON.stringify({
         job_id: 1,
-        timestamp: formatDateForLog(),
+        timestamp: new Date().toISOString(),
         status: 'WARNING',
         message: 'bad line',
         call_file: 'someFile',
@@ -311,7 +310,7 @@ describe('createSelfLogsWriter', () => {
 
       const legacyEntry = JSON.stringify({
         job_id: 1,
-        timestamp: formatDateForLog(),
+        timestamp: new Date().toISOString(),
         status: 'WARNING',
         message: 'bad line'
       })

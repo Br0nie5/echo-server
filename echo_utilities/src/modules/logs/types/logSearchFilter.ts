@@ -1,4 +1,4 @@
-import type { Log } from './__generated__/log.js'
+import type { Log } from '../schemas/log.schema.js'
 
 /** The log fields a search can target with `key:`. */
 export type LogSearchableKeys = keyof Omit<

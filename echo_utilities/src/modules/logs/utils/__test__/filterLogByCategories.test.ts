@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
-import type { Log } from '../../types/__generated__/log'
-import { LogCategory } from '../../types/__generated__/logCategory'
+import type { Log } from '../../schemas/log.schema'
+import { LogCategory } from '../../schemas/logCategory.schema'
 import { filterLogByCategories } from '../filterLogByCategories'
 
 describe('filterLogByCategories', () => {

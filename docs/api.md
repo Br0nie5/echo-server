@@ -52,4 +52,4 @@ Errors use the `EchoError` schema: `400` invalid params, `401` unauthenticated, 
 
 ## Changing the API
 
-Routes and schemas are the source of truth for the shared types. After editing a route schema, run `npm run generate:types` (see the [development guide](development.md#regenerating-shared-types)).
+Routes and schemas are the source of truth for the shared types, except for `Log`, `LogCategory` and `GetLogsParams`: their zod schemas in `@echo/utilities` are the source of truth, and both their types and the schemas of the routes are derived from them. After editing a route schema or one of these zod schemas, run `npm run generate:types` (see the [development guide](development.md#regenerating-shared-types)).

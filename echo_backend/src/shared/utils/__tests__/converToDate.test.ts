@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { convertToDateFromISO, formatDateForLog } from '../convertToDate.js'
+import { convertToDateFromISO } from '../convertToDate.js'
 
 // Dates without an offset are read as UTC, so the expectations use the UTC getters: the local
 // getters would depend on the timezone of the machine running the tests.
@@ -33,17 +33,5 @@ describe('convertToDateFromISO', () => {
   it('should return undefined for an invalid ISO string', () => {
     const result = convertToDateFromISO('not-a-date')
     expect(result).toBeUndefined()
-  })
-})
-
-describe('formatDateForLog', () => {
-  it('should format a date as an ISO string in UTC', () => {
-    const result = formatDateForLog(new Date('2024-05-12T12:30:00.123Z'))
-    expect(result).toBe('2024-05-12T12:30:00.123Z')
-  })
-
-  it('should default to the current date when none is given', () => {
-    const result = formatDateForLog()
-    expect(convertToDateFromISO(result)).toBeInstanceOf(Date)
   })
 })

@@ -1,6 +1,14 @@
 export default {
   api: {
-    input: './openApi.json',
+    input: {
+      target: './openApi.json',
+      // Log and LogCategory are derived from their zod schemas in echo_utilities: the API schemas are
+      // generated from them, not the other way round.
+      filters: {
+        mode: 'exclude',
+        schemas: ['Log', 'LogCategory']
+      }
+    },
     output: {
       mode: 'tags-split',
       target: './__generated__',

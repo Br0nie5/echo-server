@@ -13,12 +13,11 @@ export * from './modules/auth/consts.js'
 
 export * from './modules/auth/schemas/auth.schema.js'
 
-export * from './modules/logs/types/__generated__/getLogsParams.js'
-export * from './modules/logs/types/__generated__/log.js'
-export * from './modules/logs/types/__generated__/logCategory.js'
 export * from './modules/logs/types/logSearchFilter.js'
 
+export * from './modules/logs/schemas/getLogsParams.schema.js'
 export * from './modules/logs/schemas/log.schema.js'
+export * from './modules/logs/schemas/logCategory.schema.js'
 
 export * from './modules/logs/utils/filterLogByCategories.js'
 export * from './modules/logs/utils/filterLogBySearch.js'

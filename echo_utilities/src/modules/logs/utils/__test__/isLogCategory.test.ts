@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { LogCategory } from '../../types/__generated__/logCategory'
+import { LogCategory } from '../../schemas/logCategory.schema'
 import { isLogCategory } from '../isLogCategory'
 
 describe('isLogCategory', () => {

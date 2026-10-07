@@ -4,8 +4,8 @@ import path from 'node:path'
 import { LogCategory } from '@echo/utilities'
 import type { FastifyBaseLogger } from 'fastify'
 
-import { convertToDateFromISO, formatDateForLog } from '../../../shared/utils/convertToDate.js'
-import type { RawJsonLogLine } from '../utils/schemas/rawJsonLogLine.schema.js'
+import { convertToDateFromISO } from '../../../shared/utils/convertToDate.js'
+import type { RawJsonLogLine } from '../infra/dto/rawJsonLog.dto.js'
 
 import { sanitizeServerNameForPath } from './utils/sanitizeServerNameForPath.js'
 
@@ -163,7 +163,7 @@ export const createSelfLogsWriter = async ({
         const rawLines = newFailures.map(({ rawLogLine, lineIndex }) => {
           const rawJsonLogLine: RawJsonLogLine = {
             job_id: sessionJobId,
-            timestamp: formatDateForLog(),
+            timestamp: new Date().toISOString(),
             status: LogCategory.WARNING,
             message: rawLogLine,
             call_file: sourceFileName,

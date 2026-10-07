@@ -20,7 +20,7 @@ Thanks for your interest in Echo. Bug reports, ideas and pull requests are welco
 - Follow the module layout (`routes` / `controller` / `service` / `repository` / `schemas` / `utils`) described in the architecture doc.
 - Import shared code from `@echo/utilities`, never from its internal paths.
 - Read configuration through the parsed env objects, not `process.env` directly.
-- Never edit files under `__generated__/`. Change the backend route schema and run `npm run generate:types`.
+- Never edit files under `__generated__/`. Change the backend route schema (or, for `Log`, `LogCategory` and `GetLogsParams`, their zod schema in `echo_utilities/src/modules/logs/schemas/`) and run `npm run generate:types`.
 - Run `npm run arch:check`: it enforces the import boundaries above (no `shared/` → `modules/`, no cross-module imports, no cycles).
 - Keep filtering logic in `@echo/utilities` so client and server stay identical.
 

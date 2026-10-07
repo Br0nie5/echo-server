@@ -22,12 +22,12 @@ npm run lint               # eslint --fix across all workspaces
 npm run format              # prettier --write across all workspaces
 npm run test:coverage        # vitest run --coverage (100% threshold) across all workspaces
 npm run open:coverage         # open each workspace's coverage/index.html
-npm run generate:types          # regenerate @echo/utilities types from openApi.json via orval (see below)
+npm run generate:types          # regenerate openApi.json, then the @echo/utilities types from it via orval (see below)
 ```
 
 Single test file / watch mode (run inside the relevant workspace dir, e.g. `cd echo_backend`):
 ```bash
-npx vitest run src/modules/logs/logs.service.test.ts
+npx vitest run src/modules/logs/application/__tests__/getFilteredLogs.test.ts
 npx vitest --watch
 ```
 
@@ -44,18 +44,28 @@ npm run deploy:server      # multi-arch build & push to ghcr.io/br0nie5/echo:lat
 
 ### Type flow: backend → OpenAPI → shared types
 
-Types are **not** hand-written independently in each workspace. The flow is one-directional:
+The `auth` request types (`LoginRequest`, `SignUpRequest`, …) and `EchoError` are **not** hand-written. The flow is one-directional:
 
 1. Fastify routes in `echo_backend` declare JSON schemas (`*.schemas.ts`) inline in `server.route({ schema: ... })`.
 2. `scripts/export_open_api.ts` boots the server and dumps `openApi.json` at the repo root.
 3. `orval` (config in `orval.config.ts`) generates TypeScript types from `openApi.json` into a temporary `__generated__/` folder.
-4. `scripts/generate_types.sh` moves the relevant generated files into `echo_utilities/src/**/__generated__/`, fixes a known import-extension issue, then lints/formats/builds `echo_utilities`.
+4. `scripts/generate_types.sh` moves the generated files into `echo_utilities/src/**/__generated__/` (orval skips `Log` and `LogCategory`, see `filters` in `orval.config.ts`, and the `GetLogsParams` it generates is left behind: the three come from zod schemas, see below), then lints/formats/builds `echo_utilities`.
 
-Run the whole pipeline with `npm run generate:types` after changing a backend route's request/response schema. Never hand-edit files under `__generated__/`. `echo_utilities/src/index.ts` is the single barrel export — both backend and frontend import everything from `@echo/utilities`, never by reaching into its internal paths.
+Run the whole pipeline with `npm run generate:types` after changing a backend route's request/response schema or a zod schema of the logs module (see the module layout below), so `openApi.json` stays up to date. Never hand-edit files under `__generated__/`. `echo_utilities/src/index.ts` is the single barrel export — both backend and frontend import everything from `@echo/utilities`, never by reaching into its internal paths.
 
 ### Module layout convention (backend and frontend)
 
-Both `echo_backend/src/modules` and `echo_frontend/src/modules` are split by domain (`auth`, `logs`). Backend modules follow a consistent layered naming scheme per module:
+Both `echo_backend/src/modules` and `echo_frontend/src/modules` are split by domain (`auth`, `logs`).
+
+The core of the backend `logs` module is split into four layer folders (the `cron/` and `selfLogs/` sub-features are not), with imports only going `presentation → application → domain ← infra` (enforced by `npm run arch:check`):
+- `domain/` — the contracts the module needs from the outside (`logs.repository.ts`); the models (`Log`, `LogCategory`) are imported from `@echo/utilities`
+- `application/` — the business rules, one file per use case, named after it (`getFilteredLogs.ts`), which know nothing of HTTP
+- `infra/` — `*.api.ts` reads a data source, `dto/*.dto.ts` describes what it returns (with the function converting it to a model next to it), `*.repository.ts` implements a `domain/` contract with both
+- `presentation/` — `*.routes.ts`, `*.controller.ts` (the request handlers, calling into `application/`), `utils/` (pure helpers, such as the validation of the input of the handlers), and `*.schemas.ts`, the JSON schemas of the routes, derived from the zod schemas of `@echo/utilities`
+
+`Log`, `LogCategory` and `GetLogsParams` (the query of `GET /logs`) are the exception to the type flow above: each is a zod schema in `echo_utilities/src/modules/logs/schemas/` (`LogSchema`, `LogCategorySchema`, `GetLogsParamsSchema`), its single source of truth. The type is inferred from it (`z.infer`), never redeclared, and `presentation/logs.schemas.ts` converts it to the JSON schema the routes use with `z.toJSONSchema`, when the server starts: no file is generated. What a TypeScript type cannot say goes in the zod schema: `z.int()`, `.meta({ format: 'date-time' })`. `GetLogsParamsSchema` describes the query as the client sends it; `safeParseGetLogsParams` (`presentation/utils/`) validates it and turns it into what `getFilteredLogs` needs (`fromDate` as a `Date`, `logCategories` always an array). To expose another zod schema, add it to the registry of `logs.schemas.ts`.
+
+The backend `auth` module is not layered yet and follows a flat naming scheme:
 - `*.routes.ts` — Fastify route registration + JSON schema (`server.route(...)`)
 - `*.controller.ts` — request handlers, calls into the service
 - `*.service.ts` — business logic
@@ -75,7 +85,7 @@ Env vars are parsed and validated once at startup, not read ad hoc via `process.
 
 ### Log storage and parsing
 
-Logs are read directly from `.jsonl` files on disk (path from `LOGS_DIR_PATH`), not from a database — `logs.service.ts` walks the directory (`shared/services/files.service.ts`), parses each file (`modules/logs/utils/parseLogFile.ts`), then filters/sorts in memory. `filterLogByCategories` / `filterLogBySearch` (in `@echo/utilities`, shared with the frontend) implement the actual filter logic so backend filtering and frontend live-filtering (`echo_frontend/src/modules/logs/infra/__workers__/filterWorker.ts`, a Web Worker) stay in sync.
+Logs are read directly from `.jsonl` files on disk (path from `LOGS_DIR_PATH`), not from a database — `infra/fileLogs.api.ts` walks the directory and reads the lines of each file, `infra/fileLogs.repository.ts` converts each line to a log (`convertRawLogLineToLog` in `infra/dto/rawLogLine.dto.ts`) to implement the `LogsRepository` of `domain/`, and `getFilteredLogs` (`application/getFilteredLogs.ts`) filters them and sorts them from the newest to the oldest, in memory. `filterLogByCategories` / `filterLogBySearch` (in `@echo/utilities`, shared with the frontend) implement the actual filter logic so backend filtering and frontend live-filtering (`echo_frontend/src/modules/logs/infra/__workers__/filterWorker.ts`, a Web Worker) stay in sync.
 
 ### Auth
 

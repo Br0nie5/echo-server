@@ -12,6 +12,9 @@ const TESTS = '(^|/)(__tests__|__test__)/|\\.test\\.tsx?$'
 /** Layers that sit above `utils/` and `*.schemas.ts` and must never be imported by them. */
 const UPPER_LAYERS = `${MODULES}/[^/]+/[^/]+\\.(routes|controller|service|repository)\\.ts$`
 
+/** Folder of one layer of a module split into `domain/`, `application/`, `infra/` and `presentation/`. */
+const layer = (names: string): string => `${MODULES}/[^/]+/(${names})/`
+
 const config: IConfiguration = {
   forbidden: [
     {
@@ -44,7 +47,39 @@ const config: IConfiguration = {
       }
     },
 
-    // ── layering: routes → controller → service → repository ───────────────
+    // ── layered modules: presentation → application → domain ← infra ───────
+    {
+      name: 'backend-domain-is-independent',
+      severity: 'error',
+      comment:
+        'domain/ holds the models and the contracts the other layers build on, it depends on none of them.',
+      from: { path: layer('domain'), pathNot: TESTS },
+      to: { path: layer('application|infra|presentation') }
+    },
+    {
+      name: 'backend-application-not-to-outer-layers',
+      severity: 'error',
+      comment:
+        'application/ reaches the storage through the contracts of domain/, never through infra/, and does not know the routes.',
+      from: { path: layer('application'), pathNot: TESTS },
+      to: { path: layer('infra|presentation') }
+    },
+    {
+      name: 'backend-infra-only-to-domain',
+      severity: 'error',
+      comment: 'infra/ implements the contracts of domain/ and knows nothing of the layers above.',
+      from: { path: layer('infra'), pathNot: TESTS },
+      to: { path: layer('application|presentation') }
+    },
+    {
+      name: 'backend-presentation-not-to-infra',
+      severity: 'error',
+      comment: 'presentation/ talks to application/, never directly to infra/.',
+      from: { path: layer('presentation'), pathNot: TESTS },
+      to: { path: layer('infra') }
+    },
+
+    // ── flat modules: routes → controller → service → repository ───────────
     {
       name: 'backend-controller-not-to-routes',
       severity: 'error',
@@ -61,7 +96,8 @@ const config: IConfiguration = {
     {
       name: 'backend-repository-not-upward',
       severity: 'error',
-      comment: 'Repositories must only know about data access, not services, controllers or routes.',
+      comment:
+        'Repositories must only know about data access, not services, controllers or routes.',
       from: { path: `${MODULES}/[^/]+/[^/]+\\.repository\\.ts$` },
       to: { path: `${MODULES}/[^/]+/[^/]+\\.(service|controller|routes)\\.ts$` }
     },

@@ -21,12 +21,6 @@ safe_mv() {
     mv "$1" "$2"
 }
 
-fix_import() {
-    # `-i.bak` is the only in-place form that works with both BSD (macOS) and GNU (CI) sed
-    sed -i.bak "s|\./logCategory\(\.js\)\{0,1\}'|./logCategory.js'|g" "$1"
-    rm "$1.bak"
-}
-
 # ── Clean / Move generated files ──────────────────────────────
 
 remove_generated_files() {
@@ -35,12 +29,6 @@ remove_generated_files() {
 
 transfer_files() {
     "safe_mv"  "$ROOT_DIR/__generated__/types/echoError.ts"     "$UTILITIES_DIR/src/shared/types/__generated__/echoError.ts"
-
-    "safe_mv"  "$ROOT_DIR/__generated__/types/logCategory.ts"   "$UTILITIES_DIR/src/modules/logs/types/__generated__/logCategory.ts"
-    "safe_mv"  "$ROOT_DIR/__generated__/types/log.ts"           "$UTILITIES_DIR/src/modules/logs/types/__generated__/log.ts"
-    fix_import "$UTILITIES_DIR/src/modules/logs/types/__generated__/log.ts"
-    "safe_mv"  "$ROOT_DIR/__generated__/types/getLogsParams.ts" "$UTILITIES_DIR/src/modules/logs/types/__generated__/getLogsParams.ts"
-    fix_import "$UTILITIES_DIR/src/modules/logs/types/__generated__/getLogsParams.ts"
 
     "safe_mv" "$ROOT_DIR/__generated__/types/authToken.ts"     "$UTILITIES_DIR/src/modules/auth/types/__generated__/authToken.ts"
     "safe_mv" "$ROOT_DIR/__generated__/types/loginRequest.ts"  "$UTILITIES_DIR/src/modules/auth/types/__generated__/loginRequest.ts"
@@ -65,6 +53,8 @@ run() {
 
     npx orval
 
+    # orval also generates GetLogsParams, which is left behind: its type is derived from its zod
+    # schema in echo_utilities.
     transfer_files
 
     rm -rf "$ROOT_DIR/__generated__/"
