@@ -57,13 +57,15 @@ Run the whole pipeline with `npm run generate:types` after changing a backend ro
 
 Both `echo_backend/src/modules` and `echo_frontend/src/modules` are split by domain (`auth`, `logs`).
 
-The core of the backend `logs` module is split into four layer folders (the `cron/` and `selfLogs/` sub-features are not), with imports only going `presentation → application → domain ← infra` (enforced by `npm run arch:check`):
+The core of the backend `logs` module is split into four layer folders (the `cron/` sub-feature is not), with imports only going `presentation → application → domain ← infra` (enforced by `npm run arch:check`):
 - `domain/` — the contracts the module needs from the outside (`logs.repository.ts`); the models (`Log`, `LogCategory`) are imported from `@echo/utilities`
 - `application/` — the business rules, one file per use case, named after it (`getFilteredLogs.ts`), which know nothing of HTTP
 - `infra/` — `*.api.ts` reads a data source, `dto/*.dto.ts` describes what it returns (with the function converting it to a model next to it), `*.repository.ts` implements a `domain/` contract with both
 - `presentation/` — `*.routes.ts`, `*.controller.ts` (the request handlers, calling into `application/`), `utils/` (pure helpers, such as the validation of the input of the handlers), and `*.schemas.ts`, the JSON schemas of the routes, derived from the zod schemas of `@echo/utilities`
 
 `Log`, `LogCategory` and `GetLogsParams` (the query of `GET /logs`) are the exception to the type flow above: each is a zod schema in `echo_utilities/src/modules/logs/schemas/` (`LogSchema`, `LogCategorySchema`, `GetLogsParamsSchema`), its single source of truth. The type is inferred from it (`z.infer`), never redeclared, and `presentation/logs.schemas.ts` converts it to the JSON schema the routes use with `z.toJSONSchema`, when the server starts: no file is generated. What a TypeScript type cannot say goes in the zod schema: `z.int()`, `.meta({ format: 'date-time' })`. `GetLogsParamsSchema` describes the query as the client sends it; `safeParseGetLogsParams` (`presentation/utils/`) validates it and turns it into what `getFilteredLogs` needs (`fromDate` as a `Date`, `logCategories` always an array). To expose another zod schema, add it to the registry of `logs.schemas.ts`.
+
+`logs/modules/selfLog/` is a submodule of `logs`, layered the same way but with `domain/` and `infra/` only (it has no route and no business rule of its own). It is how the backend reports its own diagnostics as logs: `domain/` holds the `SelfLog` model and the `SelfLogRepository` contract the other parts of the backend log through; `infra/` holds `SelfFileLogApi` (the `.jsonl` files of `LOGS_DIR_PATH/server/<SERVER_NAME>/log`), `SelfFileLogRepository` (the contract on top of it) and `utils/getNextSessionJobId.ts` (the `job_id` the repository writes its self logs with). A `SelfFileLogRepository` is created for one file, in `server.ts`: whoever needs to log is given its own `SelfLogRepository` and never names a file.
 
 The backend `auth` module is not layered yet and follows a flat naming scheme:
 - `*.routes.ts` — Fastify route registration + JSON schema (`server.route(...)`)

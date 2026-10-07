@@ -1,11 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import type { SelfLogsWriter } from '../../selfLogs/selfLogs.writer.js'
+import type { SelfLogRepository } from '../../modules/selfLog/domain/selfLog.repository.js'
 import type { LogFileDto } from '../dto/logFile.dto.js'
 import type { RawLogLineDto } from '../dto/rawLogLine.dto.js'
 import { createFileLogsRepository } from '../fileLogs.repository.js'
-
-const SELF_LOG_FILE_PATH = '/logs/server/Echo/log/parseLogFile.jsonl'
 
 const lineContents = [
   '{"job_id":1,"timestamp":"2024-05-12T14:30:00.001Z","status":"INFO","message":"First log","call_file":"file.sh","call_line":1}',
@@ -31,11 +29,10 @@ const fileLogsApi = {
   getAllLogsFromFile: vi.fn(),
   getRawLogLines: vi.fn()
 }
-const selfLogsWriter: SelfLogsWriter = {
-  isSelfLogFile: (filePath): boolean => filePath === SELF_LOG_FILE_PATH,
-  logParseFailures: vi.fn()
+const selfLogRepository: SelfLogRepository = {
+  saveSelfLogs: vi.fn()
 }
-const fileLogsRepository = createFileLogsRepository(fileLogsApi, selfLogsWriter)
+const fileLogsRepository = createFileLogsRepository(fileLogsApi, selfLogRepository)
 
 describe('FileLogsRepository.findAllLogs', () => {
   beforeEach(() => {
@@ -75,14 +72,10 @@ describe('FileLogsRepository.findAllLogs', () => {
       callLine: 4
     })
 
-    expect(selfLogsWriter.logParseFailures).toHaveBeenCalledWith(
-      [
-        { rawLogLine: lineContents[2], lineIndex: 3 },
-        { rawLogLine: 'invalid line', lineIndex: 5 }
-      ],
-      'parseLogFile.jsonl',
-      'myFile'
-    )
+    expect(selfLogRepository.saveSelfLogs).toHaveBeenCalledWith([
+      { category: 'WARNING', message: lineContents[2], callFile: 'myFile', callLine: 3 },
+      { category: 'WARNING', message: 'invalid line', callFile: 'myFile', callLine: 5 }
+    ])
   })
 
   it('should flatten the logs of every file', async () => {
@@ -115,16 +108,26 @@ describe('FileLogsRepository.findAllLogs', () => {
     fileLogsApi.getRawLogLines.mockResolvedValue([])
 
     expect(await fileLogsRepository.findAllLogs()).toEqual([])
-    expect(selfLogsWriter.logParseFailures).toHaveBeenCalledWith([], 'parseLogFile.jsonl', 'empty')
+    expect(selfLogRepository.saveSelfLogs).toHaveBeenCalledWith([])
   })
 
-  it('should not report the failures of a file that is itself a self-log', async () => {
-    const selfLogFile = logFile({ path: SELF_LOG_FILE_PATH })
-    fileLogsApi.getAllLogsFromFiles.mockResolvedValue([selfLogFile])
-    fileLogsApi.getRawLogLines.mockResolvedValue(rawLogLinesOf(selfLogFile, ['invalid line']))
+  it('should report the failures of every file in a single save, self-log files included', async () => {
+    const fileA = logFile({ fileName: 'a' })
+    const selfLogFile = logFile({
+      path: '/logs/server/Echo/log/parseLogFile.jsonl',
+      fileName: 'parseLogFile'
+    })
+    fileLogsApi.getAllLogsFromFiles.mockResolvedValue([fileA, selfLogFile])
+    fileLogsApi.getRawLogLines.mockImplementation(async (file: LogFileDto) =>
+      rawLogLinesOf(file, file === fileA ? [lineContents[0], 'invalid line'] : ['cut line'])
+    )
 
     await fileLogsRepository.findAllLogs()
 
-    expect(selfLogsWriter.logParseFailures).not.toHaveBeenCalled()
+    expect(selfLogRepository.saveSelfLogs).toHaveBeenCalledTimes(1)
+    expect(selfLogRepository.saveSelfLogs).toHaveBeenCalledWith([
+      { category: 'WARNING', message: 'invalid line', callFile: 'a', callLine: 2 },
+      { category: 'WARNING', message: 'cut line', callFile: 'parseLogFile', callLine: 1 }
+    ])
   })
 })

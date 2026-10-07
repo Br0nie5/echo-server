@@ -12,8 +12,14 @@ const TESTS = '(^|/)(__tests__|__test__)/|\\.test\\.tsx?$'
 /** Layers that sit above `utils/` and `*.schemas.ts` and must never be imported by them. */
 const UPPER_LAYERS = `${MODULES}/[^/]+/[^/]+\\.(routes|controller|service|repository)\\.ts$`
 
-/** Folder of one layer of a module split into `domain/`, `application/`, `infra/` and `presentation/`. */
-const layer = (names: string): string => `${MODULES}/[^/]+/(${names})/`
+/**
+ * Folders of one layer of a module split into `domain/`, `application/`, `infra/` and
+ * `presentation/`, and of its submodules (`modules/logs/modules/selfLog/`).
+ */
+const layer = (names: string): string[] => [
+  `${MODULES}/[^/]+/(${names})/`,
+  `${MODULES}/[^/]+/modules/[^/]+/(${names})/`
+]
 
 const config: IConfiguration = {
   forbidden: [

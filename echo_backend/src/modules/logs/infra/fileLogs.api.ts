@@ -13,8 +13,6 @@ const LOG_FILE_EXTENSION = '.jsonl'
 export interface FileLogsApi {
   /** The path of every log file of the logs directory, at any depth. */
   getAllLogFilesPaths: () => Promise<string[]>
-  /** Every log file of the logs directory, at any depth. */
-  getAllLogsFromFiles: () => Promise<LogFileDto[]>
   /**
    * The log file found at `filePath`.
    *
@@ -23,6 +21,8 @@ export interface FileLogsApi {
    * directory is skipped), and is `undefined` when there is none.
    */
   getAllLogsFromFile: (filePath: string) => LogFileDto
+  /** Every log file of the logs directory, at any depth. */
+  getAllLogsFromFiles: () => Promise<LogFileDto[]>
   /**
    * The non-blank lines of `logFile`, in the order they were written.
    *
@@ -83,10 +83,10 @@ export const createFileLogsApi = (
   return {
     getAllLogFilesPaths,
 
+    getAllLogsFromFile,
+
     getAllLogsFromFiles: async (): Promise<LogFileDto[]> =>
       (await getAllLogFilesPaths()).map(getAllLogsFromFile),
-
-    getAllLogsFromFile,
 
     getRawLogLines: async (logFile): Promise<RawLogLineDto[]> => {
       await fileSystem.access(logFile.path, fsConstants.F_OK | fsConstants.R_OK).catch(() => {

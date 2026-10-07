@@ -1,29 +1,40 @@
-import type { Log } from '@echo/utilities'
+import { LogCategory, type Log } from '@echo/utilities'
 
 import type { LogsRepository } from '../domain/logs.repository.js'
-import type { FailedLogLine, SelfLogsWriter } from '../selfLogs/selfLogs.writer.js'
+import type { SelfLog } from '../modules/selfLog/domain/selfLog.js'
+import type { SelfLogRepository } from '../modules/selfLog/domain/selfLog.repository.js'
 
 import type { LogFileDto } from './dto/logFile.dto.js'
 import { convertRawLogLineToLog } from './dto/rawLogLine.dto.js'
 import type { FileLogsApi } from './fileLogs.api.js'
 
-/** Name of the file the lines that hold no log are reported to, under the self-logs directory. */
-const SELF_LOG_FILE_NAME = 'parseLogFile.jsonl'
+/**
+ * Name of the file the lines that hold no log are reported to.
+ *
+ * It is what the `SelfLogRepository` given to {@link createFileLogsRepository} is created with.
+ */
+export const PARSE_LOG_FILE_SELF_LOG_FILE_NAME = 'parseLogFile.jsonl'
+
+/** What reading a log file gives: the logs it holds, and a warning for each line that holds none. */
+interface ParsedLogFile {
+  logs: Log[]
+  parseFailures: SelfLog[]
+}
 
 /**
  * Builds the `LogsRepository` that takes its logs from the files given by `fileLogsApi`.
  *
- * The lines that hold no valid log are left out and reported to `selfLogsWriter`, unless their file
- * is itself a self-log: reporting the failures of a self-log into the self-logs would be a
- * feedback loop.
+ * The lines that hold no valid log are left out and reported to `selfLogRepository` as warnings,
+ * those of every file in a single save: the message is the line itself, `callFile` the name of its
+ * file and `callLine` its position among the non-blank lines of that file, starting at 1.
  */
 export const createFileLogsRepository = (
   fileLogsApi: FileLogsApi,
-  selfLogsWriter: SelfLogsWriter
+  selfLogRepository: SelfLogRepository
 ): LogsRepository => {
-  const findAllLogsInFile = async (logFile: LogFileDto): Promise<Log[]> => {
+  const parseLogFile = async (logFile: LogFileDto): Promise<ParsedLogFile> => {
     const logs: Log[] = []
-    const failedLines: FailedLogLine[] = []
+    const parseFailures: SelfLog[] = []
 
     const rawLogLines = await fileLogsApi.getRawLogLines(logFile)
 
@@ -31,24 +42,30 @@ export const createFileLogsRepository = (
       const log = convertRawLogLineToLog(rawLogLine)
 
       if (log === undefined) {
-        failedLines.push({ rawLogLine: rawLogLine.content, lineIndex: rawLogLine.index + 1 })
+        parseFailures.push({
+          category: LogCategory.WARNING,
+          message: rawLogLine.content,
+          callFile: logFile.fileName,
+          callLine: rawLogLine.index + 1
+        })
       } else {
         logs.push(log)
       }
     }
 
-    if (!selfLogsWriter.isSelfLogFile(logFile.path)) {
-      await selfLogsWriter.logParseFailures(failedLines, SELF_LOG_FILE_NAME, logFile.fileName)
-    }
-
-    return logs
+    return { logs, parseFailures }
   }
 
   return {
     findAllLogs: async (): Promise<Log[]> => {
       const logFiles = await fileLogsApi.getAllLogsFromFiles()
+      const parsedLogFiles = await Promise.all(logFiles.map(parseLogFile))
 
-      return (await Promise.all(logFiles.map(findAllLogsInFile))).flat()
+      await selfLogRepository.saveSelfLogs(
+        parsedLogFiles.flatMap(({ parseFailures }) => parseFailures)
+      )
+
+      return parsedLogFiles.flatMap(({ logs }) => logs)
     }
   }
 }
