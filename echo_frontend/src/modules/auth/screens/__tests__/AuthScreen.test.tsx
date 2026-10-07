@@ -1,7 +1,6 @@
 import { needsSignupMessage, type AuthToken } from '@echo/utilities'
 import { type RenderResult } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { Interceptor, Scope } from 'nock'
 import nock from 'nock'
 import type { Mock } from 'vitest'
 import { vi, describe, expect, beforeEach, beforeAll } from 'vitest'
@@ -49,7 +48,7 @@ beforeEach(() => {
   vi.resetModules()
 })
 
-const buildRequestMockScope = (): Scope => {
+const buildRequestMockScope = (): nock.Scope => {
   return nock(testEnv.API_URL)
 }
 
@@ -63,7 +62,7 @@ const buildSignUpRequestMock = (status: number, response: AuthToken): void => {
   buildRequestMockScope().post(signUpUri).reply(status, response)
 }
 
-const buildAuthCheckRequestMock = (): Interceptor => {
+const buildAuthCheckRequestMock = (): nock.Interceptor => {
   const authCheckUri = getAuthCheckQueryKey[0]
 
   return buildRequestMockScope().get(authCheckUri).query({})

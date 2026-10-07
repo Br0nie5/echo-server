@@ -1,7 +1,6 @@
 import { LogCategory, type GetLogsParams, type Log, type LogSearchFilter } from '@echo/utilities'
 import { waitForElementToBeRemoved, type RenderResult } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { Scope, Interceptor } from 'nock'
 import nock from 'nock'
 import { vi, vitest, type Mock } from 'vitest'
 
@@ -81,11 +80,11 @@ beforeEach(() => {
   vi.resetModules()
 })
 
-const buildRequestMockScope = (): Scope => {
+const buildRequestMockScope = (): nock.Scope => {
   return nock(testEnv.API_URL)
 }
 
-const buildLogsRequestMock = (params: GetLogsParams): Interceptor => {
+const buildLogsRequestMock = (params: GetLogsParams): nock.Interceptor => {
   const logsUri = getGetLogsQueryKey(params)[0]
 
   return buildRequestMockScope().get(logsUri).query(params)

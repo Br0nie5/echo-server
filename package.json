@@ -25,12 +25,16 @@
   "devDependencies": {
     "@types/node": "^24.19.1",
     "concurrently": "^10.0.5",
-    "orval": "8.33.0"
+    "orval": "^8.40.0"
   },
   "allowScripts": {
     "bcrypt@6.0.0": true,
     "better-sqlite3@13.0.3": true,
     "esbuild@0.28.2": true,
     "unrs-resolver@1.12.2": true
+  },
+  "//": "overrides: concurrently 10.0.5 pins shell-quote to 1.9.0, which has a critical command injection (GHSA-pqg4-j6r4-53mv, fixed in 1.11.0). Remove the override once concurrently depends on a patched shell-quote.",
+  "overrides": {
+    "shell-quote": "^1.12.0"
   }
 }

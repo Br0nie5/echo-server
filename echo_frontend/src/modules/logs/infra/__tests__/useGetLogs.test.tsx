@@ -1,6 +1,5 @@
 import { LogCategory, type GetLogsParams, type Log } from '@echo/utilities'
 import { waitFor } from '@testing-library/react'
-import type { Interceptor, Scope } from 'nock'
 import nock from 'nock'
 import { describe, expect, test } from 'vitest'
 
@@ -9,11 +8,11 @@ import { testEnv } from '../../../../test/utils/env'
 import { getGetLogsQueryKey } from '../getLogsQueryKey'
 import { useGetLogs } from '../useGetLogs'
 
-const buildRequestMockScope = (): Scope => {
+const buildRequestMockScope = (): nock.Scope => {
   return nock(testEnv.API_URL)
 }
 
-const buildLogsRequestMock = (params: GetLogsParams): Interceptor => {
+const buildLogsRequestMock = (params: GetLogsParams): nock.Interceptor => {
   const logsUri = getGetLogsQueryKey(params)[0]
 
   return buildRequestMockScope().get(logsUri).query(params)

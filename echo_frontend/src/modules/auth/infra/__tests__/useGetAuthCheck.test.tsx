@@ -1,5 +1,4 @@
 import { waitFor } from '@testing-library/react'
-import type { Interceptor, Scope } from 'nock'
 import nock from 'nock'
 import { describe, expect, test } from 'vitest'
 
@@ -8,11 +7,11 @@ import { testEnv } from '../../../../test/utils/env'
 import { getAuthCheckQueryKey } from '../keys/getAuthCheckQueryKey'
 import { useGetAuthCheck } from '../useGetAuthCheck'
 
-const buildRequestMockScope = (): Scope => {
+const buildRequestMockScope = (): nock.Scope => {
   return nock(testEnv.API_URL)
 }
 
-const buildAuthCheckRequestMock = (): Interceptor => {
+const buildAuthCheckRequestMock = (): nock.Interceptor => {
   const authCheckUri = getAuthCheckQueryKey[0]
 
   return buildRequestMockScope().get(authCheckUri).query({})
