@@ -12,7 +12,8 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest run --coverage --coverage.thresholds.100",
-    "open:coverage": "open coverage/index.html"
+    "open:coverage": "open coverage/index.html",
+    "arch:check": "depcruise src --config .dependency-cruiser.mts"
   },
   "keywords": [],
   "author": "",
@@ -53,6 +54,7 @@
     "@typescript-eslint/parser": "^8.70.0",
     "@vitest/coverage-v8": "^5.0.2",
     "ajv": "^8.20.0",
+    "dependency-cruiser": "^18.4.0",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.5",

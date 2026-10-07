@@ -25,9 +25,10 @@
 # Git configs
 **/.gitignore
 
-# Eslint/Prettier configs
+# Eslint/Prettier/dependency-cruiser configs
 **/eslint.config.js
 **/prettier.config.js
+**/.dependency-cruiser.mts
 
 # Typescript configs
 **/tsconfig.json

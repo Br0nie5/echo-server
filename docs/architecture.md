@@ -80,7 +80,7 @@ The conventions above are checked automatically with [dependency-cruiser](https:
 npm run arch:check
 ```
 
-Rules live in [.dependency-cruiser.cts](../.dependency-cruiser.cts) and also run in the pre-commit hook. They fail on:
+The script runs `arch:check` in every workspace. Each one has its own rules, with paths relative to the workspace: [echo_backend/.dependency-cruiser.mts](../echo_backend/.dependency-cruiser.mts), [echo_frontend/.dependency-cruiser.mts](../echo_frontend/.dependency-cruiser.mts) and [echo_utilities/.dependency-cruiser.mts](../echo_utilities/.dependency-cruiser.mts). To check a single workspace, run `npm run arch:check --workspace=echo_backend`. They fail on:
 
 | Rule | What it prevents |
 | ---- | ---------------- |
@@ -94,4 +94,4 @@ Rules live in [.dependency-cruiser.cts](../.dependency-cruiser.cts) and also run
 | `utilities-only-through-barrel`, `generated-only-inside-utilities` | Reaching into `echo_utilities` or `__generated__/` by path |
 | `prod-not-to-tests` | Production code importing test files or helpers |
 
-The check covers type-only imports too. To add or relax a rule, edit the config and explain why in the PR. Note that import-graph tooling cannot detect `process.env` reads; that convention is enforced in review.
+The check covers type-only imports too. To add or relax a rule, edit the config of the workspace it applies to and explain why in the PR. Note that import-graph tooling cannot detect `process.env` reads; that convention is enforced in review.

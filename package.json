@@ -18,14 +18,13 @@
     "test:coverage": "npm run test:coverage --workspaces",
     "open:coverage": "npm run open:coverage --workspaces",
     "generate:types": "bash scripts/generate_types.sh",
-    "arch:check": "depcruise echo_backend/src echo_frontend/src echo_utilities/src --config .dependency-cruiser.cts",
+    "arch:check": "npm run arch:check --workspaces",
     "vulnerabilities:scan": "npm audit",
     "deploy:server": "bash scripts/deploy_server.sh"
   },
   "devDependencies": {
     "@types/node": "^24.19.1",
     "concurrently": "^10.0.5",
-    "dependency-cruiser": "^18.4.0",
     "orval": "8.33.0"
   },
   "allowScripts": {
