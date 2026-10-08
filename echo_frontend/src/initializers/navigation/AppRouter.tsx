@@ -1,10 +1,11 @@
-import { getCleanUrlPathname } from '@echo/utilities'
 import { lazy, Suspense, useMemo } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { useEnv } from '../../shared/env/useEnv'
 import { LoadingLayout } from '../../shared/layouts/LoadingLayout'
 import { AppPathNames } from '../../shared/navigation/pathNames'
+
+import { getCleanUrlPathname } from './utils/getCleanUrlPathname'
 
 const AuthScreen = lazy(() =>
   import('../../modules/auth/screens/AuthScreen').then((module) => ({

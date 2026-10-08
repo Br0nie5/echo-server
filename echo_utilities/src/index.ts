@@ -3,8 +3,6 @@ export * from './shared/schemas/echoError.schema.js'
 export * from './shared/config/config.js'
 export * from './shared/config/parseConfig.js'
 
-export * from './shared/utils/getCleanUrlPathname.js'
-
 export * from './modules/auth/consts.js'
 
 export * from './modules/auth/schemas/authToken.schema.js'
