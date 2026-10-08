@@ -56,7 +56,7 @@ The `logs` module itself has two parts: the core log retrieval in the four layer
 
 ### The `logsNotifier` submodule
 
-A submodule lives in `modules/<module>/modules/<submodule>/` and follows the layers of its parent, keeping only those it needs.
+A submodule lives in `modules/<module>/modules/<submodule>/` and follows the layers of its parent, keeping only those it needs. It is isolated like a module (see [the rules](#enforcing-the-architecture)): its parent and the other submodules only import its `domain/` and its `infra/`, and it only imports theirs, except that its `application/` may build on the use cases of the `application/` of its parent.
 
 `logsNotifier` is the optional cron that notifies the problem logs. It has a use case and an entry point of its own, so it has the four layers:
 
@@ -147,8 +147,10 @@ The script runs `arch:check` in every workspace. Each one has its own rules, wit
 | `no-circular` | Any circular dependency |
 | `*-shared-not-to-modules` | `shared/` importing from `modules/` (backend and frontend) |
 | `backend-modules-isolated` | A backend module importing another module, except its `domain/` and `infra/`, and those of its submodules |
+| `backend-parent-not-to-submodule-internals`, `backend-submodules-isolated` | A module importing one of its submodules, or a submodule importing another one, except its `domain/` and `infra/` |
+| `backend-submodule-not-to-parent-internals` | A submodule importing its parent, except its `domain/` and `infra/`, and its `application/` from the `application/` of the submodule |
 | `frontend-modules-isolated` | A frontend module importing another module |
-| `backend-domain-is-independent`, `backend-application-not-to-outer-layers`, `backend-infra-only-to-domain`, `backend-presentation-not-to-infra` | In a layered module, any import other than `presentation → application → domain ← infra` |
+| `backend-domain-is-independent`, `backend-application-not-to-outer-layers`, `backend-infra-only-to-domain`, `backend-presentation-not-to-infra` | Any import other than `presentation → application → domain ← infra`, within a module and across modules: only an `infra/` may import the `infra/` of another module or submodule |
 | `frontend-infra-not-to-screens` | `infra/` importing from `screens/` |
 | `utilities-not-to-apps`, `backend-frontend-independent`, `frontend-not-to-backend` | Cross-package imports; apps share code only through `@echo/utilities` |
 | `utilities-only-through-barrel` | Reaching into `echo_utilities` by path |

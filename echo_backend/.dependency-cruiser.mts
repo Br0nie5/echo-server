@@ -38,7 +38,9 @@ const config: IConfiguration = {
       to: { path: MODULES }
     },
 
-    // ── modules are isolated from each other ───────────────────────────────
+    // ── modules and submodules are isolated from each other ────────────────
+    // Whatever the two sides are, the layer rules below already keep infra/ for infra/: what is
+    // left to say here is that application/ and presentation/ stay private.
     {
       name: 'backend-modules-isolated',
       severity: 'error',
@@ -48,6 +50,45 @@ const config: IConfiguration = {
       to: {
         path: `${MODULES}/`,
         pathNot: [`${MODULES}/$1/`, ...layer('domain|infra')]
+      }
+    },
+    {
+      name: 'backend-parent-not-to-submodule-internals',
+      severity: 'error',
+      comment:
+        'A module may only import its submodules through their domain/ and infra/, as it would another module: a submodule builds on its parent, never the other way round.',
+      from: { path: `${MODULES}/([^/]+)/(?!modules/)`, pathNot: TESTS },
+      to: {
+        path: `${MODULES}/$1/modules/`,
+        pathNot: `${MODULES}/[^/]+/modules/[^/]+/(domain|infra)/`
+      }
+    },
+    {
+      name: 'backend-submodules-isolated',
+      severity: 'error',
+      comment:
+        'A submodule may only import another submodule of its parent through its domain/ and infra/, as it would another module.',
+      from: { path: `${MODULES}/([^/]+)/modules/([^/]+)/`, pathNot: TESTS },
+      to: {
+        path: `${MODULES}/$1/modules/`,
+        pathNot: [
+          `${MODULES}/$1/modules/$2/`,
+          `${MODULES}/[^/]+/modules/[^/]+/(domain|infra)/`
+        ]
+      }
+    },
+    {
+      name: 'backend-submodule-not-to-parent-internals',
+      severity: 'error',
+      comment:
+        'A submodule may only import its parent through its domain/ and infra/, as it would another module, with one exception: its application/ may build on the use cases of the application/ of its parent (and on nothing more of it, see backend-application-not-to-outer-layers).',
+      from: {
+        path: `${MODULES}/([^/]+)/modules/[^/]+/`,
+        pathNot: [TESTS, `${MODULES}/[^/]+/modules/[^/]+/application/`]
+      },
+      to: {
+        path: `${MODULES}/$1/(?!modules/)`,
+        pathNot: `${MODULES}/[^/]+/(domain|infra)/`
       }
     },
 
