@@ -5,42 +5,42 @@ import nock from 'nock'
 
 import i18n from '../../../shared/i18n/i18n.ts'
 import type { AppTranslation } from '../../../shared/i18n/useAppTranslation.ts'
-import { testEnv } from '../../../test/utils/env.ts'
+import { testConfig } from '../../../test/utils/config.ts'
 import { testUrl } from '../../../test/utils/url.ts'
 import { queryClient } from '../../api/queryClient.ts'
-import { envJsonBaseUrl, envPageTestId, EnvProvider } from '../EnvProvider'
+import { configJsonBaseUrl, configPageTestId, ConfigProvider } from '../ConfigProvider'
 
 const appTranslation: AppTranslation = (key) => i18n.t(key)
 
-describe('EnvProvider', () => {
-  test('Should render its children correctly if the env is loaded', async () => {
-    nock(testUrl).get(envJsonBaseUrl).reply(200, testEnv)
+describe('ConfigProvider', () => {
+  test('Should render its children correctly if the config is loaded', async () => {
+    nock(testUrl).get(configJsonBaseUrl).reply(200, testConfig)
 
     const component = render(
       <QueryClientProvider client={queryClient}>
-        <EnvProvider>
+        <ConfigProvider>
           <Box />
-        </EnvProvider>
+        </ConfigProvider>
       </QueryClientProvider>
     )
 
-    await waitForElementToBeRemoved(component.getByTestId(envPageTestId))
+    await waitForElementToBeRemoved(component.getByTestId(configPageTestId))
 
-    expect(component.queryByTestId(envPageTestId)).not.toBeInTheDocument()
+    expect(component.queryByTestId(configPageTestId)).not.toBeInTheDocument()
   })
 
-  test('Should render a loader if the env failed loading', async () => {
-    nock(testUrl).get(envJsonBaseUrl).reply(400, {})
+  test('Should render a loader if the config failed loading', async () => {
+    nock(testUrl).get(configJsonBaseUrl).reply(400, {})
 
     const component = render(
       <QueryClientProvider client={queryClient}>
-        <EnvProvider>
+        <ConfigProvider>
           <Box />
-        </EnvProvider>
+        </ConfigProvider>
       </QueryClientProvider>
     )
 
-    expect(component.getByTestId(envPageTestId)).toBeInTheDocument()
+    expect(component.getByTestId(configPageTestId)).toBeInTheDocument()
 
     expect(await component.findByText(appTranslation('query.error'))).toBeInTheDocument()
   })

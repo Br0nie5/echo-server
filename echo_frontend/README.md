@@ -20,7 +20,7 @@ The bundle contains no configuration. On load it fetches `env.<mode>.json` (`SER
 
 ```
 src/
-  initializers/     API client, env loading, routing
+  initializers/     API client, config loading, routing
   modules/
     auth/           sign-up and login
     logs/           log list, filters, filter Web Worker

@@ -9,7 +9,7 @@ import type { AppTranslation } from '../../../../shared/i18n/useAppTranslation'
 import { AppPathNames } from '../../../../shared/navigation/pathNames'
 import { formatDate } from '../../../../shared/utils/formatDate'
 import { renderApp } from '../../../../test/renderApp'
-import { testEnv } from '../../../../test/utils/env'
+import { testConfig } from '../../../../test/utils/config'
 import { resizeWindow } from '../../../../test/utils/resizeWindow'
 import { testUrl } from '../../../../test/utils/url'
 import { getGetLogsQueryKey } from '../../infra/getLogsQueryKey'
@@ -81,7 +81,7 @@ beforeEach(() => {
 })
 
 const buildRequestMockScope = (): nock.Scope => {
-  return nock(testEnv.API_URL)
+  return nock(testConfig.API_URL)
 }
 
 const buildLogsRequestMock = (params: GetLogsParams): nock.Interceptor => {
@@ -347,7 +347,7 @@ describe('LogsScreen', () => {
       await renderLogsScreen({ status: 'error', statusCode: 401 })
 
       expect(mockSetHref).toHaveBeenCalledWith(
-        `${testEnv.APP_URL}${AppPathNames.auth}?redirect=${encodeURIComponent(testUrl).replace(/%20/g, '+')}`
+        `${testConfig.APP_URL}${AppPathNames.auth}?redirect=${encodeURIComponent(testUrl).replace(/%20/g, '+')}`
       )
     })
   })

@@ -4,12 +4,12 @@ import nock from 'nock'
 import { describe, expect, test } from 'vitest'
 
 import { renderAppHook } from '../../../../test/renderAppHook'
-import { testEnv } from '../../../../test/utils/env'
+import { testConfig } from '../../../../test/utils/config'
 import { getGetLogsQueryKey } from '../getLogsQueryKey'
 import { useGetLogs } from '../useGetLogs'
 
 const buildRequestMockScope = (): nock.Scope => {
-  return nock(testEnv.API_URL)
+  return nock(testConfig.API_URL)
 }
 
 const buildLogsRequestMock = (params: GetLogsParams): nock.Interceptor => {

@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-import { useEnv } from '../../../../shared/env/useEnv'
+import { useConfig } from '../../../../shared/config/useConfig'
 import { AppPathNames } from '../../../../shared/navigation/pathNames'
 
 interface UseRedirectionOnAuthReturnType {
@@ -10,7 +10,7 @@ interface UseRedirectionOnAuthReturnType {
 
 /** Where to go after authenticating: the `redirect` query param (set when a 401 sent the user here), otherwise the logs screen. */
 export const useRedirectionOnAuth = (): UseRedirectionOnAuthReturnType => {
-  const { APP_URL } = useEnv()
+  const { APP_URL } = useConfig()
 
   const [searchParams] = useSearchParams()
   const redirectPath = searchParams.get('redirect') ?? undefined

@@ -6,22 +6,22 @@ import React from 'react'
 
 import { ApiProvider } from './initializers/api/ApiProvider'
 import { queryClient } from './initializers/api/queryClient'
-import { EnvProvider } from './initializers/env/EnvProvider'
+import { ConfigProvider } from './initializers/config/ConfigProvider'
 import { AppRouter } from './initializers/navigation/AppRouter'
 import { theme } from './shared/theme'
 
-/** Root component. The env is loaded before the API client is created, and the router is only rendered once both are ready. */
+/** Root component. The config is loaded before the API client is created, and the router is only rendered once both are ready. */
 export const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <QueryClientProvider client={queryClient}>
-          <EnvProvider>
+          <ConfigProvider>
             <ApiProvider>
               <AppRouter />
             </ApiProvider>
-          </EnvProvider>
+          </ConfigProvider>
         </QueryClientProvider>
       </LocalizationProvider>
     </ThemeProvider>

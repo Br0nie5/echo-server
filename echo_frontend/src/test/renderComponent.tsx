@@ -11,15 +11,19 @@ import '../shared/i18n/i18n.ts'
 
 import { ApiProvider } from '../initializers/api/ApiProvider.tsx'
 import { queryClient } from '../initializers/api/queryClient.ts'
-import { envJsonBaseUrl, envPageTestId, EnvProvider } from '../initializers/env/EnvProvider.tsx'
+import {
+  configJsonBaseUrl,
+  configPageTestId,
+  ConfigProvider
+} from '../initializers/config/ConfigProvider.tsx'
 import { theme } from '../shared/theme'
 
-import { testEnv } from './utils/env.ts'
+import { testConfig } from './utils/config.ts'
 import { testUrl } from './utils/url.ts'
 
 export const renderComponent = async (
   child: React.ReactElement,
-  params?: { envOverride?: Config }
+  params?: { configOverride?: Config }
 ): Promise<RenderResult> => {
   queryClient.setDefaultOptions({
     queries: {
@@ -30,23 +34,23 @@ export const renderComponent = async (
   })
 
   nock(testUrl)
-    .get(envJsonBaseUrl)
-    .reply(200, params?.envOverride ?? testEnv)
+    .get(configJsonBaseUrl)
+    .reply(200, params?.configOverride ?? testConfig)
 
   const screen = render(
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <QueryClientProvider client={queryClient}>
-          <EnvProvider>
+          <ConfigProvider>
             <ApiProvider>{child}</ApiProvider>
-          </EnvProvider>
+          </ConfigProvider>
         </QueryClientProvider>
       </LocalizationProvider>
     </ThemeProvider>
   )
 
-  await waitForElementToBeRemoved(screen.getByTestId(envPageTestId))
+  await waitForElementToBeRemoved(screen.getByTestId(configPageTestId))
 
   return screen
 }

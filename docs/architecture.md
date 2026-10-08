@@ -102,7 +102,7 @@ A `SelfFileReportRepository` stores its self reports in one file, given when it 
 - `infra/`: TanStack Query hooks plus query and mutation keys, one file per hook.
 - `screens/`: the screen component and its `hooks/`, `layouts/`, `components/`, `utils/`.
 
-`Initializers/` sets up the API client, env loading and routing. `shared/` holds i18n (English only for now), layouts, theme and generic utilities.
+`Initializers/` sets up the API client, config loading and routing. `shared/` holds i18n (English only for now), layouts, theme and generic utilities.
 
 ## Type flow
 

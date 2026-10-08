@@ -6,7 +6,7 @@ import dayjs from 'dayjs'
 import { memo } from 'react'
 
 import { FilterChips } from '../../../../shared/components/FilterChips'
-import { useEnv } from '../../../../shared/env/useEnv'
+import { useConfig } from '../../../../shared/config/useConfig'
 import { useWindowSize } from '../../../../shared/hooks/useWindowSize'
 import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
 import { getLogsMaximalDate, getLogsMinimalDate } from '../utils/getLogsDates'
@@ -32,7 +32,7 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
   setLogCategoriesFilters,
   onSearch
 }) => {
-  const { SERVER_NAME } = useEnv()
+  const { SERVER_NAME } = useConfig()
 
   const translation = useAppTranslation()
   const { isSmallScreen } = useWindowSize()

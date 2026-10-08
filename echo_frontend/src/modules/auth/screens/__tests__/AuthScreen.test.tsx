@@ -9,7 +9,7 @@ import i18n from '../../../../shared/i18n/i18n'
 import type { AppTranslation } from '../../../../shared/i18n/useAppTranslation'
 import { AppPathNames } from '../../../../shared/navigation/pathNames'
 import { renderApp } from '../../../../test/renderApp'
-import { testEnv } from '../../../../test/utils/env'
+import { testConfig } from '../../../../test/utils/config'
 import { resizeWindow } from '../../../../test/utils/resizeWindow'
 import { getAuthCheckQueryKey } from '../../infra/keys/getAuthCheckQueryKey'
 import { postLoginMutationKey } from '../../infra/keys/postLoginMutationKey'
@@ -49,7 +49,7 @@ beforeEach(() => {
 })
 
 const buildRequestMockScope = (): nock.Scope => {
-  return nock(testEnv.API_URL)
+  return nock(testConfig.API_URL)
 }
 
 const buildLoginRequestMock = (status: number, response: AuthToken): void => {
@@ -194,7 +194,7 @@ describe('AuthScreen', () => {
 
       await screen.findByText(appTranslation('auth.login.success'))
 
-      expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(`${testEnv.APP_URL}/logs`)
+      expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(`${testConfig.APP_URL}/logs`)
     })
 
     test('should call the API and display an error message on failed login', async () => {
@@ -284,7 +284,7 @@ describe('AuthScreen', () => {
 
       await screen.findByText(appTranslation('auth.signUp.success'))
 
-      expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(`${testEnv.APP_URL}/logs`)
+      expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(`${testConfig.APP_URL}/logs`)
     })
 
     test('should call the API and display an error message on failed sign up', async () => {
@@ -320,10 +320,10 @@ describe('AuthScreen', () => {
       expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(redirectUrl)
     })
 
-    test('should directly redirect to the env logs url if no redirection is provided', async () => {
+    test('should directly redirect to the config logs url if no redirection is provided', async () => {
       await renderAuthScreen('redirect')
 
-      expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(`${testEnv.APP_URL}/logs`)
+      expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(`${testConfig.APP_URL}/logs`)
     })
 
     test('should redirect by clicking on the redirect button', async () => {
@@ -331,12 +331,12 @@ describe('AuthScreen', () => {
 
       const screen = await renderAuthScreen('redirect')
 
-      expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(`${testEnv.APP_URL}/logs`)
+      expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(`${testConfig.APP_URL}/logs`)
 
       const redirectButton = screen.getByText(appTranslation('auth.redirect.button'))
       await user.click(redirectButton)
 
-      expect(mockSetHref).toHaveBeenNthCalledWith(2, `${testEnv.APP_URL}/logs`)
+      expect(mockSetHref).toHaveBeenNthCalledWith(2, `${testConfig.APP_URL}/logs`)
     })
   })
 

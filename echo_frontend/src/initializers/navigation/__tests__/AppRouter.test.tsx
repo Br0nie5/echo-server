@@ -2,7 +2,7 @@ import type { JSX } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { renderComponent } from '../../../test/renderComponent'
-import { testEnv } from '../../../test/utils/env'
+import { testConfig } from '../../../test/utils/config'
 import { AppRouter } from '../AppRouter'
 
 const authTestId = 'auth-screen'
@@ -22,7 +22,7 @@ afterEach(() => {
 describe('AppRouter', () => {
   it('should render AuthScreen if HAS_AUTHENTICATION is true', async () => {
     const screen = await renderComponent(<AppRouter />, {
-      envOverride: { ...testEnv, HAS_AUTHENTICATION: true }
+      configOverride: { ...testConfig, HAS_AUTHENTICATION: true }
     })
 
     expect(await screen.findByTestId(authTestId)).toBeInTheDocument()
@@ -31,7 +31,7 @@ describe('AppRouter', () => {
 
   it('should render LogsScreen if HAS_AUTHENTICATION is false', async () => {
     const screen = await renderComponent(<AppRouter />, {
-      envOverride: { ...testEnv, HAS_AUTHENTICATION: false }
+      configOverride: { ...testConfig, HAS_AUTHENTICATION: false }
     })
 
     expect(await screen.findByTestId(logsTestId)).toBeInTheDocument()

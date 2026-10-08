@@ -6,13 +6,13 @@ import axios from 'axios'
 
 import { ApiContext } from '../initializers/api/ApiContext'
 import { queryClient } from '../initializers/api/queryClient'
-import { EnvContext } from '../initializers/env/EnvContext'
+import { ConfigContext } from '../initializers/config/ConfigContext'
 
-import { testEnv } from './utils/env'
+import { testConfig } from './utils/config'
 
 export const renderAppHook = <Result,>(
   hook: () => Result,
-  params?: { envOverride?: Config }
+  params?: { configOverride?: Config }
 ): RenderHookResult<Result, void> => {
   queryClient.setDefaultOptions({
     queries: {
@@ -22,15 +22,15 @@ export const renderAppHook = <Result,>(
     }
   })
 
-  const env = params?.envOverride ?? testEnv
+  const config = params?.configOverride ?? testConfig
 
-  const axiosInstance = axios.create({ baseURL: env.API_URL, withCredentials: true })
+  const axiosInstance = axios.create({ baseURL: config.API_URL, withCredentials: true })
 
   const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <QueryClientProvider client={queryClient}>
-      <EnvContext.Provider value={{ env }}>
+      <ConfigContext.Provider value={{ config }}>
         <ApiContext.Provider value={{ axiosInstance }}>{children}</ApiContext.Provider>
-      </EnvContext.Provider>
+      </ConfigContext.Provider>
     </QueryClientProvider>
   )
 

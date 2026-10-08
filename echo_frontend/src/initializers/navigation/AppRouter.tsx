@@ -1,7 +1,7 @@
 import { lazy, Suspense, useMemo } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
-import { useEnv } from '../../shared/env/useEnv'
+import { useConfig } from '../../shared/config/useConfig'
 import { LoadingLayout } from '../../shared/layouts/LoadingLayout'
 import { AppPathNames } from '../../shared/navigation/pathNames'
 
@@ -20,7 +20,7 @@ const LogsScreen = lazy(() =>
 
 /** Routes of the app, under the pathname of `APP_URL`. The auth screen only exists with authentication, and unknown paths redirect to the default screen. */
 export const AppRouter: React.FC = () => {
-  const { APP_URL, HAS_AUTHENTICATION } = useEnv()
+  const { APP_URL, HAS_AUTHENTICATION } = useConfig()
 
   const appPathname = useMemo(() => {
     return getCleanUrlPathname(new URL(APP_URL))

@@ -3,12 +3,12 @@ import nock from 'nock'
 import { describe, expect, test } from 'vitest'
 
 import { renderAppHook } from '../../../../test/renderAppHook'
-import { testEnv } from '../../../../test/utils/env'
+import { testConfig } from '../../../../test/utils/config'
 import { getAuthCheckQueryKey } from '../keys/getAuthCheckQueryKey'
 import { useGetAuthCheck } from '../useGetAuthCheck'
 
 const buildRequestMockScope = (): nock.Scope => {
-  return nock(testEnv.API_URL)
+  return nock(testConfig.API_URL)
 }
 
 const buildAuthCheckRequestMock = (): nock.Interceptor => {

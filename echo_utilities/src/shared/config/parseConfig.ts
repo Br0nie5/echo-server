@@ -29,12 +29,12 @@ const buildUrl = (serverUrl: string, path: string): string => {
 }
 
 /**
- * Builds the `Config` common to the backend and the frontend from their environment.
+ * Builds the `Config` common to the backend and the frontend from `rawConfig`.
  *
- * `envHolder` is whatever holds the variables: `process.env` in the backend, the content of
- * `env.<mode>.json` in the frontend. `HAS_AUTHENTICATION` may be a boolean or the string `true` or
- * `false`. It throws when `SERVER_NAME`, `SERVER_URL` or `HAS_AUTHENTICATION` is missing or
- * invalid.
+ * `rawConfig` is whatever holds the variables as they were written: `process.env` in the backend,
+ * the content of `env.<mode>.json` in the frontend. `HAS_AUTHENTICATION` may be a boolean or the
+ * string `true` or `false`. It throws when `SERVER_NAME`, `SERVER_URL` or `HAS_AUTHENTICATION` is
+ * missing or invalid.
  *
  * ```ts
  * const config = parseConfig({ ...process.env })
@@ -42,14 +42,14 @@ const buildUrl = (serverUrl: string, path: string): string => {
  * ```
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const parseConfig = (envHolder: any): Config => {
-  const SERVER_URL = requireString(envHolder.SERVER_URL, 'SERVER_URL')
+export const parseConfig = (rawConfig: any): Config => {
+  const SERVER_URL = requireString(rawConfig.SERVER_URL, 'SERVER_URL')
 
   return {
-    SERVER_NAME: requireString(envHolder.SERVER_NAME, 'SERVER_NAME'),
+    SERVER_NAME: requireString(rawConfig.SERVER_NAME, 'SERVER_NAME'),
     SERVER_URL,
     API_URL: buildUrl(SERVER_URL, '/api'),
     APP_URL: buildUrl(SERVER_URL, '/app'),
-    HAS_AUTHENTICATION: requireBooleanOrString(envHolder.HAS_AUTHENTICATION, 'HAS_AUTHENTICATION')
+    HAS_AUTHENTICATION: requireBooleanOrString(rawConfig.HAS_AUTHENTICATION, 'HAS_AUTHENTICATION')
   }
 }

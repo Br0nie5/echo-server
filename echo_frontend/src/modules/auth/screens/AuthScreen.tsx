@@ -11,7 +11,7 @@ import { AuthSignUpLayout } from './layouts/AuthSignUpLayout'
 import { RedirectLayout } from './layouts/RedirectLayout'
 
 const AuthScreenComponent: React.FC = () => {
-  const { translation, env, authCheckResult, authCheckResultStatus, refetchAuthResultCheck } =
+  const { translation, config, authCheckResult, authCheckResultStatus, refetchAuthResultCheck } =
     useAuthScreen()
 
   useScreenTitle(translation('auth.wall'))
@@ -19,10 +19,10 @@ const AuthScreenComponent: React.FC = () => {
   const title = useMemo(
     () => (
       <Typography variant="h4" gutterBottom align="center" sx={{ mt: 3 }}>
-        {`${env.SERVER_NAME}: ${translation('auth.wall')}`}
+        {`${config.SERVER_NAME}: ${translation('auth.wall')}`}
       </Typography>
     ),
-    [env.SERVER_NAME, translation]
+    [config.SERVER_NAME, translation]
   )
 
   if (!authCheckResult) {

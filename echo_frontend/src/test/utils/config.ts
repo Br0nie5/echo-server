@@ -1,6 +1,6 @@
 import type { Config } from '@echo/utilities'
 
-export const testEnv: Config = {
+export const testConfig: Config = {
   SERVER_NAME: 'Test',
   SERVER_URL: 'http://localhost:3000',
   API_URL: 'http://localhost:3000/api',

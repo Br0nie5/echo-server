@@ -4,7 +4,7 @@ import type { AxiosError } from 'axios'
 
 import { interceptUnauthenticatedError } from '../../../shared/api/interceptors'
 import { useApiMutator } from '../../../shared/api/useApiMutator'
-import { useEnv } from '../../../shared/env/useEnv'
+import { useConfig } from '../../../shared/config/useConfig'
 
 import { getGetLogsQueryKey, type LogsQueryKeyType } from './getLogsQueryKey'
 
@@ -13,7 +13,7 @@ export function useGetLogs(
   params: GetLogsParams
 ): UseQueryResult<Log[], AxiosError<Log[], GetLogsParams>> {
   const axiosMutator = useApiMutator()
-  const env = useEnv()
+  const config = useConfig()
 
   const queryKey = getGetLogsQueryKey(params)
   const [url, method] = queryKey
@@ -27,7 +27,7 @@ export function useGetLogs(
         params,
         signal,
         withCredentials: true,
-        errorInterceptor: (error: AxiosError): void => interceptUnauthenticatedError(error, env)
+        errorInterceptor: (error: AxiosError): void => interceptUnauthenticatedError(error, config)
       })
 
       return LogArraySchema.parse(data)

@@ -2,12 +2,12 @@ import nock from 'nock'
 import { describe, expect, test, vi } from 'vitest'
 
 import { renderAppHook } from '../../../test/renderAppHook'
-import { testEnv } from '../../../test/utils/env'
+import { testConfig } from '../../../test/utils/config'
 import { useApiMutator } from '../useApiMutator'
 
 describe('useApiMutator', () => {
   test('should return the response data on success', async () => {
-    nock(testEnv.API_URL).get('/ok').reply(200, { hello: 'world' })
+    nock(testConfig.API_URL).get('/ok').reply(200, { hello: 'world' })
 
     const { result } = renderAppHook(() => useApiMutator())
 
@@ -15,8 +15,8 @@ describe('useApiMutator', () => {
   })
 
   test('should only run the error interceptor of the request that failed', async () => {
-    nock(testEnv.API_URL).get('/failing').reply(500)
-    nock(testEnv.API_URL).get('/ok').delay(20).reply(200, {})
+    nock(testConfig.API_URL).get('/failing').reply(500)
+    nock(testConfig.API_URL).get('/ok').delay(20).reply(200, {})
 
     const { result } = renderAppHook(() => useApiMutator())
     const otherRequestInterceptor = vi.fn()
@@ -33,8 +33,8 @@ describe('useApiMutator', () => {
   })
 
   test('should not keep the error interceptor of a failed request for later requests', async () => {
-    nock(testEnv.API_URL).get('/first').reply(500)
-    nock(testEnv.API_URL).get('/second').reply(500)
+    nock(testConfig.API_URL).get('/first').reply(500)
+    nock(testConfig.API_URL).get('/second').reply(500)
 
     const { result } = renderAppHook(() => useApiMutator())
     const errorInterceptor = vi.fn()
