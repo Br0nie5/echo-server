@@ -1,4 +1,4 @@
-import type { EchoEnv } from '@echo/utilities'
+import type { Config } from '@echo/utilities'
 import type { QueryStatus } from '@tanstack/react-query'
 
 import { useEnv } from '../../../../shared/env/useEnv'
@@ -7,7 +7,7 @@ import { useGetAuthCheck, type AuthCheckResult } from '../../infra/useGetAuthChe
 
 interface UseAuthScreenReturnType {
   translation: AppTranslation
-  env: EchoEnv
+  env: Config
   authCheckResult: AuthCheckResult | undefined
   authCheckResultStatus: QueryStatus
   refetchAuthResultCheck: () => void

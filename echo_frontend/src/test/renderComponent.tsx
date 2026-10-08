@@ -1,4 +1,4 @@
-import type { EchoEnv } from '@echo/utilities'
+import type { Config } from '@echo/utilities'
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
@@ -19,7 +19,7 @@ import { testUrl } from './utils/url.ts'
 
 export const renderComponent = async (
   child: React.ReactElement,
-  params?: { envOverride?: EchoEnv }
+  params?: { envOverride?: Config }
 ): Promise<RenderResult> => {
   queryClient.setDefaultOptions({
     queries: {

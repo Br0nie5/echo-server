@@ -1,4 +1,4 @@
-import type { EchoEnv } from '@echo/utilities'
+import type { Config } from '@echo/utilities'
 import type { RenderResult } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
@@ -9,11 +9,11 @@ export const renderApp = async (
   testPath: string,
   child: React.ReactElement,
   pathParams?: string,
-  params?: { envOverride?: EchoEnv }
+  params?: { envOverride?: Config }
 ): Promise<RenderResult> => {
-  const echoEnv = params?.envOverride ?? testEnv
+  const env = params?.envOverride ?? testEnv
 
-  const initialPath = `${new URL(echoEnv.APP_URL).pathname}${testPath}`
+  const initialPath = `${new URL(env.APP_URL).pathname}${testPath}`
 
   const initialPathWithParams = `${initialPath}${pathParams !== undefined ? pathParams : ''}`
 
@@ -23,7 +23,7 @@ export const renderApp = async (
         <Route path={initialPath} element={child} />
       </Routes>
     </MemoryRouter>,
-    { envOverride: echoEnv }
+    { envOverride: env }
   )
 
   return screen

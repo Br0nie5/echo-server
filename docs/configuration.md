@@ -14,7 +14,7 @@ Real environment variables always win over `.env.*` files. The file is chosen by
 
 ## Common (frontend and backend)
 
-Parsed by [parseEnv.ts](../echo_utilities/src/shared/utils/parseEnv.ts).
+Parsed by [parseConfig.ts](../echo_utilities/src/shared/config/parseConfig.ts).
 
 | Variable             | Required | Description |
 | -------------------- | :------: | ----------- |

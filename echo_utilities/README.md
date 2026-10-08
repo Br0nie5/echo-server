@@ -5,7 +5,7 @@ Shared package used by both `echo_backend` and `echo_frontend`. It is built to `
 ## Contents
 
 - **Types**: the types the API exchanges, each inferred from its zod schema (`src/**/schemas/`), which also validates it at runtime and gives the backend the schema of its routes.
-- **Env parsing**: `parseEchoEnv` for the variables common to frontend and backend (`SERVER_NAME`, `SERVER_URL`, `HAS_AUTHENTICATION`; `API_URL` and `APP_URL` are derived).
+- **Env parsing**: `parseConfig` for the variables common to frontend and backend (`SERVER_NAME`, `SERVER_URL`, `HAS_AUTHENTICATION`; `API_URL` and `APP_URL` are derived).
 - **Log filtering**: `filterLogByCategories`, `filterLogBySearch`. Shared so server and client filter identically.
 - **Helpers**: URL and domain utilities.
 

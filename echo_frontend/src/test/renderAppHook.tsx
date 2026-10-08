@@ -1,4 +1,4 @@
-import type { EchoEnv } from '@echo/utilities'
+import type { Config } from '@echo/utilities'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { RenderHookResult } from '@testing-library/react'
 import { renderHook } from '@testing-library/react'
@@ -12,7 +12,7 @@ import { testEnv } from './utils/env'
 
 export const renderAppHook = <Result,>(
   hook: () => Result,
-  params?: { envOverride?: EchoEnv }
+  params?: { envOverride?: Config }
 ): RenderHookResult<Result, void> => {
   queryClient.setDefaultOptions({
     queries: {

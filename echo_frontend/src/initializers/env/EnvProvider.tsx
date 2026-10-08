@@ -1,4 +1,4 @@
-import { parseEchoEnv } from '@echo/utilities'
+import { parseConfig } from '@echo/utilities'
 import { Box } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 
@@ -22,7 +22,7 @@ export const EnvProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         throw new Error(`Failed to load env: ${response.status}`)
       }
       const rawEnv = await response.json()
-      return parseEchoEnv(rawEnv)
+      return parseConfig(rawEnv)
     },
     staleTime: Infinity, // never refetch
     retry: false

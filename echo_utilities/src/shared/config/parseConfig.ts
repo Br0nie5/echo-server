@@ -1,4 +1,4 @@
-import type { EchoEnv } from '../types/env.js'
+import type { Config } from './config.js'
 
 /** The value if it is a non-blank string, throwing otherwise. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,9 +28,21 @@ const buildUrl = (serverUrl: string, path: string): string => {
   }
 }
 
-/** Validates the variables shared by the backend (`process.env`) and the frontend (`env.<mode>.json`). Throws on a missing or invalid one. */
+/**
+ * Builds the `Config` common to the backend and the frontend from their environment.
+ *
+ * `envHolder` is whatever holds the variables: `process.env` in the backend, the content of
+ * `env.<mode>.json` in the frontend. `HAS_AUTHENTICATION` may be a boolean or the string `true` or
+ * `false`. It throws when `SERVER_NAME`, `SERVER_URL` or `HAS_AUTHENTICATION` is missing or
+ * invalid.
+ *
+ * ```ts
+ * const config = parseConfig({ ...process.env })
+ * config.API_URL // `${SERVER_URL}/api`
+ * ```
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const parseEchoEnv = (envHolder: any): EchoEnv => {
+export const parseConfig = (envHolder: any): Config => {
   const SERVER_URL = requireString(envHolder.SERVER_URL, 'SERVER_URL')
 
   return {

@@ -1,7 +1,7 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-import { parseEchoEnv } from '@echo/utilities'
+import { parseConfig } from '@echo/utilities'
 import dotenv from 'dotenv'
 
 import type { BackConfig } from './backConfig.js'
@@ -54,8 +54,8 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
   const mode = processEnv.NODE_ENV === 'production' ? processEnv.NODE_ENV : 'development'
   dotenv.config({ path: `.env.${mode}`, processEnv, override: false, quiet: true })
 
-  const echoEnv = parseEchoEnv({ ...processEnv })
-  const allowedDomain = parseAllowedDomain(echoEnv.SERVER_URL)
+  const config = parseConfig({ ...processEnv })
+  const allowedDomain = parseAllowedDomain(config.SERVER_URL)
   const logsDirPath = requireEnv(processEnv, 'LOGS_DIR_PATH')
   const notification = parseNotificationConfig(processEnv, {
     telegramMessageSizeLimit: TELEGRAM_MESSAGE_SIZE_LIMIT
@@ -63,20 +63,20 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
 
   return {
     server: {
-      serverName: echoEnv.SERVER_NAME,
-      serverUrl: echoEnv.SERVER_URL,
-      apiUrl: echoEnv.API_URL,
-      appUrl: echoEnv.APP_URL,
-      apiRoutePrefix: new URL(echoEnv.API_URL).pathname,
-      appRoutePrefix: new URL(echoEnv.APP_URL).pathname,
+      serverName: config.SERVER_NAME,
+      serverUrl: config.SERVER_URL,
+      apiUrl: config.API_URL,
+      appUrl: config.APP_URL,
+      apiRoutePrefix: new URL(config.API_URL).pathname,
+      appRoutePrefix: new URL(config.APP_URL).pathname,
       host: '0.0.0.0',
       port: parseHttpPort(requireEnv(processEnv, 'HTTP_PORT')),
       allowedDomain,
-      tls: parseTlsConfig(processEnv, { mode, serverUrl: echoEnv.SERVER_URL }),
+      tls: parseTlsConfig(processEnv, { mode, serverUrl: config.SERVER_URL }),
       frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
     },
     auth: {
-      hasAuthentication: echoEnv.HAS_AUTHENTICATION,
+      hasAuthentication: config.HAS_AUTHENTICATION,
       cookieName: `${allowedDomain}_access_token`,
       cookieSerializeOptions: parseCookieSerializeOptions(allowedDomain),
       usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')
@@ -87,7 +87,7 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
       logsNotifier:
         notification &&
         parseLogsNotifierConfig(processEnv, {
-          serverName: echoEnv.SERVER_NAME,
+          serverName: config.SERVER_NAME,
           lastLogsCheckFilePath: path.join(DATA_DIR_PATH, 'last_logs_check.json')
         })
     },
@@ -98,7 +98,7 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
       retentionDays: addEnvNameToError('SELF_REPORTS_RETENTION_DAYS', () =>
         parseDaysNumber(processEnv.SELF_REPORTS_RETENTION_DAYS, 10)
       ),
-      selfReportsDirPath: createSelfReportsDirPath(logsDirPath, echoEnv.SERVER_NAME),
+      selfReportsDirPath: createSelfReportsDirPath(logsDirPath, config.SERVER_NAME),
       parseLogFileSelfReportFileName: `parseLogFile${LOG_FILE_EXTENSION}`,
       logsNotifierSelfReportFileName: `logsNotifier${LOG_FILE_EXTENSION}`,
       sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')
