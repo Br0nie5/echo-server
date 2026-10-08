@@ -75,7 +75,17 @@ The backend `auth` module has `domain/`, `infra/` and `presentation/`, and no `a
 - `infra/` — `users.db.ts` (`createUsersDb`) opens the SQLite database, `dto/user.dto.ts` describes a row of its `users` table, `authUsersDb.repository.ts` implements the contract by querying that database, hashing the passwords with bcrypt
 - `presentation/` — `auth.routes.ts`, `auth.controller.ts` (the request handlers, signing the JWT and setting the session cookie), `auth.schemas.ts` (the JSON schemas of the routes, derived from the zod schemas of `@echo/utilities`) and `auth.hooks.ts`, the `authPreHandler` rejecting the requests without a valid JWT. No other module imports it: `plugins/registerLogsRoutes.ts` hands it to the routes to protect as their `preHandler` option (`logsRoutes`), only when authentication is enabled
 
-Frontend modules split into `infra/` (TanStack Query hooks + query/mutation keys, one file per hook) and `screens/` (the screen component plus its `hooks/`, `layouts/`, `components/`, `utils/`). `shared/` in each workspace holds cross-module code (the config, API client setup, i18n, layouts, generic components).
+The frontend `logs` module is split into `infra/` (TanStack Query hooks + query/mutation keys, one file per hook) and `screens/` (the screen component plus its `hooks/`, `layouts/`, `components/`, `utils/`).
+
+The frontend `auth` module is layered like a backend module:
+- `domain/` — the `AuthRepository` contract (`checkAuthentication`, `login`, `signUp`) and, in the same file, what it gives and throws: `AuthCheckResult` and `InvalidCredentialsError`
+- `infra/useAuthRepository.ts` — the hook giving the `AuthRepository` on top of the auth endpoints of the backend: it sends the requests, validates the answers against `AuthTokenSchema` and turns the 401 of the backend into the `AuthCheckResult` of the auth check (`login` or `signUp`) and into the `InvalidCredentialsError` of the login, so that no layer above it reads an HTTP status or an axios error
+- `application/` — the TanStack Query hooks: `useGetAuthCheck`, `usePostLogin` and `usePostSignUp`, the two mutations. They import `useAuthRepository` from `infra/` directly: there is no injection, and no query or mutation key file (the one query key is written in its hook)
+- `presentation/` — `AuthScreen`, which shows one of two layouts after the auth check: `AuthFormLayout`, the credentials form of the login or of the sign up depending on its `formMode` (`useAuthForm` holds its state, submits with the mutation of that mode, alerts the outcome and redirects), or `RedirectLayout`. `hooks/useRedirectionOnAuth.ts` says where to go once authenticated
+
+The dependency-cruiser rules of the frontend do not cover these layers yet.
+
+`shared/` in each workspace holds cross-module code (the config, API client setup, i18n, layouts, generic components).
 
 ### Environment configuration
 

@@ -1,0 +1,51 @@
+import nock from 'nock'
+import { describe, expect, test } from 'vitest'
+
+import { renderAppHook } from '../../../../test/renderAppHook'
+import { testConfig } from '../../../../test/utils/config'
+import { InvalidCredentialsError } from '../../domain/auth.repository'
+import { useAuthRepository } from '../useAuthRepository'
+
+const buildRequestMockScope = (): nock.Scope => {
+  return nock(testConfig.API_URL)
+}
+
+const buildAuthCheckRequestMock = (): nock.Interceptor => {
+  return buildRequestMockScope().get('/auth/check').query({})
+}
+
+describe('useAuthRepository', () => {
+  describe('checkAuthentication', () => {
+    test('should treat a malformed 401 auth check body as needing login, not sign up', async () => {
+      buildAuthCheckRequestMock().reply(401, { success: 'not-a-boolean' })
+
+      const { result } = renderAppHook(() => useAuthRepository())
+
+      await expect(result.current.checkAuthentication()).resolves.toBe('login')
+    })
+
+    test('should throw if a successful auth check response does not match the AuthToken schema', async () => {
+      buildAuthCheckRequestMock().reply(200, { success: 'not-a-boolean' })
+
+      const { result } = renderAppHook(() => useAuthRepository())
+
+      await expect(result.current.checkAuthentication()).rejects.toThrow(
+        'Invalid auth token format'
+      )
+    })
+  })
+
+  describe('login', () => {
+    test('should throw an InvalidCredentialsError if the backend refuses the credentials', async () => {
+      buildRequestMockScope()
+        .post('/auth/login')
+        .reply(401, { success: false, message: 'Invalid credentials.' })
+
+      const { result } = renderAppHook(() => useAuthRepository())
+
+      await expect(
+        result.current.login({ username: 'bad-user', password: 'bad-pass' })
+      ).rejects.toBeInstanceOf(InvalidCredentialsError)
+    })
+  })
+})

@@ -97,10 +97,21 @@ A `SelfFileReportRepository` stores its self reports in one file, given when it 
 
 ## Frontend layout
 
-`echo_frontend/src/modules/<domain>` is split into:
+`echo_frontend/src/modules/logs` is split into:
 
 - `infra/`: TanStack Query hooks plus query and mutation keys, one file per hook.
 - `screens/`: the screen component and its `hooks/`, `layouts/`, `components/`, `utils/`.
+
+`echo_frontend/src/modules/auth` is layered like a backend module:
+
+| Folder | Content |
+| ------ | ------- |
+| `domain/` | `AuthRepository`, the contract the backend is reached through (`checkAuthentication`, `login`, `signUp`), and, in the same file, what it gives and throws: `AuthCheckResult` and `InvalidCredentialsError` |
+| `infra/` | `useAuthRepository`, the hook giving the `AuthRepository` on top of the auth endpoints: it sends the requests, validates the answers against `AuthTokenSchema` and turns the 401 of the backend into the `AuthCheckResult` of the auth check (`login` or `signUp`) and into the `InvalidCredentialsError` of the login, so that no layer above it reads an HTTP status or an axios error |
+| `application/` | The TanStack Query hooks: `useGetAuthCheck`, `usePostLogin` and `usePostSignUp`, the two mutations. They import `useAuthRepository` from `infra/` directly |
+| `presentation/` | `AuthScreen`, which shows one of two layouts after the auth check: `AuthFormLayout`, the credentials form of the login or of the sign up depending on its `formMode` (`useAuthForm` holds its state, submits with the mutation of that mode, alerts the outcome and redirects), or `RedirectLayout`. `hooks/useRedirectionOnAuth.ts` says where to go once authenticated |
+
+The frontend rules of `arch:check` do not cover these layers yet.
 
 `Initializers/` sets up the API client, config loading and routing. `shared/` holds i18n (English only for now), layouts, theme and generic utilities.
 

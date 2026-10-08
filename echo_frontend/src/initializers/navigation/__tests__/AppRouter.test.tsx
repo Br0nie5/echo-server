@@ -6,7 +6,7 @@ import { testConfig } from '../../../test/utils/config'
 import { AppRouter } from '../AppRouter'
 
 const authTestId = 'auth-screen'
-vi.mock('../../../modules/auth/screens/AuthScreen', () => ({
+vi.mock('../../../modules/auth/presentation/AuthScreen', () => ({
   AuthScreen: (): JSX.Element => <div data-testid={authTestId} />
 }))
 

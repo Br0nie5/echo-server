@@ -1,23 +1,25 @@
 import { Typography, TextField, Button, Box, CircularProgress, Alert } from '@mui/material'
-import type { MutationStatus } from '@tanstack/react-query'
 import React, { memo } from 'react'
 
 import { useAuthForm } from '../hooks/useAuthForm'
-import type { OnFormSubmitType } from '../utils/types'
+import type { AuthenticationMode } from '../utils/types'
 
 type AuthFormLayoutProps = {
-  onFormSubmit: OnFormSubmitType
-  submitStatus: MutationStatus
-  formMode: 'login' | 'signUp'
+  formMode: AuthenticationMode
 }
 
-const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({
-  onFormSubmit,
-  submitStatus,
-  formMode
-}) => {
-  const { translation, onSubmit, alert, username, setUsername, password, setPassword } =
-    useAuthForm(onFormSubmit)
+const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({ formMode }) => {
+  const {
+    translation,
+    onSubmit,
+    isSubmitting,
+    isAuthenticated,
+    alert,
+    username,
+    setUsername,
+    password,
+    setPassword
+  } = useAuthForm(formMode)
 
   return (
     <Box component="form" onSubmit={onSubmit} sx={{ maxWidth: 400, mx: 'auto', p: 3 }}>
@@ -36,7 +38,7 @@ const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({
         margin="normal"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        disabled={submitStatus === 'pending'}
+        disabled={isSubmitting}
         autoComplete="username"
       />
       <TextField
@@ -47,7 +49,7 @@ const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        disabled={submitStatus === 'pending'}
+        disabled={isSubmitting}
         autoComplete={formMode === 'login' ? 'current-password' : 'new-password'}
       />
       <Button
@@ -56,8 +58,8 @@ const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({
         color="primary"
         fullWidth
         sx={{ mt: 3 }}
-        disabled={submitStatus === 'pending' || submitStatus === 'success'}
-        startIcon={submitStatus === 'pending' && <CircularProgress size={20} color="inherit" />}
+        disabled={isSubmitting || isAuthenticated}
+        startIcon={isSubmitting && <CircularProgress size={20} color="inherit" />}
       >
         {formMode === 'login'
           ? translation('auth.login.button')
@@ -67,5 +69,5 @@ const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({
   )
 }
 
-/** Credentials form shared by the login and the sign up. `formMode` sets the browser password autocomplete hint. */
+/** Credentials form of the login or of the sign up of the first account, depending on `formMode`. */
 export const AuthFormLayout = memo(AuthFormLayoutComponent)

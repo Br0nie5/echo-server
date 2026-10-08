@@ -8,7 +8,7 @@ import { AppPathNames } from '../../shared/navigation/pathNames'
 import { getCleanUrlPathname } from './utils/getCleanUrlPathname'
 
 const AuthScreen = lazy(() =>
-  import('../../modules/auth/screens/AuthScreen').then((module) => ({
+  import('../../modules/auth/presentation/AuthScreen').then((module) => ({
     default: module.AuthScreen
   }))
 )

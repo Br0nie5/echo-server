@@ -3,7 +3,8 @@ import type { QueryStatus } from '@tanstack/react-query'
 
 import { useConfig } from '../../../../shared/config/useConfig'
 import { useAppTranslation, type AppTranslation } from '../../../../shared/i18n/useAppTranslation'
-import { useGetAuthCheck, type AuthCheckResult } from '../../infra/useGetAuthCheck'
+import { useGetAuthCheck } from '../../application/useGetAuthCheck'
+import type { AuthCheckResult } from '../../domain/auth.repository'
 
 interface UseAuthScreenReturnType {
   translation: AppTranslation

@@ -6,8 +6,7 @@ import { PageLayout } from '../../../shared/layouts/PageLayout'
 import { QueryFallbackLayout } from '../../../shared/layouts/QueryFallbackLayout'
 
 import { useAuthScreen } from './hooks/useAuthScreen'
-import { AuthLoginLayout } from './layouts/AuthLoginLayout'
-import { AuthSignUpLayout } from './layouts/AuthSignUpLayout'
+import { AuthFormLayout } from './layouts/AuthFormLayout'
 import { RedirectLayout } from './layouts/RedirectLayout'
 
 const AuthScreenComponent: React.FC = () => {
@@ -41,17 +40,9 @@ const AuthScreenComponent: React.FC = () => {
     )
   }
 
-  if (authCheckResult === 'signUp') {
-    return (
-      <PageLayout header={title}>
-        <AuthSignUpLayout />
-      </PageLayout>
-    )
-  }
-
   return (
     <PageLayout header={title}>
-      <AuthLoginLayout />
+      <AuthFormLayout formMode={authCheckResult} />
     </PageLayout>
   )
 }

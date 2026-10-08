@@ -11,10 +11,7 @@ import { AppPathNames } from '../../../../shared/navigation/pathNames'
 import { renderApp } from '../../../../test/renderApp'
 import { testConfig } from '../../../../test/utils/config'
 import { resizeWindow } from '../../../../test/utils/resizeWindow'
-import { getAuthCheckQueryKey } from '../../infra/keys/getAuthCheckQueryKey'
-import { postLoginMutationKey } from '../../infra/keys/postLoginMutationKey'
-import { postSignUpMutationKey } from '../../infra/keys/postSignUpMutationKey'
-import type { AuthCheckResult } from '../../infra/useGetAuthCheck'
+import type { AuthCheckResult } from '../../domain/auth.repository'
 import { AuthScreen } from '../AuthScreen'
 
 const appTranslation: AppTranslation = (key) => i18n.t(key)
@@ -53,19 +50,15 @@ const buildRequestMockScope = (): nock.Scope => {
 }
 
 const buildLoginRequestMock = (status: number, response: AuthToken): void => {
-  const loginUri = postLoginMutationKey[0]
-  buildRequestMockScope().post(loginUri).reply(status, response)
+  buildRequestMockScope().post('/auth/login').reply(status, response)
 }
 
 const buildSignUpRequestMock = (status: number, response: AuthToken): void => {
-  const signUpUri = postSignUpMutationKey[0]
-  buildRequestMockScope().post(signUpUri).reply(status, response)
+  buildRequestMockScope().post('/auth/signup').reply(status, response)
 }
 
 const buildAuthCheckRequestMock = (): nock.Interceptor => {
-  const authCheckUri = getAuthCheckQueryKey[0]
-
-  return buildRequestMockScope().get(authCheckUri).query({})
+  return buildRequestMockScope().get('/auth/check').query({})
 }
 
 const buildAuthCheckSuccessRequestMock = (): void => {
