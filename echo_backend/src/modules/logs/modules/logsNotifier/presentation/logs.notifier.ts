@@ -4,8 +4,8 @@ import cron from 'node-cron'
 
 import type { LogsNotifierConfig } from '../../../../../shared/config/backConfig.js'
 import type { Notifier } from '../../../../notification/domain/notifier.js'
+import type { SelfReportRepository } from '../../../../selfReport/domain/selfReport.repository.js'
 import type { LogsRepository } from '../../../domain/logs.repository.js'
-import type { SelfLogRepository } from '../../selfLog/domain/selfLog.repository.js'
 import { checkProblemLogsAndNotify } from '../application/checkProblemLogsAndNotify.js'
 import type { CheckDateRepository } from '../domain/checkDate.repository.js'
 
@@ -15,7 +15,7 @@ export interface LogsNotifierPluginOptions extends FastifyPluginOptions {
   logsRepository: LogsRepository
   notifier: Notifier
   checkDateRepository: CheckDateRepository
-  selfLogRepository: SelfLogRepository
+  selfReportRepository: SelfReportRepository
 }
 
 /**
@@ -26,7 +26,7 @@ export interface LogsNotifierPluginOptions extends FastifyPluginOptions {
  */
 const logsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = async (
   fastify,
-  { logsNotifierConfig, logsRepository, notifier, checkDateRepository, selfLogRepository }
+  { logsNotifierConfig, logsRepository, notifier, checkDateRepository, selfReportRepository }
 ) => {
   fastify.log.info('Registering logs notifier')
 
@@ -39,7 +39,7 @@ const logsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = async (
         logsRepository,
         notifier,
         checkDateRepository,
-        selfLogRepository
+        selfReportRepository
       })
     } catch (err) {
       fastify.log.error({ err }, 'Cron job failed')

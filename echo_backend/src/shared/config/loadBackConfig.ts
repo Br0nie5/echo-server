@@ -6,7 +6,7 @@ import dotenv from 'dotenv'
 
 import type { BackConfig } from './backConfig.js'
 import { addEnvNameToError } from './utils/addEnvNameToError.js'
-import { createSelfLogsDirPath } from './utils/createSelfLogsDirPath.js'
+import { createSelfReportsDirPath } from './utils/createSelfReportsDirPath.js'
 import { parseAllowedDomain } from './utils/parseAllowedDomain.js'
 import { parseCookieSerializeOptions } from './utils/parseCookieSerializeOptions.js'
 import { parseDaysNumber } from './utils/parseDaysNumber.js'
@@ -21,10 +21,10 @@ import { requireEnv } from './utils/requireEnv.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const REPOSITORY_ROOT_PATH = path.join(__dirname, '../../../..')
-/** Directory holding the persistent data of the backend (users database, cron checkpoint, self-logs session). */
+/** Directory holding the persistent data of the backend (users database, cron checkpoint, self-reports session). */
 const DATA_DIR_PATH = path.join(REPOSITORY_ROOT_PATH, 'data')
 
-/** Extension of the files the logs are read from, and of the files the self logs are written to. */
+/** Extension of the files the logs are read from, and of the files the self reports are written to. */
 const LOG_FILE_EXTENSION = '.jsonl'
 
 /** Maximum length of a message, set by the Telegram bot API. */
@@ -82,24 +82,24 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
     logs: {
       logsDirPath,
       logFileExtension: LOG_FILE_EXTENSION,
-      selfLogs: {
-        isEnabled: addEnvNameToError('SELF_LOGS_ENABLED', () =>
-          parseOptionalBoolean(processEnv.SELF_LOGS_ENABLED)
-        ),
-        retentionDays: addEnvNameToError('SELF_LOGS_RETENTION_DAYS', () =>
-          parseDaysNumber(processEnv.SELF_LOGS_RETENTION_DAYS, 10)
-        ),
-        selfLogsDirPath: createSelfLogsDirPath(logsDirPath, echoEnv.SERVER_NAME),
-        parseLogFileSelfLogFileName: `parseLogFile${LOG_FILE_EXTENSION}`,
-        logsNotifierSelfLogFileName: `logsNotifier${LOG_FILE_EXTENSION}`,
-        sessionFilePath: path.join(DATA_DIR_PATH, 'self_logs_session.json')
-      },
       logsNotifier:
         notification &&
         parseLogsNotifierConfig(processEnv, {
           serverName: echoEnv.SERVER_NAME,
           lastLogsCheckFilePath: path.join(DATA_DIR_PATH, 'last_logs_check.json')
         })
+    },
+    selfReports: {
+      isEnabled: addEnvNameToError('SELF_REPORTS_ENABLED', () =>
+        parseOptionalBoolean(processEnv.SELF_REPORTS_ENABLED)
+      ),
+      retentionDays: addEnvNameToError('SELF_REPORTS_RETENTION_DAYS', () =>
+        parseDaysNumber(processEnv.SELF_REPORTS_RETENTION_DAYS, 10)
+      ),
+      selfReportsDirPath: createSelfReportsDirPath(logsDirPath, echoEnv.SERVER_NAME),
+      parseLogFileSelfReportFileName: `parseLogFile${LOG_FILE_EXTENSION}`,
+      logsNotifierSelfReportFileName: `logsNotifier${LOG_FILE_EXTENSION}`,
+      sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')
     },
     notification
   }

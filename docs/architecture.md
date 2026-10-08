@@ -23,7 +23,7 @@ Echo is an npm-workspaces monorepo with three packages.
 1. `GET /api/logs?fromDate=…` reaches `presentation/logs.routes.ts`.
 2. `presentation/logs.controller.ts` validates params and calls `getFilteredLogs` (`application/getFilteredLogs.ts`).
 3. `getFilteredLogs` asks the `LogsRepository` of `domain/` for every log, then filters them and sorts them from the newest to the oldest, in memory.
-4. `infra/fileLogs.repository.ts` implements that repository: `infra/fileLogs.api.ts` walks `LOGS_DIR_PATH` and reads the lines of each `.jsonl` file, and the repository converts each line to a log with `convertRawLogLineToLog` (`infra/dto/rawLogLine.dto.ts`).
+4. `infra/logsFiles.repository.ts` implements that repository: `infra/logsFiles.api.ts`, the one access to the log files (it also writes the ones the self reports are stored in), walks `LOGS_DIR_PATH` and reads the lines of each `.jsonl` file, and the repository converts each line to a log with `convertRawLogLineToLog` (`infra/dto/rawLogLine.dto.ts`).
 
 There is no database for logs. Every request re-reads the files.
 
@@ -31,7 +31,7 @@ The filter functions `filterLogByCategories` and `filterLogBySearch` live in `@e
 
 ## Backend layout
 
-Code is split by domain under `echo_backend/src/modules` (`auth`, `logs`, `notification`).
+Code is split by domain under `echo_backend/src/modules` (`auth`, `logs`, `notification`, `selfReport`).
 
 The core of the `logs` module is split into four layers, each in its own folder:
 
@@ -53,22 +53,13 @@ The `auth` module is not layered yet and keeps its files flat, with this naming 
 | `*.schemas.ts` | Fastify `addSchema` definitions |
 | `utils/` | Pure helpers |
 
-`shared/` holds cross-module code (the config, error schemas). `shared/config/` holds `BackConfig`, split into `ServerConfig`, `AuthConfig`, `LogsConfig` (itself holding `SelfLogsConfig` and the optional `LogsNotifierConfig`) and the optional `NotificationConfig`, and `loadBackConfig`, which builds it once from the environment variables and from constants (the paths under `data/`, the self-logs directory, file names, the extension of the log files). `shared/config/utils/` holds the helpers `loadBackConfig` builds it with, one per file: mostly the parsers the variables are read with. Each function is given the config of its domain and takes every setting and path from it. [server.ts](../echo_backend/src/server.ts) wires everything, registers Swagger, serves `/app` via `@fastify/static` (with an SPA fallback to `index.html`) and returns JSON 404s elsewhere.
+`shared/` holds cross-module code (the config, error schemas). `shared/config/` holds `BackConfig`, split into `ServerConfig`, `AuthConfig`, `LogsConfig` (itself holding the optional `LogsNotifierConfig`), `SelfReportsConfig` and the optional `NotificationConfig`, and `loadBackConfig`, which builds it once from the environment variables and from constants (the paths under `data/`, the self-reports directory, file names, the extension of the log files). `shared/config/utils/` holds the helpers `loadBackConfig` builds it with, one per file: mostly the parsers the variables are read with. Each function is given the config of its domain and takes every setting and path from it. [server.ts](../echo_backend/src/server.ts) wires everything, registers Swagger, serves `/app` via `@fastify/static` (with an SPA fallback to `index.html`) and returns JSON 404s elsewhere.
 
-The `logs` module itself has three parts: the core log retrieval in the four layer folders described above (the only one with HTTP routes), and two submodules, `modules/logs/modules/selfLog/` (the backend's own diagnostics, see below) and `modules/logs/modules/logsNotifier/` (the cron notifying the problem logs, see below). They depend on each other in one direction only (`selfLog` ← `logs` ← `logsNotifier`), never circularly, except for the format of a log line (`infra/dto/rawJsonLog.dto.ts`), which `selfLog` writes and `logs` reads.
-
-### The `selfLog` submodule
-
-A submodule lives in `modules/<module>/modules/<submodule>/` and follows the layers of its parent, keeping only those it needs. `selfLog` has no route and no business rule of its own, so it has two:
-
-| Folder | Content |
-| ------ | ------- |
-| `domain/` | `SelfLog`, a diagnostic the backend reports about itself, and `SelfLogRepository`, the contract the other parts of the backend log through |
-| `infra/` | `SelfFileLogApi` reads and writes the `.jsonl` files of `LOGS_DIR_PATH/server/<SERVER_NAME>/log`, `SelfFileLogRepository` implements the contract on top of it, `utils/getNextSessionJobId.ts` gives the `job_id` a repository writes its self logs with |
-
-A `SelfFileLogRepository` stores its self logs in one file, given when it is created in [server.ts](../echo_backend/src/server.ts) along with the `SelfLogsConfig` (self-logs directory, retention, session file). Each part of the backend that reports diagnostics receives its own `SelfLogRepository` and never names a file: `FileLogsRepository` does, for the lines it cannot parse (`parseLogFile.jsonl`), and so does the `logsNotifier` submodule, for the problem logs it could not notify (`logsNotifier.jsonl`). When self logs are disabled, or when their directory cannot be prepared, it receives a repository that stores nothing.
+The `logs` module itself has two parts: the core log retrieval in the four layer folders described above (the only one with HTTP routes), and a submodule, `modules/logs/modules/logsNotifier/` (the cron notifying the problem logs, see below), which depends on the core and never the other way round.
 
 ### The `logsNotifier` submodule
+
+A submodule lives in `modules/<module>/modules/<submodule>/` and follows the layers of its parent, keeping only those it needs.
 
 `logsNotifier` is the optional cron that notifies the problem logs. It has a use case and an entry point of its own, so it has the four layers:
 
@@ -79,7 +70,7 @@ A `SelfFileLogRepository` stores its self logs in one file, given when it is cre
 | `infra/` | `CheckDateApi` reads and writes the last-check file (`data/last_logs_check.json`), `fileCheckDate.repository.ts` implements the contract on top of it, with `dto/lastCheckDate.dto.ts` (what the file holds) |
 | `presentation/` | `logs.notifier.ts`, the Fastify plugin that runs the check on the configured schedule: a cron is the entry point of the submodule, the way a route is the one of `logs` |
 
-The check gets its logs from the `getFilteredLogs` of `logs` (`application/getFilteredLogs.ts`) and sends its message through the `Notifier` of the `notification` module (see below). The very first check only saves its date, so the logs that predate it are not notified, and a check whose notification fails does not save its date, so the next one sends the same logs again. When the size limit of the channel is too small for any message, nothing is sent and the check reports it as a warning through its own `SelfLogRepository` (`logsNotifier.jsonl`). The repositories are built in [server.ts](../echo_backend/src/server.ts), only when both the cron and the notifications are configured (see the [configuration](configuration.md)).
+The check gets its logs from the `getFilteredLogs` of `logs` (`application/getFilteredLogs.ts`) and sends its message through the `Notifier` of the `notification` module (see below). The very first check only saves its date, so the logs that predate it are not notified, and a check whose notification fails does not save its date, so the next one sends the same logs again. When the size limit of the channel is too small for any message, nothing is sent and the check reports it as a warning through its own `SelfReportRepository` (`logsNotifier.jsonl`). The repositories are built in [server.ts](../echo_backend/src/server.ts), only when both the cron and the notifications are configured (see the [configuration](configuration.md)).
 
 ### The `notification` module
 
@@ -91,6 +82,21 @@ The check gets its logs from the `getFilteredLogs` of `logs` (`application/getFi
 | `infra/` | `TelegramNotifierApi` sends a message through the Telegram bot API, `telegramNotifier.ts` implements the contract on top of it, its size limit being the `telegramMessageSizeLimit` of `NotificationConfig` |
 
 `Notifier` is a contract, so other channels can be added. It is the one thing, with `auth.hooks`, a module may import from another one: `logsNotifier` depends on `notification/domain/`, never on its `infra/`.
+
+### The `selfReport` module
+
+`modules/selfReport/` is how the backend reports its own diagnostics. It has no route and no business rule, so it has two layers:
+
+| Folder | Content |
+| ------ | ------- |
+| `domain/` | `SelfReport`, a diagnostic the backend reports about itself (`date`, `message`, `level`, either `'warning'` or `'error'`, `reportedFile`, `reportedLine`), and `SelfReportRepository`, the contract the other parts of the backend report through |
+| `infra/` | `SelfFileReportRepository` implements the contract on top of the `LogsFilesApi` of `logs`, reading and writing the `.jsonl` files of `LOGS_DIR_PATH/server/<SERVER_NAME>/log` through it, `SessionJobIdApi` reads and writes the session file, which remembers the last `job_id` the self reports were written with (a repository takes the next one when it is created), `dto/sessionJobId.dto.ts` describes its content |
+
+A `SelfReport` is a model of its own, not a `Log`: the repository writes it as a log line (`utils/convertSelfReportToRawJsonLogLine.ts`), which is how it shows up in the app like any other log.
+
+A `SelfFileReportRepository` stores its self reports in one file, given when it is created in [server.ts](../echo_backend/src/server.ts) along with the `SelfReportsConfig` (self-reports directory, retention, session file). Each part of the backend that reports diagnostics receives its own `SelfReportRepository` and never names a file: `LogsFilesRepository` does, for the lines it cannot parse (`parseLogFile.jsonl`), and so does the `logsNotifier` submodule, for the problem logs it could not notify (`logsNotifier.jsonl`). When self reports are disabled, or when their directory cannot be prepared, it receives a repository that stores nothing.
+
+`logs` and `selfReport` import each other, through the two layers a module may import from another one (`domain/` and `infra/`, see `backend-modules-isolated`): `logs` reports through `selfReport/domain/`, and `selfReport` stores its self reports as log lines, with the access to the log files and the format of a log line that `logs` owns (`logs/infra/logsFiles.api.ts`, `logs/infra/dto/rawJsonLog.dto.ts`).
 
 ## Frontend layout
 
@@ -141,7 +147,7 @@ The script runs `arch:check` in every workspace. Each one has its own rules, wit
 | ---- | ---------------- |
 | `no-circular` | Any circular dependency |
 | `*-shared-not-to-modules` | `shared/` importing from `modules/` (backend and frontend) |
-| `backend-modules-isolated` | A backend module importing another module, except `auth/auth.hooks.ts` and `notification/domain/` |
+| `backend-modules-isolated` | A backend module importing another module, except its `domain/` and `infra/`, those of its submodules, and `auth/auth.hooks.ts` |
 | `frontend-modules-isolated` | A frontend module importing another module |
 | `backend-domain-is-independent`, `backend-application-not-to-outer-layers`, `backend-infra-only-to-domain`, `backend-presentation-not-to-infra` | In a layered module, any import other than `presentation → application → domain ← infra` |
 | other `backend-*` layering | In a flat module, going upward or skipping layers in `routes → controller → service → repository`; `utils/` and `*.schemas.ts` importing any of those layers |

@@ -19,6 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `LOGS_CRON_TELEGRAM_CHAT_ID` | `TELEGRAM_CHAT_ID` |
   | `LOGS_CRON_TELEGRAM_BASE_URL` | `TELEGRAM_BASE_URL` |
 
+- **Breaking:** the self logs are now called self reports, and their environment variables are renamed. Update the environment of your container, otherwise the self reports are disabled and their retention goes back to its default:
+
+  | Before | After |
+  | ------ | ----- |
+  | `SELF_LOGS_ENABLED` | `SELF_REPORTS_ENABLED` |
+  | `SELF_LOGS_RETENTION_DAYS` | `SELF_REPORTS_RETENTION_DAYS` |
+
+- The file remembering the last `job_id` of the self reports is renamed from `data/self_logs_session.json` to `data/self_reports_session.json`. Rename it in your `data/` volume to keep the `job_id` going on from the last one, otherwise it starts again at `1`. The self reports themselves are still stored in `/watched_logs/server/<SERVER_NAME>/log`, in the same format.
+
 ## [1.2.0] - 2026-09-23
 
 ### Changed

@@ -85,8 +85,8 @@ describe('loadBackConfig', () => {
     { variable: 'HAS_AUTHENTICATION', value: 'maybe' },
     { variable: 'HTTP_PORT', value: 'not-a-number' },
     { variable: 'LOGS_DIR_PATH', value: '' },
-    { variable: 'SELF_LOGS_ENABLED', value: 'maybe' },
-    { variable: 'SELF_LOGS_RETENTION_DAYS', value: '0' }
+    { variable: 'SELF_REPORTS_ENABLED', value: 'maybe' },
+    { variable: 'SELF_REPORTS_RETENTION_DAYS', value: '0' }
   ])('should throw when the parser of $variable throws on "$value"', ({ variable, value }) => {
     expect(() => loadBackConfig({ ...REQUIRED_ENV, [variable]: value })).toThrow()
   })
@@ -120,15 +120,15 @@ describe('loadBackConfig', () => {
       logs: {
         logsDirPath: '/some/path',
         logFileExtension: '.jsonl',
-        selfLogs: {
-          isEnabled: false,
-          retentionDays: 10,
-          selfLogsDirPath: '/some/path/server/Echo/log',
-          parseLogFileSelfLogFileName: 'parseLogFile.jsonl',
-          logsNotifierSelfLogFileName: 'logsNotifier.jsonl',
-          sessionFilePath: path.join(DATA_DIR_PATH, 'self_logs_session.json')
-        },
         logsNotifier: undefined
+      },
+      selfReports: {
+        isEnabled: false,
+        retentionDays: 10,
+        selfReportsDirPath: '/some/path/server/Echo/log',
+        parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
+        logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
+        sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')
       },
       notification: undefined
     })
@@ -144,8 +144,8 @@ describe('loadBackConfig', () => {
       LOGS_DIR_PATH: '/watched_logs',
       TLS_CERT_PATH: TEST_CERT_PATH,
       TLS_KEY_PATH: TEST_KEY_PATH,
-      SELF_LOGS_ENABLED: 'true',
-      SELF_LOGS_RETENTION_DAYS: '30',
+      SELF_REPORTS_ENABLED: 'true',
+      SELF_REPORTS_RETENTION_DAYS: '30',
       LOGS_NOTIFIER_SCHEDULE_REGEX: '*/30 * * * *',
       LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: 'WARNING,ERROR',
       TELEGRAM_CHAT_ID: '123456789',
@@ -184,14 +184,6 @@ describe('loadBackConfig', () => {
       logs: {
         logsDirPath: '/watched_logs',
         logFileExtension: '.jsonl',
-        selfLogs: {
-          isEnabled: true,
-          retentionDays: 30,
-          selfLogsDirPath: '/watched_logs/server/Docker Prod/log',
-          parseLogFileSelfLogFileName: 'parseLogFile.jsonl',
-          logsNotifierSelfLogFileName: 'logsNotifier.jsonl',
-          sessionFilePath: path.join(DATA_DIR_PATH, 'self_logs_session.json')
-        },
         logsNotifier: {
           schedule: '*/30 * * * *',
           watchedLogsCategories: ['WARNING', 'ERROR'],
@@ -199,6 +191,14 @@ describe('loadBackConfig', () => {
           serverName: 'Docker Prod',
           lastLogsCheckFilePath: path.join(DATA_DIR_PATH, 'last_logs_check.json')
         }
+      },
+      selfReports: {
+        isEnabled: true,
+        retentionDays: 30,
+        selfReportsDirPath: '/watched_logs/server/Docker Prod/log',
+        parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
+        logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
+        sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')
       },
       notification: {
         telegramChatId: '123456789',

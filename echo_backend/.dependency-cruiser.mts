@@ -15,7 +15,7 @@ const UPPER_LAYERS = `${MODULES}/[^/]+/[^/]+\\.(routes|controller|service|reposi
 
 /**
  * Folders of one layer of a module split into `domain/`, `application/`, `infra/` and
- * `presentation/`, and of its submodules (`modules/logs/modules/selfLog/`).
+ * `presentation/`, and of its submodules (`modules/logs/modules/logsNotifier/`).
  */
 const layer = (names: string): string[] => [
   `${MODULES}/[^/]+/(${names})/`,
@@ -46,15 +46,11 @@ const config: IConfiguration = {
       name: 'backend-modules-isolated',
       severity: 'error',
       comment:
-        'A backend module may only import another module through auth.hooks (the shared authentication pre-handler) or through the domain/ of notification (the contract any module notifies through).',
+        'A backend module may only import another module through its domain/ and infra/ (its models, its contracts and what implements them), those of its submodules, or auth.hooks (the shared authentication pre-handler). Its application/ and presentation/ stay its own.',
       from: { path: `${MODULES}/([^/]+)/`, pathNot: TESTS },
       to: {
         path: `${MODULES}/`,
-        pathNot: [
-          `${MODULES}/$1/`,
-          `${MODULES}/auth/auth\\.hooks\\.ts$`,
-          `${MODULES}/notification/domain/`
-        ]
+        pathNot: [`${MODULES}/$1/`, `${MODULES}/auth/auth\\.hooks\\.ts$`, ...layer('domain|infra')]
       }
     },
 

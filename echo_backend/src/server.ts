@@ -16,20 +16,20 @@ import { createAuthService } from './modules/auth/auth.service.js'
 import { openUsersDb } from './modules/auth/users.db.js'
 import { createSqliteUsersRepository } from './modules/auth/users.repository.js'
 import type { LogsRepository } from './modules/logs/domain/logs.repository.js'
-import { createFileLogsApi } from './modules/logs/infra/fileLogs.api.js'
-import { createFileLogsRepository } from './modules/logs/infra/fileLogs.repository.js'
+import { createLogsFilesApi, type LogsFilesApi } from './modules/logs/infra/logsFiles.api.js'
+import { createLogsFilesRepository } from './modules/logs/infra/logsFiles.repository.js'
 import { createFileCheckDateApi } from './modules/logs/modules/logsNotifier/infra/fileCheckDate.api.js'
 import { createFileCheckDateRepository } from './modules/logs/modules/logsNotifier/infra/fileCheckDate.repository.js'
 import logsNotifier from './modules/logs/modules/logsNotifier/presentation/logs.notifier.js'
-import type { SelfLogRepository } from './modules/logs/modules/selfLog/domain/selfLog.repository.js'
-import { createNoopSelfLogRepository } from './modules/logs/modules/selfLog/infra/noopSelfLog.repository.js'
-import { createSelfFileLogApi } from './modules/logs/modules/selfLog/infra/selfFileLog.api.js'
-import { createSelfFileLogRepository } from './modules/logs/modules/selfLog/infra/selfFileLog.repository.js'
 import { createLogsController } from './modules/logs/presentation/logs.controller.js'
 import { logsRoutes } from './modules/logs/presentation/logs.routes.js'
 import { createTelegramNotifierApi } from './modules/notification/infra/telegramNotifier.api.js'
 import { createTelegramNotifier } from './modules/notification/infra/telegramNotifier.js'
-import type { BackConfig, SelfLogsConfig, ServerConfig } from './shared/config/backConfig.js'
+import type { SelfReportRepository } from './modules/selfReport/domain/selfReport.repository.js'
+import { createFileSessionJobIdApi } from './modules/selfReport/infra/fileSessionJobId.api.js'
+import { createNoopSelfReportRepository } from './modules/selfReport/infra/noopSelfReport.repository.js'
+import { createSelfFileReportRepository } from './modules/selfReport/infra/selfFileReport.repository.js'
+import type { BackConfig, SelfReportsConfig, ServerConfig } from './shared/config/backConfig.js'
 import { loadBackConfig } from './shared/config/loadBackConfig.js'
 import { EchoErrorSchema } from './shared/schemas/errors.schemas.js'
 import { isOriginAllowed } from './shared/utils/isOriginAllowed.js'
@@ -145,28 +145,32 @@ const registerFrontend = async (
   })
 }
 
-/** The repository storing its self logs in the file named `selfLogFileName`, or storing nothing when the self logs are disabled. */
-const getSelfLogRepository = (
+/** The repository storing its self reports in the file named `selfReportFileName`, through `logsFilesApi`, or storing nothing when the self reports are disabled. */
+const getSelfReportRepository = (
   server: EchoServer,
-  selfLogsConfig: SelfLogsConfig,
-  selfLogFileName: string
-): Promise<SelfLogRepository> | SelfLogRepository =>
-  selfLogsConfig.isEnabled
-    ? createSelfFileLogRepository({
-        selfFileLogApi: createSelfFileLogApi(selfLogsConfig),
-        selfLogsConfig,
-        selfLogFileName,
+  logsFilesApi: LogsFilesApi,
+  selfReportsConfig: SelfReportsConfig,
+  selfReportFileName: string
+): Promise<SelfReportRepository> | SelfReportRepository =>
+  selfReportsConfig.isEnabled
+    ? createSelfFileReportRepository({
+        logsFilesApi,
+        sessionJobIdApi: createFileSessionJobIdApi(selfReportsConfig),
+        selfReportsConfig,
+        selfReportFileName,
         logger: server.log
       })
-    : createNoopSelfLogRepository()
+    : createNoopSelfReportRepository()
 
 /** Registers the cron notifying the problem logs, only when it is configured along with the notifications. */
 const registerLogsNotifier = async (
   server: EchoServer,
   {
-    logs: { logsNotifier: logsNotifierConfig, selfLogs: selfLogsConfig },
+    logs: { logsNotifier: logsNotifierConfig },
+    selfReports: selfReportsConfig,
     notification: notificationConfig
   }: BackConfig,
+  logsFilesApi: LogsFilesApi,
   logsRepository: LogsRepository
 ): Promise<void> => {
   if (logsNotifierConfig === undefined || notificationConfig === undefined) {
@@ -182,10 +186,11 @@ const registerLogsNotifier = async (
       notificationConfig
     ),
     checkDateRepository: createFileCheckDateRepository(createFileCheckDateApi(logsNotifierConfig)),
-    selfLogRepository: await getSelfLogRepository(
+    selfReportRepository: await getSelfReportRepository(
       server,
-      selfLogsConfig,
-      selfLogsConfig.logsNotifierSelfLogFileName
+      logsFilesApi,
+      selfReportsConfig,
+      selfReportsConfig.logsNotifierSelfReportFileName
     )
   })
 }
@@ -217,12 +222,14 @@ export const buildServer = async (config: BackConfig = loadBackConfig()): Promis
 
   server.addSchema(EchoErrorSchema)
 
-  const fileLogsRepository = createFileLogsRepository(
-    createFileLogsApi(config.logs),
-    await getSelfLogRepository(
+  const logsFilesApi = createLogsFilesApi(config.logs)
+  const logsFilesRepository = createLogsFilesRepository(
+    logsFilesApi,
+    await getSelfReportRepository(
       server,
-      config.logs.selfLogs,
-      config.logs.selfLogs.parseLogFileSelfLogFileName
+      logsFilesApi,
+      config.selfReports,
+      config.selfReports.parseLogFileSelfReportFileName
     )
   )
 
@@ -238,12 +245,12 @@ export const buildServer = async (config: BackConfig = loadBackConfig()): Promis
   }
   await server.register(logsRoutes, {
     prefix: '/api',
-    controller: createLogsController(fileLogsRepository),
+    controller: createLogsController(logsFilesRepository),
     hasAuthentication: config.auth.hasAuthentication
   })
 
   await registerFrontend(server, config.server)
-  await registerLogsNotifier(server, config, fileLogsRepository)
+  await registerLogsNotifier(server, config, logsFilesApi, logsFilesRepository)
 
   return server
 }

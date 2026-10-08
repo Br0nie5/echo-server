@@ -3,7 +3,7 @@ import type {
   LogsNotifierConfig,
   NotificationConfig,
   LogsConfig,
-  SelfLogsConfig
+  SelfReportsConfig
 } from '../../shared/config/backConfig.js'
 
 /** An `AuthConfig` for the tests, with `overrides` on top of its defaults. */
@@ -15,14 +15,16 @@ export const getMockAuthConfig = (overrides: Partial<AuthConfig> = {}): AuthConf
   ...overrides
 })
 
-/** A `SelfLogsConfig` for the tests, with `overrides` on top of its defaults. */
-export const getMockSelfLogsConfig = (overrides: Partial<SelfLogsConfig> = {}): SelfLogsConfig => ({
+/** A `SelfReportsConfig` for the tests, with `overrides` on top of its defaults. */
+export const getMockSelfReportsConfig = (
+  overrides: Partial<SelfReportsConfig> = {}
+): SelfReportsConfig => ({
   isEnabled: true,
   retentionDays: 10,
-  selfLogsDirPath: '/logs/server/Echo/log',
-  parseLogFileSelfLogFileName: 'parseLogFile.jsonl',
-  logsNotifierSelfLogFileName: 'logsNotifier.jsonl',
-  sessionFilePath: '/fake/data/self_logs_session.json',
+  selfReportsDirPath: '/logs/server/Echo/log',
+  parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
+  logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
+  sessionFilePath: '/fake/data/self_reports_session.json',
   ...overrides
 })
 
@@ -52,6 +54,5 @@ export const getMockNotificationConfig = (
 export const getMockLogsConfig = (overrides: Partial<LogsConfig> = {}): LogsConfig => ({
   logsDirPath: '/logs',
   logFileExtension: '.jsonl',
-  selfLogs: getMockSelfLogsConfig(),
   ...overrides
 })

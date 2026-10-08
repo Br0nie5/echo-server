@@ -41,8 +41,8 @@ Parsed by [loadBackConfig.ts](../echo_backend/src/shared/config/loadBackConfig.t
 | `TELEGRAM_CHAT_ID` | no* | Telegram chat id. |
 | `TELEGRAM_BASE_URL` | no* | `https://api.telegram.org/bot<token>`. |
 | `LOGS_NOTIFIER_TIMEZONE` | no | Default `UTC`. Timezone the dates of Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`). Throws at startup if unknown. |
-| `SELF_LOGS_ENABLED` | no | `true` or `false`, default `false`. When enabled, `.jsonl` lines the backend fails to parse are written to `LOGS_DIR_PATH/server/<SERVER_NAME>/log/parseLogFile.jsonl`, so they show up in the app like any other log. Requires that path to be writable (see the Volumes section of the [README](../README.md)). |
-| `SELF_LOGS_RETENTION_DAYS` | no | Integer, default `10`. Self-log lines older than this are pruned once at each server start. |
+| `SELF_REPORTS_ENABLED` | no | `true` or `false`, default `false`. When enabled, `.jsonl` lines the backend fails to parse are written to `LOGS_DIR_PATH/server/<SERVER_NAME>/log/parseLogFile.jsonl`, so they show up in the app like any other log. Requires that path to be writable (see the Volumes section of the [README](../README.md)). |
+| `SELF_REPORTS_RETENTION_DAYS` | no | Integer, default `10`. Self-report lines older than this are pruned once at each server start. |
 
 \* The Telegram cron is registered only if **all four** of these variables are present and valid.
 

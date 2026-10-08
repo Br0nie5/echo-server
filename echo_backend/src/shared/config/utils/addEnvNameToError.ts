@@ -7,8 +7,8 @@
  * message, and the error of the parser as its `cause`.
  *
  * ```ts
- * const retentionDays = addEnvNameToError('SELF_LOGS_RETENTION_DAYS', () =>
- *   parseDaysNumber(processEnv.SELF_LOGS_RETENTION_DAYS, 10)
+ * const retentionDays = addEnvNameToError('SELF_REPORTS_RETENTION_DAYS', () =>
+ *   parseDaysNumber(processEnv.SELF_REPORTS_RETENTION_DAYS, 10)
  * )
  * ```
  */

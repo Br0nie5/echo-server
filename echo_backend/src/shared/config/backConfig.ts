@@ -39,19 +39,19 @@ export type AuthConfig = {
   usersDbFilePath: string
 }
 
-/** What the backend needs to report its own diagnostics as logs. */
-export type SelfLogsConfig = {
-  /** Whether the self logs are stored (`SELF_LOGS_ENABLED`). */
+/** What the backend needs to store the diagnostics it reports about itself. */
+export type SelfReportsConfig = {
+  /** Whether the self reports are stored (`SELF_REPORTS_ENABLED`). */
   isEnabled: boolean
-  /** Number of days a stored self log is kept (`SELF_LOGS_RETENTION_DAYS`). */
+  /** Number of days a stored self report is kept (`SELF_REPORTS_RETENTION_DAYS`). */
   retentionDays: number
-  /** Directory holding the self-log files, inside the logs directory so they are read back like any other log. */
-  selfLogsDirPath: string
-  /** Name of the self-log file the lines of the log files that hold no log are reported to, with its extension. */
-  parseLogFileSelfLogFileName: string
-  /** Name of the self-log file the problem logs that could not be notified are reported to, with its extension. */
-  logsNotifierSelfLogFileName: string
-  /** File remembering the last `job_id` the self logs were written with. */
+  /** Directory holding the self-report files, inside the logs directory so they are read back like any other log. */
+  selfReportsDirPath: string
+  /** Name of the self-report file the lines of the log files that hold no log are reported to, with its extension. */
+  parseLogFileSelfReportFileName: string
+  /** Name of the self-report file the problem logs that could not be notified are reported to, with its extension. */
+  logsNotifierSelfReportFileName: string
+  /** File remembering the last `job_id` the self reports were written with. */
   sessionFilePath: string
 }
 
@@ -75,7 +75,6 @@ export type LogsConfig = {
   logsDirPath: string
   /** Extension, with its dot, a file of the logs directory must have to be read as a log file. */
   logFileExtension: string
-  selfLogs: SelfLogsConfig
   /**
    * Missing when the cron notifying the problem logs is not configured, or when there is no
    * `NotificationConfig` to notify with, which disables it.
@@ -102,8 +101,8 @@ export type NotificationConfig = {
  *
  * ```ts
  * const config = loadBackConfig()
- * const fileLogsApi = createFileLogsApi(config.logs)
- * const selfFileLogApi = createSelfFileLogApi(config.logs.selfLogs)
+ * const logsFilesApi = createLogsFilesApi(config.logs)
+ * const notifierApi = createTelegramNotifierApi(config.notification)
  * ```
  *
  * A value needed in two places is in both configs (`serverName` is in `ServerConfig` and
@@ -113,6 +112,7 @@ export type BackConfig = {
   server: ServerConfig
   auth: AuthConfig
   logs: LogsConfig
+  selfReports: SelfReportsConfig
   /** Missing when Telegram is not configured: the backend then has no channel to notify through. */
   notification?: NotificationConfig
 }

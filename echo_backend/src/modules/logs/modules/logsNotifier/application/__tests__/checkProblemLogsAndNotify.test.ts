@@ -21,7 +21,7 @@ const getFilteredLogs = vi.mocked(actualGetFilteredLogs)
 const logsRepository = { findAllLogs: vi.fn() }
 const notifier = { getMessageSizeLimit: vi.fn(), notify: vi.fn() }
 const checkDateRepository = { getLastCheckDate: vi.fn(), saveLastCheckDate: vi.fn() }
-const selfLogRepository = { saveSelfLogs: vi.fn() }
+const selfReportRepository = { saveSelfReports: vi.fn() }
 const WATCHED = ['ERROR', 'WARNING'] as LogCategory[]
 const PREVIOUS_CHECK = { lastCheckDate: new Date('2026-01-01T00:00:00.000Z') }
 
@@ -33,7 +33,7 @@ const check = (): Promise<void> =>
     logsRepository,
     notifier,
     checkDateRepository,
-    selfLogRepository
+    selfReportRepository
   })
 
 beforeEach(() => {
@@ -69,7 +69,7 @@ describe('checkProblemLogsAndNotify', () => {
     expect(notifier.notify).toHaveBeenCalledWith(
       'Logs from device test-device:\n\n\n[1] [2026-01-01 12:00:00 UTC+2] [ERROR] - worker > Something broke'
     )
-    expect(selfLogRepository.saveSelfLogs).not.toHaveBeenCalled()
+    expect(selfReportRepository.saveSelfReports).not.toHaveBeenCalled()
     expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledTimes(1)
   })
 
@@ -83,10 +83,10 @@ describe('checkProblemLogsAndNotify', () => {
     expect(notifier.notify).toHaveBeenCalledWith(
       '2 logs from device test-device to see inside the console'
     )
-    expect(selfLogRepository.saveSelfLogs).not.toHaveBeenCalled()
+    expect(selfReportRepository.saveSelfReports).not.toHaveBeenCalled()
   })
 
-  it('should notify nothing, warn in the self logs and still save the date when the size limit is too small for any message', async () => {
+  it('should notify nothing, save a warning self report and still save the date when the size limit is too small for any message', async () => {
     checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
     getFilteredLogs.mockResolvedValueOnce([log])
     notifier.getMessageSizeLimit.mockReturnValue(10)
@@ -94,13 +94,14 @@ describe('checkProblemLogsAndNotify', () => {
     await check()
 
     expect(notifier.notify).not.toHaveBeenCalled()
-    expect(selfLogRepository.saveSelfLogs).toHaveBeenCalledWith([
+    expect(selfReportRepository.saveSelfReports).toHaveBeenCalledWith([
       {
-        category: 'WARNING',
+        date: expect.any(Date),
         message:
           'The problem logs were not notified: the notifier takes messages of 10 characters at most, which is not enough for any message',
-        callFile: 'checkProblemLogsAndNotify',
-        callLine: 0
+        level: 'warning',
+        reportedFile: 'checkProblemLogsAndNotify',
+        reportedLine: 0
       }
     ])
     expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledTimes(1)

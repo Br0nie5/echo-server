@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Builds the Echo image and runs it locally for manual testing (TLS and self logs enabled).
+# Builds the Echo image and runs it locally for manual testing (TLS and self reports enabled).
 #
 # Usage: npm run start:docker
 
@@ -16,7 +16,7 @@ cd "$ROOT_DIR"
 npm run build
 docker build -t echo:dev .
 
-# Self logs need a writable /watched_logs/server. Docker can't create a mount point nested inside an
+# Self reports need a writable /watched_logs/server. Docker can't create a mount point nested inside an
 # already read-only mount, so that directory must exist in the read-only source beforehand.
 mkdir -p ./test_logs/server
 
@@ -29,9 +29,9 @@ docker run \
   -e SERVER_URL="https://localhost:4000" \
   -e TLS_CERT_PATH=/certs/localhost-cert.pem \
   -e TLS_KEY_PATH=/certs/localhost-key.pem \
-  -e SELF_LOGS_ENABLED=true \
+  -e SELF_REPORTS_ENABLED=true \
   -v ./test_logs:/watched_logs:ro \
-  -v ./self_logs:/watched_logs/server \
+  -v ./self_reports:/watched_logs/server \
   -v ./data:/app/data \
   -v ./certs:/certs:ro \
   echo:dev

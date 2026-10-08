@@ -1,9 +1,9 @@
-import { LogCategory } from '@echo/utilities'
+import type { LogCategory } from '@echo/utilities'
 
 import type { Notifier } from '../../../../notification/domain/notifier.js'
+import type { SelfReportRepository } from '../../../../selfReport/domain/selfReport.repository.js'
 import { getFilteredLogs } from '../../../application/getFilteredLogs.js'
 import type { LogsRepository } from '../../../domain/logs.repository.js'
-import type { SelfLogRepository } from '../../selfLog/domain/selfLog.repository.js'
 import type { CheckDateRepository } from '../domain/checkDate.repository.js'
 
 import { buildNotifierMessage } from './utils/buildNotifierMessage.js'
@@ -20,7 +20,7 @@ export interface ProblemLogsCheck {
   notifier: Notifier
   checkDateRepository: CheckDateRepository
   /** Where the check reports the problem logs it could not notify. */
-  selfLogRepository: SelfLogRepository
+  selfReportRepository: SelfReportRepository
 }
 
 /**
@@ -29,7 +29,7 @@ export interface ProblemLogsCheck {
  * The notification is one message telling about the logs (see {@link buildNotifierMessage}), built
  * for the size limit of `notifier`. Nothing is sent when there is no problem log.
  * Nothing is sent either when the size limit is too small for any message: a warning is then saved
- * to `selfLogRepository`, and the date of the check is saved all the same, since notifying the
+ * to `selfReportRepository`, and the date of the check is saved all the same, since notifying the
  * same logs again would fail the same way.
  *
  * The very first check only saves its date, so the logs that predate it are not notified. The date
@@ -43,7 +43,7 @@ export interface ProblemLogsCheck {
  *   logsRepository,
  *   notifier,
  *   checkDateRepository,
- *   selfLogRepository
+ *   selfReportRepository
  * })
  * ```
  */
@@ -54,7 +54,7 @@ export async function checkProblemLogsAndNotify({
   logsRepository,
   notifier,
   checkDateRepository,
-  selfLogRepository
+  selfReportRepository
 }: ProblemLogsCheck): Promise<void> {
   const previousCheck = await checkDateRepository.getLastCheckDate()
 
@@ -76,14 +76,15 @@ export async function checkProblemLogsAndNotify({
     const message = buildNotifierMessage({ messageSizeLimit, problemLogs, deviceName, timezone })
 
     if (message === undefined) {
-      await selfLogRepository.saveSelfLogs([
+      await selfReportRepository.saveSelfReports([
         {
-          category: LogCategory.WARNING,
+          date: now,
           message:
             `The problem logs were not notified: the notifier takes messages of ` +
             `${messageSizeLimit} characters at most, which is not enough for any message`,
-          callFile: 'checkProblemLogsAndNotify',
-          callLine: 0
+          level: 'warning',
+          reportedFile: 'checkProblemLogsAndNotify',
+          reportedLine: 0
         }
       ])
     } else {

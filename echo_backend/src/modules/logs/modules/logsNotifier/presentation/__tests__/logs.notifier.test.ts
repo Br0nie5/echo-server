@@ -18,7 +18,7 @@ const pluginOptions: LogsNotifierPluginOptions = {
   logsRepository: { findAllLogs: vi.fn() },
   notifier: { getMessageSizeLimit: vi.fn(), notify: vi.fn() },
   checkDateRepository: { getLastCheckDate: vi.fn(), saveLastCheckDate: vi.fn() },
-  selfLogRepository: { saveSelfLogs: vi.fn() }
+  selfReportRepository: { saveSelfReports: vi.fn() }
 }
 
 function mockFastify(): FastifyInstance {
@@ -80,7 +80,7 @@ describe('logsNotifier plugin', () => {
       logsRepository: pluginOptions.logsRepository,
       notifier: pluginOptions.notifier,
       checkDateRepository: pluginOptions.checkDateRepository,
-      selfLogRepository: pluginOptions.selfLogRepository
+      selfReportRepository: pluginOptions.selfReportRepository
     })
     expect(fastify.log.error).not.toHaveBeenCalled()
   })
