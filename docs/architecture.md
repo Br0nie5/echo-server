@@ -119,14 +119,12 @@ Everything else is derived from it:
 ```
                                     ┌─► z.infer ─► the type, used by both apps
 echo_utilities/…/schemas/*.schema.ts ┼─► the runtime validation: API answers in the frontend, the query and the thrown errors in the backend
-                                    └─► z.toJSONSchema ─► echo_backend/…/*.schemas.ts ─► route schemas ─► openApi.json
+                                    └─► z.toJSONSchema ─► echo_backend/…/*.schemas.ts ─► route schemas ─► /documentation
 ```
 
 The `*.schemas.ts` files of the backend convert the zod schemas when the server starts: [logs.schemas.ts](../echo_backend/src/modules/logs/presentation/logs.schemas.ts), [auth.schemas.ts](../echo_backend/src/modules/auth/presentation/auth.schemas.ts) and [errors.schemas.ts](../echo_backend/src/shared/schemas/errors.schemas.ts). What a type cannot say is said by the zod schema: `z.int()` for a number without decimals, `.meta({ format: 'date-time' })` for the format of a string.
 
 `GetLogsParamsSchema` describes the query as the client sends it. The backend validates it with `safeParseGetLogsParams` (`presentation/utils/`), which turns it into what `getFilteredLogs` needs (`fromDate` as a `Date`, `logCategories` always an array).
-
-`npm run generate:openapi` exports `openApi.json` again from the routes. Details in the [development guide](development.md).
 
 ## Authentication
 

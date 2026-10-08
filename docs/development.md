@@ -34,7 +34,6 @@ npm run dev
 | `npm run open:coverage` | Open coverage reports |
 | `npm run arch:check` | Architecture rules (import boundaries, cycles), see [architecture](architecture.md#enforcing-the-architecture) |
 | `npm run vulnerabilities:scan` | `npm audit` |
-| `npm run generate:openapi` | Export `openApi.json` again from the backend routes |
 | `npm run build:docker` / `start:docker` | Build the image / build and run it on `test_logs/` |
 
 Target one workspace with `--workspace=echo_backend` (or `echo_frontend`, `echo_utilities`).
@@ -48,16 +47,6 @@ cd echo_backend
 npx vitest run src/modules/logs/application/__tests__/getFilteredLogs.test.ts   # single file
 npx vitest --watch
 ```
-
-## Exporting the OpenAPI document
-
-Run after changing a backend route, or one of the zod schemas of `echo_utilities` its schema is derived from (see the [type flow](architecture.md#type-flow)):
-
-```bash
-npm run generate:openapi
-```
-
-This boots the server and writes its OpenAPI document to `openApi.json`. Commit it: the CI fails when it is not up to date. The shared types need nothing: they are inferred from the zod schemas.
 
 ## Pre-commit hook
 

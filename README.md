@@ -250,7 +250,6 @@ Common commands:
 | `npm run lint`              | ESLint (with fix) |
 | `npm run format`            | Prettier |
 | `npm run test:coverage`     | Vitest, 100% coverage threshold |
-| `npm run generate:openapi`  | Export `openApi.json` again from the backend routes |
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/development.md](docs/development.md) for details.
 

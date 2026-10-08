@@ -15,7 +15,7 @@ interface AxiosMutatorArgs<TParams = unknown, TBody = unknown> {
   errorInterceptor?: (error: AxiosError) => void
 }
 
-/** A request function returning the response body, in the shape of an orval mutator. `errorInterceptor` runs on failure, before the error is rethrown. */
+/** A request function sending its request through the API client and returning the response body. `errorInterceptor` runs on failure, before the error is rethrown. */
 export const useApiMutator = () => {
   const axiosInstance = useApi()
 

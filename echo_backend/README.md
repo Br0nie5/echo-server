@@ -34,4 +34,4 @@ Each module is split into the layer folders it needs: `domain/`, `application/`,
 
 ## Notes
 
-- The JSON schemas of the routes are derived from the zod schemas of `@echo/utilities`, and drive both the Swagger docs and `openApi.json`. Run `npm run generate:openapi` at the repo root after changing them.
+- The JSON schemas of the routes are derived from the zod schemas of `@echo/utilities`, and drive the Swagger docs.

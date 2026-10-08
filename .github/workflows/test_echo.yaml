@@ -34,12 +34,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Exports openApi.json again from the backend routes, and fails if that changed anything
-      - name: OpenAPI up to date
-        run: |
-          npm run generate:openapi
-          git diff --exit-code --stat -- openApi.json
-
       # The scripts fix what they find, so a change in the working tree means the commit was not
       # formatted / linted.
       - name: Format

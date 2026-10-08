@@ -17,13 +17,3 @@ Shared package used by both `echo_backend` and `echo_frontend`. It is built to `
 npm run build --workspace=echo_utilities
 npm run test:coverage --workspace=echo_utilities
 ```
-
-## Changing a schema
-
-From the repo root, after changing a zod schema the backend routes use:
-
-```bash
-npm run generate:openapi
-```
-
-See [docs/development.md](../docs/development.md#exporting-the-openapi-document).

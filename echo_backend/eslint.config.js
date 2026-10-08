@@ -26,7 +26,7 @@ export default tseslint.config([
         }
       }
     },
-    ignores: ['coverage/*', '*.config.js', '*.config.ts', 'scripts/export_open_api.ts'],
+    ignores: ['coverage/*', '*.config.js', '*.config.ts'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,

@@ -1,6 +1,6 @@
 # API reference
 
-Live, interactive documentation is served at `/documentation` (Swagger UI) by every running instance. The machine-readable spec is committed at [openApi.json](../openApi.json). All routes below are under `/api`.
+Live, interactive documentation is served at `/documentation` (Swagger UI) by every running instance. The machine-readable spec is served at `/documentation/json`. All routes below are under `/api`.
 
 ## Authentication routes
 
@@ -52,4 +52,4 @@ Errors use the `EchoError` schema: `400` invalid params, `401` unauthenticated, 
 
 ## Changing the API
 
-The zod schemas of `@echo/utilities` are the source of truth of what the API exchanges: both the shared types and the schemas of the routes are derived from them. After editing a route or one of these zod schemas, run `npm run generate:openapi` (see the [development guide](development.md#exporting-the-openapi-document)).
+The zod schemas of `@echo/utilities` are the source of truth of what the API exchanges: both the shared types and the schemas of the routes are derived from them. Nothing has to be generated after editing a route or one of these zod schemas: the documentation is built from the routes when the server starts.

@@ -5,12 +5,11 @@ import type { ServerConfig } from '../shared/config/backConfig.js'
 
 import type { EchoServer } from './types/echoServer.js'
 
-/** Registers Swagger (source of `openApi.json`) and its UI, served under `/documentation`. */
+/** Registers Swagger, which builds the OpenAPI document from the routes, and its UI, served under `/documentation`. */
 export const registerDocumentation = async (
   server: EchoServer,
   serverConfig: ServerConfig
 ): Promise<void> => {
-  // Swagger for OpenAPI generation
   await server.register(swagger, {
     openapi: {
       info: {

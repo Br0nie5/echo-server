@@ -22,7 +22,6 @@ npm run lint               # eslint --fix across all workspaces
 npm run format              # prettier --write across all workspaces
 npm run test:coverage        # vitest run --coverage (100% threshold) across all workspaces
 npm run open:coverage         # open each workspace's coverage/index.html
-npm run generate:openapi        # export openApi.json again from the routes of the backend (see below)
 ```
 
 Single test file / watch mode (run inside the relevant workspace dir, e.g. `cd echo_backend`):
@@ -48,9 +47,8 @@ The types the API exchanges are **not** hand-written, and no file is generated. 
 
 1. The type is inferred from the schema (`z.infer`), never redeclared. What a TypeScript type cannot say goes in the zod schema: `z.int()`, `.meta({ format: 'date-time' })`.
 2. In `echo_backend`, a `*.schemas.ts` file converts the zod schemas to the JSON schemas the routes use with `z.toJSONSchema`, when the server starts: `presentation/logs.schemas.ts`, `presentation/auth.schemas.ts` and `shared/schemas/errors.schemas.ts`. To expose another zod schema, add it to the registry of one of them.
-3. `scripts/export_open_api.ts` boots the server and dumps `openApi.json` at the repo root.
 
-Run `npm run generate:openapi` after changing a backend route or one of these zod schemas, so `openApi.json` stays up to date (the CI fails when it is not). `echo_utilities/src/index.ts` is the single barrel export — both backend and frontend import everything from `@echo/utilities`, never by reaching into its internal paths.
+`echo_utilities/src/index.ts` is the single barrel export — both backend and frontend import everything from `@echo/utilities`, never by reaching into its internal paths.
 
 ### Module layout convention (backend and frontend)
 
@@ -103,7 +101,7 @@ In production the backend serves the built frontend static files (`echo_frontend
 
 ### Swagger / OpenAPI
 
-`@fastify/swagger` + `@fastify/swagger-ui` are registered in `plugins/registerDocumentation.ts` and serve live docs at `/documentation`. This is also the source `openApi.json` is exported from — keep route `schema` blocks (especially `operationId`, request/response shapes) accurate, since they drive both the docs and `openApi.json`.
+`@fastify/swagger` + `@fastify/swagger-ui` are registered in `plugins/registerDocumentation.ts` and serve live docs at `/documentation`. Keep route `schema` blocks (especially `operationId`, request/response shapes) accurate, since they drive these docs.
 
 ## Testing
 
