@@ -49,21 +49,20 @@ export type SelfLogsConfig = {
   selfLogsDirPath: string
   /** Name of the self-log file the lines of the log files that hold no log are reported to, with its extension. */
   parseLogFileSelfLogFileName: string
+  /** Name of the self-log file the problem logs that could not be notified are reported to, with its extension. */
+  logsNotifierSelfLogFileName: string
   /** File remembering the last `job_id` the self logs were written with. */
   sessionFilePath: string
 }
 
-/** What the cron notifying the problem logs on Telegram needs. */
-export type CronConfig = {
-  /** Cron expression saying when the logs are checked (`LOGS_CRON_SCHEDULE_REGEX`). */
+/** What the cron notifying the problem logs needs, the channel it notifies through apart (`NotificationConfig`). */
+export type LogsNotifierConfig = {
+  /** Cron expression saying when the logs are checked (`LOGS_NOTIFIER_SCHEDULE_REGEX`). */
   schedule: string
-  /** Categories that make a log a problem log (`LOGS_CRON_WATCHED_LOGS_CATEGORIES`). */
+  /** Categories that make a log a problem log (`LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES`). */
   watchedLogsCategories: LogCategory[]
-  telegramChatId: string
-  /** URL of the Telegram bot API, token included (`LOGS_CRON_TELEGRAM_BASE_URL`). */
-  telegramBaseUrl: string
-  /** Luxon zone the dates of the messages are shown in. */
-  telegramTimezone: string
+  /** Luxon zone the dates of the messages are shown in (`LOGS_NOTIFIER_TIMEZONE`). */
+  notifierTimezone: string
   /** Name the messages say the logs come from (`SERVER_NAME`). */
   serverName: string
   /** File remembering when the logs were last checked. */
@@ -77,8 +76,21 @@ export type LogsConfig = {
   /** Extension, with its dot, a file of the logs directory must have to be read as a log file. */
   logFileExtension: string
   selfLogs: SelfLogsConfig
-  /** Missing when the cron is not configured, which disables it. */
-  cron?: CronConfig
+  /**
+   * Missing when the cron notifying the problem logs is not configured, or when there is no
+   * `NotificationConfig` to notify with, which disables it.
+   */
+  logsNotifier?: LogsNotifierConfig
+}
+
+/** What sending a notification needs: the Telegram chat it goes to. */
+export type NotificationConfig = {
+  /** Chat the messages are sent to (`TELEGRAM_CHAT_ID`). */
+  telegramChatId: string
+  /** URL of the Telegram bot API, token included (`TELEGRAM_BASE_URL`). */
+  telegramBaseUrl: string
+  /** Maximum length of a Telegram message. */
+  telegramMessageSizeLimit: number
 }
 
 /**
@@ -95,10 +107,12 @@ export type LogsConfig = {
  * ```
  *
  * A value needed in two places is in both configs (`serverName` is in `ServerConfig` and
- * `CronConfig`), so no function needs a second config for one field.
+ * `LogsNotifierConfig`), so no function needs a second config for one field.
  */
 export type BackConfig = {
   server: ServerConfig
   auth: AuthConfig
   logs: LogsConfig
+  /** Missing when Telegram is not configured: the backend then has no channel to notify through. */
+  notification?: NotificationConfig
 }

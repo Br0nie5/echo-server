@@ -125,10 +125,12 @@ describe('loadBackConfig', () => {
           retentionDays: 10,
           selfLogsDirPath: '/some/path/server/Echo/log',
           parseLogFileSelfLogFileName: 'parseLogFile.jsonl',
+          logsNotifierSelfLogFileName: 'logsNotifier.jsonl',
           sessionFilePath: path.join(DATA_DIR_PATH, 'self_logs_session.json')
         },
-        cron: undefined
-      }
+        logsNotifier: undefined
+      },
+      notification: undefined
     })
   })
 
@@ -144,11 +146,11 @@ describe('loadBackConfig', () => {
       TLS_KEY_PATH: TEST_KEY_PATH,
       SELF_LOGS_ENABLED: 'true',
       SELF_LOGS_RETENTION_DAYS: '30',
-      LOGS_CRON_SCHEDULE_REGEX: '*/30 * * * *',
-      LOGS_CRON_WATCHED_LOGS_CATEGORIES: 'WARNING,ERROR',
-      LOGS_CRON_TELEGRAM_CHAT_ID: '123456789',
-      LOGS_CRON_TELEGRAM_BASE_URL: 'https://api.telegram.org/bot123456789',
-      LOGS_CRON_TELEGRAM_TIMEZONE: 'Europe/Paris'
+      LOGS_NOTIFIER_SCHEDULE_REGEX: '*/30 * * * *',
+      LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: 'WARNING,ERROR',
+      TELEGRAM_CHAT_ID: '123456789',
+      TELEGRAM_BASE_URL: 'https://api.telegram.org/bot123456789',
+      LOGS_NOTIFIER_TIMEZONE: 'Europe/Paris'
     })
 
     expect(config).toStrictEqual({
@@ -187,18 +189,34 @@ describe('loadBackConfig', () => {
           retentionDays: 30,
           selfLogsDirPath: '/watched_logs/server/Docker Prod/log',
           parseLogFileSelfLogFileName: 'parseLogFile.jsonl',
+          logsNotifierSelfLogFileName: 'logsNotifier.jsonl',
           sessionFilePath: path.join(DATA_DIR_PATH, 'self_logs_session.json')
         },
-        cron: {
+        logsNotifier: {
           schedule: '*/30 * * * *',
           watchedLogsCategories: ['WARNING', 'ERROR'],
-          telegramChatId: '123456789',
-          telegramBaseUrl: 'https://api.telegram.org/bot123456789',
-          telegramTimezone: 'Europe/Paris',
+          notifierTimezone: 'Europe/Paris',
           serverName: 'Docker Prod',
           lastLogsCheckFilePath: path.join(DATA_DIR_PATH, 'last_logs_check.json')
         }
+      },
+      notification: {
+        telegramChatId: '123456789',
+        telegramBaseUrl: 'https://api.telegram.org/bot123456789',
+        telegramMessageSizeLimit: 4096
       }
     })
+  })
+
+  it('should leave the logs notifier out when there is no notification config', () => {
+    const config = loadBackConfig({
+      ...REQUIRED_ENV,
+      LOGS_NOTIFIER_SCHEDULE_REGEX: '*/30 * * * *',
+      LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: 'WARNING,ERROR',
+      LOGS_NOTIFIER_TIMEZONE: 'Mars/Olympus'
+    })
+
+    expect(config.notification).toBeUndefined()
+    expect(config.logs.logsNotifier).toBeUndefined()
   })
 })

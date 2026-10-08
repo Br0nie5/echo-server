@@ -15,24 +15,21 @@ import { authRoutes } from './modules/auth/auth.routes.js'
 import { createAuthService } from './modules/auth/auth.service.js'
 import { openUsersDb } from './modules/auth/users.db.js'
 import { createSqliteUsersRepository } from './modules/auth/users.repository.js'
-import { createFileCheckpointStore } from './modules/logs/cron/logs.checkpoint.js'
-import logsCron from './modules/logs/cron/logs.cron.js'
-import { createTelegramNotifier } from './modules/logs/cron/notifications/telegram.notifier.js'
 import type { LogsRepository } from './modules/logs/domain/logs.repository.js'
 import { createFileLogsApi } from './modules/logs/infra/fileLogs.api.js'
 import { createFileLogsRepository } from './modules/logs/infra/fileLogs.repository.js'
+import { createFileCheckDateApi } from './modules/logs/modules/logsNotifier/infra/fileCheckDate.api.js'
+import { createFileCheckDateRepository } from './modules/logs/modules/logsNotifier/infra/fileCheckDate.repository.js'
+import logsNotifier from './modules/logs/modules/logsNotifier/presentation/logs.notifier.js'
 import type { SelfLogRepository } from './modules/logs/modules/selfLog/domain/selfLog.repository.js'
 import { createNoopSelfLogRepository } from './modules/logs/modules/selfLog/infra/noopSelfLog.repository.js'
 import { createSelfFileLogApi } from './modules/logs/modules/selfLog/infra/selfFileLog.api.js'
 import { createSelfFileLogRepository } from './modules/logs/modules/selfLog/infra/selfFileLog.repository.js'
 import { createLogsController } from './modules/logs/presentation/logs.controller.js'
 import { logsRoutes } from './modules/logs/presentation/logs.routes.js'
-import type {
-  BackConfig,
-  CronConfig,
-  SelfLogsConfig,
-  ServerConfig
-} from './shared/config/backConfig.js'
+import { createTelegramNotifierApi } from './modules/notification/infra/telegramNotifier.api.js'
+import { createTelegramNotifier } from './modules/notification/infra/telegramNotifier.js'
+import type { BackConfig, SelfLogsConfig, ServerConfig } from './shared/config/backConfig.js'
 import { loadBackConfig } from './shared/config/loadBackConfig.js'
 import { EchoErrorSchema } from './shared/schemas/errors.schemas.js'
 import { isOriginAllowed } from './shared/utils/isOriginAllowed.js'
@@ -148,38 +145,50 @@ const registerFrontend = async (
   })
 }
 
-/** Registers the notifier cron, only when it is configured. */
-const registerLogsCron = async (
-  server: EchoServer,
-  cronConfig: CronConfig | undefined,
-  logsRepository: LogsRepository
-): Promise<void> => {
-  if (cronConfig === undefined) {
-    server.log.info('The logs cron is not configured, skipping its registration')
-    return
-  }
-
-  await server.register(logsCron, {
-    cronConfig,
-    logsRepository,
-    notifier: createTelegramNotifier(cronConfig),
-    checkpointStore: createFileCheckpointStore(cronConfig)
-  })
-}
-
-/** The repository the lines of the log files that hold no log are reported to, storing nothing when the self logs are disabled. */
+/** The repository storing its self logs in the file named `selfLogFileName`, or storing nothing when the self logs are disabled. */
 const getSelfLogRepository = (
   server: EchoServer,
-  selfLogsConfig: SelfLogsConfig
+  selfLogsConfig: SelfLogsConfig,
+  selfLogFileName: string
 ): Promise<SelfLogRepository> | SelfLogRepository =>
   selfLogsConfig.isEnabled
     ? createSelfFileLogRepository({
         selfFileLogApi: createSelfFileLogApi(selfLogsConfig),
         selfLogsConfig,
-        selfLogFileName: selfLogsConfig.parseLogFileSelfLogFileName,
+        selfLogFileName,
         logger: server.log
       })
     : createNoopSelfLogRepository()
+
+/** Registers the cron notifying the problem logs, only when it is configured along with the notifications. */
+const registerLogsNotifier = async (
+  server: EchoServer,
+  {
+    logs: { logsNotifier: logsNotifierConfig, selfLogs: selfLogsConfig },
+    notification: notificationConfig
+  }: BackConfig,
+  logsRepository: LogsRepository
+): Promise<void> => {
+  if (logsNotifierConfig === undefined || notificationConfig === undefined) {
+    server.log.info('The logs notifier is not configured, skipping its registration')
+    return
+  }
+
+  await server.register(logsNotifier, {
+    logsNotifierConfig,
+    logsRepository,
+    notifier: createTelegramNotifier(
+      createTelegramNotifierApi(notificationConfig),
+      notificationConfig
+    ),
+    checkDateRepository: createFileCheckDateRepository(createFileCheckDateApi(logsNotifierConfig)),
+    selfLogRepository: await getSelfLogRepository(
+      server,
+      selfLogsConfig,
+      selfLogsConfig.logsNotifierSelfLogFileName
+    )
+  })
+}
 
 /**
  * Composition root: builds the dependency graph from `config` (the one `loadBackConfig` gives by
@@ -210,7 +219,11 @@ export const buildServer = async (config: BackConfig = loadBackConfig()): Promis
 
   const fileLogsRepository = createFileLogsRepository(
     createFileLogsApi(config.logs),
-    await getSelfLogRepository(server, config.logs.selfLogs)
+    await getSelfLogRepository(
+      server,
+      config.logs.selfLogs,
+      config.logs.selfLogs.parseLogFileSelfLogFileName
+    )
   )
 
   // API
@@ -230,7 +243,7 @@ export const buildServer = async (config: BackConfig = loadBackConfig()): Promis
   })
 
   await registerFrontend(server, config.server)
-  await registerLogsCron(server, config.logs.cron, fileLogsRepository)
+  await registerLogsNotifier(server, config, fileLogsRepository)
 
   return server
 }

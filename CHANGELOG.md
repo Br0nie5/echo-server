@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Breaking:** the environment variables of the Telegram notifications are renamed. Update the environment of your container:
+
+  | Before | After |
+  | ------ | ----- |
+  | `LOGS_CRON_SCHEDULE_REGEX` | `LOGS_NOTIFIER_SCHEDULE_REGEX` |
+  | `LOGS_CRON_WATCHED_LOGS_CATEGORIES` | `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` |
+  | `LOGS_CRON_TELEGRAM_TIMEZONE` | `LOGS_NOTIFIER_TIMEZONE` |
+  | `LOGS_CRON_TELEGRAM_CHAT_ID` | `TELEGRAM_CHAT_ID` |
+  | `LOGS_CRON_TELEGRAM_BASE_URL` | `TELEGRAM_BASE_URL` |
+
 ## [1.2.0] - 2026-09-23
 
 ### Changed

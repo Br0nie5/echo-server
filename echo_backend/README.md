@@ -22,7 +22,8 @@ src/
   server.ts              app wiring, Swagger, static serving, 404 handling
   modules/
     auth/                signup / login / check / logout, SQLite users, JWT hooks
-    logs/                logs API, parsing, cron + Telegram notifications
+    logs/                logs API, parsing, self logs, cron notifying the problem logs
+    notification/        sending a message to the outside (Telegram)
   shared/                config (BackConfig, loadBackConfig, utils), error schemas, helpers
 ```
 

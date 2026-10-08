@@ -64,10 +64,10 @@ services:
       - SERVER_URL=http://localhost:4000
       - HAS_AUTHENTICATION=true
       # Optional: Telegram notifications, see the section below
-      # - LOGS_CRON_SCHEDULE_REGEX=*/30 * * * *
-      # - LOGS_CRON_WATCHED_LOGS_CATEGORIES=ERROR,WARNING
-      # - LOGS_CRON_TELEGRAM_CHAT_ID=123456789
-      # - LOGS_CRON_TELEGRAM_BASE_URL=https://api.telegram.org/bot<token>
+      # - LOGS_NOTIFIER_SCHEDULE_REGEX=*/30 * * * *
+      # - LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES=ERROR,WARNING
+      # - TELEGRAM_CHAT_ID=123456789
+      # - TELEGRAM_BASE_URL=https://api.telegram.org/bot<token>
       # Optional: surface log-parsing failures in the UI, see the section below
       # - SELF_LOGS_ENABLED=true
       # - SELF_LOGS_RETENTION_DAYS=10
@@ -119,17 +119,17 @@ Container parameters are given as `<external>:<internal>` for ports and volumes.
 | `HTTP_PORT`                           | `4000`                     | Port the server listens on inside the container. |
 | `HAS_AUTHENTICATION`                  | `true`                     | `true` enables login (cookie + JWT). `false` disables auth entirely and exposes logs to anyone who can reach the port. |
 | `LOGS_DIR_PATH`                       | `/watched_logs`            | Directory scanned for `.jsonl` files. Normally left as is and controlled via the volume. |
-| `LOGS_CRON_SCHEDULE_REGEX`            | `*/30 * * * *`             | Cron expression for the Telegram check. |
-| `LOGS_CRON_WATCHED_LOGS_CATEGORIES`   | `ERROR,WARNING`            | Comma-separated categories that trigger a notification. Valid values: `SUCCESS`, `INFO`, `WARNING`, `ERROR`. |
-| `LOGS_CRON_TELEGRAM_CHAT_ID`          | _(empty)_                  | Telegram chat that receives notifications. |
-| `LOGS_CRON_TELEGRAM_BASE_URL`         | _(empty)_                  | Bot API base URL, `https://api.telegram.org/bot<token>`. Treat as a secret. |
-| `LOGS_CRON_TELEGRAM_TIMEZONE`         | `UTC`                      | Timezone the dates of Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`, follows daylight saving). An unknown value stops the server at startup. |
+| `LOGS_NOTIFIER_SCHEDULE_REGEX`        | `*/30 * * * *`             | Cron expression for the Telegram check. |
+| `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` | `ERROR,WARNING`            | Comma-separated categories that trigger a notification. Valid values: `SUCCESS`, `INFO`, `WARNING`, `ERROR`. |
+| `TELEGRAM_CHAT_ID`                    | _(empty)_                  | Telegram chat that receives notifications. |
+| `TELEGRAM_BASE_URL`                   | _(empty)_                  | Bot API base URL, `https://api.telegram.org/bot<token>`. Treat as a secret. |
+| `LOGS_NOTIFIER_TIMEZONE`              | `UTC`                      | Timezone the dates of Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`, follows daylight saving). An unknown value stops the server at startup. |
 | `TLS_CERT_PATH`                       | _(empty)_                  | Path (inside the container) to a PEM certificate. Set with `TLS_KEY_PATH` to serve HTTPS. |
 | `TLS_KEY_PATH`                        | _(empty)_                  | Path (inside the container) to the PEM private key. |
 | `SELF_LOGS_ENABLED`                   | `false`                    | When `true`, `.jsonl` lines the backend fails to parse are written to `/watched_logs/server/<SERVER_NAME>/log/parseLogFile.jsonl`, so they show up in the UI like any other log. Requires a writable sub-mount, see Volumes below. |
 | `SELF_LOGS_RETENTION_DAYS`            | `10`                       | Self-log lines older than this many days are pruned once at each server start. |
 
-The Telegram job only starts when the four required `LOGS_CRON_*` variables (all but `LOGS_CRON_TELEGRAM_TIMEZONE`) are set and valid. Otherwise it is silently disabled.
+The Telegram job only starts when `LOGS_NOTIFIER_SCHEDULE_REGEX`, `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES`, `TELEGRAM_CHAT_ID` and `TELEGRAM_BASE_URL` are all set and valid. Otherwise it is silently disabled.
 
 ### Volumes
 
@@ -192,14 +192,14 @@ With `HAS_AUTHENTICATION=false`, no auth routes exist and anyone with network ac
 
 ```yaml
 environment:
-  - LOGS_CRON_SCHEDULE_REGEX=*/30 * * * *
-  - LOGS_CRON_WATCHED_LOGS_CATEGORIES=ERROR,WARNING
-  - LOGS_CRON_TELEGRAM_CHAT_ID=123456789
-  - LOGS_CRON_TELEGRAM_BASE_URL=https://api.telegram.org/bot<token>
-  - LOGS_CRON_TELEGRAM_TIMEZONE=UTC+2 # optional, UTC by default
+  - LOGS_NOTIFIER_SCHEDULE_REGEX=*/30 * * * *
+  - LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES=ERROR,WARNING
+  - TELEGRAM_CHAT_ID=123456789
+  - TELEGRAM_BASE_URL=https://api.telegram.org/bot<token>
+  - LOGS_NOTIFIER_TIMEZONE=UTC+2 # optional, UTC by default
 ```
 
-On each run, Echo sends the matching logs written since the previous run. The first run only records a checkpoint (in `/app/data/last_logs_check.json`) and sends nothing. Messages are capped at Telegram's 4096 characters; overflow is summarized as "N other logs to see inside the console". Times in messages are shown in `LOGS_CRON_TELEGRAM_TIMEZONE` (UTC by default), labeled with their offset (e.g. `2026-01-01 12:00:00 UTC+2`).
+On each run, Echo sends the matching logs written since the previous run. The first run only records a checkpoint (in `/app/data/last_logs_check.json`) and sends nothing. Messages are capped at Telegram's 4096 characters; overflow is summarized as "N other logs to see inside the console". Times in messages are shown in `LOGS_NOTIFIER_TIMEZONE` (UTC by default), labeled with their offset (e.g. `2026-01-01 12:00:00 UTC+2`).
 
 ## HTTPS
 

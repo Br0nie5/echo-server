@@ -46,11 +46,15 @@ const config: IConfiguration = {
       name: 'backend-modules-isolated',
       severity: 'error',
       comment:
-        'A backend module may only import another module through auth.hooks (the shared authentication pre-handler).',
+        'A backend module may only import another module through auth.hooks (the shared authentication pre-handler) or through the domain/ of notification (the contract any module notifies through).',
       from: { path: `${MODULES}/([^/]+)/`, pathNot: TESTS },
       to: {
         path: `${MODULES}/`,
-        pathNot: [`${MODULES}/$1/`, `${MODULES}/auth/auth\\.hooks\\.ts$`]
+        pathNot: [
+          `${MODULES}/$1/`,
+          `${MODULES}/auth/auth\\.hooks\\.ts$`,
+          `${MODULES}/notification/domain/`
+        ]
       }
     },
 
@@ -126,7 +130,7 @@ const config: IConfiguration = {
       name: 'backend-utils-and-schemas-are-leaves',
       severity: 'error',
       comment:
-        'utils/ and *.schemas.ts are pure helpers and must not import routes/controllers/services/repositories. utils/ may sit directly under a module (modules/logs/utils/) or one level deeper, inside a sub-feature folder (modules/logs/cron/utils/).',
+        'utils/ and *.schemas.ts are pure helpers and must not import routes/controllers/services/repositories. utils/ may sit directly under a module (modules/logs/utils/) or one level deeper, inside a layer folder (modules/logs/presentation/utils/).',
       from: {
         path: [
           `${MODULES}/[^/]+/utils/`,

@@ -9,9 +9,10 @@ import { addEnvNameToError } from './utils/addEnvNameToError.js'
 import { createSelfLogsDirPath } from './utils/createSelfLogsDirPath.js'
 import { parseAllowedDomain } from './utils/parseAllowedDomain.js'
 import { parseCookieSerializeOptions } from './utils/parseCookieSerializeOptions.js'
-import { parseCronConfig } from './utils/parseCronConfig.js'
 import { parseDaysNumber } from './utils/parseDaysNumber.js'
 import { parseHttpPort } from './utils/parseHttpPort.js'
+import { parseLogsNotifierConfig } from './utils/parseLogsNotifierConfig.js'
+import { parseNotificationConfig } from './utils/parseNotificationConfig.js'
 import { parseOptionalBoolean } from './utils/parseOptionalBoolean.js'
 import { parseTlsConfig } from './utils/parseTlsConfig.js'
 import { requireEnv } from './utils/requireEnv.js'
@@ -26,6 +27,9 @@ const DATA_DIR_PATH = path.join(REPOSITORY_ROOT_PATH, 'data')
 /** Extension of the files the logs are read from, and of the files the self logs are written to. */
 const LOG_FILE_EXTENSION = '.jsonl'
 
+/** Maximum length of a message, set by the Telegram bot API. */
+const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
+
 /**
  * Builds the configuration of the backend from `processEnv` (the environment of the process by
  * default) and from the constants of the backend (paths, file names, cookie settings).
@@ -33,8 +37,10 @@ const LOG_FILE_EXTENSION = '.jsonl'
  * `.env.<mode>` is loaded into `processEnv` first, without overriding the variables already set;
  * `<mode>` is `production` when `NODE_ENV` is, `development` otherwise. Each variable is then read
  * by its parser (`utils/`). Throws as soon as one of them does, that is on the first required
- * variable that is missing or invalid, so a misconfigured server never starts. The cron is the
- * exception: it is left out of the config, hence disabled, when one of its required variables is.
+ * variable that is missing or invalid, so a misconfigured server never starts. The notifications
+ * and the cron notifying the problem logs are the exception: each is left out of the config, hence
+ * disabled, when one of its required variables is, and the cron is left out too when the
+ * notifications are, since it would have no channel to notify through.
  *
  * It is meant to be called once, when the server starts, the config then being handed down:
  *
@@ -51,6 +57,9 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
   const echoEnv = parseEchoEnv({ ...processEnv })
   const allowedDomain = parseAllowedDomain(echoEnv.SERVER_URL)
   const logsDirPath = requireEnv(processEnv, 'LOGS_DIR_PATH')
+  const notification = parseNotificationConfig(processEnv, {
+    telegramMessageSizeLimit: TELEGRAM_MESSAGE_SIZE_LIMIT
+  })
 
   return {
     server: {
@@ -82,12 +91,16 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
         ),
         selfLogsDirPath: createSelfLogsDirPath(logsDirPath, echoEnv.SERVER_NAME),
         parseLogFileSelfLogFileName: `parseLogFile${LOG_FILE_EXTENSION}`,
+        logsNotifierSelfLogFileName: `logsNotifier${LOG_FILE_EXTENSION}`,
         sessionFilePath: path.join(DATA_DIR_PATH, 'self_logs_session.json')
       },
-      cron: parseCronConfig(processEnv, {
-        serverName: echoEnv.SERVER_NAME,
-        lastLogsCheckFilePath: path.join(DATA_DIR_PATH, 'last_logs_check.json')
-      })
-    }
+      logsNotifier:
+        notification &&
+        parseLogsNotifierConfig(processEnv, {
+          serverName: echoEnv.SERVER_NAME,
+          lastLogsCheckFilePath: path.join(DATA_DIR_PATH, 'last_logs_check.json')
+        })
+    },
+    notification
   }
 }

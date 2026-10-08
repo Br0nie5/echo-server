@@ -31,7 +31,7 @@ The filter functions `filterLogByCategories` and `filterLogBySearch` live in `@e
 
 ## Backend layout
 
-Code is split by domain under `echo_backend/src/modules` (`auth`, `logs`).
+Code is split by domain under `echo_backend/src/modules` (`auth`, `logs`, `notification`).
 
 The core of the `logs` module is split into four layers, each in its own folder:
 
@@ -53,9 +53,9 @@ The `auth` module is not layered yet and keeps its files flat, with this naming 
 | `*.schemas.ts` | Fastify `addSchema` definitions |
 | `utils/` | Pure helpers |
 
-`shared/` holds cross-module code (the config, error schemas). `shared/config/` holds `BackConfig`, split into `ServerConfig`, `AuthConfig` and `LogsConfig` (itself holding `SelfLogsConfig` and the optional `CronConfig`), and `loadBackConfig`, which builds it once from the environment variables and from constants (the paths under `data/`, the self-logs directory, file names, the extension of the log files). `shared/config/utils/` holds the helpers `loadBackConfig` builds it with, one per file: mostly the parsers the variables are read with. Each function is given the config of its domain and takes every setting and path from it. [server.ts](../echo_backend/src/server.ts) wires everything, registers Swagger, serves `/app` via `@fastify/static` (with an SPA fallback to `index.html`) and returns JSON 404s elsewhere.
+`shared/` holds cross-module code (the config, error schemas). `shared/config/` holds `BackConfig`, split into `ServerConfig`, `AuthConfig`, `LogsConfig` (itself holding `SelfLogsConfig` and the optional `LogsNotifierConfig`) and the optional `NotificationConfig`, and `loadBackConfig`, which builds it once from the environment variables and from constants (the paths under `data/`, the self-logs directory, file names, the extension of the log files). `shared/config/utils/` holds the helpers `loadBackConfig` builds it with, one per file: mostly the parsers the variables are read with. Each function is given the config of its domain and takes every setting and path from it. [server.ts](../echo_backend/src/server.ts) wires everything, registers Swagger, serves `/app` via `@fastify/static` (with an SPA fallback to `index.html`) and returns JSON 404s elsewhere.
 
-The `logs` module itself has three parts: the core log retrieval in the four layer folders described above (the only one with HTTP routes), `modules/logs/cron/` (the Telegram notifier cron, see below) and the `modules/logs/modules/selfLog/` submodule (the backend's own diagnostics, see below). They depend on each other in one direction only (`selfLog` ← `logs` ← `cron`), never circularly, except for the format of a log line (`infra/dto/rawJsonLog.dto.ts`), which `selfLog` writes and `logs` reads.
+The `logs` module itself has three parts: the core log retrieval in the four layer folders described above (the only one with HTTP routes), and two submodules, `modules/logs/modules/selfLog/` (the backend's own diagnostics, see below) and `modules/logs/modules/logsNotifier/` (the cron notifying the problem logs, see below). They depend on each other in one direction only (`selfLog` ← `logs` ← `logsNotifier`), never circularly, except for the format of a log line (`infra/dto/rawJsonLog.dto.ts`), which `selfLog` writes and `logs` reads.
 
 ### The `selfLog` submodule
 
@@ -66,7 +66,31 @@ A submodule lives in `modules/<module>/modules/<submodule>/` and follows the lay
 | `domain/` | `SelfLog`, a diagnostic the backend reports about itself, and `SelfLogRepository`, the contract the other parts of the backend log through |
 | `infra/` | `SelfFileLogApi` reads and writes the `.jsonl` files of `LOGS_DIR_PATH/server/<SERVER_NAME>/log`, `SelfFileLogRepository` implements the contract on top of it, `utils/getNextSessionJobId.ts` gives the `job_id` a repository writes its self logs with |
 
-A `SelfFileLogRepository` stores its self logs in one file, given when it is created in [server.ts](../echo_backend/src/server.ts) along with the `SelfLogsConfig` (self-logs directory, retention, session file). Each part of the backend that reports diagnostics receives its own `SelfLogRepository` and never names a file: today only `FileLogsRepository` does, for the lines it cannot parse (`parseLogFile.jsonl`). When self logs are disabled, or when their directory cannot be prepared, it receives a repository that stores nothing.
+A `SelfFileLogRepository` stores its self logs in one file, given when it is created in [server.ts](../echo_backend/src/server.ts) along with the `SelfLogsConfig` (self-logs directory, retention, session file). Each part of the backend that reports diagnostics receives its own `SelfLogRepository` and never names a file: `FileLogsRepository` does, for the lines it cannot parse (`parseLogFile.jsonl`), and so does the `logsNotifier` submodule, for the problem logs it could not notify (`logsNotifier.jsonl`). When self logs are disabled, or when their directory cannot be prepared, it receives a repository that stores nothing.
+
+### The `logsNotifier` submodule
+
+`logsNotifier` is the optional cron that notifies the problem logs. It has a use case and an entry point of its own, so it has the four layers:
+
+| Folder | Content |
+| ------ | ------- |
+| `domain/` | `LastCheckDate`, the date the logs were last checked at, and `CheckDateRepository`, the contract it is stored through |
+| `application/` | `checkProblemLogsAndNotify`, one check: it notifies the problem logs logged since the previous check, then saves the date of this one; `utils/buildNotifierMessage.ts` writes the message, never longer than the size limit: the logs listed, a footer counting those that do not fit, only their count when none fits, and no message when even that is too long |
+| `infra/` | `CheckDateApi` reads and writes the last-check file (`data/last_logs_check.json`), `fileCheckDate.repository.ts` implements the contract on top of it, with `dto/lastCheckDate.dto.ts` (what the file holds) |
+| `presentation/` | `logs.notifier.ts`, the Fastify plugin that runs the check on the configured schedule: a cron is the entry point of the submodule, the way a route is the one of `logs` |
+
+The check gets its logs from the `getFilteredLogs` of `logs` (`application/getFilteredLogs.ts`) and sends its message through the `Notifier` of the `notification` module (see below). The very first check only saves its date, so the logs that predate it are not notified, and a check whose notification fails does not save its date, so the next one sends the same logs again. When the size limit of the channel is too small for any message, nothing is sent and the check reports it as a warning through its own `SelfLogRepository` (`logsNotifier.jsonl`). The repositories are built in [server.ts](../echo_backend/src/server.ts), only when both the cron and the notifications are configured (see the [configuration](configuration.md)).
+
+### The `notification` module
+
+`modules/notification/` is how the backend sends a message to the outside. It has no route and no business rule, so it has two layers:
+
+| Folder | Content |
+| ------ | ------- |
+| `domain/` | `Notifier`, the contract a notification is sent through: it gives the size limit of its messages (`getMessageSizeLimit`) and sends one (`notify`) |
+| `infra/` | `TelegramNotifierApi` sends a message through the Telegram bot API, `telegramNotifier.ts` implements the contract on top of it, its size limit being the `telegramMessageSizeLimit` of `NotificationConfig` |
+
+`Notifier` is a contract, so other channels can be added. It is the one thing, with `auth.hooks`, a module may import from another one: `logsNotifier` depends on `notification/domain/`, never on its `infra/`.
 
 ## Frontend layout
 
@@ -103,10 +127,6 @@ Nothing is generated into a file: [logs.schemas.ts](../echo_backend/src/modules/
 
 See the [README](../README.md#authentication) for behavior. Implementation: users live in SQLite (`better-sqlite3`, `users.db.ts`) with bcrypt hashes. The JWT secret is generated with `crypto.randomBytes` at process start, so sessions do not survive restarts. `auth.hooks.ts` provides the `requireAuthentication` pre-handler used by protected routes. With `HAS_AUTHENTICATION=false` the auth plugins and routes are not registered.
 
-## Telegram cron
-
-`cron/logs.cron.ts` schedules a job that asks `getFilteredLogs` (`application/getFilteredLogs.ts`) for logs in the watched categories since the last checkpoint (`cron/logs.checkpoint.ts`, stored in `data/last_logs_check.json`) and passes them to a `LogsNotifier` (`cron/notifications/telegram.notifier.ts`). The notifier is an interface, so other channels can be added.
-
 ## Enforcing the architecture
 
 The conventions above are checked automatically with [dependency-cruiser](https://github.com/sverweij/dependency-cruiser):
@@ -121,7 +141,7 @@ The script runs `arch:check` in every workspace. Each one has its own rules, wit
 | ---- | ---------------- |
 | `no-circular` | Any circular dependency |
 | `*-shared-not-to-modules` | `shared/` importing from `modules/` (backend and frontend) |
-| `backend-modules-isolated` | A backend module importing another module, except `auth/auth.hooks.ts` |
+| `backend-modules-isolated` | A backend module importing another module, except `auth/auth.hooks.ts` and `notification/domain/` |
 | `frontend-modules-isolated` | A frontend module importing another module |
 | `backend-domain-is-independent`, `backend-application-not-to-outer-layers`, `backend-infra-only-to-domain`, `backend-presentation-not-to-infra` | In a layered module, any import other than `presentation → application → domain ← infra` |
 | other `backend-*` layering | In a flat module, going upward or skipping layers in `routes → controller → service → repository`; `utils/` and `*.schemas.ts` importing any of those layers |
