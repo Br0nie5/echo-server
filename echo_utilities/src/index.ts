@@ -4,7 +4,6 @@ export * from './shared/config/config.js'
 export * from './shared/config/parseConfig.js'
 
 export * from './shared/utils/getCleanUrlPathname.js'
-export * from './shared/utils/getDomain.js'
 
 export * from './modules/auth/consts.js'
 

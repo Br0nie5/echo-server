@@ -20,7 +20,6 @@
     "arch:check": "depcruise src --config .dependency-cruiser.mts"
   },
   "dependencies": {
-    "tldts": "^7.4.16",
     "zod": "^4.6.5"
   },
   "devDependencies": {
