@@ -7,7 +7,7 @@ Fastify API server for Echo. It reads `.jsonl` logs from disk, exposes them unde
 ```bash
 npm run dev --workspace=echo_backend            # tsx watch
 npm run build --workspace=echo_backend          # tsc to dist/
-npm run start --workspace=echo_backend          # NODE_ENV=production node dist/server.js
+npm run start --workspace=echo_backend          # NODE_ENV=production node dist/main.js
 npm run test:coverage --workspace=echo_backend
 ```
 
@@ -19,7 +19,9 @@ Environment variables, validated at startup by `loadBackConfig` (`src/shared/con
 
 ```
 src/
-  server.ts              app wiring, Swagger, static serving, 404 handling
+  main.ts                entry point: calls startServer
+  server.ts              buildServer, the app wiring, and startServer, which builds it and starts listening
+  plugins/               what buildServer registers: Swagger, cookie/JWT and CORS, the routes of the API, static serving and 404 handling, the logs notifier
   modules/
     auth/                signup / login / check / logout, SQLite users, JWT hooks
     logs/                logs API, parsing, cron notifying the problem logs

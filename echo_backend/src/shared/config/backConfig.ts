@@ -17,6 +17,10 @@ export type ServerConfig = {
   apiUrl: string
   /** `<serverUrl>/app`. */
   appUrl: string
+  /** Path the routes of the API are served under: the path of `apiUrl`. */
+  apiRoutePrefix: string
+  /** Path the frontend is served under: the path of `appUrl`. */
+  appRoutePrefix: string
   host: string
   /** Port the server listens on (`HTTP_PORT`). */
   port: number
@@ -24,7 +28,7 @@ export type ServerConfig = {
   allowedDomain: string
   /** Set when the server uses HTTPS (`TLS_CERT_PATH` and `TLS_KEY_PATH`). */
   tls?: TlsConfig
-  /** Directory holding the built frontend, served under `/app`. */
+  /** Directory holding the built frontend, served under `appRoutePrefix`. */
   frontendDistDirPath: string
 }
 

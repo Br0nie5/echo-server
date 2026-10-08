@@ -67,6 +67,8 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
       serverUrl: echoEnv.SERVER_URL,
       apiUrl: echoEnv.API_URL,
       appUrl: echoEnv.APP_URL,
+      apiRoutePrefix: new URL(echoEnv.API_URL).pathname,
+      appRoutePrefix: new URL(echoEnv.APP_URL).pathname,
       host: '0.0.0.0',
       port: parseHttpPort(requireEnv(processEnv, 'HTTP_PORT')),
       allowedDomain,

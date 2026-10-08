@@ -1,199 +1,22 @@
-import * as crypto from 'crypto'
 import type { Server, IncomingMessage, ServerResponse } from 'http'
 
-import fastifyCookie from '@fastify/cookie'
-import cors from '@fastify/cors'
-import fastifyJwt from '@fastify/jwt'
-import fastifyStatic from '@fastify/static'
-import swagger from '@fastify/swagger'
-import swaggerUI from '@fastify/swagger-ui'
-import type { FastifyBaseLogger, FastifyServerOptions, FastifyTypeProviderDefault } from 'fastify'
-import Fastify, { type FastifyInstance } from 'fastify'
+import type { FastifyServerOptions } from 'fastify'
+import Fastify from 'fastify'
 
-import { createAuthUsersDbRepository } from './modules/auth/infra/authUsersDb.repository.js'
-import { createUsersDb } from './modules/auth/infra/users.db.js'
-import { createAuthController } from './modules/auth/presentation/auth.controller.js'
-import { authPreHandler } from './modules/auth/presentation/auth.hooks.js'
-import { authRoutes } from './modules/auth/presentation/auth.routes.js'
-import type { LogsRepository } from './modules/logs/domain/logs.repository.js'
-import { createLogsFilesApi, type LogsFilesApi } from './modules/logs/infra/logsFiles.api.js'
+import { createLogsFilesApi } from './modules/logs/infra/logsFiles.api.js'
 import { createLogsFilesRepository } from './modules/logs/infra/logsFiles.repository.js'
-import { createFileCheckDateApi } from './modules/logs/modules/logsNotifier/infra/fileCheckDate.api.js'
-import { createFileCheckDateRepository } from './modules/logs/modules/logsNotifier/infra/fileCheckDate.repository.js'
-import logsNotifier from './modules/logs/modules/logsNotifier/presentation/logs.notifier.js'
-import { createLogsController } from './modules/logs/presentation/logs.controller.js'
-import { logsRoutes } from './modules/logs/presentation/logs.routes.js'
-import { createTelegramNotifierApi } from './modules/notification/infra/telegramNotifier.api.js'
-import { createTelegramNotifier } from './modules/notification/infra/telegramNotifier.js'
-import type { SelfReportRepository } from './modules/selfReport/domain/selfReport.repository.js'
-import { createFileSessionJobIdApi } from './modules/selfReport/infra/fileSessionJobId.api.js'
-import { createNoopSelfReportRepository } from './modules/selfReport/infra/noopSelfReport.repository.js'
-import { createSelfFileReportRepository } from './modules/selfReport/infra/selfFileReport.repository.js'
-import type { BackConfig, SelfReportsConfig, ServerConfig } from './shared/config/backConfig.js'
+import { registerAuthRoutes } from './plugins/registerAuthRoutes.js'
+import { registerDocumentation } from './plugins/registerDocumentation.js'
+import { registerFrontend } from './plugins/registerFrontend.js'
+import { registerLogsNotifier } from './plugins/registerLogsNotifier.js'
+import { registerLogsRoutes } from './plugins/registerLogsRoutes.js'
+import { registerSecurity } from './plugins/registerSecurity.js'
+import type { EchoServer } from './plugins/types/echoServer.js'
+import { getSelfReportRepository } from './plugins/utils/getSelfReportRepository.js'
+import { normalizeToEchoError } from './plugins/utils/normalizeToEchoError.js'
+import type { BackConfig } from './shared/config/backConfig.js'
 import { loadBackConfig } from './shared/config/loadBackConfig.js'
 import { EchoErrorJsonSchema } from './shared/schemas/errors.schemas.js'
-import { isOriginAllowed } from './shared/utils/isOriginAllowed.js'
-import { normalizeToEchoError } from './shared/utils/normalizeToEchoError.js'
-
-/** Random secret regenerated at each start, so the sessions do not survive a restart. */
-const DYNAMIC_JWT_SECRET = crypto.randomBytes(256).toString('hex')
-
-/** The Fastify instance type used by the server, with the plain-http generics. */
-type EchoServer = FastifyInstance<
-  Server<typeof IncomingMessage, typeof ServerResponse>,
-  IncomingMessage,
-  ServerResponse<IncomingMessage>,
-  FastifyBaseLogger,
-  FastifyTypeProviderDefault
->
-
-/** Registers Swagger (source of `openApi.json`) and its UI, served under `/documentation`. */
-const registerDocumentation = async (
-  server: EchoServer,
-  serverConfig: ServerConfig
-): Promise<void> => {
-  // Swagger for OpenAPI generation
-  await server.register(swagger, {
-    openapi: {
-      info: {
-        title: 'Echo API',
-        description: 'Auto-generated API documentation for the Echo server',
-        version: '1.0.0'
-      },
-      servers: [{ url: new URL(serverConfig.apiUrl).origin }],
-      tags: [
-        {
-          name: 'Logs',
-          description: 'Everything concerning getting scripts logs'
-        },
-        {
-          name: 'Authentication',
-          description: 'Everything concerning authentication if it is enabled'
-        }
-      ]
-    },
-    refResolver: {
-      buildLocalReference(json, _, __, i) {
-        const id = json.$id?.toString()
-        return id || `my-fragment-${i}`
-      }
-    }
-  })
-
-  await server.register(swaggerUI, {
-    routePrefix: '/documentation',
-    uiConfig: {
-      docExpansion: 'list',
-      deepLinking: false
-    }
-  })
-}
-
-/** Registers cookie/JWT support when authentication is enabled, and CORS restricted to the allowed domain and its subdomains. */
-const registerSecurity = async (server: EchoServer, config: BackConfig): Promise<void> => {
-  const { allowedDomain } = config.server
-
-  if (config.auth.hasAuthentication) {
-    await server.register(fastifyCookie)
-
-    await server.register(fastifyJwt, {
-      secret: DYNAMIC_JWT_SECRET,
-      cookie: {
-        cookieName: config.auth.cookieName,
-        signed: false // We verify via JWT signature, so the cookie itself doesn't need a secondary signature
-      }
-    })
-  }
-
-  await server.register(cors, {
-    origin: (origin, cb) => {
-      if (!origin) {
-        return cb(null, true)
-      }
-
-      try {
-        if (isOriginAllowed(origin, allowedDomain)) {
-          return cb(null, true)
-        }
-
-        return cb(new Error(`Not allowed by CORS: ${origin} (Allowed: ${allowedDomain})`), false)
-      } catch {
-        return cb(new Error('Invalid Origin Header'), false)
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
-  })
-}
-
-/** Serves the built frontend under `/app`. Unknown `/app/*` paths get `index.html` (SPA routing), anything else a JSON 404. */
-const registerFrontend = async (
-  server: EchoServer,
-  { frontendDistDirPath }: ServerConfig
-): Promise<void> => {
-  await server.register(fastifyStatic, {
-    root: frontendDistDirPath,
-    prefix: '/app'
-  })
-
-  server.setNotFoundHandler((req, reply) => {
-    if (req.url.startsWith('/app')) {
-      return reply.sendFile('index.html', frontendDistDirPath)
-    }
-    return reply.code(404).send({ error: 'Not found' })
-  })
-}
-
-/** The repository storing its self reports in the file named `selfReportFileName`, through `logsFilesApi`, or storing nothing when the self reports are disabled. */
-const getSelfReportRepository = (
-  server: EchoServer,
-  logsFilesApi: LogsFilesApi,
-  selfReportsConfig: SelfReportsConfig,
-  selfReportFileName: string
-): Promise<SelfReportRepository> | SelfReportRepository =>
-  selfReportsConfig.isEnabled
-    ? createSelfFileReportRepository({
-        logsFilesApi,
-        sessionJobIdApi: createFileSessionJobIdApi(selfReportsConfig),
-        selfReportsConfig,
-        selfReportFileName,
-        logger: server.log
-      })
-    : createNoopSelfReportRepository()
-
-/** Registers the cron notifying the problem logs, only when it is configured along with the notifications. */
-const registerLogsNotifier = async (
-  server: EchoServer,
-  {
-    logs: { logsNotifier: logsNotifierConfig },
-    selfReports: selfReportsConfig,
-    notification: notificationConfig
-  }: BackConfig,
-  logsFilesApi: LogsFilesApi,
-  logsRepository: LogsRepository
-): Promise<void> => {
-  if (logsNotifierConfig === undefined || notificationConfig === undefined) {
-    server.log.info('The logs notifier is not configured, skipping its registration')
-    return
-  }
-
-  await server.register(logsNotifier, {
-    logsNotifierConfig,
-    logsRepository,
-    notifier: createTelegramNotifier(
-      createTelegramNotifierApi(notificationConfig),
-      notificationConfig
-    ),
-    checkDateRepository: createFileCheckDateRepository(createFileCheckDateApi(logsNotifierConfig)),
-    selfReportRepository: await getSelfReportRepository(
-      server,
-      logsFilesApi,
-      selfReportsConfig,
-      selfReportsConfig.logsNotifierSelfReportFileName
-    )
-  })
-}
 
 /**
  * Composition root: builds the dependency graph from `config` (the one `loadBackConfig` gives by
@@ -218,6 +41,7 @@ export const buildServer = async (config: BackConfig = loadBackConfig()): Promis
   })
 
   await registerSecurity(server, config)
+
   await registerDocumentation(server, config.server)
 
   server.addSchema(EchoErrorJsonSchema)
@@ -233,28 +57,18 @@ export const buildServer = async (config: BackConfig = loadBackConfig()): Promis
     )
   )
 
-  // API
-  if (config.auth.hasAuthentication) {
-    const authRepository = createAuthUsersDbRepository(await createUsersDb(config.auth))
-    await server.register(authRoutes, {
-      prefix: '/api',
-      controller: createAuthController(authRepository, config.auth)
-    })
-  }
-  await server.register(logsRoutes, {
-    prefix: '/api',
-    controller: createLogsController(logsFilesRepository),
-    preHandler: config.auth.hasAuthentication ? authPreHandler : undefined
-  })
+  await registerAuthRoutes(server, config)
+  await registerLogsRoutes(server, config, logsFilesRepository)
 
   await registerFrontend(server, config.server)
+
   await registerLogsNotifier(server, config, logsFilesApi, logsFilesRepository)
 
   return server
 }
 
-/** Entry point: loads the config, builds the server with it and starts listening, exiting the process on failure. */
-const startServer = async (): Promise<void> => {
+/** Loads the config, builds the server with it and starts listening, exiting the process on failure. */
+export const startServer = async (): Promise<void> => {
   const config = loadBackConfig()
   const server = await buildServer(config)
 
@@ -268,5 +82,3 @@ const startServer = async (): Promise<void> => {
     process.exit(1)
   }
 }
-
-void startServer()

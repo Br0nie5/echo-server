@@ -31,4 +31,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node /usr/local/bin/docker-health-check.js
 
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["node", "echo_backend/dist/server.js"]
+CMD ["node", "echo_backend/dist/main.js"]
