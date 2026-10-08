@@ -7,6 +7,7 @@ import type { IConfiguration } from 'dependency-cruiser'
 
 const MODULES = '^src/modules'
 const SHARED = '^src/shared'
+const TEST_HELPERS = '^src/test/'
 const TESTS = '(^|/)(__tests__|__test__)/|\\.test\\.tsx?$'
 
 /** Layers that sit above `utils/` and `*.schemas.ts` and must never be imported by them. */
@@ -166,8 +167,8 @@ const config: IConfiguration = {
       name: 'prod-not-to-tests',
       severity: 'error',
       comment: 'Production code must not import test files or test helpers.',
-      from: { pathNot: TESTS },
-      to: { path: TESTS }
+      from: { pathNot: [TESTS, TEST_HELPERS] },
+      to: { path: [TESTS, TEST_HELPERS] }
     }
   ],
 

@@ -1,7 +1,7 @@
 import type { Log } from '@echo/utilities'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { LogsCronOptions } from '../../../../../shared/types/echoBackEnv.js'
+import { getMockCronConfig } from '../../../../../test/mocks/configs.js'
 import {
   buildTelegramMessage,
   createTelegramNotifier,
@@ -18,17 +18,6 @@ function mockLog(overrides: Partial<Log> = {}): Log {
     message: 'Something broke',
     callFile: 'worker.sh',
     callLine: 1,
-    ...overrides
-  }
-}
-
-function mockLogsCronOptions(overrides: Partial<LogsCronOptions> = {}): LogsCronOptions {
-  return {
-    LOGS_CRON_SCHEDULE_REGEX: '*/30 * * * *',
-    WATCHED_LOGS_CATEGORIES: ['ERROR', 'WARNING'],
-    TELEGRAM_CHAT_ID: 'chat-123',
-    TELEGRAM_BASE_URL: 'https://api.telegram.org/bot-fake',
-    TELEGRAM_TIMEZONE: 'UTC',
     ...overrides
   }
 }
@@ -109,8 +98,9 @@ describe('buildTelegramMessage', () => {
 })
 
 describe('createTelegramNotifier', () => {
-  const notify = (logs: Log[], options = mockLogsCronOptions()): Promise<void> =>
-    createTelegramNotifier(options, 'test-device').notify(logs)
+  const cronConfig = getMockCronConfig({ serverName: 'test-device' })
+
+  const notify = (logs: Log[]): Promise<void> => createTelegramNotifier(cronConfig).notify(logs)
 
   it('should do nothing when there are no problem logs', async () => {
     await notify([])
@@ -121,15 +111,14 @@ describe('createTelegramNotifier', () => {
   it('should send a POST request with the built message', async () => {
     vi.mocked(fetch).mockResolvedValueOnce({ ok: true } as Response)
 
-    const options = mockLogsCronOptions()
-    await notify([mockLog()], options)
+    await notify([mockLog()])
 
     expect(fetch).toHaveBeenCalledWith(
-      `${options.TELEGRAM_BASE_URL}/sendMessage`,
+      `${cronConfig.telegramBaseUrl}/sendMessage`,
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: expect.stringContaining(options.TELEGRAM_CHAT_ID)
+        body: expect.stringContaining(cronConfig.telegramChatId)
       })
     )
 

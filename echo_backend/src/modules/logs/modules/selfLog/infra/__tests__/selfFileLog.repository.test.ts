@@ -6,6 +6,7 @@ vi.mock('../utils/getNextSessionJobId.js')
 vi.mock('../utils/pruneOldSelfLogFileLines.js')
 vi.mock('../utils/deleteStoredSelfLogsDuplicate.js')
 
+import { getMockSelfLogsConfig } from '../../../../../../test/mocks/configs.js'
 import type { SelfLog } from '../../domain/selfLog.js'
 import { createSelfFileLogRepository } from '../selfFileLog.repository.js'
 import { deleteStoredSelfLogsDuplicate } from '../utils/deleteStoredSelfLogsDuplicate.js'
@@ -24,10 +25,12 @@ const selfFileLogApi = {
   appendRawSelfLogLines: vi.fn()
 }
 
+const selfLogsConfig = getMockSelfLogsConfig({ retentionDays: 10 })
+
 const options = {
   selfFileLogApi,
+  selfLogsConfig,
   selfLogFileName: SELF_LOG_FILE_NAME,
-  retentionDays: 10,
   logger
 }
 
@@ -57,6 +60,12 @@ beforeEach(() => {
 })
 
 describe('createSelfFileLogRepository', () => {
+  it('should take its session jobId with the self-logs config', async () => {
+    await createSelfFileLogRepository(options)
+
+    expect(getNextSessionJobId).toHaveBeenCalledWith(selfLogsConfig)
+  })
+
   it('should create the self-logs directory', async () => {
     await createSelfFileLogRepository(options)
 

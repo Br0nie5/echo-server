@@ -1,7 +1,7 @@
 import type { Log } from '@echo/utilities'
 import { DateTime } from 'luxon'
 
-import type { LogsCronOptions } from '../../../../shared/types/echoBackEnv.js'
+import type { CronConfig } from '../../../../shared/config/backConfig.js'
 
 import type { LogsNotifier } from './logs.notifier.js'
 
@@ -59,24 +59,26 @@ export function buildTelegramMessage(
   return message
 }
 
-/** Sends the problem logs as a Telegram message from the bot behind `TELEGRAM_BASE_URL`. */
-export const createTelegramNotifier = (
-  logsCronOptions: LogsCronOptions,
-  deviceName: string
-): LogsNotifier => ({
+/** Sends the problem logs as a Telegram message from the bot behind `telegramBaseUrl`, to the chat `telegramChatId`. */
+export const createTelegramNotifier = ({
+  telegramBaseUrl,
+  telegramChatId,
+  telegramTimezone,
+  serverName
+}: CronConfig): LogsNotifier => ({
   notify: async (problemLogs: Log[]): Promise<void> => {
     if (problemLogs.length === 0) {
       return
     }
 
-    const message = buildTelegramMessage(problemLogs, deviceName, logsCronOptions.TELEGRAM_TIMEZONE)
+    const message = buildTelegramMessage(problemLogs, serverName, telegramTimezone)
 
-    const url = `${logsCronOptions.TELEGRAM_BASE_URL}/sendMessage`
+    const url = `${telegramBaseUrl}/sendMessage`
 
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: logsCronOptions.TELEGRAM_CHAT_ID, text: message })
+      body: JSON.stringify({ chat_id: telegramChatId, text: message })
     })
 
     if (!res.ok) {

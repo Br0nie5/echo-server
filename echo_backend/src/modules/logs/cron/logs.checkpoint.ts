@@ -1,26 +1,22 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
-import { dataDir } from '../../../shared/utils/dataDir.js'
+import type { CronConfig } from '../../../shared/config/backConfig.js'
 
 import { LastLogsCheckSchema } from './utils/schemas/lastLogsCheck.schema.js'
-
-/** File where the date of the last logs check is stored. */
-export const lastLogsCheckFile = path.join(dataDir, 'last_logs_check.json')
 
 /** Remembers when the logs were last checked, so each check only looks at newer logs. */
 export interface CheckpointStore {
   /** The stored date, or `undefined` when the file is missing, malformed or holds an invalid date. */
   getLastCheckDate: () => Promise<Date | undefined>
-  /** Stores the date, creating the data directory if needed. */
+  /** Stores the date, creating the directory of its file if needed. */
   saveLastCheckDate: (date: Date) => Promise<void>
 }
 
-/** Keeps the last check date in a JSON file, inside `dataDirPath`. */
-export const createFileCheckpointStore = (
-  dataDirPath: string,
-  lastLogsCheckFilePath: string
-): CheckpointStore => ({
+/** Keeps the last check date in the JSON file at `lastLogsCheckFilePath`. */
+export const createFileCheckpointStore = ({
+  lastLogsCheckFilePath
+}: CronConfig): CheckpointStore => ({
   getLastCheckDate: async (): Promise<Date | undefined> => {
     try {
       const content = await fs.readFile(lastLogsCheckFilePath, 'utf-8')
@@ -38,7 +34,7 @@ export const createFileCheckpointStore = (
   },
 
   saveLastCheckDate: async (date: Date): Promise<void> => {
-    await fs.mkdir(dataDirPath, { recursive: true })
+    await fs.mkdir(path.dirname(lastLogsCheckFilePath), { recursive: true })
     await fs.writeFile(
       lastLogsCheckFilePath,
       JSON.stringify({ lastCheck: date.toISOString() }, null, 2),

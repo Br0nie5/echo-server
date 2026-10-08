@@ -53,7 +53,7 @@ The `auth` module is not layered yet and keeps its files flat, with this naming 
 | `*.schemas.ts` | Fastify `addSchema` definitions |
 | `utils/` | Pure helpers |
 
-`shared/` holds cross-module code (env parsing, error schemas). [server.ts](../echo_backend/src/server.ts) wires everything, registers Swagger, serves `/app` via `@fastify/static` (with an SPA fallback to `index.html`) and returns JSON 404s elsewhere.
+`shared/` holds cross-module code (the config, error schemas). `shared/config/` holds `BackConfig`, split into `ServerConfig`, `AuthConfig` and `LogsConfig` (itself holding `SelfLogsConfig` and the optional `CronConfig`), and `loadBackConfig`, which builds it once from the environment variables and from constants (the paths under `data/`, the self-logs directory, file names, the extension of the log files). `shared/config/utils/` holds the helpers `loadBackConfig` builds it with, one per file: mostly the parsers the variables are read with. Each function is given the config of its domain and takes every setting and path from it. [server.ts](../echo_backend/src/server.ts) wires everything, registers Swagger, serves `/app` via `@fastify/static` (with an SPA fallback to `index.html`) and returns JSON 404s elsewhere.
 
 The `logs` module itself has three parts: the core log retrieval in the four layer folders described above (the only one with HTTP routes), `modules/logs/cron/` (the Telegram notifier cron, see below) and the `modules/logs/modules/selfLog/` submodule (the backend's own diagnostics, see below). They depend on each other in one direction only (`selfLog` ← `logs` ← `cron`), never circularly, except for the format of a log line (`infra/dto/rawJsonLog.dto.ts`), which `selfLog` writes and `logs` reads.
 
@@ -66,7 +66,7 @@ A submodule lives in `modules/<module>/modules/<submodule>/` and follows the lay
 | `domain/` | `SelfLog`, a diagnostic the backend reports about itself, and `SelfLogRepository`, the contract the other parts of the backend log through |
 | `infra/` | `SelfFileLogApi` reads and writes the `.jsonl` files of `LOGS_DIR_PATH/server/<SERVER_NAME>/log`, `SelfFileLogRepository` implements the contract on top of it, `utils/getNextSessionJobId.ts` gives the `job_id` a repository writes its self logs with |
 
-A `SelfFileLogRepository` stores its self logs in one file, given when it is created in [server.ts](../echo_backend/src/server.ts) along with the retention. Each part of the backend that reports diagnostics receives its own `SelfLogRepository` and never names a file: today only `FileLogsRepository` does, for the lines it cannot parse (`parseLogFile.jsonl`). When self logs are disabled, or when their directory cannot be prepared, it receives a repository that stores nothing.
+A `SelfFileLogRepository` stores its self logs in one file, given when it is created in [server.ts](../echo_backend/src/server.ts) along with the `SelfLogsConfig` (self-logs directory, retention, session file). Each part of the backend that reports diagnostics receives its own `SelfLogRepository` and never names a file: today only `FileLogsRepository` does, for the lines it cannot parse (`parseLogFile.jsonl`). When self logs are disabled, or when their directory cannot be prepared, it receives a repository that stores nothing.
 
 ## Frontend layout
 

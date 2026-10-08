@@ -2,6 +2,7 @@ import { needsSignupMessage, type AuthToken, type LoginRequest } from '@echo/uti
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import { getMockAuthConfig } from '../../../test/mocks/configs.js'
 import { createAuthController } from '../auth.controller.js'
 
 const mockReply = (): FastifyReply<{ Reply: AuthToken }> => {
@@ -26,16 +27,13 @@ const mockRequest = (
 const username = 'test_admin'
 const password = 'some_password'
 
-const env = {
-  COOKIE_NAME: 'test-cookie',
-  COOKIE_SERIALIZE_OPTIONS: { httpOnly: true, path: '/' }
-}
+const authConfig = getMockAuthConfig()
 const AuthService = {
   needsSignup: vi.fn(),
   signUpFirstAdmin: vi.fn(),
   areCredentialsValid: vi.fn()
 }
-const AuthController = createAuthController(AuthService, env)
+const AuthController = createAuthController(AuthService, authConfig)
 
 describe('AuthController', () => {
   beforeEach(() => {
@@ -53,9 +51,9 @@ describe('AuthController', () => {
 
       expect(req.server.jwt.sign).toHaveBeenCalledWith({ user: username })
       expect(reply.setCookie).toHaveBeenCalledWith(
-        env.COOKIE_NAME,
+        authConfig.cookieName,
         'mocked.jwt.token',
-        env.COOKIE_SERIALIZE_OPTIONS
+        authConfig.cookieSerializeOptions
       )
       expect(reply.status).toHaveBeenCalledWith(200)
       expect(reply.send).toHaveBeenCalledWith({ success: true, message: 'Sign up successful.' })
@@ -88,9 +86,9 @@ describe('AuthController', () => {
 
       expect(req.server.jwt.sign).toHaveBeenCalledWith({ user: username })
       expect(reply.setCookie).toHaveBeenCalledWith(
-        env.COOKIE_NAME,
+        authConfig.cookieName,
         'mocked.jwt.token',
-        env.COOKIE_SERIALIZE_OPTIONS
+        authConfig.cookieSerializeOptions
       )
       expect(reply.status).toHaveBeenCalledWith(200)
       expect(reply.send).toHaveBeenCalledWith({ success: true, message: 'Login successful.' })
@@ -172,7 +170,10 @@ describe('AuthController', () => {
 
       await AuthController.logout(req, reply)
 
-      expect(reply.clearCookie).toHaveBeenCalledWith(env.COOKIE_NAME, env.COOKIE_SERIALIZE_OPTIONS)
+      expect(reply.clearCookie).toHaveBeenCalledWith(
+        authConfig.cookieName,
+        authConfig.cookieSerializeOptions
+      )
       expect(reply.status).toHaveBeenCalledWith(200)
       expect(reply.send).toHaveBeenCalledWith({
         success: true,

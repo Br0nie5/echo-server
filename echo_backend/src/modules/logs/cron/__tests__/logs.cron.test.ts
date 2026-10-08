@@ -7,7 +7,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('node-cron')
 vi.mock('../../application/getFilteredLogs.js')
 
-import type { LogsCronOptions } from '../../../../shared/types/echoBackEnv.js'
+import type { CronConfig } from '../../../../shared/config/backConfig.js'
+import { getMockCronConfig } from '../../../../test/mocks/configs.js'
 import { getFilteredLogs as actualGetFilteredLogs } from '../../application/getFilteredLogs.js'
 import logsCronPlugin, {
   checkProblemLogsAndNotify,
@@ -43,8 +44,8 @@ const check = (): Promise<void> =>
     checkpointStore
   })
 
-const pluginOptions = (logsCronOptions: LogsCronOptions): LogsCronPluginOptions => ({
-  logsCronOptions,
+const pluginOptions = (cronConfig: CronConfig): LogsCronPluginOptions => ({
+  cronConfig,
   logsRepository,
   notifier,
   checkpointStore
@@ -59,17 +60,6 @@ function mockFastify(): FastifyInstance {
     },
     addHook: vi.fn()
   } as unknown as FastifyInstance
-}
-
-function mockLogsCronOptions(overrides: Partial<LogsCronOptions> = {}): LogsCronOptions {
-  return {
-    LOGS_CRON_SCHEDULE_REGEX: '*/30 * * * *',
-    WATCHED_LOGS_CATEGORIES: ['ERROR', 'WARNING'],
-    TELEGRAM_CHAT_ID: 'chat-123',
-    TELEGRAM_BASE_URL: 'https://api.telegram.org/bot-fake',
-    TELEGRAM_TIMEZONE: 'UTC',
-    ...overrides
-  }
 }
 
 beforeEach(() => {
@@ -152,8 +142,8 @@ describe('checkProblemLogsAndNotify', () => {
 
 // ---------------------------------------------------------------------------
 describe('logsCron plugin', () => {
-  it('should register the cron task and onClose hook when options are set', async () => {
-    const options = mockLogsCronOptions()
+  it('should register the cron task and onClose hook when it is configured', async () => {
+    const cronConfig = getMockCronConfig()
 
     const stopMock = vi.fn()
     vi.mocked(cron.schedule).mockReturnValueOnce({
@@ -161,13 +151,10 @@ describe('logsCron plugin', () => {
     } as unknown as ScheduledTask)
 
     const fastify = mockFastify()
-    await logsCronPlugin(fastify, pluginOptions(options))
+    await logsCronPlugin(fastify, pluginOptions(cronConfig))
 
     expect(fastify.log.info).toHaveBeenCalledWith('Registering logs cron')
-    expect(cron.schedule).toHaveBeenCalledWith(
-      options.LOGS_CRON_SCHEDULE_REGEX,
-      expect.any(Function)
-    )
+    expect(cron.schedule).toHaveBeenCalledWith(cronConfig.schedule, expect.any(Function))
     expect(fastify.addHook).toHaveBeenCalledWith('onClose', expect.any(Function))
 
     // Simulate Fastify calling the onClose hook
@@ -177,13 +164,13 @@ describe('logsCron plugin', () => {
   })
 
   it('should run the cron callback successfully without logging an error', async () => {
-    const options = mockLogsCronOptions()
+    const cronConfig = getMockCronConfig()
 
     vi.mocked(cron.schedule).mockReturnValueOnce({ stop: vi.fn() } as unknown as ScheduledTask)
     checkpointStore.getLastCheckDate.mockResolvedValueOnce(undefined) // first run path
 
     const fastify = mockFastify()
-    await logsCronPlugin(fastify, pluginOptions(options))
+    await logsCronPlugin(fastify, pluginOptions(cronConfig))
 
     const cronCallback = vi.mocked(cron.schedule).mock.calls[0][1] as () => Promise<void>
     await cronCallback()
@@ -192,14 +179,14 @@ describe('logsCron plugin', () => {
   })
 
   it('should log an error when the cron callback throws', async () => {
-    const options = mockLogsCronOptions()
+    const cronConfig = getMockCronConfig()
 
     vi.mocked(cron.schedule).mockReturnValueOnce({ stop: vi.fn() } as unknown as ScheduledTask)
     checkpointStore.getLastCheckDate.mockResolvedValueOnce(new Date('2026-01-01T00:00:00.000Z'))
     getFilteredLogs.mockRejectedValueOnce(new Error('DB down'))
 
     const fastify = mockFastify()
-    await logsCronPlugin(fastify, pluginOptions(options))
+    await logsCronPlugin(fastify, pluginOptions(cronConfig))
 
     const cronCallback = vi.mocked(cron.schedule).mock.calls[0][1] as () => Promise<void>
     await cronCallback()

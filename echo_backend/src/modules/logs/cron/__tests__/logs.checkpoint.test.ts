@@ -4,9 +4,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('node:fs/promises')
 
+import { getMockCronConfig } from '../../../../test/mocks/configs.js'
 import { createFileCheckpointStore } from '../logs.checkpoint.js'
 
-const store = createFileCheckpointStore('/fake/data', '/fake/data/last_logs_check.json')
+const store = createFileCheckpointStore(
+  getMockCronConfig({ lastLogsCheckFilePath: '/fake/data/nested/last_logs_check.json' })
+)
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -66,14 +69,14 @@ describe('CheckpointStore', () => {
   })
 
   describe('saveLastCheckDate', () => {
-    it('should create the data directory and write the date as JSON', async () => {
+    it('should create the directory of the file and write the date as JSON', async () => {
       const date = new Date('2026-01-01T00:00:00.000Z')
 
       await store.saveLastCheckDate(date)
 
-      expect(fs.mkdir).toHaveBeenCalledWith('/fake/data', { recursive: true })
+      expect(fs.mkdir).toHaveBeenCalledWith('/fake/data/nested', { recursive: true })
       expect(fs.writeFile).toHaveBeenCalledWith(
-        '/fake/data/last_logs_check.json',
+        '/fake/data/nested/last_logs_check.json',
         JSON.stringify({ lastCheck: date.toISOString() }, null, 2),
         'utf-8'
       )

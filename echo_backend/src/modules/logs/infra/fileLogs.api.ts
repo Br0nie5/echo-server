@@ -4,10 +4,10 @@ import path from 'path'
 
 import type { EchoError } from '@echo/utilities'
 
+import type { LogsConfig } from '../../../shared/config/backConfig.js'
+
 import type { LogFileDto } from './dto/logFile.dto.js'
 import type { RawLogLineDto } from './dto/rawLogLine.dto.js'
-
-const LOG_FILE_EXTENSION = '.jsonl'
 
 /** Access to the log files, the data source the logs are stored in. */
 export interface FileLogsApi {
@@ -35,11 +35,11 @@ export interface FileLogsApi {
 export type FileSystem = Pick<typeof nodeFs, 'readdir' | 'access' | 'readFile'>
 
 /**
- * Builds the access to the `.jsonl` files found under `logsDirPath`, on top of `fileSystem` (the
- * real file system by default).
+ * Builds the access to the files of `logsDirPath` whose name ends with `logFileExtension`, on top
+ * of `fileSystem` (the real file system by default).
  */
 export const createFileLogsApi = (
-  logsDirPath: string,
+  { logsDirPath, logFileExtension }: LogsConfig,
   fileSystem: FileSystem = nodeFs
 ): FileLogsApi => {
   const getAllFilesPaths = async (directory: string): Promise<string[]> => {
@@ -61,9 +61,7 @@ export const createFileLogsApi = (
   }
 
   const getAllLogFilesPaths = async (): Promise<string[]> =>
-    (await getAllFilesPaths(logsDirPath)).filter((filePath) =>
-      filePath.endsWith(LOG_FILE_EXTENSION)
-    )
+    (await getAllFilesPaths(logsDirPath)).filter((filePath) => filePath.endsWith(logFileExtension))
 
   const getAllLogsFromFile = (filePath: string): LogFileDto => {
     const directoriesLinkedName = filePath

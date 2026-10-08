@@ -2,8 +2,11 @@ import path from 'path'
 
 import { describe, it, expect, vi } from 'vitest'
 
+import { getMockLogsConfig } from '../../../../test/mocks/configs.js'
 import type { LogFileDto } from '../dto/logFile.dto.js'
 import { createFileLogsApi, type FileSystem } from '../fileLogs.api.js'
+
+const logsConfig = getMockLogsConfig({ logsDirPath: '/logs', logFileExtension: '.jsonl' })
 
 const entry = (name: string, type: 'file' | 'directory' | 'other'): object => ({
   name,
@@ -38,9 +41,9 @@ const logFile = (filePath: string): LogFileDto => ({
 
 describe('FileLogsApi', () => {
   describe('getAllLogFilesPaths', () => {
-    it('should list the paths of the .jsonl files recursively', async () => {
+    it('should list the paths of the files having the log file extension recursively', async () => {
       const fileLogsApi = createFileLogsApi(
-        '/logs',
+        logsConfig,
         buildFileSystem({
           directories: {
             '/logs': [
@@ -62,7 +65,7 @@ describe('FileLogsApi', () => {
   })
 
   describe('getAllLogsFromFile', () => {
-    const fileLogsApi = createFileLogsApi('/logs', buildFileSystem({}))
+    const fileLogsApi = createFileLogsApi(logsConfig, buildFileSystem({}))
 
     it('should name the file after its base name, without a group at the first two levels', () => {
       expect(fileLogsApi.getAllLogsFromFile('/logs/docker/compose.jsonl')).toEqual({
@@ -84,7 +87,7 @@ describe('FileLogsApi', () => {
   describe('getAllLogsFromFiles', () => {
     it('should list the .jsonl files recursively, with their name and group', async () => {
       const fileLogsApi = createFileLogsApi(
-        '/logs',
+        logsConfig,
         buildFileSystem({
           directories: {
             '/logs': [
@@ -122,7 +125,7 @@ describe('FileLogsApi', () => {
 
     it('should ignore the entries that are neither directories nor files', async () => {
       const fileLogsApi = createFileLogsApi(
-        '/logs',
+        logsConfig,
         buildFileSystem({ directories: { '/logs': [entry('socket.jsonl', 'other')] } })
       )
 
@@ -134,7 +137,7 @@ describe('FileLogsApi', () => {
     it('should return the non-blank lines of the file with their position', async () => {
       const file = logFile('/logs/file.jsonl')
       const fileLogsApi = createFileLogsApi(
-        '/logs',
+        logsConfig,
         buildFileSystem({ files: { '/logs/file.jsonl': 'foo\n\nbar\n  \n' } })
       )
 
@@ -146,7 +149,7 @@ describe('FileLogsApi', () => {
 
     it('should throw an EchoError if the file does not exist or is not readable', async () => {
       const fileLogsApi = createFileLogsApi(
-        '/logs',
+        logsConfig,
         buildFileSystem({ unreadable: ['/logs/nope.jsonl'] })
       )
 
@@ -157,7 +160,7 @@ describe('FileLogsApi', () => {
     })
 
     it('should use the real file system by default', async () => {
-      const fileLogsApi = createFileLogsApi('/does/not/exist')
+      const fileLogsApi = createFileLogsApi(getMockLogsConfig({ logsDirPath: '/does/not/exist' }))
 
       await expect(
         fileLogsApi.getRawLogLines(logFile('/does/not/exist/file.jsonl'))

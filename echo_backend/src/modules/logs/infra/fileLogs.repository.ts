@@ -8,13 +8,6 @@ import type { LogFileDto } from './dto/logFile.dto.js'
 import { convertRawLogLineToLog } from './dto/rawLogLine.dto.js'
 import type { FileLogsApi } from './fileLogs.api.js'
 
-/**
- * Name of the file the lines that hold no log are reported to.
- *
- * It is what the `SelfLogRepository` given to {@link createFileLogsRepository} is created with.
- */
-export const PARSE_LOG_FILE_SELF_LOG_FILE_NAME = 'parseLogFile.jsonl'
-
 /** What reading a log file gives: the logs it holds, and a warning for each line that holds none. */
 interface ParsedLogFile {
   logs: Log[]

@@ -3,7 +3,7 @@ import type { FastifyPluginAsync, FastifyPluginOptions } from 'fastify'
 import fastifyPlugin from 'fastify-plugin'
 import cron from 'node-cron'
 
-import type { LogsCronOptions } from '../../../shared/types/echoBackEnv.js'
+import type { CronConfig } from '../../../shared/config/backConfig.js'
 import { getFilteredLogs } from '../application/getFilteredLogs.js'
 import type { LogsRepository } from '../domain/logs.repository.js'
 
@@ -62,7 +62,7 @@ export async function checkProblemLogsAndNotify({
 
 /** Options of the `logsCron` plugin. */
 export interface LogsCronPluginOptions extends FastifyPluginOptions {
-  logsCronOptions: LogsCronOptions
+  cronConfig: CronConfig
   logsRepository: LogsRepository
   notifier: LogsNotifier
   checkpointStore: CheckpointStore
@@ -71,14 +71,14 @@ export interface LogsCronPluginOptions extends FastifyPluginOptions {
 /** Schedules `checkProblemLogsAndNotify` and stops the task when the server closes. A failing run is logged, not thrown, so it does not stop the schedule. */
 const logsCron: FastifyPluginAsync<LogsCronPluginOptions> = async (
   fastify,
-  { logsCronOptions, logsRepository, notifier, checkpointStore }
+  { cronConfig, logsRepository, notifier, checkpointStore }
 ) => {
   fastify.log.info('Registering logs cron')
 
-  const task = cron.schedule(logsCronOptions.LOGS_CRON_SCHEDULE_REGEX, async () => {
+  const task = cron.schedule(cronConfig.schedule, async () => {
     try {
       await checkProblemLogsAndNotify({
-        watchedLogsCategories: logsCronOptions.WATCHED_LOGS_CATEGORIES,
+        watchedLogsCategories: cronConfig.watchedLogsCategories,
         logsRepository,
         notifier,
         checkpointStore

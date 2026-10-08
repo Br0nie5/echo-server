@@ -13,7 +13,7 @@ npm run test:coverage --workspace=echo_backend
 
 ## Configuration
 
-Environment variables, validated at startup in `src/shared/utils/parseEchoBackEnv.ts`. Defaults for local work are in `.env.development` and `.env.production`. Full list: [docs/configuration.md](../docs/configuration.md).
+Environment variables, validated at startup by `loadBackConfig` (`src/shared/config/loadBackConfig.ts`), which builds the `BackConfig` every part of the backend reads its settings, paths and file names from. Defaults for local work are in `.env.development` and `.env.production`. Full list: [docs/configuration.md](../docs/configuration.md).
 
 ## Layout
 
@@ -23,7 +23,7 @@ src/
   modules/
     auth/                signup / login / check / logout, SQLite users, JWT hooks
     logs/                logs API, parsing, cron + Telegram notifications
-  shared/                env parsing, file service, error schemas, helpers
+  shared/                config (BackConfig, loadBackConfig, utils), error schemas, helpers
 ```
 
 Each module uses `*.routes.ts`, `*.controller.ts`, `*.service.ts`, `*.repository.ts`, `*.schemas.ts` and `utils/`. See [docs/architecture.md](../docs/architecture.md).

@@ -2,12 +2,9 @@ import type { SignUpRequest } from '@echo/utilities'
 import { needsSignupMessage, type AuthToken, type LoginRequest } from '@echo/utilities'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
-import type { EchoBackEnv } from '../../shared/types/echoBackEnv.js'
+import type { AuthConfig } from '../../shared/config/backConfig.js'
 
 import type { AuthService } from './auth.service.js'
-
-/** Cookie settings the controller needs to set and clear the session cookie. */
-export type AuthControllerConfig = Pick<EchoBackEnv, 'COOKIE_NAME' | 'COOKIE_SERIALIZE_OPTIONS'>
 
 type AuthReply = FastifyReply<{ Reply: AuthToken }>
 
@@ -21,11 +18,12 @@ export interface AuthController {
 
 /**
  * Builds the auth handlers on top of `authService`.
- * A successful `signUp` or `login` signs a JWT and stores it in an httpOnly cookie; `logout` clears it.
+ * A successful `signUp` or `login` signs a JWT and stores it in the session cookie described by
+ * `authConfig`; `logout` clears it.
  */
 export const createAuthController = (
   authService: AuthService,
-  env: AuthControllerConfig
+  { cookieName, cookieSerializeOptions }: AuthConfig
 ): AuthController => ({
   signUp: async (
     request: FastifyRequest<{ Body: SignUpRequest }>,
@@ -39,7 +37,7 @@ export const createAuthController = (
     }
 
     const token = request.server.jwt.sign({ user: username })
-    reply.setCookie(env.COOKIE_NAME, token, env.COOKIE_SERIALIZE_OPTIONS)
+    reply.setCookie(cookieName, token, cookieSerializeOptions)
 
     return reply.status(200).send({ success: true, message: 'Sign up successful.' })
   },
@@ -55,7 +53,7 @@ export const createAuthController = (
     }
 
     const token = request.server.jwt.sign({ user: username })
-    reply.setCookie(env.COOKIE_NAME, token, env.COOKIE_SERIALIZE_OPTIONS)
+    reply.setCookie(cookieName, token, cookieSerializeOptions)
 
     return reply.status(200).send({ success: true, message: 'Login successful.' })
   },
@@ -78,7 +76,7 @@ export const createAuthController = (
   },
 
   logout: async (_: FastifyRequest, reply: FastifyReply<{ Reply: AuthToken }>): Promise<void> => {
-    reply.clearCookie(env.COOKIE_NAME, env.COOKIE_SERIALIZE_OPTIONS)
+    reply.clearCookie(cookieName, cookieSerializeOptions)
 
     return reply.status(200).send({ success: true, message: 'Logged out successfully.' })
   }

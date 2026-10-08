@@ -29,7 +29,7 @@ Two values are derived from `SERVER_URL` and are not separate variables:
 
 ## Backend only
 
-Parsed by [parseEchoBackEnv.ts](../echo_backend/src/shared/utils/parseEchoBackEnv.ts).
+Parsed by [loadBackConfig.ts](../echo_backend/src/shared/config/loadBackConfig.ts), which builds the `BackConfig` ([backConfig.ts](../echo_backend/src/shared/config/backConfig.ts)) the backend is wired with. Each variable is read by its own parser, in [utils/](../echo_backend/src/shared/config/utils/).
 
 | Variable        | Required | Description |
 | --------------- | :------: | ----------- |

@@ -1,8 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 
+import { getMockSelfLogsConfig } from '../../../../../../test/mocks/configs.js'
 import { createSelfFileLogApi, type SelfLogFileSystem } from '../selfFileLog.api.js'
 
 const SELF_LOGS_DIR = '/logs/server/Echo/log'
+const selfLogsConfig = getMockSelfLogsConfig({ selfLogsDirPath: SELF_LOGS_DIR })
 
 const buildFileSystem = (overrides: Partial<SelfLogFileSystem> = {}): SelfLogFileSystem =>
   ({
@@ -19,19 +21,9 @@ describe('SelfFileLogApi', () => {
     it('should create the self-logs directory and its parents', async () => {
       const fileSystem = buildFileSystem()
 
-      await createSelfFileLogApi('/logs', 'Echo', fileSystem).createSelfLogsDirectory()
+      await createSelfFileLogApi(selfLogsConfig, fileSystem).createSelfLogsDirectory()
 
       expect(fileSystem.mkdir).toHaveBeenCalledWith(SELF_LOGS_DIR, { recursive: true })
-    })
-
-    it('should make the server name safe for the directory path', async () => {
-      const fileSystem = buildFileSystem()
-
-      await createSelfFileLogApi('/logs', '../Docker Prod/1!', fileSystem).createSelfLogsDirectory()
-
-      expect(fileSystem.mkdir).toHaveBeenCalledWith('/logs/server/___Docker Prod_1_/log', {
-        recursive: true
-      })
     })
   })
 
@@ -42,8 +34,7 @@ describe('SelfFileLogApi', () => {
       })
 
       const rawSelfLogLines = await createSelfFileLogApi(
-        '/logs',
-        'Echo',
+        selfLogsConfig,
         fileSystem
       ).getRawSelfLogLines('parseLogFile.jsonl')
 
@@ -60,7 +51,7 @@ describe('SelfFileLogApi', () => {
       })
 
       expect(
-        await createSelfFileLogApi('/logs', 'Echo', fileSystem).getRawSelfLogLines('new.jsonl')
+        await createSelfFileLogApi(selfLogsConfig, fileSystem).getRawSelfLogLines('new.jsonl')
       ).toEqual([])
     })
 
@@ -70,7 +61,7 @@ describe('SelfFileLogApi', () => {
       })
 
       await expect(
-        createSelfFileLogApi('/logs', 'Echo', fileSystem).getRawSelfLogLines('locked.jsonl')
+        createSelfFileLogApi(selfLogsConfig, fileSystem).getRawSelfLogLines('locked.jsonl')
       ).rejects.toThrow('denied')
     })
   })
@@ -87,7 +78,7 @@ describe('SelfFileLogApi', () => {
         })
       })
 
-      await createSelfFileLogApi('/logs', 'Echo', fileSystem).replaceRawSelfLogLines(
+      await createSelfFileLogApi(selfLogsConfig, fileSystem).replaceRawSelfLogLines(
         'parseLogFile.jsonl',
         ['first', 'second']
       )
@@ -107,7 +98,7 @@ describe('SelfFileLogApi', () => {
     it('should empty the file when there is no line', async () => {
       const fileSystem = buildFileSystem()
 
-      await createSelfFileLogApi('/logs', 'Echo', fileSystem).replaceRawSelfLogLines(
+      await createSelfFileLogApi(selfLogsConfig, fileSystem).replaceRawSelfLogLines(
         'parseLogFile.jsonl',
         []
       )
@@ -126,7 +117,7 @@ describe('SelfFileLogApi', () => {
         readFile: vi.fn().mockResolvedValue('first\nsecond\nthird\nsecond\n')
       })
 
-      await createSelfFileLogApi('/logs', 'Echo', fileSystem).deleteRawSelfLogLines(
+      await createSelfFileLogApi(selfLogsConfig, fileSystem).deleteRawSelfLogLines(
         'parseLogFile.jsonl',
         ['second', 'unknown']
       )
@@ -145,7 +136,7 @@ describe('SelfFileLogApi', () => {
     it('should leave the file untouched when there is no line to delete', async () => {
       const fileSystem = buildFileSystem()
 
-      await createSelfFileLogApi('/logs', 'Echo', fileSystem).deleteRawSelfLogLines(
+      await createSelfFileLogApi(selfLogsConfig, fileSystem).deleteRawSelfLogLines(
         'parseLogFile.jsonl',
         []
       )
@@ -159,7 +150,7 @@ describe('SelfFileLogApi', () => {
     it('should append the lines to the file in a single write', async () => {
       const fileSystem = buildFileSystem()
 
-      await createSelfFileLogApi('/logs', 'Echo', fileSystem).appendRawSelfLogLines(
+      await createSelfFileLogApi(selfLogsConfig, fileSystem).appendRawSelfLogLines(
         'parseLogFile.jsonl',
         ['first', 'second']
       )

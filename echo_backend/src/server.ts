@@ -1,7 +1,5 @@
 import * as crypto from 'crypto'
 import type { Server, IncomingMessage, ServerResponse } from 'http'
-import path from 'path'
-import { fileURLToPath } from 'url'
 
 import fastifyCookie from '@fastify/cookie'
 import cors from '@fastify/cors'
@@ -17,29 +15,28 @@ import { authRoutes } from './modules/auth/auth.routes.js'
 import { createAuthService } from './modules/auth/auth.service.js'
 import { openUsersDb } from './modules/auth/users.db.js'
 import { createSqliteUsersRepository } from './modules/auth/users.repository.js'
-import {
-  createFileCheckpointStore,
-  lastLogsCheckFile
-} from './modules/logs/cron/logs.checkpoint.js'
+import { createFileCheckpointStore } from './modules/logs/cron/logs.checkpoint.js'
 import logsCron from './modules/logs/cron/logs.cron.js'
 import { createTelegramNotifier } from './modules/logs/cron/notifications/telegram.notifier.js'
 import type { LogsRepository } from './modules/logs/domain/logs.repository.js'
 import { createFileLogsApi } from './modules/logs/infra/fileLogs.api.js'
-import {
-  createFileLogsRepository,
-  PARSE_LOG_FILE_SELF_LOG_FILE_NAME
-} from './modules/logs/infra/fileLogs.repository.js'
+import { createFileLogsRepository } from './modules/logs/infra/fileLogs.repository.js'
+import type { SelfLogRepository } from './modules/logs/modules/selfLog/domain/selfLog.repository.js'
 import { createNoopSelfLogRepository } from './modules/logs/modules/selfLog/infra/noopSelfLog.repository.js'
 import { createSelfFileLogApi } from './modules/logs/modules/selfLog/infra/selfFileLog.api.js'
 import { createSelfFileLogRepository } from './modules/logs/modules/selfLog/infra/selfFileLog.repository.js'
 import { createLogsController } from './modules/logs/presentation/logs.controller.js'
 import { logsRoutes } from './modules/logs/presentation/logs.routes.js'
+import type {
+  BackConfig,
+  CronConfig,
+  SelfLogsConfig,
+  ServerConfig
+} from './shared/config/backConfig.js'
+import { loadBackConfig } from './shared/config/loadBackConfig.js'
 import { EchoErrorSchema } from './shared/schemas/errors.schemas.js'
-import type { EchoBackEnv } from './shared/types/echoBackEnv.js'
-import { dataDir } from './shared/utils/dataDir.js'
 import { isOriginAllowed } from './shared/utils/isOriginAllowed.js'
 import { normalizeToEchoError } from './shared/utils/normalizeToEchoError.js'
-import { env as defaultEnv } from './shared/utils/parseEchoBackEnv.js'
 
 /** Random secret regenerated at each start, so the sessions do not survive a restart. */
 const DYNAMIC_JWT_SECRET = crypto.randomBytes(256).toString('hex')
@@ -54,7 +51,10 @@ type EchoServer = FastifyInstance<
 >
 
 /** Registers Swagger (source of `openApi.json`) and its UI, served under `/documentation`. */
-const registerDocumentation = async (server: EchoServer, env: EchoBackEnv): Promise<void> => {
+const registerDocumentation = async (
+  server: EchoServer,
+  serverConfig: ServerConfig
+): Promise<void> => {
   // Swagger for OpenAPI generation
   await server.register(swagger, {
     openapi: {
@@ -63,7 +63,7 @@ const registerDocumentation = async (server: EchoServer, env: EchoBackEnv): Prom
         description: 'Auto-generated API documentation for the Echo server',
         version: '1.0.0'
       },
-      servers: [{ url: new URL(env.API_URL).origin }],
+      servers: [{ url: new URL(serverConfig.apiUrl).origin }],
       tags: [
         {
           name: 'Logs',
@@ -93,14 +93,16 @@ const registerDocumentation = async (server: EchoServer, env: EchoBackEnv): Prom
 }
 
 /** Registers cookie/JWT support when authentication is enabled, and CORS restricted to the allowed domain and its subdomains. */
-const registerSecurity = async (server: EchoServer, env: EchoBackEnv): Promise<void> => {
-  if (env.HAS_AUTHENTICATION) {
+const registerSecurity = async (server: EchoServer, config: BackConfig): Promise<void> => {
+  const { allowedDomain } = config.server
+
+  if (config.auth.hasAuthentication) {
     await server.register(fastifyCookie)
 
     await server.register(fastifyJwt, {
       secret: DYNAMIC_JWT_SECRET,
       cookie: {
-        cookieName: env.COOKIE_NAME,
+        cookieName: config.auth.cookieName,
         signed: false // We verify via JWT signature, so the cookie itself doesn't need a secondary signature
       }
     })
@@ -113,14 +115,11 @@ const registerSecurity = async (server: EchoServer, env: EchoBackEnv): Promise<v
       }
 
       try {
-        if (isOriginAllowed(origin, env.ALLOWED_DOMAIN)) {
+        if (isOriginAllowed(origin, allowedDomain)) {
           return cb(null, true)
         }
 
-        return cb(
-          new Error(`Not allowed by CORS: ${origin} (Allowed: ${env.ALLOWED_DOMAIN})`),
-          false
-        )
+        return cb(new Error(`Not allowed by CORS: ${origin} (Allowed: ${allowedDomain})`), false)
       } catch {
         return cb(new Error('Invalid Origin Header'), false)
       }
@@ -132,48 +131,68 @@ const registerSecurity = async (server: EchoServer, env: EchoBackEnv): Promise<v
 }
 
 /** Serves the built frontend under `/app`. Unknown `/app/*` paths get `index.html` (SPA routing), anything else a JSON 404. */
-const registerFrontend = async (server: EchoServer, echoFrontDist: string): Promise<void> => {
+const registerFrontend = async (
+  server: EchoServer,
+  { frontendDistDirPath }: ServerConfig
+): Promise<void> => {
   await server.register(fastifyStatic, {
-    root: echoFrontDist,
+    root: frontendDistDirPath,
     prefix: '/app'
   })
 
   server.setNotFoundHandler((req, reply) => {
     if (req.url.startsWith('/app')) {
-      return reply.sendFile('index.html', echoFrontDist)
+      return reply.sendFile('index.html', frontendDistDirPath)
     }
     return reply.code(404).send({ error: 'Not found' })
   })
 }
 
-/** Registers the notifier cron, only when `LOGS_CRON_OPTIONS` is set. */
+/** Registers the notifier cron, only when it is configured. */
 const registerLogsCron = async (
   server: EchoServer,
-  env: EchoBackEnv,
+  cronConfig: CronConfig | undefined,
   logsRepository: LogsRepository
 ): Promise<void> => {
-  if (env.LOGS_CRON_OPTIONS === undefined) {
-    server.log.info('LOGS_CRON_OPTIONS is not set, skipping cron registration')
+  if (cronConfig === undefined) {
+    server.log.info('The logs cron is not configured, skipping its registration')
     return
   }
 
   await server.register(logsCron, {
-    logsCronOptions: env.LOGS_CRON_OPTIONS,
+    cronConfig,
     logsRepository,
-    notifier: createTelegramNotifier(env.LOGS_CRON_OPTIONS, env.SERVER_NAME),
-    checkpointStore: createFileCheckpointStore(dataDir, lastLogsCheckFile)
+    notifier: createTelegramNotifier(cronConfig),
+    checkpointStore: createFileCheckpointStore(cronConfig)
   })
 }
 
-/** Composition root: builds the dependency graph from `env` and wires it into the Fastify app. */
-export const buildServer = async (env: EchoBackEnv = defaultEnv): Promise<EchoServer> => {
+/** The repository the lines of the log files that hold no log are reported to, storing nothing when the self logs are disabled. */
+const getSelfLogRepository = (
+  server: EchoServer,
+  selfLogsConfig: SelfLogsConfig
+): Promise<SelfLogRepository> | SelfLogRepository =>
+  selfLogsConfig.isEnabled
+    ? createSelfFileLogRepository({
+        selfFileLogApi: createSelfFileLogApi(selfLogsConfig),
+        selfLogsConfig,
+        selfLogFileName: selfLogsConfig.parseLogFileSelfLogFileName,
+        logger: server.log
+      })
+    : createNoopSelfLogRepository()
+
+/**
+ * Composition root: builds the dependency graph from `config` (the one `loadBackConfig` gives by
+ * default) and wires it into the Fastify app.
+ */
+export const buildServer = async (config: BackConfig = loadBackConfig()): Promise<EchoServer> => {
   // Fastify's https/http overloads produce distinct FastifyInstance generics, which would
   // make `server` a union type unusable for the .register() calls below. The raw server type
   // is never introspected past this point, so the options are built once and typed as the
   // plain-http shape Fastify's default overload expects; `https` still drives TLS at runtime.
   const serverOptions = {
     logger: true,
-    ...(env.TLS_OPTIONS && { https: env.TLS_OPTIONS })
+    ...(config.server.tls && { https: config.server.tls })
   } as FastifyServerOptions<Server<typeof IncomingMessage, typeof ServerResponse>>
 
   const server = Fastify(serverOptions)
@@ -184,57 +203,48 @@ export const buildServer = async (env: EchoBackEnv = defaultEnv): Promise<EchoSe
     reply.status(echoError.statusCode).send(echoError)
   })
 
-  await registerSecurity(server, env)
-  await registerDocumentation(server, env)
+  await registerSecurity(server, config)
+  await registerDocumentation(server, config.server)
 
   server.addSchema(EchoErrorSchema)
 
-  const parseLogFileSelfLogRepository = env.SELF_LOGS_ENABLED
-    ? await createSelfFileLogRepository({
-        selfFileLogApi: createSelfFileLogApi(env.LOGS_DIR_PATH, env.SERVER_NAME),
-        selfLogFileName: PARSE_LOG_FILE_SELF_LOG_FILE_NAME,
-        retentionDays: env.SELF_LOGS_RETENTION_DAYS,
-        logger: server.log
-      })
-    : createNoopSelfLogRepository()
-
-  const fileLogsApi = createFileLogsApi(env.LOGS_DIR_PATH)
-  const fileLogsRepository = createFileLogsRepository(fileLogsApi, parseLogFileSelfLogRepository)
-
-  const __filename = fileURLToPath(import.meta.url)
-  const __dirname = path.dirname(__filename)
+  const fileLogsRepository = createFileLogsRepository(
+    createFileLogsApi(config.logs),
+    await getSelfLogRepository(server, config.logs.selfLogs)
+  )
 
   // API
-  if (env.HAS_AUTHENTICATION) {
-    const usersDb = openUsersDb(path.join(__dirname, '../../data/users.db'))
+  if (config.auth.hasAuthentication) {
+    const usersDb = await openUsersDb(config.auth)
     const userRepository = createSqliteUsersRepository(usersDb)
     const authService = createAuthService(userRepository)
     await server.register(authRoutes, {
       prefix: '/api',
-      controller: createAuthController(authService, env)
+      controller: createAuthController(authService, config.auth)
     })
   }
   await server.register(logsRoutes, {
     prefix: '/api',
     controller: createLogsController(fileLogsRepository),
-    hasAuthentication: env.HAS_AUTHENTICATION
+    hasAuthentication: config.auth.hasAuthentication
   })
 
-  await registerFrontend(server, path.join(__dirname, '../../echo_frontend/dist'))
-  await registerLogsCron(server, env, fileLogsRepository)
+  await registerFrontend(server, config.server)
+  await registerLogsCron(server, config.logs.cron, fileLogsRepository)
 
   return server
 }
 
-/** Entry point: builds the server with the real env and starts listening, exiting the process on failure. */
+/** Entry point: loads the config, builds the server with it and starts listening, exiting the process on failure. */
 const startServer = async (): Promise<void> => {
-  const server = await buildServer(defaultEnv)
+  const config = loadBackConfig()
+  const server = await buildServer(config)
 
   try {
-    await server.listen({ port: defaultEnv.PORT, host: defaultEnv.HOST })
+    await server.listen({ port: config.server.port, host: config.server.host })
 
-    console.log(`Api is accessible though ${defaultEnv.API_URL.toString()}`)
-    console.log(`App is accessible though ${defaultEnv.APP_URL.toString()}`)
+    console.log(`Api is accessible though ${config.server.apiUrl}`)
+    console.log(`App is accessible though ${config.server.appUrl}`)
   } catch (err) {
     server.log.error(err)
     process.exit(1)
