@@ -4,21 +4,25 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import type { AuthController } from '../auth.controller.js'
 import { authRoutes } from '../auth.routes.js'
-import { AuthTokenSchema, LoginRequestSchema, SignUpRequestSchema } from '../auth.schemas.js'
+import {
+  AuthTokenJsonSchema,
+  LoginRequestJsonSchema,
+  SignUpRequestJsonSchema
+} from '../auth.schemas.js'
 
 // Schemas are mocked to ensure the test only validates route registration
 vi.mock('../auth.schemas.js', () => ({
-  AuthTokenSchema: {
+  AuthTokenJsonSchema: {
     $id: 'AuthToken',
     type: 'object',
     properties: { success: { type: 'boolean' } }
   },
-  LoginRequestSchema: {
+  LoginRequestJsonSchema: {
     $id: 'LoginRequest',
     type: 'object',
     properties: { username: { type: 'string' } }
   },
-  SignUpRequestSchema: {
+  SignUpRequestJsonSchema: {
     $id: 'SignUpRequest',
     type: 'object',
     properties: { username: { type: 'string' } }
@@ -51,9 +55,9 @@ describe('authRoutes', () => {
     await authRoutes(mockServer as unknown as FastifyInstance, { controller })
 
     // Check schemas were added
-    expect(mockServer.addSchema).toHaveBeenCalledWith(AuthTokenSchema)
-    expect(mockServer.addSchema).toHaveBeenCalledWith(LoginRequestSchema)
-    expect(mockServer.addSchema).toHaveBeenCalledWith(SignUpRequestSchema)
+    expect(mockServer.addSchema).toHaveBeenCalledWith(AuthTokenJsonSchema)
+    expect(mockServer.addSchema).toHaveBeenCalledWith(LoginRequestJsonSchema)
+    expect(mockServer.addSchema).toHaveBeenCalledWith(SignUpRequestJsonSchema)
     expect(mockServer.addSchema).toHaveBeenCalledTimes(3)
 
     // Check that all routes were registered

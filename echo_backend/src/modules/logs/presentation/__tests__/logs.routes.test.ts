@@ -2,7 +2,6 @@ import type { FastifyInstance } from 'fastify'
 import type { Mock } from 'vitest'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { requireAuthentication } from '../../../auth/auth.hooks.js'
 import type { LogsController } from '../logs.controller.js'
 import { logsRoutes } from '../logs.routes.js'
 import {
@@ -27,23 +26,22 @@ describe('logsRoutes', () => {
     }
   })
 
-  it.each([
-    [true, requireAuthentication],
-    [false, undefined]
-  ])('should set preHandler when HAS_AUTHENTICATION is %s', async (hasAuth, expected) => {
-    await logsRoutes(mockServer as unknown as FastifyInstance, {
-      controller,
-      hasAuthentication: hasAuth
-    })
+  it('should run the given preHandler before the handler of the route', async () => {
+    const preHandler = vi.fn()
 
-    expect(mockServer.route.mock.calls[0][0].preHandler).toBe(expected)
+    await logsRoutes(mockServer as unknown as FastifyInstance, { controller, preHandler })
+
+    expect(mockServer.route.mock.calls[0][0].preHandler).toBe(preHandler)
+  })
+
+  it('should set no preHandler when none is given', async () => {
+    await logsRoutes(mockServer as unknown as FastifyInstance, { controller })
+
+    expect(mockServer.route.mock.calls[0][0]).not.toHaveProperty('preHandler')
   })
 
   it('should register schemas and /logs route correctly', async () => {
-    await logsRoutes(mockServer as unknown as FastifyInstance, {
-      controller,
-      hasAuthentication: true
-    })
+    await logsRoutes(mockServer as unknown as FastifyInstance, { controller })
 
     // Check schemas were added
     expect(mockServer.addSchema).toHaveBeenCalledWith(LogCategoryQuerySchema)

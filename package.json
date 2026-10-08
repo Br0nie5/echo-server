@@ -17,15 +17,14 @@
     "lint": "npm run lint --workspaces",
     "test:coverage": "npm run test:coverage --workspaces",
     "open:coverage": "npm run open:coverage --workspaces",
-    "generate:types": "bash scripts/generate_types.sh",
+    "generate:openapi": "bash scripts/generate_open_api.sh",
     "arch:check": "npm run arch:check --workspaces",
     "vulnerabilities:scan": "npm audit",
     "deploy:server": "bash scripts/deploy_server.sh"
   },
   "devDependencies": {
     "@types/node": "^24.19.1",
-    "concurrently": "^10.0.5",
-    "orval": "^8.40.0"
+    "concurrently": "^10.0.5"
   },
   "allowScripts": {
     "bcrypt@6.0.0": true,

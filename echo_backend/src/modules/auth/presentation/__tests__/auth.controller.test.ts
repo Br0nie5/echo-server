@@ -2,7 +2,7 @@ import { needsSignupMessage, type AuthToken, type LoginRequest } from '@echo/uti
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { getMockAuthConfig } from '../../../test/mocks/configs.js'
+import { getMockAuthConfig } from '../../../../test/mocks/configs.js'
 import { createAuthController } from '../auth.controller.js'
 
 const mockReply = (): FastifyReply<{ Reply: AuthToken }> => {
@@ -28,12 +28,12 @@ const username = 'test_admin'
 const password = 'some_password'
 
 const authConfig = getMockAuthConfig()
-const AuthService = {
+const AuthRepository = {
   needsSignup: vi.fn(),
   signUpFirstAdmin: vi.fn(),
   areCredentialsValid: vi.fn()
 }
-const AuthController = createAuthController(AuthService, authConfig)
+const AuthController = createAuthController(AuthRepository, authConfig)
 
 describe('AuthController', () => {
   beforeEach(() => {
@@ -42,7 +42,7 @@ describe('AuthController', () => {
 
   describe('signUp', () => {
     it('should successfully sign up, set a cookie, and return 200 for first user', async () => {
-      vi.mocked(AuthService.signUpFirstAdmin).mockResolvedValue(true)
+      vi.mocked(AuthRepository.signUpFirstAdmin).mockResolvedValue(true)
 
       const req = mockRequest({ username: username, password: password })
       const reply = mockReply()
@@ -60,7 +60,7 @@ describe('AuthController', () => {
     })
 
     it('should return a 403 if an user had already signed up', async () => {
-      vi.mocked(AuthService.signUpFirstAdmin).mockResolvedValue(false)
+      vi.mocked(AuthRepository.signUpFirstAdmin).mockResolvedValue(false)
 
       const req = mockRequest({ username: username, password: password })
       const reply = mockReply()
@@ -77,7 +77,7 @@ describe('AuthController', () => {
 
   describe('login', () => {
     it('should successfully log in, set a cookie, and return 200 for valid credentials', async () => {
-      vi.mocked(AuthService.areCredentialsValid).mockResolvedValue(true)
+      vi.mocked(AuthRepository.areCredentialsValid).mockResolvedValue(true)
 
       const req = mockRequest({ username: username, password: password })
       const reply = mockReply()
@@ -95,7 +95,7 @@ describe('AuthController', () => {
     })
 
     it('should return 401 for invalid username', async () => {
-      vi.mocked(AuthService.areCredentialsValid).mockResolvedValue(false)
+      vi.mocked(AuthRepository.areCredentialsValid).mockResolvedValue(false)
 
       const req = mockRequest({ username: 'wrong_user', password: 'any_password' })
       const reply = mockReply()
@@ -109,7 +109,7 @@ describe('AuthController', () => {
     })
 
     it('should return 401 for valid username but invalid password', async () => {
-      vi.mocked(AuthService.areCredentialsValid).mockResolvedValue(false)
+      vi.mocked(AuthRepository.areCredentialsValid).mockResolvedValue(false)
 
       const req = mockRequest({ username: username, password: 'wrong_password' })
       const reply = mockReply()
@@ -125,7 +125,7 @@ describe('AuthController', () => {
 
   describe('check', () => {
     it('should return 200 when the JWT is successfully verified', async () => {
-      vi.mocked(AuthService.needsSignup).mockReturnValue(false)
+      vi.mocked(AuthRepository.needsSignup).mockReturnValue(false)
 
       const req = mockRequest({}, vi.fn().mockResolvedValue({}))
       const reply = mockReply()
@@ -138,7 +138,7 @@ describe('AuthController', () => {
     })
 
     it('should return 401 when JWT verification fails', async () => {
-      vi.mocked(AuthService.needsSignup).mockReturnValue(false)
+      vi.mocked(AuthRepository.needsSignup).mockReturnValue(false)
 
       const req = mockRequest({}, vi.fn().mockRejectedValue(new Error('Invalid token')))
       const reply = mockReply()
@@ -151,7 +151,7 @@ describe('AuthController', () => {
     })
 
     it('should return 401 when no user are found in the db', async () => {
-      vi.mocked(AuthService.needsSignup).mockReturnValue(true)
+      vi.mocked(AuthRepository.needsSignup).mockReturnValue(true)
 
       const req = mockRequest({}, vi.fn().mockRejectedValue(new Error(needsSignupMessage)))
       const reply = mockReply()

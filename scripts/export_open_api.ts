@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url)
 // Get current script directory
 const __dirname = path.dirname(__filename)
 
-/** Boots the server and writes its OpenAPI document to `openApi.json`, the input of the types generation. */
+/** Boots the server and writes its OpenAPI document to `openApi.json`, the committed description of the API. */
 async function exportOpenApi(): Promise<void> {
   const server = await buildServer()
   await server.ready()

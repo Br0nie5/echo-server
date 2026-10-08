@@ -28,8 +28,8 @@ src/
   shared/                config (BackConfig, loadBackConfig, utils), error schemas, helpers
 ```
 
-Each module uses `*.routes.ts`, `*.controller.ts`, `*.service.ts`, `*.repository.ts`, `*.schemas.ts` and `utils/`. See [docs/architecture.md](../docs/architecture.md).
+Each module is split into the layer folders it needs: `domain/`, `application/`, `infra/` and `presentation/`. See [docs/architecture.md](../docs/architecture.md).
 
 ## Notes
 
-- Route JSON schemas drive both the Swagger docs and the shared types. Run `npm run generate:types` at the repo root after changing them.
+- The JSON schemas of the routes are derived from the zod schemas of `@echo/utilities`, and drive both the Swagger docs and `openApi.json`. Run `npm run generate:openapi` at the repo root after changing them.

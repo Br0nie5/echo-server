@@ -22,7 +22,7 @@ npm run lint               # eslint --fix across all workspaces
 npm run format              # prettier --write across all workspaces
 npm run test:coverage        # vitest run --coverage (100% threshold) across all workspaces
 npm run open:coverage         # open each workspace's coverage/index.html
-npm run generate:types          # regenerate openApi.json, then the @echo/utilities types from it via orval (see below)
+npm run generate:openapi        # export openApi.json again from the routes of the backend (see below)
 ```
 
 Single test file / watch mode (run inside the relevant workspace dir, e.g. `cd echo_backend`):
@@ -42,41 +42,38 @@ npm run deploy:server      # multi-arch build & push to ghcr.io/br0nie5/echo:lat
 
 ## Architecture
 
-### Type flow: backend → OpenAPI → shared types
+### Type flow: zod schema → shared type and route schema
 
-The `auth` request types (`LoginRequest`, `SignUpRequest`, …) and `EchoError` are **not** hand-written. The flow is one-directional:
+The types the API exchanges are **not** hand-written, and no file is generated. Each one is a zod schema in `echo_utilities`, its single source of truth: `LogSchema`, `LogCategorySchema` and `GetLogsParamsSchema` (the query of `GET /logs`) in `src/modules/logs/schemas/`, `AuthTokenSchema`, `LoginRequestSchema` and `SignUpRequestSchema` in `src/modules/auth/schemas/`, `EchoErrorSchema` in `src/shared/schemas/`.
 
-1. Fastify routes in `echo_backend` declare JSON schemas (`*.schemas.ts`) inline in `server.route({ schema: ... })`.
-2. `scripts/export_open_api.ts` boots the server and dumps `openApi.json` at the repo root.
-3. `orval` (config in `orval.config.ts`) generates TypeScript types from `openApi.json` into a temporary `__generated__/` folder.
-4. `scripts/generate_types.sh` moves the generated files into `echo_utilities/src/**/__generated__/` (orval skips `Log` and `LogCategory`, see `filters` in `orval.config.ts`, and the `GetLogsParams` it generates is left behind: the three come from zod schemas, see below), then lints/formats/builds `echo_utilities`.
+1. The type is inferred from the schema (`z.infer`), never redeclared. What a TypeScript type cannot say goes in the zod schema: `z.int()`, `.meta({ format: 'date-time' })`.
+2. In `echo_backend`, a `*.schemas.ts` file converts the zod schemas to the JSON schemas the routes use with `z.toJSONSchema`, when the server starts: `presentation/logs.schemas.ts`, `presentation/auth.schemas.ts` and `shared/schemas/errors.schemas.ts`. To expose another zod schema, add it to the registry of one of them.
+3. `scripts/export_open_api.ts` boots the server and dumps `openApi.json` at the repo root.
 
-Run the whole pipeline with `npm run generate:types` after changing a backend route's request/response schema or a zod schema of the logs module (see the module layout below), so `openApi.json` stays up to date. Never hand-edit files under `__generated__/`. `echo_utilities/src/index.ts` is the single barrel export — both backend and frontend import everything from `@echo/utilities`, never by reaching into its internal paths.
+Run `npm run generate:openapi` after changing a backend route or one of these zod schemas, so `openApi.json` stays up to date (the CI fails when it is not). `echo_utilities/src/index.ts` is the single barrel export — both backend and frontend import everything from `@echo/utilities`, never by reaching into its internal paths.
 
 ### Module layout convention (backend and frontend)
 
 Both `echo_backend/src/modules` and `echo_frontend/src/modules` are split by domain (`auth`, `logs`, and `notification` and `selfReport` on the backend only).
 
-The core of the backend `logs` module is split into four layer folders, with imports only going `presentation → application → domain ← infra` (enforced by `npm run arch:check`):
+The backend modules are split into layer folders, with imports only going `presentation → application → domain ← infra` (enforced by `npm run arch:check`). A module keeps only the layers it needs. In the core of the `logs` module, which has the four of them:
 - `domain/` — the contracts the module needs from the outside (`logs.repository.ts`); the models (`Log`, `LogCategory`) are imported from `@echo/utilities`
 - `application/` — the business rules, one file per use case, named after it (`getFilteredLogs.ts`), which know nothing of HTTP
 - `infra/` — `*.api.ts` reads a data source, `dto/*.dto.ts` describes what it returns (with the function converting it to a model next to it), `*.repository.ts` implements a `domain/` contract with both
 - `presentation/` — `*.routes.ts`, `*.controller.ts` (the request handlers, calling into `application/`), `utils/` (pure helpers, such as the validation of the input of the handlers), and `*.schemas.ts`, the JSON schemas of the routes, derived from the zod schemas of `@echo/utilities`
 
-`Log`, `LogCategory` and `GetLogsParams` (the query of `GET /logs`) are the exception to the type flow above: each is a zod schema in `echo_utilities/src/modules/logs/schemas/` (`LogSchema`, `LogCategorySchema`, `GetLogsParamsSchema`), its single source of truth. The type is inferred from it (`z.infer`), never redeclared, and `presentation/logs.schemas.ts` converts it to the JSON schema the routes use with `z.toJSONSchema`, when the server starts: no file is generated. What a TypeScript type cannot say goes in the zod schema: `z.int()`, `.meta({ format: 'date-time' })`. `GetLogsParamsSchema` describes the query as the client sends it; `safeParseGetLogsParams` (`presentation/utils/`) validates it and turns it into what `getFilteredLogs` needs (`fromDate` as a `Date`, `logCategories` always an array). To expose another zod schema, add it to the registry of `logs.schemas.ts`.
+`GetLogsParamsSchema` describes the query as the client sends it; `safeParseGetLogsParams` (`presentation/utils/`) validates it and turns it into what `getFilteredLogs` needs (`fromDate` as a `Date`, `logCategories` always an array).
 
 `logs/modules/logsNotifier/` is the submodule of `logs`, layered the same way, with the four layers. It is the optional cron that notifies the problem logs: `domain/` holds the `LastCheckDate` model and the `CheckDateRepository` contract (the date the logs were last checked at); `application/checkProblemLogsAndNotify.ts` is the use case, built on the `getFilteredLogs` of `logs`, with `application/utils/buildNotifierMessage.ts` writing the message it notifies, never longer than the size limit the use case asks the notifier for (it returns `undefined` when nothing fits, in which case nothing is sent and the use case saves a warning to its own `SelfReportRepository`, stored in `logsNotifier.jsonl`); `infra/` holds `CheckDateApi` (the last-check file), `fileCheckDate.repository.ts` implementing the contract on top of it, and `dto/lastCheckDate.dto.ts`; `presentation/logs.notifier.ts` is the Fastify plugin scheduling the use case. A cron is the entry point of the submodule the way a route is the one of `logs`, hence `presentation/`. It notifies through the `Notifier` of the `notification` module.
 
-The backend `notification` module is how the backend sends a message to the outside. It has `domain/` and `infra/` only: `domain/notifier.ts` holds the `Notifier` contract, which gives the size limit of its messages (`getMessageSizeLimit`) and sends one (`notify`); `infra/` holds `TelegramNotifierApi` (the Telegram bot API) and `telegramNotifier.ts`, implementing the contract on top of it with the `telegramMessageSizeLimit` of the config. A module may import from another module its `domain/` and `infra/`, those of its submodules, and `auth.hooks`, never its `application/` nor its `presentation/` (`backend-modules-isolated` in `.dependency-cruiser.mts`).
+The backend `notification` module is how the backend sends a message to the outside. It has `domain/` and `infra/` only: `domain/notifier.ts` holds the `Notifier` contract, which gives the size limit of its messages (`getMessageSizeLimit`) and sends one (`notify`); `infra/` holds `TelegramNotifierApi` (the Telegram bot API) and `telegramNotifier.ts`, implementing the contract on top of it with the `telegramMessageSizeLimit` of the config. A module may import from another module its `domain/` and `infra/`, and those of its submodules, never its `application/` nor its `presentation/` (`backend-modules-isolated` in `.dependency-cruiser.mts`).
 
 The backend `selfReport` module is how the backend reports its own diagnostics. It has `domain/` and `infra/` only (it has no route and no business rule of its own): `domain/` holds the `SelfReport` model (`date`, `message`, `level` (`'warning'` or `'error'`), `reportedFile`, `reportedLine`), which is not derived from `Log`, and the `SelfReportRepository` contract the other parts of the backend report through; `infra/` holds `SelfFileReportRepository` (the contract on top of the `LogsFilesApi` of `logs`, writing each self report as a log line of a `.jsonl` file of `LOGS_DIR_PATH/server/<SERVER_NAME>/log`, so it is read back like any other log), `SessionJobIdApi` (the session file, remembering the last `job_id` the self reports were written with: a repository takes the next one when it is created) and `dto/sessionJobId.dto.ts`. A `SelfFileReportRepository` is created for one file, in `server.ts`: whoever needs to report is given its own `SelfReportRepository` and never names a file. `logs` and `selfReport` import each other, which the rule allows: `logs` the `domain/` of `selfReport`, `selfReport` the `infra/logsFiles.api.ts` and the `infra/dto/rawJsonLog.dto.ts` of `logs`.
 
-The backend `auth` module is not layered yet and follows a flat naming scheme:
-- `*.routes.ts` — Fastify route registration + JSON schema (`server.route(...)`)
-- `*.controller.ts` — request handlers, calls into the service
-- `*.service.ts` — business logic
-- `*.schemas.ts` — Fastify `addSchema` definitions used by routes
-- `utils/` — pure helper functions, unit-tested independently
+The backend `auth` module has `domain/`, `infra/` and `presentation/`, and no `application/`: it has no use case of its own yet, its handlers call the contract of `domain/` directly.
+- `domain/auth.repository.ts` — the `AuthRepository` contract: whether a sign up is needed (`needsSignup`), the sign up of the first admin (`signUpFirstAdmin`), the check of credentials (`areCredentialsValid`)
+- `infra/` — `users.db.ts` (`createUsersDb`) opens the SQLite database, `dto/user.dto.ts` describes a row of its `users` table, `authUsersDb.repository.ts` implements the contract by querying that database, hashing the passwords with bcrypt
+- `presentation/` — `auth.routes.ts`, `auth.controller.ts` (the request handlers, signing the JWT and setting the session cookie), `auth.schemas.ts` (the JSON schemas of the routes, derived from the zod schemas of `@echo/utilities`) and `auth.hooks.ts`, the `authPreHandler` rejecting the requests without a valid JWT. No other module imports it: `server.ts` hands it to the routes to protect as their `preHandler` option (`logsRoutes`), only when authentication is enabled
 
 Frontend modules split into `infra/` (TanStack Query hooks + query/mutation keys, one file per hook) and `screens/` (the screen component plus its `hooks/`, `layouts/`, `components/`, `utils/`). `shared/` in each workspace holds cross-module code (env parsing, API client setup, i18n, layouts, generic components).
 
@@ -96,7 +93,7 @@ Logs are read directly from `.jsonl` files on disk (path from `LOGS_DIR_PATH`), 
 
 ### Auth
 
-Backend stores users in a local SQLite file at `data/users.db` (`echo_backend/src/modules/auth/users.db.ts`, `better-sqlite3`) with bcrypt-hashed passwords. JWT secret is a fresh random value generated at process start (`crypto.randomBytes` in `server.ts`) — sessions do not survive a server restart. The JWT is delivered via an httpOnly cookie whose domain/security options are derived from `APP_URL` (itself derived from `SERVER_URL`) at startup (`parseAllowedDomain` and `parseCookieSerializeOptions` in `shared/config/utils/`).
+Backend stores users in a local SQLite file at `data/users.db` (`echo_backend/src/modules/auth/infra/users.db.ts`, `better-sqlite3`) with bcrypt-hashed passwords. JWT secret is a fresh random value generated at process start (`crypto.randomBytes` in `server.ts`) — sessions do not survive a server restart. The JWT is delivered via an httpOnly cookie whose domain/security options are derived from `APP_URL` (itself derived from `SERVER_URL`) at startup (`parseAllowedDomain` and `parseCookieSerializeOptions` in `shared/config/utils/`).
 
 ### Serving frontend from backend
 
@@ -104,8 +101,8 @@ In production the backend serves the built frontend static files (`echo_frontend
 
 ### Swagger / OpenAPI
 
-`@fastify/swagger` + `@fastify/swagger-ui` are registered in `server.ts` and serve live docs at `/documentation`. This is also the source `openApi.json` is exported from — keep route `schema` blocks (especially `operationId`, request/response shapes) accurate, since they drive both the docs and the generated shared types.
+`@fastify/swagger` + `@fastify/swagger-ui` are registered in `server.ts` and serve live docs at `/documentation`. This is also the source `openApi.json` is exported from — keep route `schema` blocks (especially `operationId`, request/response shapes) accurate, since they drive both the docs and `openApi.json`.
 
 ## Testing
 
-Vitest is used in all three workspaces with 100% coverage thresholds enforced by `test:coverage` (see each `vitest.config.ts` for exclude lists — generated code, entry points, and `*.db.ts` are excluded). Tests live in `__tests__` (or `__test__`) directories colocated with the code under test.
+Vitest is used in all three workspaces with 100% coverage thresholds enforced by `test:coverage` (see each `vitest.config.ts` for exclude lists — the entry points are excluded). Tests live in `__tests__` (or `__test__`) directories colocated with the code under test.

@@ -4,7 +4,7 @@ Shared package used by both `echo_backend` and `echo_frontend`. It is built to `
 
 ## Contents
 
-- **Types**: API types generated from the backend OpenAPI schema (`src/**/__generated__/`, never edit by hand).
+- **Types**: the types the API exchanges, each inferred from its zod schema (`src/**/schemas/`), which also validates it at runtime and gives the backend the schema of its routes.
 - **Env parsing**: `parseEchoEnv` for the variables common to frontend and backend (`SERVER_NAME`, `SERVER_URL`, `HAS_AUTHENTICATION`; `API_URL` and `APP_URL` are derived).
 - **Log filtering**: `filterLogByCategories`, `filterLogBySearch`. Shared so server and client filter identically.
 - **Helpers**: URL and domain utilities.
@@ -18,12 +18,12 @@ npm run build --workspace=echo_utilities
 npm run test:coverage --workspace=echo_utilities
 ```
 
-## Regenerating types
+## Changing a schema
 
-From the repo root, after changing backend route schemas:
+From the repo root, after changing a zod schema the backend routes use:
 
 ```bash
-npm run generate:types
+npm run generate:openapi
 ```
 
-See [docs/development.md](../docs/development.md#regenerating-shared-types).
+See [docs/development.md](../docs/development.md#exporting-the-openapi-document).

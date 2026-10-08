@@ -34,14 +34,14 @@ npm run dev
 | `npm run open:coverage` | Open coverage reports |
 | `npm run arch:check` | Architecture rules (import boundaries, cycles), see [architecture](architecture.md#enforcing-the-architecture) |
 | `npm run vulnerabilities:scan` | `npm audit` |
-| `npm run generate:types` | Regenerate `openApi.json` and the shared types |
+| `npm run generate:openapi` | Export `openApi.json` again from the backend routes |
 | `npm run build:docker` / `start:docker` | Build the image / build and run it on `test_logs/` |
 
 Target one workspace with `--workspace=echo_backend` (or `echo_frontend`, `echo_utilities`).
 
 ## Testing
 
-Vitest in every workspace with a **100% coverage threshold**. Tests live in `__tests__` folders next to the code. Generated code and entry points files are excluded (see each `vitest.config.ts`).
+Vitest in every workspace with a **100% coverage threshold**. Tests live in `__tests__` folders next to the code. Entry points files are excluded (see each `vitest.config.ts`).
 
 ```bash
 cd echo_backend
@@ -49,15 +49,15 @@ npx vitest run src/modules/logs/application/__tests__/getFilteredLogs.test.ts   
 npx vitest --watch
 ```
 
-## Regenerating shared types
+## Exporting the OpenAPI document
 
-Run after changing a backend route's request or response schema, or one of the zod schemas of `echo_utilities/src/modules/logs/schemas/`:
+Run after changing a backend route, or one of the zod schemas of `echo_utilities` its schema is derived from (see the [type flow](architecture.md#type-flow)):
 
 ```bash
-npm run generate:types
+npm run generate:openapi
 ```
 
-This exports `openApi.json` (booting the server), runs orval, moves the results into `echo_utilities/src/**/__generated__/`, then lints, formats and builds `echo_utilities`. Commit `openApi.json` and the regenerated files. The types of the logs module are not part of the results: they are derived from zod schemas (see the [type flow](architecture.md#type-flow)).
+This boots the server and writes its OpenAPI document to `openApi.json`. Commit it: the CI fails when it is not up to date. The shared types need nothing: they are inferred from the zod schemas.
 
 ## Pre-commit hook
 

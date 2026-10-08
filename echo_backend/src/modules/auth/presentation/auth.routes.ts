@@ -2,21 +2,25 @@ import type { AuthToken, LoginRequest, SignUpRequest } from '@echo/utilities'
 import type { FastifyInstance, FastifyPluginAsync, FastifyPluginOptions } from 'fastify'
 
 import type { AuthController } from './auth.controller.js'
-import { AuthTokenSchema, LoginRequestSchema, SignUpRequestSchema } from './auth.schemas.js'
+import {
+  AuthTokenJsonSchema,
+  LoginRequestJsonSchema,
+  SignUpRequestJsonSchema
+} from './auth.schemas.js'
 
 /** Options of the `authRoutes` plugin. */
 export interface AuthRoutesOptions extends FastifyPluginOptions {
   controller: AuthController
 }
 
-/** Registers the `/auth/*` routes. Their schemas feed the OpenAPI document that the shared types are generated from. */
+/** Registers the `/auth/*` routes, and the schemas of `auth.schemas.ts` they refer to. */
 export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (
   server: FastifyInstance,
   { controller }
 ): Promise<void> => {
-  server.addSchema(AuthTokenSchema)
-  server.addSchema(LoginRequestSchema)
-  server.addSchema(SignUpRequestSchema)
+  server.addSchema(AuthTokenJsonSchema)
+  server.addSchema(LoginRequestJsonSchema)
+  server.addSchema(SignUpRequestJsonSchema)
 
   server.route<{ Body: SignUpRequest; Reply: AuthToken }>({
     method: 'POST',

@@ -1,14 +1,14 @@
 import { Ajv, type ValidateFunction } from 'ajv'
 import { describe, it, expect, beforeAll } from 'vitest'
 
-import { EchoErrorSchema } from '../errors.schemas.js'
+import { EchoErrorJsonSchema } from '../errors.schemas.js'
 
-describe('EchoErrorSchema', () => {
+describe('EchoErrorJsonSchema', () => {
   let validate: ValidateFunction
 
   beforeAll(() => {
     const ajv = new Ajv()
-    validate = ajv.compile(EchoErrorSchema)
+    validate = ajv.compile(EchoErrorJsonSchema)
   })
 
   it('should be a valid error object', () => {

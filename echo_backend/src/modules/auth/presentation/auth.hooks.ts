@@ -2,7 +2,7 @@ import type { EchoError } from '@echo/utilities'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 /** Fastify `preHandler` rejecting requests that do not carry a valid JWT. */
-export const requireAuthentication = async (
+export const authPreHandler = async (
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> => {

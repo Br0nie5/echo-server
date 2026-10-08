@@ -1,17 +1,17 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { describe, it, expect, vi } from 'vitest'
 
-import { requireAuthentication } from '../auth.hooks.js'
+import { authPreHandler } from '../auth.hooks.js'
 
 const mockReply = (): FastifyReply =>
   ({ status: vi.fn().mockReturnThis(), send: vi.fn() }) as unknown as FastifyReply
 
-describe('requireAuthentication', () => {
+describe('authPreHandler', () => {
   it('should let the request through when the JWT is valid', async () => {
     const request = { jwtVerify: vi.fn().mockResolvedValue({}) } as unknown as FastifyRequest
     const reply = mockReply()
 
-    await requireAuthentication(request, reply)
+    await authPreHandler(request, reply)
 
     expect(reply.status).not.toHaveBeenCalled()
     expect(reply.send).not.toHaveBeenCalled()
@@ -23,7 +23,7 @@ describe('requireAuthentication', () => {
     } as unknown as FastifyRequest
     const reply = mockReply()
 
-    await requireAuthentication(request, reply)
+    await authPreHandler(request, reply)
 
     expect(reply.status).toHaveBeenCalledWith(401)
     expect(reply.send).toHaveBeenCalledWith({ statusCode: 401, message: 'Invalid token.' })

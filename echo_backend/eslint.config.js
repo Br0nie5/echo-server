@@ -96,7 +96,6 @@ export default tseslint.config([
     // a parameter or the result has a rule the types do not show. They are validated when present.
     files: ['src/**/*.{ts,tsx}'],
     ignores: [
-      '**/__generated__/**',
       '**/__tests__/**',
       '**/__test__/**',
       '**/*.test.{ts,tsx}',

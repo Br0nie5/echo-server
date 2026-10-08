@@ -10,11 +10,11 @@ import swaggerUI from '@fastify/swagger-ui'
 import type { FastifyBaseLogger, FastifyServerOptions, FastifyTypeProviderDefault } from 'fastify'
 import Fastify, { type FastifyInstance } from 'fastify'
 
-import { createAuthController } from './modules/auth/auth.controller.js'
-import { authRoutes } from './modules/auth/auth.routes.js'
-import { createAuthService } from './modules/auth/auth.service.js'
-import { openUsersDb } from './modules/auth/users.db.js'
-import { createSqliteUsersRepository } from './modules/auth/users.repository.js'
+import { createAuthUsersDbRepository } from './modules/auth/infra/authUsersDb.repository.js'
+import { createUsersDb } from './modules/auth/infra/users.db.js'
+import { createAuthController } from './modules/auth/presentation/auth.controller.js'
+import { authPreHandler } from './modules/auth/presentation/auth.hooks.js'
+import { authRoutes } from './modules/auth/presentation/auth.routes.js'
 import type { LogsRepository } from './modules/logs/domain/logs.repository.js'
 import { createLogsFilesApi, type LogsFilesApi } from './modules/logs/infra/logsFiles.api.js'
 import { createLogsFilesRepository } from './modules/logs/infra/logsFiles.repository.js'
@@ -31,7 +31,7 @@ import { createNoopSelfReportRepository } from './modules/selfReport/infra/noopS
 import { createSelfFileReportRepository } from './modules/selfReport/infra/selfFileReport.repository.js'
 import type { BackConfig, SelfReportsConfig, ServerConfig } from './shared/config/backConfig.js'
 import { loadBackConfig } from './shared/config/loadBackConfig.js'
-import { EchoErrorSchema } from './shared/schemas/errors.schemas.js'
+import { EchoErrorJsonSchema } from './shared/schemas/errors.schemas.js'
 import { isOriginAllowed } from './shared/utils/isOriginAllowed.js'
 import { normalizeToEchoError } from './shared/utils/normalizeToEchoError.js'
 
@@ -220,7 +220,7 @@ export const buildServer = async (config: BackConfig = loadBackConfig()): Promis
   await registerSecurity(server, config)
   await registerDocumentation(server, config.server)
 
-  server.addSchema(EchoErrorSchema)
+  server.addSchema(EchoErrorJsonSchema)
 
   const logsFilesApi = createLogsFilesApi(config.logs)
   const logsFilesRepository = createLogsFilesRepository(
@@ -235,18 +235,16 @@ export const buildServer = async (config: BackConfig = loadBackConfig()): Promis
 
   // API
   if (config.auth.hasAuthentication) {
-    const usersDb = await openUsersDb(config.auth)
-    const userRepository = createSqliteUsersRepository(usersDb)
-    const authService = createAuthService(userRepository)
+    const authRepository = createAuthUsersDbRepository(await createUsersDb(config.auth))
     await server.register(authRoutes, {
       prefix: '/api',
-      controller: createAuthController(authService, config.auth)
+      controller: createAuthController(authRepository, config.auth)
     })
   }
   await server.register(logsRoutes, {
     prefix: '/api',
     controller: createLogsController(logsFilesRepository),
-    hasAuthentication: config.auth.hasAuthentication
+    preHandler: config.auth.hasAuthentication ? authPreHandler : undefined
   })
 
   await registerFrontend(server, config.server)

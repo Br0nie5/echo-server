@@ -33,7 +33,7 @@ The filter functions `filterLogByCategories` and `filterLogBySearch` live in `@e
 
 Code is split by domain under `echo_backend/src/modules` (`auth`, `logs`, `notification`, `selfReport`).
 
-The core of the `logs` module is split into four layers, each in its own folder:
+The modules are split into layers, each in its own folder, and keep only those they need. The core of the `logs` module has the four of them:
 
 | Folder | Responsibility | May import |
 | ------ | -------------- | ---------- |
@@ -42,16 +42,13 @@ The core of the `logs` module is split into four layers, each in its own folder:
 | `infra/` | Implementations of the `domain/` contracts on top of a data source: `*.api.ts` reads it, `dto/` describes what it returns and converts it to models, `*.repository.ts` implements the contract with both | `domain/` |
 | `presentation/` | Route registration (`*.routes.ts`), request handlers (`*.controller.ts`), the validation of their input (`utils/`) and the JSON schemas of the routes (`*.schemas.ts`), derived from the zod schemas of `@echo/utilities` | `application/`, `domain/` |
 
-The `auth` module is not layered yet and keeps its files flat, with this naming scheme:
+The `auth` module has three of them. It has no use case of its own yet, so no `application/`: its handlers call the contract of `domain/` directly.
 
-| File | Responsibility |
-| ---- | -------------- |
-| `*.routes.ts` | Route registration and inline JSON schema |
-| `*.controller.ts` | Request handlers |
-| `*.service.ts` | Business logic |
-| `*.repository.ts` | Data access |
-| `*.schemas.ts` | Fastify `addSchema` definitions |
-| `utils/` | Pure helpers |
+| Folder | Content |
+| ------ | ------- |
+| `domain/` | `AuthRepository`, the contract the accounts are reached through: whether a sign up is needed, the sign up of the first admin, the check of credentials |
+| `infra/` | `users.db.ts` (`createUsersDb`) opens the SQLite database, `dto/user.dto.ts` describes a row of its `users` table, `authUsersDb.repository.ts` implements the contract by querying that database, hashing the passwords with bcrypt |
+| `presentation/` | `auth.routes.ts`, `auth.controller.ts` (the handlers, signing the JWT and setting the session cookie), `auth.schemas.ts` (the JSON schemas of the routes) and `auth.hooks.ts`, the `authPreHandler` rejecting the requests without a valid JWT, which [server.ts](../echo_backend/src/server.ts) hands to the routes to protect as their `preHandler` option |
 
 `shared/` holds cross-module code (the config, error schemas). `shared/config/` holds `BackConfig`, split into `ServerConfig`, `AuthConfig`, `LogsConfig` (itself holding the optional `LogsNotifierConfig`), `SelfReportsConfig` and the optional `NotificationConfig`, and `loadBackConfig`, which builds it once from the environment variables and from constants (the paths under `data/`, the self-reports directory, file names, the extension of the log files). `shared/config/utils/` holds the helpers `loadBackConfig` builds it with, one per file: mostly the parsers the variables are read with. Each function is given the config of its domain and takes every setting and path from it. [server.ts](../echo_backend/src/server.ts) wires everything, registers Swagger, serves `/app` via `@fastify/static` (with an SPA fallback to `index.html`) and returns JSON 404s elsewhere.
 
@@ -81,7 +78,7 @@ The check gets its logs from the `getFilteredLogs` of `logs` (`application/getFi
 | `domain/` | `Notifier`, the contract a notification is sent through: it gives the size limit of its messages (`getMessageSizeLimit`) and sends one (`notify`) |
 | `infra/` | `TelegramNotifierApi` sends a message through the Telegram bot API, `telegramNotifier.ts` implements the contract on top of it, its size limit being the `telegramMessageSizeLimit` of `NotificationConfig` |
 
-`Notifier` is a contract, so other channels can be added. It is the one thing, with `auth.hooks`, a module may import from another one: `logsNotifier` depends on `notification/domain/`, never on its `infra/`.
+`Notifier` is a contract, so other channels can be added. It is what a module may import from another one: `logsNotifier` depends on `notification/domain/`, never on its `infra/`.
 
 ### The `selfReport` module
 
@@ -109,29 +106,31 @@ A `SelfFileReportRepository` stores its self reports in one file, given when it 
 
 ## Type flow
 
-The types of the `auth` requests (`LoginRequest`, `SignUpRequest`, …) and `EchoError` are not written by hand. They are generated from the backend routes:
+The types the API exchanges are not written by hand, and no file is generated. Each one is a [zod](https://zod.dev) schema in `echo_utilities`, its single source of truth:
 
-```
-backend route schemas ─► openApi.json ─► orval ─► echo_utilities/**/__generated__ ─► both apps
-```
+| Schemas | Folder |
+| ------- | ------ |
+| `LogSchema`, `LogCategorySchema`, `GetLogsParamsSchema` (the query of `GET /logs`) | `src/modules/logs/schemas/` |
+| `AuthTokenSchema`, `LoginRequestSchema`, `SignUpRequestSchema` | `src/modules/auth/schemas/` |
+| `EchoErrorSchema` | `src/shared/schemas/` |
 
-The logs module goes the other way. `Log`, `LogCategory` and `GetLogsParams` (the query of `GET /logs`) are each a [zod](https://zod.dev) schema in `echo_utilities/src/modules/logs/schemas/`, their single source of truth. Everything else is derived from it:
+Everything else is derived from it:
 
 ```
                                     ┌─► z.infer ─► the type, used by both apps
-echo_utilities/…/schemas/*.schema.ts ┼─► the runtime validation: API answers in the frontend, the query in the backend
-                                    └─► z.toJSONSchema ─► echo_backend/…/presentation/logs.schemas.ts ─► route schemas ─► openApi.json
+echo_utilities/…/schemas/*.schema.ts ┼─► the runtime validation: API answers in the frontend, the query and the thrown errors in the backend
+                                    └─► z.toJSONSchema ─► echo_backend/…/*.schemas.ts ─► route schemas ─► openApi.json
 ```
 
-Nothing is generated into a file: [logs.schemas.ts](../echo_backend/src/modules/logs/presentation/logs.schemas.ts) converts the zod schemas when the server starts. What a type cannot say is said by the zod schema: `z.int()` for a number without decimals, `.meta({ format: 'date-time' })` for the format of a string. orval is told to leave `Log` and `LogCategory` out (`filters` in [orval.config.ts](../orval.config.ts)), and the `GetLogsParams` it generates is not kept, so there is never a second copy of these types.
+The `*.schemas.ts` files of the backend convert the zod schemas when the server starts: [logs.schemas.ts](../echo_backend/src/modules/logs/presentation/logs.schemas.ts), [auth.schemas.ts](../echo_backend/src/modules/auth/presentation/auth.schemas.ts) and [errors.schemas.ts](../echo_backend/src/shared/schemas/errors.schemas.ts). What a type cannot say is said by the zod schema: `z.int()` for a number without decimals, `.meta({ format: 'date-time' })` for the format of a string.
 
 `GetLogsParamsSchema` describes the query as the client sends it. The backend validates it with `safeParseGetLogsParams` (`presentation/utils/`), which turns it into what `getFilteredLogs` needs (`fromDate` as a `Date`, `logCategories` always an array).
 
-`npm run generate:types` runs the orval pipeline and refreshes `openApi.json`. **Never edit `__generated__/` files.** Details in the [development guide](development.md).
+`npm run generate:openapi` exports `openApi.json` again from the routes. Details in the [development guide](development.md).
 
 ## Authentication
 
-See the [README](../README.md#authentication) for behavior. Implementation: users live in SQLite (`better-sqlite3`, `users.db.ts`) with bcrypt hashes. The JWT secret is generated with `crypto.randomBytes` at process start, so sessions do not survive restarts. `auth.hooks.ts` provides the `requireAuthentication` pre-handler used by protected routes. With `HAS_AUTHENTICATION=false` the auth plugins and routes are not registered.
+See the [README](../README.md#authentication) for behavior. Implementation: users live in SQLite (`better-sqlite3`, `infra/users.db.ts`) with bcrypt hashes. The JWT secret is generated with `crypto.randomBytes` at process start, so sessions do not survive restarts. `presentation/auth.hooks.ts` provides the `authPreHandler`, which `server.ts` gives to the protected routes as their `preHandler`: the other modules do not import it. With `HAS_AUTHENTICATION=false` the auth plugins and routes are not registered.
 
 ## Enforcing the architecture
 
@@ -147,13 +146,12 @@ The script runs `arch:check` in every workspace. Each one has its own rules, wit
 | ---- | ---------------- |
 | `no-circular` | Any circular dependency |
 | `*-shared-not-to-modules` | `shared/` importing from `modules/` (backend and frontend) |
-| `backend-modules-isolated` | A backend module importing another module, except its `domain/` and `infra/`, those of its submodules, and `auth/auth.hooks.ts` |
+| `backend-modules-isolated` | A backend module importing another module, except its `domain/` and `infra/`, and those of its submodules |
 | `frontend-modules-isolated` | A frontend module importing another module |
 | `backend-domain-is-independent`, `backend-application-not-to-outer-layers`, `backend-infra-only-to-domain`, `backend-presentation-not-to-infra` | In a layered module, any import other than `presentation → application → domain ← infra` |
-| other `backend-*` layering | In a flat module, going upward or skipping layers in `routes → controller → service → repository`; `utils/` and `*.schemas.ts` importing any of those layers |
 | `frontend-infra-not-to-screens` | `infra/` importing from `screens/` |
 | `utilities-not-to-apps`, `backend-frontend-independent`, `frontend-not-to-backend` | Cross-package imports; apps share code only through `@echo/utilities` |
-| `utilities-only-through-barrel`, `generated-only-inside-utilities` | Reaching into `echo_utilities` or `__generated__/` by path |
+| `utilities-only-through-barrel` | Reaching into `echo_utilities` by path |
 | `prod-not-to-tests` | Production code importing test files or helpers |
 
 The check covers type-only imports too. To add or relax a rule, edit the config of the workspace it applies to and explain why in the PR. Note that import-graph tooling cannot detect `process.env` reads; that convention is enforced in review.

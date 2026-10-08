@@ -70,13 +70,6 @@ const config: IConfiguration = {
       from: {},
       to: { path: '(^|/)echo_utilities/(?!dist/index\\.js$|package\\.json$)' }
     },
-    {
-      name: 'generated-only-inside-utilities',
-      severity: 'error',
-      comment: '__generated__ files are exposed through the @echo/utilities barrel only.',
-      from: {},
-      to: { path: '__generated__' }
-    },
 
     // ── production code vs tests ───────────────────────────────────────────
     {

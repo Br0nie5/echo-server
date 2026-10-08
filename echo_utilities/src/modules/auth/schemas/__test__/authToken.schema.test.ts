@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
-import type { AuthToken } from '../../types/__generated__/authToken.js'
-import { AuthTokenSchema } from '../auth.schema.js'
+import type { AuthToken } from '../authToken.schema.js'
+import { AuthTokenSchema } from '../authToken.schema.js'
 
 describe('AuthTokenSchema', () => {
   it('should accept a valid AuthToken with a message', () => {

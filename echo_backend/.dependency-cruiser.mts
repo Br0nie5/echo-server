@@ -10,9 +10,6 @@ const SHARED = '^src/shared'
 const TEST_HELPERS = '^src/test/'
 const TESTS = '(^|/)(__tests__|__test__)/|\\.test\\.tsx?$'
 
-/** Layers that sit above `utils/` and `*.schemas.ts` and must never be imported by them. */
-const UPPER_LAYERS = `${MODULES}/[^/]+/[^/]+\\.(routes|controller|service|repository)\\.ts$`
-
 /**
  * Folders of one layer of a module split into `domain/`, `application/`, `infra/` and
  * `presentation/`, and of its submodules (`modules/logs/modules/logsNotifier/`).
@@ -46,11 +43,11 @@ const config: IConfiguration = {
       name: 'backend-modules-isolated',
       severity: 'error',
       comment:
-        'A backend module may only import another module through its domain/ and infra/ (its models, its contracts and what implements them), those of its submodules, or auth.hooks (the shared authentication pre-handler). Its application/ and presentation/ stay its own.',
+        'A backend module may only import another module through its domain/ and infra/ (its models, its contracts and what implements them), or those of its submodules. Its application/ and presentation/ stay its own.',
       from: { path: `${MODULES}/([^/]+)/`, pathNot: TESTS },
       to: {
         path: `${MODULES}/`,
-        pathNot: [`${MODULES}/$1/`, `${MODULES}/auth/auth\\.hooks\\.ts$`, ...layer('domain|infra')]
+        pathNot: [`${MODULES}/$1/`, ...layer('domain|infra')]
       }
     },
 
@@ -86,58 +83,6 @@ const config: IConfiguration = {
       to: { path: layer('infra') }
     },
 
-    // ── flat modules: routes → controller → service → repository ───────────
-    {
-      name: 'backend-controller-not-to-routes',
-      severity: 'error',
-      from: { path: `${MODULES}/[^/]+/[^/]+\\.controller\\.ts$` },
-      to: { path: `${MODULES}/[^/]+/[^/]+\\.routes\\.ts$` }
-    },
-    {
-      name: 'backend-service-not-upward',
-      severity: 'error',
-      comment: 'Services must not depend on controllers or routes.',
-      from: { path: `${MODULES}/[^/]+/[^/]+\\.service\\.ts$` },
-      to: { path: `${MODULES}/[^/]+/[^/]+\\.(controller|routes)\\.ts$` }
-    },
-    {
-      name: 'backend-repository-not-upward',
-      severity: 'error',
-      comment:
-        'Repositories must only know about data access, not services, controllers or routes.',
-      from: { path: `${MODULES}/[^/]+/[^/]+\\.repository\\.ts$` },
-      to: { path: `${MODULES}/[^/]+/[^/]+\\.(service|controller|routes)\\.ts$` }
-    },
-    {
-      name: 'backend-routes-not-to-service',
-      severity: 'error',
-      comment: 'Routes talk to controllers, never directly to services or repositories.',
-      from: { path: `${MODULES}/[^/]+/[^/]+\\.routes\\.ts$`, pathNot: TESTS },
-      to: { path: `${MODULES}/[^/]+/[^/]+\\.(service|repository)\\.ts$` }
-    },
-    {
-      name: 'backend-controller-not-to-repository',
-      severity: 'error',
-      comment: 'Controllers talk to services, never directly to repositories.',
-      from: { path: `${MODULES}/[^/]+/[^/]+\\.controller\\.ts$`, pathNot: TESTS },
-      to: { path: `${MODULES}/[^/]+/[^/]+\\.repository\\.ts$` }
-    },
-    {
-      name: 'backend-utils-and-schemas-are-leaves',
-      severity: 'error',
-      comment:
-        'utils/ and *.schemas.ts are pure helpers and must not import routes/controllers/services/repositories. utils/ may sit directly under a module (modules/logs/utils/) or one level deeper, inside a layer folder (modules/logs/presentation/utils/).',
-      from: {
-        path: [
-          `${MODULES}/[^/]+/utils/`,
-          `${MODULES}/[^/]+/[^/]+/utils/`,
-          `${MODULES}/[^/]+/[^/]+\\.schemas\\.ts$`
-        ],
-        pathNot: TESTS
-      },
-      to: { path: UPPER_LAYERS }
-    },
-
     // ── package boundaries ─────────────────────────────────────────────────
     {
       name: 'backend-frontend-independent',
@@ -153,13 +98,6 @@ const config: IConfiguration = {
         'Import from "@echo/utilities", never reach into echo_utilities by path (package-path deep imports are already blocked by its "exports" field).',
       from: {},
       to: { path: '(^|/)echo_utilities/(?!dist/index\\.js$|package\\.json$)' }
-    },
-    {
-      name: 'generated-only-inside-utilities',
-      severity: 'error',
-      comment: '__generated__ files are exposed through the @echo/utilities barrel only.',
-      from: {},
-      to: { path: '__generated__' }
     },
 
     // ── production code vs tests ───────────────────────────────────────────

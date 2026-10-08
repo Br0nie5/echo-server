@@ -83,18 +83,11 @@ export default tseslint.config([
     }
   },
   {
-    files: ['**/__generated__/*.ts'],
-    rules: {
-      '@typescript-eslint/no-redeclare': 'off'
-    }
-  },
-  {
     // Documentation (TSDoc): every exported function, interface and type has a comment. `@param` and
     // `@returns` are not required, since the types already say what goes in and out: add them when
     // a parameter or the result has a rule the types do not show. They are validated when present.
     files: ['src/**/*.{ts,tsx}'],
     ignores: [
-      '**/__generated__/**',
       '**/__tests__/**',
       '**/__test__/**',
       '**/*.test.{ts,tsx}',

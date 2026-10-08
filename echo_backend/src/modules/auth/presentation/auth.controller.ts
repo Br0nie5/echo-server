@@ -2,9 +2,8 @@ import type { SignUpRequest } from '@echo/utilities'
 import { needsSignupMessage, type AuthToken, type LoginRequest } from '@echo/utilities'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
-import type { AuthConfig } from '../../shared/config/backConfig.js'
-
-import type { AuthService } from './auth.service.js'
+import type { AuthConfig } from '../../../shared/config/backConfig.js'
+import type { AuthRepository } from '../domain/auth.repository.js'
 
 type AuthReply = FastifyReply<{ Reply: AuthToken }>
 
@@ -17,12 +16,13 @@ export interface AuthController {
 }
 
 /**
- * Builds the auth handlers on top of `authService`.
+ * Builds the auth handlers, which read and create the accounts through `authRepository`.
+ *
  * A successful `signUp` or `login` signs a JWT and stores it in the session cookie described by
  * `authConfig`; `logout` clears it.
  */
 export const createAuthController = (
-  authService: AuthService,
+  authRepository: AuthRepository,
   { cookieName, cookieSerializeOptions }: AuthConfig
 ): AuthController => ({
   signUp: async (
@@ -31,7 +31,7 @@ export const createAuthController = (
   ): Promise<void> => {
     const { username, password } = request.body
 
-    const isSignedUp = await authService.signUpFirstAdmin(username, password)
+    const isSignedUp = await authRepository.signUpFirstAdmin(username, password)
     if (!isSignedUp) {
       return reply.status(403).send({ success: false, message: 'Unauthorized.' })
     }
@@ -48,7 +48,7 @@ export const createAuthController = (
   ): Promise<void> => {
     const { username, password } = request.body
 
-    if (!(await authService.areCredentialsValid(username, password))) {
+    if (!(await authRepository.areCredentialsValid(username, password))) {
       return reply.status(401).send({ success: false, message: 'Invalid credentials.' })
     }
 
@@ -63,7 +63,7 @@ export const createAuthController = (
     request: FastifyRequest,
     reply: FastifyReply<{ Reply: AuthToken }>
   ): Promise<void> => {
-    if (authService.needsSignup()) {
+    if (authRepository.needsSignup()) {
       return reply.status(401).send({ success: false, message: needsSignupMessage })
     }
 

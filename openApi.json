@@ -11,7 +11,9 @@
         "type": "object",
         "properties": {
           "statusCode": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           },
           "message": {
             "type": "string"
@@ -26,28 +28,25 @@
         "type": "object",
         "properties": {
           "success": {
-            "type": "boolean",
-            "description": "True if authentication was successful."
+            "type": "boolean"
           },
           "message": {
-            "type": "string",
-            "description": "Status message."
+            "type": "string"
           }
         },
         "required": [
           "success"
-        ]
+        ],
+        "additionalProperties": false
       },
       "LoginRequest": {
         "type": "object",
         "properties": {
           "username": {
-            "type": "string",
-            "description": "The user username."
+            "type": "string"
           },
           "password": {
-            "type": "string",
-            "description": "The user password."
+            "type": "string"
           }
         },
         "required": [
@@ -59,12 +58,10 @@
         "type": "object",
         "properties": {
           "username": {
-            "type": "string",
-            "description": "The wanted username."
+            "type": "string"
           },
           "password": {
-            "type": "string",
-            "description": "The wanted password."
+            "type": "string"
           }
         },
         "required": [
@@ -128,34 +125,6 @@
           "callLine"
         ],
         "additionalProperties": false
-      },
-      "GetLogsParams": {
-        "type": "object",
-        "properties": {
-          "fromDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "logCategories": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LogCategory"
-              },
-              {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/LogCategory"
-                }
-              }
-            ]
-          },
-          "logSearch": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "fromDate"
-        ]
       }
     }
   },

@@ -9,7 +9,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html'],
       include: ['src/**'],
-      exclude: ['**/__generated__/**', 'src/index.ts']
+      exclude: ['src/index.ts']
     }
   }
 })

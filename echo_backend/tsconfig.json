@@ -104,5 +104,5 @@
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
   "include": ["src/**/*.ts"],
-  "exclude": [".eslint.config.js", "orval.config.ts"]
+  "exclude": [".eslint.config.js"]
 }

@@ -1,7 +1,10 @@
 import type { EchoError, GetLogsParams, Log } from '@echo/utilities'
-import type { FastifyInstance, FastifyPluginAsync, FastifyPluginOptions } from 'fastify'
-
-import { requireAuthentication } from '../../auth/auth.hooks.js'
+import type {
+  FastifyInstance,
+  FastifyPluginAsync,
+  FastifyPluginOptions,
+  preHandlerAsyncHookHandler
+} from 'fastify'
 
 import type { LogsController } from './logs.controller.js'
 import { GetLogsParamsQuerySchema, LogQuerySchema, LogCategoryQuerySchema } from './logs.schemas.js'
@@ -9,13 +12,14 @@ import { GetLogsParamsQuerySchema, LogQuerySchema, LogCategoryQuerySchema } from
 /** Options of the `logsRoutes` plugin. */
 export interface LogsRoutesOptions extends FastifyPluginOptions {
   controller: LogsController
-  hasAuthentication: boolean
+  /** Runs before the handler of each route, and may answer in its place. */
+  preHandler?: preHandlerAsyncHookHandler
 }
 
-/** Registers `GET /logs`, protected by `requireAuthentication` when `hasAuthentication` is set. */
+/** Registers `GET /logs`, which runs `preHandler` first when one is given. */
 export const logsRoutes: FastifyPluginAsync<LogsRoutesOptions> = async (
   server: FastifyInstance,
-  { controller, hasAuthentication }
+  { controller, preHandler }
 ): Promise<void> => {
   server.addSchema(LogCategoryQuerySchema)
   server.addSchema(LogQuerySchema)
@@ -44,7 +48,7 @@ export const logsRoutes: FastifyPluginAsync<LogsRoutesOptions> = async (
       },
       tags: ['Logs']
     },
-    ...(hasAuthentication && { preHandler: requireAuthentication }),
+    ...(preHandler && { preHandler }),
     handler: controller.getLogs
   })
 }
