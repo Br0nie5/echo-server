@@ -2,8 +2,8 @@ import type { Log } from '@echo/utilities'
 import { Box, Stack, Typography, useTheme } from '@mui/material'
 import { memo } from 'react'
 
+import { CollapsibleBox } from '../../../../shared/components/CollapsibleBox'
 import { LogCard } from '../components/LogCard'
-import { LogsBox } from '../components/LogsBox'
 import { useLogsByJobsLayout } from '../hooks/useLogsByJobsLayout'
 
 type LogsByJobsLayoutProps = {
@@ -27,7 +27,7 @@ const LogsByJobsLayoutComponent: React.FC<LogsByJobsLayoutProps> = ({ logs }) =>
               padding: 1
             }}
           >
-            <LogsBox
+            <CollapsibleBox
               id={logsByJob.id}
               title={
                 <Typography variant="body1" align="center" sx={{ fontWeight: 'bold' }}>
@@ -39,7 +39,7 @@ const LogsByJobsLayoutComponent: React.FC<LogsByJobsLayoutProps> = ({ logs }) =>
               {logsByJob.logs.map((log) => (
                 <LogCard key={log.id} log={log} />
               ))}
-            </LogsBox>
+            </CollapsibleBox>
           </Box>
         )
       })}

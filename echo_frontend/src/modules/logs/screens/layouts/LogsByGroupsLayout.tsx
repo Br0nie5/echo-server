@@ -2,9 +2,9 @@ import type { Log } from '@echo/utilities'
 import { Stack, Typography } from '@mui/material'
 import { memo } from 'react'
 
+import { CollapsibleBox } from '../../../../shared/components/CollapsibleBox'
 import { useWindowSize } from '../../../../shared/hooks/useWindowSize'
 import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
-import { LogsBox } from '../components/LogsBox'
 import { useLogsByGroupsLayout } from '../hooks/useLogsByGroupsLayout'
 
 import { LogsByJobsLayout } from './LogsByJobsLayout'
@@ -23,7 +23,7 @@ const LogsByGroupsLayoutComponent: React.FC<LogsByGroupsLayoutProps> = ({ logs, 
     <Stack direction={isSmallScreen ? 'column' : 'row'} sx={{ overflowX: 'auto' }} spacing={1}>
       {logsByGroups.map((logsByGroup) => {
         return (
-          <LogsBox
+          <CollapsibleBox
             key={logsByGroup.id}
             id={logsByGroup.id}
             title={
@@ -35,7 +35,7 @@ const LogsByGroupsLayoutComponent: React.FC<LogsByGroupsLayoutProps> = ({ logs, 
             width={isSmallScreen ? undefined : `${windowSize.width / 2.5}px`}
           >
             <LogsByJobsLayout logs={logsByGroup.logs} />
-          </LogsBox>
+          </CollapsibleBox>
         )
       })}
     </Stack>

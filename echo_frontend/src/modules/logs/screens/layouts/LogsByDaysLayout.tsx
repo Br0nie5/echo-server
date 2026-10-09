@@ -2,9 +2,9 @@ import type { Log } from '@echo/utilities'
 import { Stack, Typography } from '@mui/material'
 import { memo } from 'react'
 
+import { CollapsibleBox } from '../../../../shared/components/CollapsibleBox'
 import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
 import { formatDate } from '../../../../shared/utils/formatDate'
-import { LogsBox } from '../components/LogsBox'
 import { useLogsByDaysLayout } from '../hooks/useLogsByDaysLayout'
 
 import { LogsByGroupsLayout } from './LogsByGroupsLayout'
@@ -20,7 +20,7 @@ const LogsByDaysLayoutComponent: React.FC<LogsByDaysLayoutProps> = ({ filteredLo
   return (
     <Stack spacing={2} sx={{ overflowX: 'auto' }}>
       {logsByDays.map((logsByDay, dayLogsIndex) => (
-        <LogsBox
+        <CollapsibleBox
           key={logsByDay.id}
           id={logsByDay.id}
           title={
@@ -31,7 +31,7 @@ const LogsByDaysLayoutComponent: React.FC<LogsByDaysLayoutProps> = ({ filteredLo
           isOpenedAtStart={dayLogsIndex === 0}
         >
           <LogsByGroupsLayout logs={logsByDay.logs} logsByDayId={logsByDay.id} />
-        </LogsBox>
+        </CollapsibleBox>
       ))}
     </Stack>
   )
