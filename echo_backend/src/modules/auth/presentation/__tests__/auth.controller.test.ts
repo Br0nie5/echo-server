@@ -15,12 +15,12 @@ const mockReply = (): FastifyReply<{ Reply: AuthToken }> => {
 
 const mockRequest = (
   body: Partial<LoginRequest>,
-  jwtVerifyImpl: () => Promise<void> | void = vi.fn()
+  jwtVerify: () => Promise<void> | void = vi.fn()
 ): FastifyRequest<{ Body: LoginRequest }> => {
   return {
     body,
     server: { jwt: { sign: vi.fn().mockReturnValue('mocked.jwt.token') } },
-    jwtVerify: jwtVerifyImpl
+    jwtVerify
   } as unknown as FastifyRequest<{ Body: LoginRequest }>
 }
 
@@ -44,12 +44,12 @@ describe('AuthController', () => {
     it('should successfully sign up, set a cookie, and return 200 for first user', async () => {
       vi.mocked(AuthRepository.signUpFirstAdmin).mockResolvedValue(true)
 
-      const req = mockRequest({ username: username, password: password })
+      const request = mockRequest({ username: username, password: password })
       const reply = mockReply()
 
-      await AuthController.signUp(req, reply)
+      await AuthController.signUp(request, reply)
 
-      expect(req.server.jwt.sign).toHaveBeenCalledWith({ user: username })
+      expect(request.server.jwt.sign).toHaveBeenCalledWith({ user: username })
       expect(reply.setCookie).toHaveBeenCalledWith(
         authConfig.cookieName,
         'mocked.jwt.token',
@@ -62,12 +62,12 @@ describe('AuthController', () => {
     it('should return a 403 if an user had already signed up', async () => {
       vi.mocked(AuthRepository.signUpFirstAdmin).mockResolvedValue(false)
 
-      const req = mockRequest({ username: username, password: password })
+      const request = mockRequest({ username: username, password: password })
       const reply = mockReply()
 
-      await AuthController.signUp(req, reply)
+      await AuthController.signUp(request, reply)
 
-      expect(req.server.jwt.sign).not.toHaveBeenCalled()
+      expect(request.server.jwt.sign).not.toHaveBeenCalled()
       expect(reply.setCookie).not.toHaveBeenCalled()
 
       expect(reply.status).toHaveBeenCalledWith(403)
@@ -79,12 +79,12 @@ describe('AuthController', () => {
     it('should successfully log in, set a cookie, and return 200 for valid credentials', async () => {
       vi.mocked(AuthRepository.areCredentialsValid).mockResolvedValue(true)
 
-      const req = mockRequest({ username: username, password: password })
+      const request = mockRequest({ username: username, password: password })
       const reply = mockReply()
 
-      await AuthController.login(req, reply)
+      await AuthController.login(request, reply)
 
-      expect(req.server.jwt.sign).toHaveBeenCalledWith({ user: username })
+      expect(request.server.jwt.sign).toHaveBeenCalledWith({ user: username })
       expect(reply.setCookie).toHaveBeenCalledWith(
         authConfig.cookieName,
         'mocked.jwt.token',
@@ -97,12 +97,12 @@ describe('AuthController', () => {
     it('should return 401 for invalid username', async () => {
       vi.mocked(AuthRepository.areCredentialsValid).mockResolvedValue(false)
 
-      const req = mockRequest({ username: 'wrong_user', password: 'any_password' })
+      const request = mockRequest({ username: 'wrong_user', password: 'any_password' })
       const reply = mockReply()
 
-      await AuthController.login(req, reply)
+      await AuthController.login(request, reply)
 
-      expect(req.server.jwt.sign).not.toHaveBeenCalled()
+      expect(request.server.jwt.sign).not.toHaveBeenCalled()
       expect(reply.setCookie).not.toHaveBeenCalled()
       expect(reply.status).toHaveBeenCalledWith(401)
       expect(reply.send).toHaveBeenCalledWith({ success: false, message: 'Invalid credentials.' })
@@ -111,12 +111,12 @@ describe('AuthController', () => {
     it('should return 401 for valid username but invalid password', async () => {
       vi.mocked(AuthRepository.areCredentialsValid).mockResolvedValue(false)
 
-      const req = mockRequest({ username: username, password: 'wrong_password' })
+      const request = mockRequest({ username: username, password: 'wrong_password' })
       const reply = mockReply()
 
-      await AuthController.login(req, reply)
+      await AuthController.login(request, reply)
 
-      expect(req.server.jwt.sign).not.toHaveBeenCalled()
+      expect(request.server.jwt.sign).not.toHaveBeenCalled()
       expect(reply.setCookie).not.toHaveBeenCalled()
       expect(reply.status).toHaveBeenCalledWith(401)
       expect(reply.send).toHaveBeenCalledWith({ success: false, message: 'Invalid credentials.' })
@@ -127,12 +127,12 @@ describe('AuthController', () => {
     it('should return 200 when the JWT is successfully verified', async () => {
       vi.mocked(AuthRepository.needsSignup).mockReturnValue(false)
 
-      const req = mockRequest({}, vi.fn().mockResolvedValue({}))
+      const request = mockRequest({}, vi.fn().mockResolvedValue({}))
       const reply = mockReply()
 
-      await AuthController.check(req, reply)
+      await AuthController.check(request, reply)
 
-      expect(req.jwtVerify).toHaveBeenCalledTimes(1)
+      expect(request.jwtVerify).toHaveBeenCalledTimes(1)
       expect(reply.status).toHaveBeenCalledWith(200)
       expect(reply.send).toHaveBeenCalledWith({ success: true, message: 'Token is valid.' })
     })
@@ -140,12 +140,12 @@ describe('AuthController', () => {
     it('should return 401 when JWT verification fails', async () => {
       vi.mocked(AuthRepository.needsSignup).mockReturnValue(false)
 
-      const req = mockRequest({}, vi.fn().mockRejectedValue(new Error('Invalid token')))
+      const request = mockRequest({}, vi.fn().mockRejectedValue(new Error('Invalid token')))
       const reply = mockReply()
 
-      await AuthController.check(req, reply)
+      await AuthController.check(request, reply)
 
-      expect(req.jwtVerify).toHaveBeenCalledTimes(1)
+      expect(request.jwtVerify).toHaveBeenCalledTimes(1)
       expect(reply.status).toHaveBeenCalledWith(401)
       expect(reply.send).toHaveBeenCalledWith({ success: false, message: 'Invalid token.' })
     })
@@ -153,10 +153,10 @@ describe('AuthController', () => {
     it('should return 401 when no user are found in the db', async () => {
       vi.mocked(AuthRepository.needsSignup).mockReturnValue(true)
 
-      const req = mockRequest({}, vi.fn().mockRejectedValue(new Error(needsSignupMessage)))
+      const request = mockRequest({}, vi.fn().mockRejectedValue(new Error(needsSignupMessage)))
       const reply = mockReply()
 
-      await AuthController.check(req, reply)
+      await AuthController.check(request, reply)
 
       expect(reply.status).toHaveBeenCalledWith(401)
       expect(reply.send).toHaveBeenCalledWith({ success: false, message: needsSignupMessage })
@@ -165,10 +165,10 @@ describe('AuthController', () => {
 
   describe('logout', () => {
     it('should clear the cookie and return 200', async () => {
-      const req = mockRequest({})
+      const request = mockRequest({})
       const reply = mockReply()
 
-      await AuthController.logout(req, reply)
+      await AuthController.logout(request, reply)
 
       expect(reply.clearCookie).toHaveBeenCalledWith(
         authConfig.cookieName,

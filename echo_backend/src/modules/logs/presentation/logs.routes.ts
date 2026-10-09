@@ -7,7 +7,7 @@ import type {
 } from 'fastify'
 
 import type { LogsController } from './logs.controller.js'
-import { GetLogsParamsQuerySchema, LogQuerySchema, LogCategoryQuerySchema } from './logs.schemas.js'
+import { GetLogsParamsJsonSchema, LogJsonSchema, LogCategoryJsonSchema } from './logs.schemas.js'
 
 /** Options of the `logsRoutes` plugin. */
 export interface LogsRoutesOptions extends FastifyPluginOptions {
@@ -21,15 +21,15 @@ export const logsRoutes: FastifyPluginAsync<LogsRoutesOptions> = async (
   server: FastifyInstance,
   { controller, preHandler }
 ): Promise<void> => {
-  server.addSchema(LogCategoryQuerySchema)
-  server.addSchema(LogQuerySchema)
+  server.addSchema(LogCategoryJsonSchema)
+  server.addSchema(LogJsonSchema)
 
   server.route<{ Querystring: GetLogsParams; Reply: Log[] | undefined | EchoError }>({
     method: 'GET',
     url: '/logs',
     schema: {
       operationId: 'getLogs',
-      querystring: GetLogsParamsQuerySchema,
+      querystring: GetLogsParamsJsonSchema,
       response: {
         200: {
           description: 'Returned Logs successfully.',

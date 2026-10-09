@@ -13,7 +13,7 @@ export interface ProblemLogsCheck {
   /** Categories that make a log a problem log. */
   watchedLogsCategories: LogCategory[]
   /** Name the notification says the logs come from. */
-  deviceName: string
+  serverName: string
   /** Luxon zone the dates of the logs are shown in. */
   timezone: string
   logsRepository: LogsRepository
@@ -38,7 +38,7 @@ export interface ProblemLogsCheck {
  * ```ts
  * await checkProblemLogsAndNotify({
  *   watchedLogsCategories: logsNotifierConfig.watchedLogsCategories,
- *   deviceName: logsNotifierConfig.serverName,
+ *   serverName: logsNotifierConfig.serverName,
  *   timezone: logsNotifierConfig.notifierTimezone,
  *   logsRepository,
  *   notifier,
@@ -49,7 +49,7 @@ export interface ProblemLogsCheck {
  */
 export async function checkProblemLogsAndNotify({
   watchedLogsCategories,
-  deviceName,
+  serverName,
   timezone,
   logsRepository,
   notifier,
@@ -73,7 +73,7 @@ export async function checkProblemLogsAndNotify({
 
   if (problemLogs.length > 0) {
     const messageSizeLimit = notifier.getMessageSizeLimit()
-    const message = buildNotifierMessage({ messageSizeLimit, problemLogs, deviceName, timezone })
+    const message = buildNotifierMessage({ messageSizeLimit, problemLogs, serverName, timezone })
 
     if (message === undefined) {
       await selfReportRepository.saveSelfReports([

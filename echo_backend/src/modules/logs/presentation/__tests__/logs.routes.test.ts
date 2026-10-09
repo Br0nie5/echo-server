@@ -4,11 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import type { LogsController } from '../logs.controller.js'
 import { logsRoutes } from '../logs.routes.js'
-import {
-  GetLogsParamsQuerySchema,
-  LogQuerySchema,
-  LogCategoryQuerySchema
-} from '../logs.schemas.js'
+import { GetLogsParamsJsonSchema, LogJsonSchema, LogCategoryJsonSchema } from '../logs.schemas.js'
 
 const controller = { getLogs: vi.fn() } as unknown as LogsController
 
@@ -44,8 +40,8 @@ describe('logsRoutes', () => {
     await logsRoutes(mockServer as unknown as FastifyInstance, { controller })
 
     // Check schemas were added
-    expect(mockServer.addSchema).toHaveBeenCalledWith(LogCategoryQuerySchema)
-    expect(mockServer.addSchema).toHaveBeenCalledWith(LogQuerySchema)
+    expect(mockServer.addSchema).toHaveBeenCalledWith(LogCategoryJsonSchema)
+    expect(mockServer.addSchema).toHaveBeenCalledWith(LogJsonSchema)
 
     // Check route registration
     expect(mockServer.route).toHaveBeenCalledTimes(1)
@@ -56,7 +52,7 @@ describe('logsRoutes', () => {
     expect(routeConfig.handler).toBe(controller.getLogs)
 
     // Check querystring schema
-    expect(routeConfig.schema.querystring).toBe(GetLogsParamsQuerySchema)
+    expect(routeConfig.schema.querystring).toBe(GetLogsParamsJsonSchema)
 
     // Check response schemas
     expect(routeConfig.schema.response[200]).toEqual({

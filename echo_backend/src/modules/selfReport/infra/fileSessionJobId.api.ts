@@ -29,7 +29,7 @@ export type SessionJobIdFileSystem = Pick<typeof nodeFs, 'mkdir' | 'readFile' | 
  * real file system by default).
  *
  * ```ts
- * const sessionJobIdApi = createFileSessionJobIdApi(config.selfReports)
+ * const sessionJobIdApi = createFileSessionJobIdApi(selfReportsConfig)
  * const sessionJobId = (await sessionJobIdApi.getLastSessionJobId()) + 1
  * await sessionJobIdApi.saveLastSessionJobId(sessionJobId)
  * ```

@@ -75,7 +75,7 @@ describe('logsNotifier plugin', () => {
 
     expect(checkProblemLogsAndNotify).toHaveBeenCalledWith({
       watchedLogsCategories: logsNotifierConfig.watchedLogsCategories,
-      deviceName: logsNotifierConfig.serverName,
+      serverName: logsNotifierConfig.serverName,
       timezone: logsNotifierConfig.notifierTimezone,
       logsRepository: pluginOptions.logsRepository,
       notifier: pluginOptions.notifier,

@@ -46,7 +46,7 @@ const buildFileSystem = ({
     ...overrides
   }) as unknown as FileSystem
 
-const WRITTEN_FILE_PATH = '/logs/server/Echo/log/parseLogFile.jsonl'
+const WRITTEN_FILE_PATH = '/server_logs/self_reports/Echo/log/parseLogFile.jsonl'
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
 
@@ -140,6 +140,30 @@ describe('LogsFilesApi', () => {
       ])
     })
 
+    it.each(['/logs/', './logs', 'logs'])(
+      'should group the files the same way when the logs directory is written %s',
+      async (logsDirPath) => {
+        const logsFilesApi = createLogsFilesApi(
+          getMockLogsConfig({ logsDirsPaths: [logsDirPath] }),
+          buildFileSystem({
+            directories: {
+              [logsDirPath]: [entry('docker', 'directory')],
+              [path.join(logsDirPath, 'docker')]: [entry('utils', 'directory')],
+              [path.join(logsDirPath, 'docker', 'utils')]: [entry('backup.jsonl', 'file')]
+            }
+          })
+        )
+
+        expect(await logsFilesApi.getAllLogFiles()).toEqual([
+          {
+            path: path.join(logsDirPath, 'docker', 'utils', 'backup.jsonl'),
+            fileName: 'backup',
+            groupName: 'utils'
+          }
+        ])
+      }
+    )
+
     it('should ignore the entries that are neither directories nor files', async () => {
       const logsFilesApi = createLogsFilesApi(
         logsConfig,
@@ -195,9 +219,13 @@ describe('LogsFilesApi', () => {
     it('should create the directory and its parents', async () => {
       const fileSystem = buildFileSystem({})
 
-      await createLogsFilesApi(logsConfig, fileSystem).createDirectory('/logs/server/Echo/log')
+      await createLogsFilesApi(logsConfig, fileSystem).createDirectory(
+        '/server_logs/self_reports/Echo/log'
+      )
 
-      expect(fileSystem.mkdir).toHaveBeenCalledWith('/logs/server/Echo/log', { recursive: true })
+      expect(fileSystem.mkdir).toHaveBeenCalledWith('/server_logs/self_reports/Echo/log', {
+        recursive: true
+      })
     })
   })
 

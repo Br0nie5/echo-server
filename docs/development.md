@@ -51,7 +51,7 @@ npx vitest --watch
 
 ## Pre-commit hook
 
-[lefthook.yml](../lefthook.yml) runs build, format, lint, architecture check, coverage and `npm audit` sequentially. Commits are slow and fail if coverage drops below 100%. Install with `npx lefthook install`.
+[lefthook.yml](../lefthook.yml) runs format then lint. It runs neither the build, the architecture check nor the tests: run them yourself before committing (see the commands above). Install with `npx lefthook install`.
 
 ## Docker
 

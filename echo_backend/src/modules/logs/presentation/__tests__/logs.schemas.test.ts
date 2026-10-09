@@ -3,18 +3,14 @@ import { Ajv } from 'ajv'
 import addFormats from 'ajv-formats'
 import { describe, it, expect, beforeAll } from 'vitest'
 
-import {
-  GetLogsParamsQuerySchema,
-  LogQuerySchema,
-  LogCategoryQuerySchema
-} from '../logs.schemas.js'
+import { GetLogsParamsJsonSchema, LogJsonSchema, LogCategoryJsonSchema } from '../logs.schemas.js'
 
-describe('LogCategoryQuerySchema', () => {
+describe('LogCategoryJsonSchema', () => {
   let validateCategory: ValidateFunction
 
   beforeAll(() => {
     const ajv = new Ajv()
-    validateCategory = ajv.compile(LogCategoryQuerySchema)
+    validateCategory = ajv.compile(LogCategoryJsonSchema)
   })
 
   it('should accept valid categories', () => {
@@ -31,14 +27,14 @@ describe('LogCategoryQuerySchema', () => {
   })
 })
 
-describe('LogQuerySchema', () => {
+describe('LogJsonSchema', () => {
   let validateLog: ValidateFunction
 
   beforeAll(() => {
     const ajv = new Ajv()
     addFormats.default(ajv)
-    ajv.addSchema(LogCategoryQuerySchema)
-    validateLog = ajv.compile(LogQuerySchema)
+    ajv.addSchema(LogCategoryJsonSchema)
+    validateLog = ajv.compile(LogJsonSchema)
   })
 
   it('should accept a valid log object', () => {
@@ -105,15 +101,15 @@ describe('LogQuerySchema', () => {
   })
 })
 
-describe('GetLogsParamsQuerySchema', () => {
+describe('GetLogsParamsJsonSchema', () => {
   let validateQuery: ValidateFunction
   const fromDate = '2026-04-28T10:00:00.000Z'
 
   beforeAll(() => {
     const ajv = new Ajv()
     addFormats.default(ajv)
-    ajv.addSchema(LogCategoryQuerySchema)
-    validateQuery = ajv.compile(GetLogsParamsQuerySchema)
+    ajv.addSchema(LogCategoryJsonSchema)
+    validateQuery = ajv.compile(GetLogsParamsJsonSchema)
   })
 
   it('should accept a query with only fromDate', () => {

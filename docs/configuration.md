@@ -60,6 +60,18 @@ The auth cookie is named `<hostname>_access_token`. Its domain and flags come fr
 
 Other flags are fixed: `httpOnly`, `sameSite=lax`, `path=/`, max age 24 hours. Because `secure` is set for real hostname, browsers will only send the cookie over HTTPS.
 
+## Derived CORS settings
+
+The API only answers a request carrying an `Origin` header when that origin is one the server serves itself. Which ones are allowed comes from `SERVER_URL` too:
+
+| `SERVER_URL` host | Allowed origins |
+| ----------------- | --------------- |
+| `localhost` | `localhost`, `127.0.0.1` and `[::1]`, on any port |
+| an IP address | that address, on any port |
+| a hostname, e.g. `echo.example.com` | its registrable domain (`example.com`) and its subdomains |
+
+Whatever `SERVER_URL` is, the origin a request is itself sent to (same host and port as its `Host` header) is allowed too, so the app keeps working when it is reached at another address than `SERVER_URL`, a LAN IP for instance. Any other origin is refused with an error.
+
 ## Frontend runtime configuration
 
 The built frontend does not embed configuration. It fetches `env.<mode>.json` at load, and [parseFrontConfig.ts](../echo_frontend/src/shared/config/utils/parseFrontConfig.ts) builds the `FrontConfig` ([frontConfig.ts](../echo_frontend/src/shared/config/frontConfig.ts)) from it: the common variables above, plus the frontend-only ones below. The app shows an error page if one of them is missing or invalid. In Docker, the entrypoint writes `echo_frontend/dist/env.production.json` from the container environment at every start, so one image serves any deployment. In dev, the files in `echo_frontend/public/` are used.

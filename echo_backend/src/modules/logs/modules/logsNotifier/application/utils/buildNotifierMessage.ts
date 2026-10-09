@@ -18,7 +18,7 @@ export interface NotifierMessageContent {
   messageSizeLimit: number
   problemLogs: Log[]
   /** Name the message says the logs come from. */
-  deviceName: string
+  serverName: string
   /** Luxon zone the dates of the logs are shown in. */
   timezone: string
 }
@@ -26,7 +26,7 @@ export interface NotifierMessageContent {
 /**
  * Builds the message telling about `problemLogs`, never longer than `messageSizeLimit`.
  *
- * The message lists the logs, in order, under a header naming `deviceName`. The logs that do not
+ * The message lists the logs, in order, under a header naming `serverName`. The logs that do not
  * fit are replaced by a footer counting them. When not even the first log fits, the message only
  * says how many logs there are.
  *
@@ -37,7 +37,7 @@ export interface NotifierMessageContent {
  * const message = buildNotifierMessage({
  *   messageSizeLimit: notifier.getMessageSizeLimit(),
  *   problemLogs,
- *   deviceName,
+ *   serverName,
  *   timezone
  * })
  * ```
@@ -45,7 +45,7 @@ export interface NotifierMessageContent {
 export function buildNotifierMessage({
   messageSizeLimit,
   problemLogs,
-  deviceName,
+  serverName,
   timezone
 }: NotifierMessageContent): string | undefined {
   if (problemLogs.length === 0) {
@@ -53,7 +53,7 @@ export function buildNotifierMessage({
   }
 
   const lines = problemLogs.map((log) => formatLogLine(log, timezone))
-  const header = `Logs from device ${deviceName}:\n\n\n`
+  const header = `Logs from device ${serverName}:\n\n\n`
 
   const buildMessageListingLogs = (listedLogsCount: number): string => {
     const otherLogsCount = lines.length - listedLogsCount
@@ -63,7 +63,7 @@ export function buildNotifierMessage({
     return `${header}${lines.slice(0, listedLogsCount).join('\n\n')}${footer}`
   }
 
-  let message = `${lines.length} logs from device ${deviceName} to see inside the console`
+  let message = `${lines.length} logs from device ${serverName} to see inside the console`
 
   if (message.length > messageSizeLimit) {
     return undefined

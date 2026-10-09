@@ -26,9 +26,10 @@ describe('parseAllowedDomain', () => {
     expect(parseAllowedDomain('http://my-server:4000')).toBe('my-server')
   })
 
-  it('should return localhost when the host of the server URL is an IP address', () => {
-    expect(parseAllowedDomain('http://192.168.1.1')).toBe('localhost')
-    expect(parseAllowedDomain('https://192.168.1.1:3700/some/path/name')).toBe('localhost')
+  it('should return the IP address when the host of the server URL is one', () => {
+    expect(parseAllowedDomain('http://192.168.1.1')).toBe('192.168.1.1')
+    expect(parseAllowedDomain('https://192.168.1.1:3700/some/path/name')).toBe('192.168.1.1')
+    expect(parseAllowedDomain('http://[::1]:4000')).toBe('[::1]')
   })
 
   it('should throw when the server URL is not a valid URL', () => {

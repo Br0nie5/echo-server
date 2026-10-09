@@ -32,7 +32,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking:** the self reports are no longer stored inside the watched logs, in `/watched_logs/server/<SERVER_NAME>/log`, but in a directory of their own, `/server_logs/self_reports/<SERVER_NAME>/log` (under `SERVER_LOGS_DIR_PATH`, default `/server_logs`), which is scanned along with `/watched_logs` when `SELF_REPORTS_ENABLED=true`. Replace the `/watched_logs/server` sub-mount with a writable `/server_logs` volume (to keep the existing self reports, move the content of the former host directory into a `self_reports` directory of the new one); the `server` directory created in your logs for that sub-mount is no longer needed.
 
+- **Breaking:** an unknown path outside `/app` and `/api` now gets the same error body as the API, `{ "statusCode": 404, "message": "Not found." }`, instead of `{ "error": "Not found" }`.
+
 - The file remembering the last `job_id` of the self reports is renamed from `data/self_logs_session.json` to `data/self_reports_session.json`. Rename it in your `data/` volume to keep the `job_id` going on from the last one, otherwise it starts again at `1`. The format of the self reports themselves does not change.
+
+### Fixed
+
+- A path that only starts like `/app` (`/application`, `/app-old/…`) now gets a 404 instead of the frontend.
+- The group of a log file no longer includes its first directory when `LOGS_DIR_PATH` ends with a `/` or starts with `./`.
+
+### Security
+
+- When `SERVER_URL` is `localhost` or an IP address, the API no longer accepts cross-origin requests from any website: only `localhost` and the loopback addresses, or that IP address, are allowed. The address a request is itself sent to stays allowed, so an instance reached at another address than `SERVER_URL` keeps working.
 
 ## [1.2.0] - 2026-09-23
 

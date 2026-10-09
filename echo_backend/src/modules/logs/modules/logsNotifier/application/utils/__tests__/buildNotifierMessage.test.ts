@@ -9,7 +9,7 @@ const buildMessage = (
   problemLogs: Log[],
   messageSizeLimit = MESSAGE_SIZE_LIMIT
 ): string | undefined =>
-  buildNotifierMessage({ messageSizeLimit, problemLogs, deviceName: 'my-device', timezone: 'UTC' })
+  buildNotifierMessage({ messageSizeLimit, problemLogs, serverName: 'my-device', timezone: 'UTC' })
 
 function mockLog(overrides: Partial<Log> = {}): Log {
   return {

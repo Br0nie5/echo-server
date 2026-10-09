@@ -77,8 +77,8 @@ export const startServer = async (): Promise<void> => {
 
     console.log(`Api is accessible though ${config.server.apiUrl}`)
     console.log(`App is accessible though ${config.server.appUrl}`)
-  } catch (err) {
-    server.log.error(err)
+  } catch (error) {
+    server.log.error(error)
     process.exit(1)
   }
 }

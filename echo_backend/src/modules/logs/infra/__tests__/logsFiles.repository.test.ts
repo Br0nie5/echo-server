@@ -136,7 +136,7 @@ describe('LogsFilesRepository.findAllLogs', () => {
   it('should report the failures of every file in a single save, self-report files included', async () => {
     const fileA = logFile({ fileName: 'a' })
     const selfReportFile = logFile({
-      path: '/logs/server/Echo/log/parseLogFile.jsonl',
+      path: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
       fileName: 'parseLogFile'
     })
     logsFilesApi.getAllLogFiles.mockResolvedValue([fileA, selfReportFile])

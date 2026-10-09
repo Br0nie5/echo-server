@@ -33,7 +33,9 @@ const ParsedGetLogsParamsSchema = GetLogsParamsSchema.extend({
  *
  * ```ts
  * const parsedParams = safeParseGetLogsParams(request.query)
- * if (!parsedParams.success) return reply.status(400).send(parsedParams.error.issues[0].message)
+ * if (!parsedParams.success) {
+ *   return reply.status(400).send({ statusCode: 400, message: parsedParams.error.issues[0].message })
+ * }
  * const { fromDate, logCategories, logSearch } = parsedParams.data
  * ```
  */

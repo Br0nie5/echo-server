@@ -14,14 +14,17 @@ describe('parseCookieSerializeOptions', () => {
     })
   })
 
-  it('should neither bind the cookie to a domain nor make it secure if the allowed domain is localhost', () => {
-    expect(parseCookieSerializeOptions('localhost')).toStrictEqual({
-      domain: undefined,
-      httpOnly: true,
-      maxAge: 86400,
-      path: '/',
-      sameSite: 'lax',
-      secure: false
-    })
-  })
+  it.each(['localhost', '192.168.1.1', '[::1]'])(
+    'should neither bind the cookie to a domain nor make it secure if the allowed domain is %s',
+    (allowedDomain) => {
+      expect(parseCookieSerializeOptions(allowedDomain)).toStrictEqual({
+        domain: undefined,
+        httpOnly: true,
+        maxAge: 86400,
+        path: '/',
+        sameSite: 'lax',
+        secure: false
+      })
+    }
+  )
 })

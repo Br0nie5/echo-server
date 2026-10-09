@@ -107,6 +107,32 @@ describe('registerSecurity', () => {
       )
     })
 
+    it('should allow the origin the request is sent to, even outside the allowed domain', async () => {
+      await buildSecuredServer(getConfig({ allowedDomain: 'localhost' }))
+      const origin = 'http://192.168.1.1:4000'
+
+      const response = await server.inject({
+        method: 'POST',
+        url: '/ping',
+        headers: { origin, host: '192.168.1.1:4000' }
+      })
+
+      expect(response.headers['access-control-allow-origin']).toBe(origin)
+    })
+
+    it('should reject any other origin when the allowed domain is localhost', async () => {
+      await buildSecuredServer(getConfig({ allowedDomain: 'localhost' }))
+
+      const response = await server.inject({
+        method: 'GET',
+        url: '/ping',
+        headers: { origin: 'https://other-domain.com', host: '192.168.1.1:4000' }
+      })
+
+      expect(response.statusCode).toBe(500)
+      expect(response.headers['access-control-allow-origin']).toBeUndefined()
+    })
+
     it('should reject an origin that is not a URL', async () => {
       await buildSecuredServer(getConfig())
 

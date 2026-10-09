@@ -24,7 +24,7 @@ export type ServerConfig = {
   host: string
   /** Port the server listens on (`HTTP_PORT`). */
   port: number
-  /** Domain allowed by CORS, with its subdomains. */
+  /** Domain allowed by CORS, with its subdomains: the registrable domain of `serverUrl`, or its host when it is a bare name or an IP address. */
   allowedDomain: string
   /** Set when the server uses HTTPS (`TLS_CERT_PATH` and `TLS_KEY_PATH`). */
   tls?: TlsConfig
@@ -107,8 +107,11 @@ export type NotificationConfig = {
  * ```ts
  * const config = loadBackConfig()
  * const logsFilesApi = createLogsFilesApi(config.logs)
- * const notifierApi = createTelegramNotifierApi(config.notification)
+ * const usersDb = await createUsersDb(config.auth)
  * ```
+ *
+ * `selfReports` and `notification` are missing when what they configure is disabled: whoever takes
+ * one is only built when it is there.
  *
  * A value needed in two places is in both configs (`serverName` is in `ServerConfig` and
  * `LogsNotifierConfig`), so no function needs a second config for one field.

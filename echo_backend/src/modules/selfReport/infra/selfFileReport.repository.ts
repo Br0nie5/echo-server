@@ -30,9 +30,9 @@ export interface CreateSelfFileReportRepositoryOptions {
  * ```ts
  * const selfReportRepository = await createSelfFileReportRepository({
  *   logsFilesApi: createLogsFilesApi(config.logs),
- *   sessionJobIdApi: createFileSessionJobIdApi(config.selfReports),
- *   selfReportsConfig: config.selfReports,
- *   selfReportFileName: config.selfReports.parseLogFileSelfReportFileName,
+ *   sessionJobIdApi: createFileSessionJobIdApi(selfReportsConfig),
+ *   selfReportsConfig,
+ *   selfReportFileName: selfReportsConfig.parseLogFileSelfReportFileName,
  *   logger: server.log
  * })
  * ```

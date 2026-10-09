@@ -6,7 +6,7 @@ import type { RawJsonLogLine } from '../../../logs/infra/dto/rawJsonLog.dto.js'
 import type { SelfReport } from '../../domain/selfReport.js'
 import { createSelfFileReportRepository } from '../selfFileReport.repository.js'
 
-const SELF_REPORTS_DIR = '/logs/server/Echo/log'
+const SELF_REPORTS_DIR = '/server_logs/self_reports/Echo/log'
 const SELF_REPORT_FILE_NAME = 'parseLogFile.jsonl'
 const SELF_REPORT_FILE_PATH = `${SELF_REPORTS_DIR}/${SELF_REPORT_FILE_NAME}`
 

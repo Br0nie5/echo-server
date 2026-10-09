@@ -30,9 +30,9 @@ export const registerDocumentation = async (
       ]
     },
     refResolver: {
-      buildLocalReference(json, _, __, i) {
+      buildLocalReference(json, _baseUri, _fragment, index) {
         const id = json.$id?.toString()
-        return id || `my-fragment-${i}`
+        return id || `my-fragment-${index}`
       }
     }
   })

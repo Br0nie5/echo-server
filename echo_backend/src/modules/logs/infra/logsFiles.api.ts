@@ -105,10 +105,10 @@ export const createLogsFilesApi = (
   }
 
   const getLogFile = (filePath: string, logsDirPath: string): LogFileDto => {
-    const directoriesLinkedName = filePath
-      .replace(`${logsDirPath}/`, '')
-      .split('/')
-      .filter((part) => part.length !== 0 && part !== 'log')
+    const directoriesLinkedName = path
+      .relative(logsDirPath, filePath)
+      .split(path.sep)
+      .filter((part) => part !== 'log')
       .slice(1, -1)
       .join('_')
 

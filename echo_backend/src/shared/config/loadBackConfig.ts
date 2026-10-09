@@ -87,7 +87,8 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
     },
     auth: {
       hasAuthentication: config.HAS_AUTHENTICATION,
-      cookieName: `${allowedDomain}_access_token`,
+      // The brackets and the colons of an IPv6 address are not allowed in the name of a cookie.
+      cookieName: `${allowedDomain.replace(/[^a-zA-Z0-9.-]/g, '_')}_access_token`,
       cookieSerializeOptions: parseCookieSerializeOptions(allowedDomain),
       usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')
     },

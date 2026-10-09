@@ -53,10 +53,10 @@ describe('LogsController.getLogs', () => {
   })
 
   it('should return a 400 if fromDate is missing', async () => {
-    const req = mockRequest({})
+    const request = mockRequest({})
     const reply = mockReply()
 
-    await LogsController.getLogs(req, reply)
+    await LogsController.getLogs(request, reply)
 
     expect(reply.status).toHaveBeenCalledWith(400)
     expect(reply.send).toHaveBeenCalledWith({
@@ -66,10 +66,10 @@ describe('LogsController.getLogs', () => {
   })
 
   it('should return 400 if fromDate is invalid', async () => {
-    const req = mockRequest({ fromDate: 'invalid-date' })
+    const request = mockRequest({ fromDate: 'invalid-date' })
     const reply = mockReply()
 
-    await LogsController.getLogs(req, reply)
+    await LogsController.getLogs(request, reply)
 
     expect(reply.status).toHaveBeenCalledWith(400)
     expect(reply.send).toHaveBeenCalledWith({
@@ -79,13 +79,13 @@ describe('LogsController.getLogs', () => {
   })
 
   it('should return 400 if an invalid log category is given', async () => {
-    const req = mockRequest({
+    const request = mockRequest({
       fromDate: new Date().toISOString(),
       logCategories: 'Invalid_log_category' as LogCategory
     })
     const reply = mockReply()
 
-    await LogsController.getLogs(req, reply)
+    await LogsController.getLogs(request, reply)
 
     expect(reply.status).toHaveBeenCalledWith(400)
     expect(reply.send).toHaveBeenCalledWith({
@@ -95,12 +95,12 @@ describe('LogsController.getLogs', () => {
   })
 
   it('should return 200 with logs when request is valid', async () => {
-    const req = mockRequest({ fromDate: new Date().toISOString() })
+    const request = mockRequest({ fromDate: new Date().toISOString() })
     const reply = mockReply()
 
     mockGetFilteredLogs.mockResolvedValue(mockLogs)
 
-    await LogsController.getLogs(req, reply)
+    await LogsController.getLogs(request, reply)
 
     expect(mockGetFilteredLogs).toHaveBeenCalledWith(logsRepository, expect.any(Object))
     expect(reply.status).toHaveBeenCalledWith(200)
@@ -108,12 +108,12 @@ describe('LogsController.getLogs', () => {
   })
 
   it('should return 200 with an empty array when no logs found', async () => {
-    const req = mockRequest({ fromDate: new Date().toISOString() })
+    const request = mockRequest({ fromDate: new Date().toISOString() })
     const reply = mockReply()
 
     mockGetFilteredLogs.mockResolvedValue([])
 
-    await LogsController.getLogs(req, reply)
+    await LogsController.getLogs(request, reply)
 
     expect(reply.status).toHaveBeenCalledWith(200)
     expect(reply.send).toHaveBeenCalledWith([])

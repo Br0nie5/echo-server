@@ -43,10 +43,27 @@ describe('registerFrontend', () => {
     expect(response.body).toContain('Echo test app')
   })
 
-  it('should answer a JSON 404 to an unknown path outside the app prefix', async () => {
+  it('should answer index.html to the app prefix followed by a query', async () => {
+    const response = await server.inject({ method: 'GET', url: '/app/unknown?tab=logs' })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toContain('Echo test app')
+  })
+
+  it.each(['/application', '/app-old/logs', '/apple?next=/app/'])(
+    'should answer a 404 EchoError to %s, which only starts like the app prefix',
+    async (url) => {
+      const response = await server.inject({ method: 'GET', url })
+
+      expect(response.statusCode).toBe(404)
+      expect(response.json()).toEqual({ statusCode: 404, message: 'Not found.' })
+    }
+  )
+
+  it('should answer a 404 EchoError to an unknown path outside the app prefix', async () => {
     const response = await server.inject({ method: 'GET', url: '/unknown' })
 
     expect(response.statusCode).toBe(404)
-    expect(response.json()).toEqual({ error: 'Not found' })
+    expect(response.json()).toEqual({ statusCode: 404, message: 'Not found.' })
   })
 })

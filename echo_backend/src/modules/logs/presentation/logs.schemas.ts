@@ -21,19 +21,19 @@ const { schemas } = z.toJSONSchema(logsApiSchemas, {
  *
  * Once registered with `addSchema`, a route refers to it with `{ $ref: 'LogCategory#' }`.
  */
-export const LogCategoryQuerySchema = schemas.LogCategory
+export const LogCategoryJsonSchema = schemas.LogCategory
 
 /**
  * JSON schema of a log, generated from `LogSchema` of `@echo/utilities`.
  *
  * Once registered with `addSchema`, a route refers to it with `{ $ref: 'Log#' }`. It refers itself
- * to `LogCategoryQuerySchema`, which has to be registered too.
+ * to `LogCategoryJsonSchema`, which has to be registered too.
  */
-export const LogQuerySchema = schemas.Log
+export const LogJsonSchema = schemas.Log
 
 /**
  * JSON schema of the query of `GET /logs`, generated from `GetLogsParamsSchema` of `@echo/utilities`.
  *
- * It refers to `LogCategoryQuerySchema`, which has to be registered with `addSchema`.
+ * It refers to `LogCategoryJsonSchema`, which has to be registered with `addSchema`.
  */
-export const GetLogsParamsQuerySchema = schemas.GetLogsParams
+export const GetLogsParamsJsonSchema = schemas.GetLogsParams

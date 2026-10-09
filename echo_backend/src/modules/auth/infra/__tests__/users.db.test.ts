@@ -9,45 +9,49 @@ import { getMockAuthConfig } from '../../../../test/mocks/configs.js'
 import { createUsersDb } from '../users.db.js'
 
 describe('createUsersDb', () => {
-  let tmpDir: string
-  let db: Database | undefined
+  let temporaryDirPath: string
+  let usersDb: Database | undefined
 
   beforeEach(() => {
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'echo-users-db-'))
+    temporaryDirPath = fs.mkdtempSync(path.join(os.tmpdir(), 'echo-users-db-'))
   })
 
   afterEach(() => {
-    db?.close()
-    db = undefined
-    fs.rmSync(tmpDir, { recursive: true, force: true })
+    usersDb?.close()
+    usersDb = undefined
+    fs.rmSync(temporaryDirPath, { recursive: true, force: true })
   })
 
   it('should create missing parent directories and an owner-only database file', async () => {
-    const dbFile = path.join(tmpDir, 'nested', 'users.db')
+    const usersDbFilePath = path.join(temporaryDirPath, 'nested', 'users.db')
 
-    db = await createUsersDb(getMockAuthConfig({ usersDbFilePath: dbFile }))
+    usersDb = await createUsersDb(getMockAuthConfig({ usersDbFilePath }))
 
-    expect(fs.statSync(dbFile).mode & 0o777).toBe(0o600)
+    expect(fs.statSync(usersDbFilePath).mode & 0o777).toBe(0o600)
   })
 
   it('should create the users table with a unique username', async () => {
-    db = await createUsersDb(getMockAuthConfig({ usersDbFilePath: path.join(tmpDir, 'users.db') }))
-    const insert = db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)')
+    usersDb = await createUsersDb(
+      getMockAuthConfig({ usersDbFilePath: path.join(temporaryDirPath, 'users.db') })
+    )
+    const insert = usersDb.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)')
 
     insert.run('admin', 'hash')
 
     expect(() => insert.run('admin', 'other')).toThrow(/UNIQUE/)
-    expect(db.prepare('SELECT is_admin FROM users').get()).toEqual({ is_admin: 0 })
+    expect(usersDb.prepare('SELECT is_admin FROM users').get()).toEqual({ is_admin: 0 })
   })
 
   it('should reopen an existing database without losing data', async () => {
-    const authConfig = getMockAuthConfig({ usersDbFilePath: path.join(tmpDir, 'users.db') })
+    const authConfig = getMockAuthConfig({
+      usersDbFilePath: path.join(temporaryDirPath, 'users.db')
+    })
     const firstDb = await createUsersDb(authConfig)
     firstDb.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run('a', 'h')
     firstDb.close()
 
-    db = await createUsersDb(authConfig)
+    usersDb = await createUsersDb(authConfig)
 
-    expect(db.prepare('SELECT username FROM users').get()).toEqual({ username: 'a' })
+    expect(usersDb.prepare('SELECT username FROM users').get()).toEqual({ username: 'a' })
   })
 })

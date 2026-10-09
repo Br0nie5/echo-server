@@ -34,15 +34,15 @@ const logsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = async (
     try {
       await checkProblemLogsAndNotify({
         watchedLogsCategories: logsNotifierConfig.watchedLogsCategories,
-        deviceName: logsNotifierConfig.serverName,
+        serverName: logsNotifierConfig.serverName,
         timezone: logsNotifierConfig.notifierTimezone,
         logsRepository,
         notifier,
         checkDateRepository,
         selfReportRepository
       })
-    } catch (err) {
-      fastify.log.error({ err }, 'Cron job failed')
+    } catch (error) {
+      fastify.log.error({ err: error }, 'Cron job failed')
     }
   })
 

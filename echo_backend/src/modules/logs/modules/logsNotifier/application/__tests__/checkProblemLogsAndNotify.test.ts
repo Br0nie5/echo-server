@@ -28,7 +28,7 @@ const PREVIOUS_CHECK = { lastCheckDate: new Date('2026-01-01T00:00:00.000Z') }
 const check = (): Promise<void> =>
   checkProblemLogsAndNotify({
     watchedLogsCategories: WATCHED,
-    deviceName: 'test-device',
+    serverName: 'test-device',
     timezone: 'UTC+2',
     logsRepository,
     notifier,
