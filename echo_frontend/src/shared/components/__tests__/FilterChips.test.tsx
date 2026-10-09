@@ -1,16 +1,28 @@
 import userEvent from '@testing-library/user-event'
+import { useState, type JSX } from 'react'
 
 import { renderComponent } from '../../../test/renderComponent'
 import { toggleTagFromList } from '../../utils/toggleTagFromList'
 import { FilterChips } from '../FilterChips'
 
+type RenderedComponent = Awaited<ReturnType<typeof renderComponent>>
+
+const getTagChip = (component: RenderedComponent, tag: string): HTMLElement | null =>
+  component.getByText(tag).closest('div')
+
+const expectTagToBeSelected = (component: RenderedComponent, tag: string): void => {
+  expect(getTagChip(component, tag)).toHaveClass('MuiChip-colorPrimary')
+}
+
+const expectTagNotToBeSelected = (component: RenderedComponent, tag: string): void => {
+  expect(getTagChip(component, tag)).toHaveClass('MuiChip-colorDefault')
+}
+
 describe('FilterChips', () => {
   test('Should display the tags', async () => {
     const tags = ['First Tag', 'Second Tag', 'Third Tag']
 
-    const component = await renderComponent(
-      <FilterChips tags={tags} mode="multi-select" onSelectTag={() => {}} />
-    )
+    const component = await renderComponent(<FilterChips tags={tags} mode="multi-select" />)
 
     tags.forEach((tag) => {
       expect(component.getByText(tag))
@@ -19,6 +31,8 @@ describe('FilterChips', () => {
 
   describe('multi-select mode', () => {
     test('Should display the several selected tags with a different color', async () => {
+      const user = userEvent.setup()
+
       const tags = ['First Tag', 'Second Tag', 'Third Tag', 'Fourth Tag']
       const selectedTags = [tags[0], tags[3]]
       const unselectedTags = tags.filter((tag) => !selectedTags.includes(tag))
@@ -26,121 +40,147 @@ describe('FilterChips', () => {
       expect(selectedTags.length > 1).toBeTruthy()
       expect(unselectedTags.length > 1).toBeTruthy()
 
-      const component = await renderComponent(
-        <FilterChips
-          tags={tags}
-          mode="multi-select"
-          initialSelectedTags={selectedTags}
-          onSelectTag={() => {}}
-        />
-      )
+      const component = await renderComponent(<FilterChips tags={tags} mode="multi-select" />)
 
-      tags.forEach((tag) => {
-        expect(component.getByText(tag))
-      })
+      for (const selectedTag of selectedTags) {
+        await user.click(component.getByText(selectedTag))
+      }
 
       selectedTags.forEach((selectedTag) => {
-        const selectedTagComponent = component.getByText(selectedTag)
-        const selectedTagContainerDiv = selectedTagComponent.closest('div')
-
-        expect(selectedTagContainerDiv).toHaveClass('MuiChip-colorPrimary')
+        expectTagToBeSelected(component, selectedTag)
       })
 
       unselectedTags.forEach((unselectedTag) => {
-        const unselectedTagComponent = component.getByText(unselectedTag)
-        const unselectedTagContainerDiv = unselectedTagComponent.closest('div')
-
-        expect(unselectedTagContainerDiv).toHaveClass('MuiChip-colorDefault')
+        expectTagNotToBeSelected(component, unselectedTag)
       })
     })
 
-    test('Should execute onSelectTag callback with the correct type when clicking on a tag and setting the correct selected tags', async () => {
+    test('Should display values from controlledState if given', async () => {
       const user = userEvent.setup()
 
-      type Tag = 'First Tag' | 'Second Tag' | 'Third Tag'
-      const tags: Tag[] = ['First Tag', 'Second Tag', 'Third Tag']
+      const tags = ['First Tag', 'Second Tag', 'Third Tag']
+      const initialSelectedTags = [tags[1]]
 
-      let clickedTag
+      const resetTagsButtonLabel = 'Reset tags'
 
-      const component = await renderComponent(
-        <FilterChips
-          tags={tags}
-          mode="multi-select"
-          onSelectTag={(selectedTags: Tag[]) => {
-            clickedTag = selectedTags
-          }}
-        />
-      )
+      const setValue = vi.fn()
+
+      const Parent = (): JSX.Element => {
+        const [selectedTags, setSelectedTags] = useState<string[]>(initialSelectedTags)
+
+        return (
+          <>
+            <FilterChips
+              tags={tags}
+              mode="multi-select"
+              controlledState={{
+                value: selectedTags,
+                setValue: (newSelectedTags) => {
+                  setValue(newSelectedTags)
+                  setSelectedTags(newSelectedTags)
+                }
+              }}
+            />
+            <button onClick={() => setSelectedTags([])}>{resetTagsButtonLabel}</button>
+          </>
+        )
+      }
+
+      const component = await renderComponent(<Parent />)
+
+      expectTagNotToBeSelected(component, tags[0])
+      expectTagToBeSelected(component, tags[1])
+      expectTagNotToBeSelected(component, tags[2])
 
       await user.click(component.getByText(tags[0]))
 
-      expect(clickedTag).toStrictEqual([tags[0]])
+      expect(setValue).toHaveBeenCalledExactlyOnceWith([tags[1], tags[0]])
 
-      await user.click(component.getByText(tags[2]))
+      expectTagToBeSelected(component, tags[0])
+      expectTagToBeSelected(component, tags[1])
+      expectTagNotToBeSelected(component, tags[2])
 
-      expect(clickedTag).toStrictEqual([tags[0], tags[2]])
+      await user.click(component.getByText(resetTagsButtonLabel))
+
+      tags.forEach((tag) => {
+        expectTagNotToBeSelected(component, tag)
+      })
     })
   })
 
   describe('single-select mode', () => {
     test('Should display the single selected tag with a different color', async () => {
+      const user = userEvent.setup()
+
       const tags = ['First Tag', 'Second Tag', 'Third Tag', 'Fourth Tag']
-      const selectedTag = tags[0]
+      const selectedTag = tags[2]
       const unselectedTags = toggleTagFromList(tags, selectedTag)
 
       expect(unselectedTags.length === tags.length - 1).toBeTruthy()
 
-      const component = await renderComponent(
-        <FilterChips
-          tags={tags}
-          mode="single-select"
-          initialSelectedTags={selectedTag}
-          onSelectTag={() => {}}
-        />
-      )
+      const component = await renderComponent(<FilterChips tags={tags} mode="single-select" />)
 
-      tags.forEach((tag) => {
-        expect(component.getByText(tag))
-      })
+      await user.click(component.getByText(tags[0]))
+      await user.click(component.getByText(selectedTag))
 
-      const selectedTagComponent = component.getByText(selectedTag)
-      const selectedTagContainerDiv = selectedTagComponent.closest('div')
-
-      expect(selectedTagContainerDiv).toHaveClass('MuiChip-colorPrimary')
+      expectTagNotToBeSelected(component, tags[0])
+      expectTagToBeSelected(component, selectedTag)
 
       unselectedTags.forEach((unselectedTag) => {
-        const unselectedTagComponent = component.getByText(unselectedTag)
-        const unselectedTagContainerDiv = unselectedTagComponent.closest('div')
-
-        expect(unselectedTagContainerDiv).toHaveClass('MuiChip-colorDefault')
+        expectTagNotToBeSelected(component, unselectedTag)
       })
     })
 
-    test('Should execute onSelectTag callback with the correct type when clicking on a tag', async () => {
+    test('Should display values from controlledState if given', async () => {
       const user = userEvent.setup()
 
-      type Tag = 'First Tag' | 'Second Tag' | 'Third Tag'
-      const tags: Tag[] = ['First Tag', 'Second Tag', 'Third Tag']
+      const tags = ['First Tag', 'Second Tag', 'Third Tag']
+      const initialSelectedTag = tags[1]
 
-      let clickedTag
+      const resetTagsButtonLabel = 'Reset tags'
 
-      const component = await renderComponent(
-        <FilterChips
-          tags={tags}
-          mode="single-select"
-          onSelectTag={(tag: Tag) => {
-            clickedTag = tag
-          }}
-        />
-      )
+      const setValue = vi.fn()
 
-      await user.click(component.getByText(tags[0]))
+      const Parent = (): JSX.Element => {
+        const [selectedTag, setSelectedTag] = useState<string | undefined>(initialSelectedTag)
 
-      expect(clickedTag).toBe(tags[0])
+        return (
+          <>
+            <FilterChips
+              tags={tags}
+              mode="single-select"
+              controlledState={{
+                value: selectedTag,
+                setValue: (newSelectedTag) => {
+                  setValue(newSelectedTag)
+                  setSelectedTag(newSelectedTag)
+                }
+              }}
+            />
+            <button onClick={() => setSelectedTag(undefined)}>{resetTagsButtonLabel}</button>
+          </>
+        )
+      }
+
+      const component = await renderComponent(<Parent />)
+
+      expectTagNotToBeSelected(component, tags[0])
+      expectTagToBeSelected(component, tags[1])
+      expectTagNotToBeSelected(component, tags[2])
 
       await user.click(component.getByText(tags[2]))
 
-      expect(clickedTag).toBe(tags[2])
+      expect(setValue).toHaveBeenCalledExactlyOnceWith(tags[2])
+
+      expectTagNotToBeSelected(component, tags[0])
+      expectTagNotToBeSelected(component, tags[1])
+      expectTagToBeSelected(component, tags[2])
+
+      await user.click(component.getByText(resetTagsButtonLabel))
+
+      tags.forEach((tag) => {
+        expectTagNotToBeSelected(component, tag)
+      })
     })
   })
 })

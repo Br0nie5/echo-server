@@ -5,19 +5,16 @@ import { getLogsInitialDate } from '../../utils/getLogsDates'
 import { LogsScreenHeader } from '../LogsScreenHeader'
 
 describe('LogsScreenHeader', () => {
-  test('Should not call onDateChange when clearing the date field', async () => {
+  test('Should not set the date when clearing the date field', async () => {
     const user = userEvent.setup()
-    const onDateChange = vi.fn()
+    const setLogsFromDate = vi.fn()
 
     const component = await renderComponent(
       <LogsScreenHeader
-        date={getLogsInitialDate()}
-        onDateChange={onDateChange}
+        logsFromDateState={{ value: getLogsInitialDate(), setValue: setLogsFromDate }}
         availableLogCategories={undefined}
-        initialLogCategoriesFilters={[]}
-        initialLogSearch=""
-        setLogCategoriesFilters={() => {}}
-        onSearch={() => {}}
+        logCategoriesFiltersState={{ value: [], setValue: () => {} }}
+        logSearchState={{ value: '', setValue: () => {} }}
       />
     )
 
@@ -32,6 +29,6 @@ describe('LogsScreenHeader', () => {
     await user.click(yearSpinner)
     await user.keyboard('{Backspace}')
 
-    expect(onDateChange).not.toHaveBeenCalled()
+    expect(setLogsFromDate).not.toHaveBeenCalled()
   })
 })

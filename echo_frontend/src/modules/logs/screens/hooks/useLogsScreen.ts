@@ -7,6 +7,7 @@ import {
 import type { QueryStatus } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
+import type { ControlledState } from '../../../../shared/types/controlledState'
 import { useGetLogs } from '../../infra/useGetLogs'
 import { combineLogCategories } from '../utils/combineLogCategories'
 import { extractLogsLogCategories } from '../utils/extractLogsLogCategories'
@@ -17,54 +18,41 @@ interface UseLogsScreenReturnType {
   logs: Log[] | undefined
   logsStatus: QueryStatus
   refetchLogs: () => void
-  logsFromDate: string
-  setLogsFromDate: (date: string) => void
+  logsFromDateState: ControlledState<string>
   availableLogCategories: LogCategory[] | undefined
-  logCategoriesFilters: LogCategory[]
-  setLogCategoriesFilters: (categories: LogCategory[]) => void
-  logSearch: string
-  setLogSearch: (search: string) => void
+  logCategoriesFiltersState: ControlledState<LogCategory[]>
+  logSearchState: ControlledState<string>
   logSearchFilters: LogSearchFilter[]
 }
 
 /** Data and filters of the logs screen. Only the date is applied by the backend; categories and search are applied client-side (see `useFilteredLogs`), and the available categories are those found in the fetched logs plus the selected ones. */
 export const useLogsScreen = (): UseLogsScreenReturnType => {
-  const {
-    logsFromDate,
-    setLogsFromDate,
-    logCategoriesFilters,
-    setLogCategoriesFilters,
-    logSearch,
-    setLogSearch
-  } = useLogsFilters()
+  const { logsFromDateState, logCategoriesFiltersState, logSearchState } = useLogsFilters()
 
   const {
     data: logs,
     status: logsStatus,
     refetch: refetchLogs
-  } = useGetLogs({ fromDate: logsFromDate })
+  } = useGetLogs({ fromDate: logsFromDateState.value })
 
   const availableLogCategories = useMemo(() => {
     return logs !== undefined
-      ? combineLogCategories(extractLogsLogCategories(logs), logCategoriesFilters)
+      ? combineLogCategories(extractLogsLogCategories(logs), logCategoriesFiltersState.value)
       : undefined
-  }, [logs, logCategoriesFilters])
+  }, [logs, logCategoriesFiltersState.value])
 
   const logSearchFilters = useMemo(() => {
-    return parseLogSearchInput(logSearch)
-  }, [logSearch])
+    return parseLogSearchInput(logSearchState.value)
+  }, [logSearchState.value])
 
   return {
     logs,
     logsStatus,
     refetchLogs,
-    logsFromDate,
-    setLogsFromDate,
+    logsFromDateState,
     availableLogCategories,
-    logCategoriesFilters,
-    setLogCategoriesFilters,
-    logSearch,
-    setLogSearch,
+    logCategoriesFiltersState,
+    logSearchState,
     logSearchFilters
   }
 }

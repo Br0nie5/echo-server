@@ -9,28 +9,23 @@ import { FilterChips } from '../../../../shared/components/FilterChips'
 import { useConfig } from '../../../../shared/config/useConfig'
 import { useWindowSize } from '../../../../shared/hooks/useWindowSize'
 import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
+import type { ControlledState } from '../../../../shared/types/controlledState'
 import { getLogsMaximalDate, getLogsMinimalDate } from '../utils/getLogsDates'
 
 import { SearchBar } from './SearchBar'
 
 type LogsScreenHeaderProps = {
-  date: string
-  onDateChange: (date: string) => void
+  logsFromDateState: ControlledState<string>
   availableLogCategories: LogCategory[] | undefined
-  initialLogCategoriesFilters: LogCategory[]
-  initialLogSearch: string
-  setLogCategoriesFilters: (logCategories: LogCategory[]) => void
-  onSearch: (search: string) => void
+  logCategoriesFiltersState: ControlledState<LogCategory[]>
+  logSearchState: ControlledState<string>
 }
 
 const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
-  date,
-  onDateChange,
+  logsFromDateState,
   availableLogCategories,
-  initialLogCategoriesFilters,
-  initialLogSearch,
-  setLogCategoriesFilters,
-  onSearch
+  logCategoriesFiltersState,
+  logSearchState
 }) => {
   const { SERVER_NAME } = useConfig()
 
@@ -48,14 +43,14 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
         <DatePicker
           label={translation('logs.from')}
           sx={{ flexShrink: 1 }}
-          value={dayjs(date)}
+          value={dayjs(logsFromDateState.value)}
           minDate={dayjs(getLogsMinimalDate())}
           maxDate={dayjs(getLogsMaximalDate())}
           onChange={(value) => {
             const newDate = value?.toDate()
             if (newDate !== undefined) {
               newDate.setHours(0, 0, 0, 0)
-              onDateChange(newDate.toISOString())
+              logsFromDateState.setValue(newDate.toISOString())
             }
           }}
         />
@@ -79,14 +74,13 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
             <FilterChips
               tags={availableLogCategories}
               mode="multi-select"
-              initialSelectedTags={initialLogCategoriesFilters}
-              onSelectTag={setLogCategoriesFilters}
+              controlledState={logCategoriesFiltersState}
             />
           </Box>
           <SearchBar
             suggestions={logSearchSuggestions}
-            initialInputValue={initialLogSearch}
-            onSearch={onSearch}
+            initialInputValue={logSearchState.value}
+            onSearch={logSearchState.setValue}
           />
         </Stack>
       )}
