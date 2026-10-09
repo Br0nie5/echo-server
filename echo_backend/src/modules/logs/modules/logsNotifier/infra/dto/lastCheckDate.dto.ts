@@ -8,7 +8,7 @@ export const LastCheckDateDtoSchema = z.object({
 })
 
 /** The last check date as it is stored in the last-check file: `lastCheck` is an ISO date. */
-export type LastCheckDateDto = z.infer<typeof LastCheckDateDtoSchema>
+type LastCheckDateDto = z.infer<typeof LastCheckDateDtoSchema>
 
 /**
  * Converts the content of the last-check file to the `LastCheckDate` it holds.

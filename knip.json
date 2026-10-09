@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/knip/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": ["docker-health-check.js"]
+    },
+    "echo_frontend": {
+      "ignoreDependencies": ["eslint-import-resolver-node"]
+    }
+  }
+}

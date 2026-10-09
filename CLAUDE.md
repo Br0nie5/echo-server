@@ -22,6 +22,7 @@ npm run lint               # eslint --fix across all workspaces
 npm run format              # prettier --write across all workspaces
 npm run test:coverage        # vitest run --coverage (100% threshold) across all workspaces
 npm run open:coverage         # open each workspace's coverage/index.html
+npm run dead-code:check        # knip: unused files, exports and dependencies, all workspaces at once (knip.json)
 ```
 
 Single test file / watch mode (run inside the relevant workspace dir, e.g. `cd echo_backend`):

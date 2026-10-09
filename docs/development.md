@@ -33,6 +33,7 @@ npm run dev
 | `npm run test:coverage` | Vitest across workspaces, 100% thresholds |
 | `npm run open:coverage` | Open coverage reports |
 | `npm run arch:check` | Architecture rules (import boundaries, cycles), see [architecture](architecture.md#enforcing-the-architecture) |
+| `npm run dead-code:check` | Unused files, exports and dependencies across the workspaces, with [Knip](https://knip.dev) (configured in [knip.json](../knip.json)) |
 | `npm run vulnerabilities:scan` | `npm audit` |
 | `npm run build:docker` / `start:docker` | Build the image / build and run it on `test_logs/` |
 

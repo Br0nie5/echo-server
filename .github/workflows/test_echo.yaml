@@ -49,6 +49,9 @@ jobs:
       - name: Architecture check
         run: npm run arch:check
 
+      - name: Dead code check
+        run: npm run dead-code:check
+
       - name: Test
         run: npm run test:coverage
 

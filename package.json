@@ -13,17 +13,19 @@
     "start": "npm run build && npm run start --workspace=echo_backend",
     "start:docker": "bash scripts/start_docker.sh",
     "dev": "concurrently --names \"backend,frontend\" \"npm run dev --workspace=echo_backend\" \"npm run dev --workspace=echo_frontend\"",
+    "deploy:server": "bash scripts/deploy_server.sh",
     "format": "npm run format --workspaces",
     "lint": "npm run lint --workspaces",
     "test:coverage": "npm run test:coverage --workspaces",
     "open:coverage": "npm run open:coverage --workspaces",
     "arch:check": "npm run arch:check --workspaces",
     "vulnerabilities:scan": "npm audit",
-    "deploy:server": "bash scripts/deploy_server.sh"
+    "dead-code:check": "knip"
   },
   "devDependencies": {
     "@types/node": "^24.19.1",
-    "concurrently": "^10.0.5"
+    "concurrently": "^10.0.5",
+    "knip": "^6.41.0"
   },
   "allowScripts": {
     "bcrypt@6.0.0": true,
