@@ -1,4 +1,3 @@
-import type { Config } from '@echo/utilities'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { RenderHookResult } from '@testing-library/react'
 import { renderHook } from '@testing-library/react'
@@ -7,12 +6,13 @@ import axios from 'axios'
 import { ApiContext } from '../initializers/api/ApiContext'
 import { queryClient } from '../initializers/api/queryClient'
 import { ConfigContext } from '../initializers/config/ConfigContext'
+import type { FrontConfig } from '../shared/config/frontConfig'
 
 import { testConfig } from './utils/config'
 
 export const renderAppHook = <Result,>(
   hook: () => Result,
-  params?: { configOverride?: Config }
+  params?: { configOverride?: FrontConfig }
 ): RenderHookResult<Result, void> => {
   queryClient.setDefaultOptions({
     queries: {

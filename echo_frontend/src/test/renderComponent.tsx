@@ -1,4 +1,3 @@
-import type { Config } from '@echo/utilities'
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
@@ -16,6 +15,7 @@ import {
   configPageTestId,
   ConfigProvider
 } from '../initializers/config/ConfigProvider.tsx'
+import type { FrontConfig } from '../shared/config/frontConfig.ts'
 import { theme } from '../shared/theme'
 
 import { testConfig } from './utils/config.ts'
@@ -23,7 +23,7 @@ import { testUrl } from './utils/url.ts'
 
 export const renderComponent = async (
   child: React.ReactElement,
-  params?: { configOverride?: Config }
+  params?: { configOverride?: FrontConfig }
 ): Promise<RenderResult> => {
   queryClient.setDefaultOptions({
     queries: {

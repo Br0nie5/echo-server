@@ -1,7 +1,7 @@
-import { parseConfig } from '@echo/utilities'
 import { Box } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 
+import { parseFrontConfig } from '../../shared/config/utils/parseFrontConfig'
 import { ErrorLayout } from '../../shared/layouts/ErrorLayout'
 import { LoadingLayout } from '../../shared/layouts/LoadingLayout'
 import { PageLayout } from '../../shared/layouts/PageLayout'
@@ -22,7 +22,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         throw new Error(`Failed to load config: ${response.status}`)
       }
       const rawConfig = await response.json()
-      return parseConfig(rawConfig)
+      return parseFrontConfig(rawConfig)
     },
     staleTime: Infinity, // never refetch
     retry: false

@@ -1,6 +1,6 @@
-import type { Config } from '@echo/utilities'
+import type { FrontConfig } from '../../shared/config/frontConfig'
 
 /** What `ConfigProvider` provides. */
 export interface ConfigContextValue {
-  config: Config
+  config: FrontConfig
 }

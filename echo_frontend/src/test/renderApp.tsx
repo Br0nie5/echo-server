@@ -1,6 +1,7 @@
-import type { Config } from '@echo/utilities'
 import type { RenderResult } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, type Location } from 'react-router-dom'
+
+import type { FrontConfig } from '../shared/config/frontConfig.ts'
 
 import { LocationObserver } from './LocationObserver.tsx'
 import { renderComponent } from './renderComponent.tsx'
@@ -27,7 +28,7 @@ export const renderApp = async (
   testPath: string,
   child: React.ReactElement,
   pathParams?: string,
-  params?: { configOverride?: Config; onLocationChange?: (location: Location) => void }
+  params?: { configOverride?: FrontConfig; onLocationChange?: (location: Location) => void }
 ): Promise<RenderResult> => {
   const config = params?.configOverride ?? testConfig
 

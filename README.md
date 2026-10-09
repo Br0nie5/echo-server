@@ -119,6 +119,8 @@ Container parameters are given as `<external>:<internal>` for ports and volumes.
 | `HTTP_PORT`                           | `4000`                     | Port the server listens on inside the container. |
 | `HAS_AUTHENTICATION`                  | `true`                     | `true` enables login (cookie + JWT). `false` disables auth entirely and exposes logs to anyone who can reach the port. |
 | `LOGS_DIR_PATH`                       | `/watched_logs`            | Directory scanned for `.jsonl` files. Normally left as is and controlled via the volume. |
+| `LOGS_INITIAL_DATE_DAYS_AGO`          | `2`                        | How many days back the logs shown in the UI start by default. A positive integer or zero, at most `LOGS_MINIMAL_DATE_DAYS_AGO`. |
+| `LOGS_MINIMAL_DATE_DAYS_AGO`          | `14`                       | How many days back the start date of the logs can be set in the UI at most. A positive integer or zero. |
 | `LOGS_NOTIFIER_SCHEDULE_REGEX`        | `*/30 * * * *`             | Cron expression for the Telegram check. |
 | `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` | `ERROR,WARNING`            | Comma-separated categories that trigger a notification. Valid values: `SUCCESS`, `INFO`, `WARNING`, `ERROR`. |
 | `TELEGRAM_CHAT_ID`                    | _(empty)_                  | Telegram chat that receives notifications. |

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `LOGS_INITIAL_DATE_DAYS_AGO` (default `2`) and `LOGS_MINIMAL_DATE_DAYS_AGO` (default `14`) set how many days back the logs start by default in the UI, and how far back their start date can be set.
+
 ### Changed
 
 - **Breaking:** the environment variables of the Telegram notifications are renamed. Update the environment of your container:

@@ -12,9 +12,6 @@ import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
 import type { ControlledState } from '../../../../shared/types/controlledState'
 import { getDateFromDaysAgo } from '../../../../shared/utils/getDateFromDaysAgo'
 
-/** How many days back the logs can start at most. */
-const LOGS_MINIMAL_DAYS_AGO = 14
-
 type LogsScreenHeaderProps = {
   logsFromDateState: ControlledState<Date>
   availableLogCategories: LogCategory[] | undefined
@@ -28,7 +25,7 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
   logCategoriesFiltersState,
   logSearchState
 }) => {
-  const { SERVER_NAME } = useConfig()
+  const { SERVER_NAME, LOGS_MINIMAL_DATE_DAYS_AGO } = useConfig()
 
   const translation = useAppTranslation()
   const { isSmallScreen } = useWindowSize()
@@ -43,7 +40,7 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
       >
         <DateSelector
           label={translation('logs.from')}
-          minimalDate={getDateFromDaysAgo(LOGS_MINIMAL_DAYS_AGO)}
+          minimalDate={getDateFromDaysAgo(LOGS_MINIMAL_DATE_DAYS_AGO)}
           maximalDate={getDateFromDaysAgo(0)}
           controlledState={logsFromDateState}
         />
@@ -81,5 +78,5 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
   )
 }
 
-/** Header of the logs page: the start date picker (limited to the last 14 days), the server name and, once categories are available, the category chips and the search bar. */
+/** Header of the logs page: the start date picker (limited to the last `LOGS_MINIMAL_DATE_DAYS_AGO` days of the config), the server name and, once categories are available, the category chips and the search bar. */
 export const LogsScreenHeader = memo(LogsScreenHeaderComponent)

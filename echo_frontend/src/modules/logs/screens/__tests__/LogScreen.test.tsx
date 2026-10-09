@@ -16,7 +16,6 @@ import { expectDateToBeSelected, getDateSection } from '../../../../test/utils/d
 import { resizeWindow } from '../../../../test/utils/resizeWindow'
 import { testUrl } from '../../../../test/utils/url'
 import { getGetLogsQueryKey } from '../../infra/getLogsQueryKey'
-import { LOGS_INITIAL_DAYS_AGO } from '../hooks/useLogsFilters'
 import { LogsScreen } from '../LogsScreen'
 
 import { getLogsMock } from './logs.mock'
@@ -116,7 +115,8 @@ const renderLogsScreen = async (
   params?: RenderLogsScreenParams
 ): Promise<RenderResult> => {
   const fromDate =
-    params?.logsInitialDateOverride ?? getDateFromDaysAgo(LOGS_INITIAL_DAYS_AGO).toISOString()
+    params?.logsInitialDateOverride ??
+    getDateFromDaysAgo(testConfig.LOGS_INITIAL_DATE_DAYS_AGO).toISOString()
 
   let textToFind: string
 
@@ -203,7 +203,7 @@ describe('LogsScreen', () => {
       })
 
       test('Should directly filter all the logs older that fromDate if it is present as a query parameter', async () => {
-        const lastLogsSeenDate = getDateFromDaysAgo(LOGS_INITIAL_DAYS_AGO)
+        const lastLogsSeenDate = getDateFromDaysAgo(testConfig.LOGS_INITIAL_DATE_DAYS_AGO)
 
         const newLogsFromDate = new Date(lastLogsSeenDate.getTime() + 1 * 24 * 60 * 60 * 1000)
 
@@ -223,7 +223,7 @@ describe('LogsScreen', () => {
       })
 
       test('Should replace the wrong values of the query parameters and display the logs', async () => {
-        const defaultLogsFromDate = getDateFromDaysAgo(LOGS_INITIAL_DAYS_AGO)
+        const defaultLogsFromDate = getDateFromDaysAgo(testConfig.LOGS_INITIAL_DATE_DAYS_AGO)
         const wrongLogCategory = 'WRONG_CATEGORY'
         const wrongQueryParameters =
           '?fromDate=not-a-date' + `&logCategories=${wrongLogCategory}` + '&logCategories=WARNING'
@@ -322,7 +322,7 @@ describe('LogsScreen', () => {
 
         const screen = await renderLogsScreen({ status: 'success' })
 
-        const lastLogsSeenDate = getDateFromDaysAgo(LOGS_INITIAL_DAYS_AGO)
+        const lastLogsSeenDate = getDateFromDaysAgo(testConfig.LOGS_INITIAL_DATE_DAYS_AGO)
 
         expect(
           screen.getByText(
@@ -375,7 +375,7 @@ describe('LogsScreen', () => {
       const refetchButton = screen.getByText(appTranslation('query.refetchButton'))
 
       buildLogsSuccessRequestMock({
-        fromDate: getDateFromDaysAgo(LOGS_INITIAL_DAYS_AGO).toISOString()
+        fromDate: getDateFromDaysAgo(testConfig.LOGS_INITIAL_DATE_DAYS_AGO).toISOString()
       })
 
       await user.click(refetchButton)

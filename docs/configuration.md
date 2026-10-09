@@ -61,7 +61,12 @@ Other flags are fixed: `httpOnly`, `sameSite=lax`, `path=/`, max age 24 hours. B
 
 ## Frontend runtime configuration
 
-The built frontend does not embed configuration. It fetches `env.<mode>.json` at load. In Docker, the entrypoint writes `echo_frontend/dist/env.production.json` from the container environment at every start, so one image serves any deployment. In dev, the files in `echo_frontend/public/` are used.
+The built frontend does not embed configuration. It fetches `env.<mode>.json` at load, and [parseFrontConfig.ts](../echo_frontend/src/shared/config/utils/parseFrontConfig.ts) builds the `FrontConfig` ([frontConfig.ts](../echo_frontend/src/shared/config/frontConfig.ts)) from it: the common variables above, plus the frontend-only ones below. The app shows an error page if one of them is missing or invalid. In Docker, the entrypoint writes `echo_frontend/dist/env.production.json` from the container environment at every start, so one image serves any deployment. In dev, the files in `echo_frontend/public/` are used.
+
+| Variable | Required | Description |
+| -------- | :------: | ----------- |
+| `LOGS_INITIAL_DATE_DAYS_AGO` | yes | How many days back the logs start when the URL gives no `fromDate`. A positive integer or zero, at most `LOGS_MINIMAL_DATE_DAYS_AGO`. The Docker entrypoint defaults it to `2`. |
+| `LOGS_MINIMAL_DATE_DAYS_AGO` | yes | How many days back the start date of the logs can be set at most. A positive integer or zero. The Docker entrypoint defaults it to `14`. |
 
 ## Time zone
 
