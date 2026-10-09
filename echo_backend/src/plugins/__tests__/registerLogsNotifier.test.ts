@@ -14,7 +14,8 @@ import {
   getMockBackConfig,
   getMockLogsConfig,
   getMockLogsNotifierConfig,
-  getMockNotificationConfig
+  getMockNotificationConfig,
+  getMockSelfReportsConfig
 } from '../../test/mocks/configs.js'
 import { registerLogsNotifier } from '../registerLogsNotifier.js'
 import { getSelfReportRepository as actualGetSelfReportRepository } from '../utils/getSelfReportRepository.js'
@@ -72,7 +73,10 @@ describe('registerLogsNotifier', () => {
       server,
       logsFilesApi,
       config.selfReports,
-      config.selfReports.logsNotifierSelfReportFileName
+      expect.any(Function)
+    )
+    expect(getSelfReportRepository.mock.calls[0][3](getMockSelfReportsConfig())).toBe(
+      getMockSelfReportsConfig().logsNotifierSelfReportFileName
     )
     const pluginOptions = register.mock.calls[0][1] as LogsNotifierPluginOptions
     expect(pluginOptions.logsNotifierConfig).toBe(logsNotifierConfig)

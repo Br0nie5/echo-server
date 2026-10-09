@@ -73,10 +73,8 @@ services:
       # - SELF_REPORTS_RETENTION_DAYS=10
     volumes:
       - /path/to/your/logs:/watched_logs:ro
-      # Required if SELF_REPORTS_ENABLED=true: a writable sub-mount, the rest of /watched_logs stays read-only.
-      # Docker mounts nested inside a read-only mount need their mount point to already exist in the
-      # read-only source, so first run: mkdir -p /path/to/your/logs/server
-      # - /path/to/echo/self-reports:/watched_logs/server
+      # Needed if SELF_REPORTS_ENABLED=true: a writable volume of its own, so /watched_logs stays read-only.
+      # - /path/to/echo/server-logs:/server_logs
       - /path/to/echo/data:/app/data
     ports:
       - 4000:4000
@@ -98,7 +96,7 @@ docker run -d \
   ghcr.io/br0nie5/echo:latest
 ```
 
-If you enable `SELF_REPORTS_ENABLED` (see below), also add `-e SELF_REPORTS_ENABLED=true` and a writable sub-mount: `-v /path/to/echo/self-reports:/watched_logs/server`. First run `mkdir -p /path/to/your/logs/server` on the host — Docker can't create a mount point nested inside an already-read-only mount, so that directory must exist in the read-only source before the container starts, or it will fail with a "read-only file system" error.
+If you enable `SELF_REPORTS_ENABLED` (see below), also add `-e SELF_REPORTS_ENABLED=true` and a writable volume of its own: `-v /path/to/echo/server-logs:/server_logs`.
 
 ## Parameters
 
@@ -128,7 +126,8 @@ Container parameters are given as `<external>:<internal>` for ports and volumes.
 | `LOGS_NOTIFIER_TIMEZONE`              | `UTC`                      | Timezone the dates of Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`, follows daylight saving). An unknown value stops the server at startup. |
 | `TLS_CERT_PATH`                       | _(empty)_                  | Path (inside the container) to a PEM certificate. Set with `TLS_KEY_PATH` to serve HTTPS. |
 | `TLS_KEY_PATH`                        | _(empty)_                  | Path (inside the container) to the PEM private key. |
-| `SELF_REPORTS_ENABLED`                | `false`                    | When `true`, `.jsonl` lines the backend fails to parse are written to `/watched_logs/server/<SERVER_NAME>/log/parseLogFile.jsonl`, so they show up in the UI like any other log. Requires a writable sub-mount, see Volumes below. |
+| `SELF_REPORTS_ENABLED`                | `false`                    | When `true`, `.jsonl` lines the backend fails to parse are written to `/server_logs/self_reports/<SERVER_NAME>/log/parseLogFile.jsonl`, and `/server_logs` is scanned too, so they show up in the UI like any other log. Requires a writable volume, see Volumes below. |
+| `SERVER_LOGS_DIR_PATH`                | `/server_logs`             | Directory the backend writes its own logs under: the self reports, in its `self_reports` subdirectory. Scanned for `.jsonl` files next to `LOGS_DIR_PATH` when `SELF_REPORTS_ENABLED=true`, and unused otherwise. Normally left as is and controlled via the volume. Keep it outside `LOGS_DIR_PATH`, otherwise its files are scanned twice. |
 | `SELF_REPORTS_RETENTION_DAYS`         | `10`                       | Self-report lines older than this many days are pruned once at each server start. |
 
 The Telegram job only starts when `LOGS_NOTIFIER_SCHEDULE_REGEX`, `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES`, `TELEGRAM_CHAT_ID` and `TELEGRAM_BASE_URL` are all set and valid. Otherwise it is silently disabled.
@@ -138,7 +137,7 @@ The Telegram job only starts when `LOGS_NOTIFIER_SCHEDULE_REGEX`, `LOGS_NOTIFIER
 | Parameter        | Function |
 | ---------------- | -------- |
 | `/watched_logs`  | The directory containing your `.jsonl` logs (subdirectories are scanned). Read-only (`:ro`) is enough. |
-| `/watched_logs/server` | Optional, only needed when `SELF_REPORTS_ENABLED=true`: a writable sub-mount for the backend's own self reports, so the rest of `/watched_logs` can stay read-only. Docker needs its mount point to already exist in the read-only source, so first create a `server` directory inside whatever host directory you mount at `/watched_logs` (e.g. `mkdir -p /path/to/your/logs/server`) before starting the container. |
+| `/server_logs`   | Optional, only needed when `SELF_REPORTS_ENABLED=true`: a writable volume for the backend's own self reports, apart from `/watched_logs`, which can stay read-only. Without it, the self reports are lost when the container is recreated. |
 | `/app/data`      | Persistent state: `users.db` (SQLite, hashed passwords) and `last_logs_check.json` (Telegram checkpoint). Without this volume, the admin account is lost when the container is recreated. |
 
 ## Log file format
@@ -171,7 +170,7 @@ The file name (without its extension) is shown as the log source.
 
 ## Self reports
 
-Set `SELF_REPORTS_ENABLED=true` to have the backend report the `.jsonl` lines it fails to parse as regular log entries, so they show up in the UI instead of only in the container's own logs. Each failing line becomes a `WARNING` entry in group `<SERVER_NAME>`, source `parseLogFile`, at `/watched_logs/server/<SERVER_NAME>/log/parseLogFile.jsonl`. This needs a writable sub-mount (see Volumes above, including the one-time `mkdir -p .../server` step) since `/watched_logs` is otherwise recommended read-only. All entries written during one server run share the same `job_id`; entries older than `SELF_REPORTS_RETENTION_DAYS` (default `10`) are pruned once at each start.
+Set `SELF_REPORTS_ENABLED=true` to have the backend report the `.jsonl` lines it fails to parse as regular log entries, so they show up in the UI instead of only in the container's own logs. Each failing line becomes a `WARNING` entry in group `<SERVER_NAME>`, source `parseLogFile`, at `/server_logs/self_reports/<SERVER_NAME>/log/parseLogFile.jsonl` (under `SERVER_LOGS_DIR_PATH`, which is scanned along with `/watched_logs`). This needs a writable volume of its own (see Volumes above), so `/watched_logs` can stay read-only. All entries written during one server run share the same `job_id`; entries older than `SELF_REPORTS_RETENTION_DAYS` (default `10`) are pruned once at each start.
 
 Since every request re-scans and re-parses all `.jsonl` files, a line that still fails to parse is reported again on every request. It is not written a second time: each entry's `call_file` is the name of the log file the failing line comes from, and its `call_line` is that line's position (1-based, among the non-blank lines of that file), and reporting a failure that already has an entry with the same `call_file`, `call_line` and message only brings the `timestamp` of that entry up to now. So the entry of a problem that is still there always has a recent date, and the entry of a problem you fixed keeps the date it was last seen at, until `SELF_REPORTS_RETENTION_DAYS` prunes it at a later start. A line of a self-report file that fails to parse is reported the same way, with `call_file` set to `parseLogFile`, and is then removed from that file the next time it is written or at the next start.
 

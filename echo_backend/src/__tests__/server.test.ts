@@ -38,6 +38,7 @@ import {
   getMockLogsConfig,
   getMockLogsNotifierConfig,
   getMockNotificationConfig,
+  getMockSelfReportsConfig,
   getMockServerConfig
 } from '../test/mocks/configs.js'
 
@@ -93,7 +94,10 @@ describe('server', () => {
         server,
         expect.anything(),
         config.selfReports,
-        config.selfReports.parseLogFileSelfReportFileName
+        expect.any(Function)
+      )
+      expect(getSelfReportRepository.mock.calls[0][3](getMockSelfReportsConfig())).toBe(
+        getMockSelfReportsConfig().parseLogFileSelfReportFileName
       )
       expect(registerAuthRoutes).toHaveBeenCalledExactlyOnceWith(server, config)
       expect(registerLogsRoutes).toHaveBeenCalledExactlyOnceWith(server, config, expect.anything())

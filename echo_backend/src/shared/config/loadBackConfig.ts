@@ -40,7 +40,9 @@ const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
  * variable that is missing or invalid, so a misconfigured server never starts. The notifications
  * and the cron notifying the problem logs are the exception: each is left out of the config, hence
  * disabled, when one of its required variables is, and the cron is left out too when the
- * notifications are, since it would have no channel to notify through.
+ * notifications are, since it would have no channel to notify through. The self reports are left
+ * out unless `SELF_REPORTS_ENABLED` is `true`: they are then stored under `SERVER_LOGS_DIR_PATH`,
+ * which is always required, and the logs are read from it too, next to `LOGS_DIR_PATH`.
  *
  * It is meant to be called once, when the server starts, the config then being handed down:
  *
@@ -55,8 +57,16 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
   dotenv.config({ path: `.env.${mode}`, processEnv, override: false, quiet: true })
 
   const config = parseConfig({ ...processEnv })
+
   const allowedDomain = parseAllowedDomain(config.SERVER_URL)
+
   const logsDirPath = requireEnv(processEnv, 'LOGS_DIR_PATH')
+  const serverLogsRootDirPath = requireEnv(processEnv, 'SERVER_LOGS_DIR_PATH')
+
+  const areSelfReportsEnabled = addEnvNameToError('SELF_REPORTS_ENABLED', () =>
+    parseOptionalBoolean(processEnv.SELF_REPORTS_ENABLED)
+  )
+
   const notification = parseNotificationConfig(processEnv, {
     telegramMessageSizeLimit: TELEGRAM_MESSAGE_SIZE_LIMIT
   })
@@ -82,7 +92,7 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
       usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')
     },
     logs: {
-      logsDirPath,
+      logsDirsPaths: areSelfReportsEnabled ? [logsDirPath, serverLogsRootDirPath] : [logsDirPath],
       logFileExtension: LOG_FILE_EXTENSION,
       logsNotifier:
         notification &&
@@ -91,18 +101,17 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
           lastLogsCheckFilePath: path.join(DATA_DIR_PATH, 'last_logs_check.json')
         })
     },
-    selfReports: {
-      isEnabled: addEnvNameToError('SELF_REPORTS_ENABLED', () =>
-        parseOptionalBoolean(processEnv.SELF_REPORTS_ENABLED)
-      ),
-      retentionDays: addEnvNameToError('SELF_REPORTS_RETENTION_DAYS', () =>
-        parseDaysNumber(processEnv.SELF_REPORTS_RETENTION_DAYS, 10)
-      ),
-      selfReportsDirPath: createSelfReportsDirPath(logsDirPath, config.SERVER_NAME),
-      parseLogFileSelfReportFileName: `parseLogFile${LOG_FILE_EXTENSION}`,
-      logsNotifierSelfReportFileName: `logsNotifier${LOG_FILE_EXTENSION}`,
-      sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')
-    },
+    selfReports: areSelfReportsEnabled
+      ? {
+          retentionDays: addEnvNameToError('SELF_REPORTS_RETENTION_DAYS', () =>
+            parseDaysNumber(processEnv.SELF_REPORTS_RETENTION_DAYS, 10)
+          ),
+          selfReportsDirPath: createSelfReportsDirPath(serverLogsRootDirPath, config.SERVER_NAME),
+          parseLogFileSelfReportFileName: `parseLogFile${LOG_FILE_EXTENSION}`,
+          logsNotifierSelfReportFileName: `logsNotifier${LOG_FILE_EXTENSION}`,
+          sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')
+        }
+      : undefined,
     notification
   }
 }

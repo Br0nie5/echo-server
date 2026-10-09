@@ -6,19 +6,34 @@ import { createSelfFileReportRepository } from '../../modules/selfReport/infra/s
 import type { SelfReportsConfig } from '../../shared/config/backConfig.js'
 import type { EchoServer } from '../types/echoServer.js'
 
-/** The repository storing its self reports in the file named `selfReportFileName`, through `logsFilesApi`, or storing nothing when the self reports are disabled. */
+/**
+ * Gives the repository a part of the backend stores its self reports in.
+ *
+ * It stores them through `logsFilesApi`, in the file of `selfReportsConfig` that
+ * `getSelfReportFileName` picks. Without a `selfReportsConfig`, the self reports are disabled, and
+ * it stores nothing:
+ *
+ * ```ts
+ * const selfReportRepository = await getSelfReportRepository(
+ *   server,
+ *   logsFilesApi,
+ *   config.selfReports,
+ *   ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName
+ * )
+ * ```
+ */
 export const getSelfReportRepository = (
   server: EchoServer,
   logsFilesApi: LogsFilesApi,
-  selfReportsConfig: SelfReportsConfig,
-  selfReportFileName: string
+  selfReportsConfig: SelfReportsConfig | undefined,
+  getSelfReportFileName: (selfReportsConfig: SelfReportsConfig) => string
 ): Promise<SelfReportRepository> | SelfReportRepository =>
-  selfReportsConfig.isEnabled
+  selfReportsConfig !== undefined
     ? createSelfFileReportRepository({
         logsFilesApi,
         sessionJobIdApi: createFileSessionJobIdApi(selfReportsConfig),
         selfReportsConfig,
-        selfReportFileName,
+        selfReportFileName: getSelfReportFileName(selfReportsConfig),
         logger: server.log
       })
     : createNoopSelfReportRepository()

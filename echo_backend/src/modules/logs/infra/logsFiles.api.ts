@@ -14,11 +14,12 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
 /** Access to the log files, the data source the logs are stored in. */
 export interface LogsFilesApi {
   /**
-   * Every log file of the logs directory, at any depth.
+   * Every log file of the logs directories, at any depth, one directory after the other.
    *
    * The name of a log file is the name of the file without its extension. Its group is made of the
-   * directories between the first one under the logs directory and the file, joined with `_` (a
-   * `log` directory is skipped), and is `undefined` when there is none.
+   * directories between the first one under its logs directory and the file, joined with `_` (a
+   * `log` directory is skipped), and is `undefined` when there is none. Throws when one of the
+   * logs directories cannot be read.
    */
   getAllLogFiles: () => Promise<LogFileDto[]>
   /**
@@ -72,17 +73,17 @@ export type FileSystem = Pick<
 /**
  * Builds the access to the log files, on top of `fileSystem` (the real file system by default).
  *
- * The log files it lists are the files of `logsDirPath` whose name ends with `logFileExtension`.
- * The ones it writes are given by their path:
+ * The log files it lists are the files of each directory of `logsDirsPaths` whose name ends with
+ * `logFileExtension`. The ones it writes are given by their path:
  *
  * ```ts
  * const logsFilesApi = createLogsFilesApi(config.logs)
  * const logFiles = await logsFilesApi.getAllLogFiles()
- * await logsFilesApi.appendLogFileLines('/logs/server/Echo/log/parseLogFile.jsonl', [rawJsonLogLine])
+ * await logsFilesApi.appendLogFileLines('/server_logs/self_reports/Echo/log/parseLogFile.jsonl', [rawJsonLogLine])
  * ```
  */
 export const createLogsFilesApi = (
-  { logsDirPath, logFileExtension }: LogsConfig,
+  { logsDirsPaths, logFileExtension }: LogsConfig,
   fileSystem: FileSystem = nodeFs
 ): LogsFilesApi => {
   const getAllFilesPaths = async (directory: string): Promise<string[]> => {
@@ -103,10 +104,7 @@ export const createLogsFilesApi = (
     return filesPathsByEntry.flat()
   }
 
-  const getAllLogFilesPaths = async (): Promise<string[]> =>
-    (await getAllFilesPaths(logsDirPath)).filter((filePath) => filePath.endsWith(logFileExtension))
-
-  const getLogFile = (filePath: string): LogFileDto => {
+  const getLogFile = (filePath: string, logsDirPath: string): LogFileDto => {
     const directoriesLinkedName = filePath
       .replace(`${logsDirPath}/`, '')
       .split('/')
@@ -173,9 +171,14 @@ export const createLogsFilesApi = (
     }
   }
 
+  const getAllDirLogFiles = async (logsDirPath: string): Promise<LogFileDto[]> =>
+    (await getAllFilesPaths(logsDirPath))
+      .filter((filePath) => filePath.endsWith(logFileExtension))
+      .map((filePath) => getLogFile(filePath, logsDirPath))
+
   return {
     getAllLogFiles: async (): Promise<LogFileDto[]> =>
-      (await getAllLogFilesPaths()).map(getLogFile),
+      (await Promise.all(logsDirsPaths.map(getAllDirLogFiles))).flat(),
 
     getRawLogLines: async (logFile): Promise<RawLogLineDto[]> =>
       (await getFileLines(logFile.path)).map((content, index) => ({ logFile, index, content })),

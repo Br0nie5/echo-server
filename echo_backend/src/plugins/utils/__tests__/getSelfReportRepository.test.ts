@@ -34,14 +34,16 @@ describe('getSelfReportRepository', () => {
     createNoopSelfReportRepository.mockReturnValue(noopSelfReportRepository)
   })
 
-  it('should give the repository storing in the given file when the self reports are enabled', async () => {
-    const selfReportsConfig = getMockSelfReportsConfig({ isEnabled: true })
+  it('should give the repository storing in the picked file when there is a self reports config', async () => {
+    const selfReportsConfig = getMockSelfReportsConfig({
+      parseLogFileSelfReportFileName: 'parseLogFile.jsonl'
+    })
 
     const selfReportRepository = await getSelfReportRepository(
       server,
       logsFilesApi,
       selfReportsConfig,
-      'parseLogFile.jsonl'
+      ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName
     )
 
     expect(selfReportRepository).toBe(selfFileReportRepository)
@@ -55,12 +57,12 @@ describe('getSelfReportRepository', () => {
     })
   })
 
-  it('should give a repository storing nothing when the self reports are disabled', async () => {
+  it('should give a repository storing nothing when there is no self reports config', async () => {
     const selfReportRepository = await getSelfReportRepository(
       server,
       logsFilesApi,
-      getMockSelfReportsConfig({ isEnabled: false }),
-      'parseLogFile.jsonl'
+      undefined,
+      ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName
     )
 
     expect(selfReportRepository).toBe(noopSelfReportRepository)

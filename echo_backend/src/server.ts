@@ -53,7 +53,7 @@ export const buildServer = async (config: BackConfig = loadBackConfig()): Promis
       server,
       logsFilesApi,
       config.selfReports,
-      config.selfReports.parseLogFileSelfReportFileName
+      ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName
     )
   )
 

@@ -30,7 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `SELF_LOGS_ENABLED` | `SELF_REPORTS_ENABLED` |
   | `SELF_LOGS_RETENTION_DAYS` | `SELF_REPORTS_RETENTION_DAYS` |
 
-- The file remembering the last `job_id` of the self reports is renamed from `data/self_logs_session.json` to `data/self_reports_session.json`. Rename it in your `data/` volume to keep the `job_id` going on from the last one, otherwise it starts again at `1`. The self reports themselves are still stored in `/watched_logs/server/<SERVER_NAME>/log`, in the same format.
+- **Breaking:** the self reports are no longer stored inside the watched logs, in `/watched_logs/server/<SERVER_NAME>/log`, but in a directory of their own, `/server_logs/self_reports/<SERVER_NAME>/log` (under `SERVER_LOGS_DIR_PATH`, default `/server_logs`), which is scanned along with `/watched_logs` when `SELF_REPORTS_ENABLED=true`. Replace the `/watched_logs/server` sub-mount with a writable `/server_logs` volume (to keep the existing self reports, move the content of the former host directory into a `self_reports` directory of the new one); the `server` directory created in your logs for that sub-mount is no longer needed.
+
+- The file remembering the last `job_id` of the self reports is renamed from `data/self_logs_session.json` to `data/self_reports_session.json`. Rename it in your `data/` volume to keep the `job_id` going on from the last one, otherwise it starts again at `1`. The format of the self reports themselves does not change.
 
 ## [1.2.0] - 2026-09-23
 

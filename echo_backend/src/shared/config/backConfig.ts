@@ -45,11 +45,9 @@ export type AuthConfig = {
 
 /** What the backend needs to store the diagnostics it reports about itself. */
 export type SelfReportsConfig = {
-  /** Whether the self reports are stored (`SELF_REPORTS_ENABLED`). */
-  isEnabled: boolean
   /** Number of days a stored self report is kept (`SELF_REPORTS_RETENTION_DAYS`). */
   retentionDays: number
-  /** Directory holding the self-report files, inside the logs directory so they are read back like any other log. */
+  /** Directory holding the self-report files, inside `SERVER_LOGS_DIR_PATH`, which the logs are read from too, so they are read back like any other log. */
   selfReportsDirPath: string
   /** Name of the self-report file the lines of the log files that hold no log are reported to, with its extension. */
   parseLogFileSelfReportFileName: string
@@ -75,9 +73,12 @@ export type LogsNotifierConfig = {
 
 /** What reading the logs needs, with the settings of the features built on top of them. */
 export type LogsConfig = {
-  /** Directory the log files are read from, at any depth (`LOGS_DIR_PATH`). */
-  logsDirPath: string
-  /** Extension, with its dot, a file of the logs directory must have to be read as a log file. */
+  /**
+   * Directories the log files are read from, at any depth: the watched one (`LOGS_DIR_PATH`), then
+   * the one the self reports are stored under (`SERVER_LOGS_DIR_PATH`) when they are enabled.
+   */
+  logsDirsPaths: string[]
+  /** Extension, with its dot, a file of a logs directory must have to be read as a log file. */
   logFileExtension: string
   /**
    * Missing when the cron notifying the problem logs is not configured, or when there is no
@@ -116,7 +117,8 @@ export type BackConfig = {
   server: ServerConfig
   auth: AuthConfig
   logs: LogsConfig
-  selfReports: SelfReportsConfig
+  /** Missing when the self reports are disabled (`SELF_REPORTS_ENABLED`): the backend then stores none. */
+  selfReports?: SelfReportsConfig
   /** Missing when Telegram is not configured: the backend then has no channel to notify through. */
   notification?: NotificationConfig
 }

@@ -36,9 +36,8 @@ export const getMockAuthConfig = (overrides: Partial<AuthConfig> = {}): AuthConf
 export const getMockSelfReportsConfig = (
   overrides: Partial<SelfReportsConfig> = {}
 ): SelfReportsConfig => ({
-  isEnabled: true,
   retentionDays: 10,
-  selfReportsDirPath: '/logs/server/Echo/log',
+  selfReportsDirPath: '/server_logs/self_reports/Echo/log',
   parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
   logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
   sessionFilePath: '/fake/data/self_reports_session.json',
@@ -69,14 +68,14 @@ export const getMockNotificationConfig = (
 
 /** A `LogsConfig` without logs notifier for the tests, with `overrides` on top of its defaults. */
 export const getMockLogsConfig = (overrides: Partial<LogsConfig> = {}): LogsConfig => ({
-  logsDirPath: '/logs',
+  logsDirsPaths: ['/logs'],
   logFileExtension: '.jsonl',
   ...overrides
 })
 
 /**
  * A `BackConfig` for the tests, made of the default mock of each of its parts, with `overrides` on
- * top: it has no logs notifier and no notification unless they are given.
+ * top: it has self reports, and no logs notifier and no notification unless they are given.
  */
 export const getMockBackConfig = (overrides: Partial<BackConfig> = {}): BackConfig => ({
   server: getMockServerConfig(),

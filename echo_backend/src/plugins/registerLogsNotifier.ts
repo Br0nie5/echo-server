@@ -38,7 +38,7 @@ export const registerLogsNotifier = async (
       server,
       logsFilesApi,
       selfReportsConfig,
-      selfReportsConfig.logsNotifierSelfReportFileName
+      ({ logsNotifierSelfReportFileName }) => logsNotifierSelfReportFileName
     )
   })
 }

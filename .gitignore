@@ -3,8 +3,8 @@
 # dev env logs
 /test_logs
 
-# dev self reports (see start:docker)
-/self_reports
+# dev server logs, holding the self reports (see start:docker)
+/server_logs
 
 # dev database
 /data

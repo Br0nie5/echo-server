@@ -22,7 +22,8 @@ const REQUIRED_ENV: NodeJS.ProcessEnv = {
   SERVER_URL: 'http://localhost:5173',
   HAS_AUTHENTICATION: 'false',
   HTTP_PORT: '4000',
-  LOGS_DIR_PATH: '/some/path'
+  LOGS_DIR_PATH: '/some/path',
+  SERVER_LOGS_DIR_PATH: '/server/logs/path'
 }
 
 /** Makes `dotenv` load `variables` when it is asked for the env file found at `envFilePath`, and nothing for any other file. */
@@ -85,10 +86,17 @@ describe('loadBackConfig', () => {
     { variable: 'HAS_AUTHENTICATION', value: 'maybe' },
     { variable: 'HTTP_PORT', value: 'not-a-number' },
     { variable: 'LOGS_DIR_PATH', value: '' },
+    { variable: 'SERVER_LOGS_DIR_PATH', value: '' },
     { variable: 'SELF_REPORTS_ENABLED', value: 'maybe' },
     { variable: 'SELF_REPORTS_RETENTION_DAYS', value: '0' }
   ])('should throw when the parser of $variable throws on "$value"', ({ variable, value }) => {
-    expect(() => loadBackConfig({ ...REQUIRED_ENV, [variable]: value })).toThrow()
+    expect(() =>
+      loadBackConfig({
+        ...REQUIRED_ENV,
+        SELF_REPORTS_ENABLED: 'true',
+        [variable]: value
+      })
+    ).toThrow()
   })
 
   it('should build the whole config, with its defaults, from the required variables alone', () => {
@@ -120,18 +128,11 @@ describe('loadBackConfig', () => {
         usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')
       },
       logs: {
-        logsDirPath: '/some/path',
+        logsDirsPaths: ['/some/path'],
         logFileExtension: '.jsonl',
         logsNotifier: undefined
       },
-      selfReports: {
-        isEnabled: false,
-        retentionDays: 10,
-        selfReportsDirPath: '/some/path/server/Echo/log',
-        parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
-        logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
-        sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')
-      },
+      selfReports: undefined,
       notification: undefined
     })
   })
@@ -147,6 +148,7 @@ describe('loadBackConfig', () => {
       TLS_CERT_PATH: TEST_CERT_PATH,
       TLS_KEY_PATH: TEST_KEY_PATH,
       SELF_REPORTS_ENABLED: 'true',
+      SERVER_LOGS_DIR_PATH: '/server_logs',
       SELF_REPORTS_RETENTION_DAYS: '30',
       LOGS_NOTIFIER_SCHEDULE_REGEX: '*/30 * * * *',
       LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: 'WARNING,ERROR',
@@ -186,7 +188,7 @@ describe('loadBackConfig', () => {
         usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')
       },
       logs: {
-        logsDirPath: '/watched_logs',
+        logsDirsPaths: ['/watched_logs', '/server_logs'],
         logFileExtension: '.jsonl',
         logsNotifier: {
           schedule: '*/30 * * * *',
@@ -197,9 +199,8 @@ describe('loadBackConfig', () => {
         }
       },
       selfReports: {
-        isEnabled: true,
         retentionDays: 30,
-        selfReportsDirPath: '/watched_logs/server/Docker Prod/log',
+        selfReportsDirPath: '/server_logs/self_reports/Docker Prod/log',
         parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
         logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
         sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')
@@ -210,6 +211,17 @@ describe('loadBackConfig', () => {
         telegramMessageSizeLimit: 4096
       }
     })
+  })
+
+  it('should leave the self reports out when they are disabled, whatever their other variables', () => {
+    const config = loadBackConfig({
+      ...REQUIRED_ENV,
+      SELF_REPORTS_ENABLED: 'false',
+      SELF_REPORTS_RETENTION_DAYS: '0'
+    })
+
+    expect(config.selfReports).toBeUndefined()
+    expect(config.logs.logsDirsPaths).toEqual(['/some/path'])
   })
 
   it('should leave the logs notifier out when there is no notification config', () => {

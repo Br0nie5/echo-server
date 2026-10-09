@@ -7,7 +7,7 @@ import { getMockLogsConfig } from '../../../../test/mocks/configs.js'
 import type { LogFileDto } from '../dto/logFile.dto.js'
 import { createLogsFilesApi, type FileSystem } from '../logsFiles.api.js'
 
-const logsConfig = getMockLogsConfig({ logsDirPath: '/logs', logFileExtension: '.jsonl' })
+const logsConfig = getMockLogsConfig({ logsDirsPaths: ['/logs'], logFileExtension: '.jsonl' })
 
 const entry = (name: string, type: 'file' | 'directory' | 'other'): object => ({
   name,
@@ -112,6 +112,34 @@ describe('LogsFilesApi', () => {
       ])
     })
 
+    it('should list the files of every logs directory, each grouped from its own directory', async () => {
+      const logsFilesApi = createLogsFilesApi(
+        getMockLogsConfig({ logsDirsPaths: ['/logs', '/server_logs'] }),
+        buildFileSystem({
+          directories: {
+            '/logs': [entry('docker', 'directory')],
+            [path.join('/logs', 'docker')]: [entry('utils', 'directory')],
+            [path.join('/logs', 'docker', 'utils')]: [entry('backup.jsonl', 'file')],
+            '/server_logs': [entry('self_reports', 'directory')],
+            [path.join('/server_logs', 'self_reports')]: [entry('Echo', 'directory')],
+            [path.join('/server_logs', 'self_reports', 'Echo')]: [entry('log', 'directory')],
+            [path.join('/server_logs', 'self_reports', 'Echo', 'log')]: [
+              entry('parseLogFile.jsonl', 'file')
+            ]
+          }
+        })
+      )
+
+      expect(await logsFilesApi.getAllLogFiles()).toEqual([
+        { path: '/logs/docker/utils/backup.jsonl', fileName: 'backup', groupName: 'utils' },
+        {
+          path: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
+          fileName: 'parseLogFile',
+          groupName: 'Echo'
+        }
+      ])
+    })
+
     it('should ignore the entries that are neither directories nor files', async () => {
       const logsFilesApi = createLogsFilesApi(
         logsConfig,
@@ -155,7 +183,9 @@ describe('LogsFilesApi', () => {
     })
 
     it('should use the real file system by default', async () => {
-      const logsFilesApi = createLogsFilesApi(getMockLogsConfig({ logsDirPath: '/does/not/exist' }))
+      const logsFilesApi = createLogsFilesApi(
+        getMockLogsConfig({ logsDirsPaths: ['/does/not/exist'] })
+      )
 
       expect(await logsFilesApi.getRawLogLines(logFile('/does/not/exist/file.jsonl'))).toEqual([])
     })
