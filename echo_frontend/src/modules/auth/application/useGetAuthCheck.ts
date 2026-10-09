@@ -9,6 +9,6 @@ export function useGetAuthCheck(): UseQueryResult<AuthCheckResult> {
 
   return useQuery({
     queryKey: ['auth', 'check'],
-    queryFn: () => authRepository.checkAuthentication()
+    queryFn: ({ signal }) => authRepository.checkAuthentication(signal)
   })
 }

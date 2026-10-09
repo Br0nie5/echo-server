@@ -17,8 +17,8 @@ export class InvalidCredentialsError extends Error {
  * The domain only states what it needs: the `infra` folder holds the implementations.
  */
 export interface AuthRepository {
-  /** Asks whether the user is authenticated. Not being so is a regular result (`login` or `signUp`), any other failure is thrown. */
-  checkAuthentication: () => Promise<AuthCheckResult>
+  /** Asks whether the user is authenticated. Aborting `signal` cancels the check. Not being so is a regular result (`login` or `signUp`), any other failure is thrown. */
+  checkAuthentication: (signal?: AbortSignal) => Promise<AuthCheckResult>
   /** Logs the user in. Throws an `InvalidCredentialsError` when the credentials are refused, and the error it got for any other failure. */
   login: (request: LoginRequest) => Promise<void>
   /** Creates the first (admin) account, which logs the user in. Throws when the sign up is refused. */

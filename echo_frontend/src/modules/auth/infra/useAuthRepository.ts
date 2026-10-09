@@ -47,11 +47,12 @@ export const useAuthRepository = (): AuthRepository => {
   }
 
   return {
-    checkAuthentication: async (): Promise<AuthCheckResult> => {
+    checkAuthentication: async (signal?: AbortSignal): Promise<AuthCheckResult> => {
       try {
         const data = await axiosMutator<AuthToken>({
           url: authCheckUrl,
           method: 'GET',
+          signal,
           withCredentials: true
         })
         const parsedData = AuthTokenSchema.safeParse(data)
