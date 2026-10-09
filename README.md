@@ -216,7 +216,7 @@ volumes:
   - /path/to/certs:/certs:ro
 ```
 
-Both variables are required together, and `SERVER_URL` must start with `https://`. HTTPS is only supported in production mode (which the Docker image always uses). If you terminate TLS at a reverse proxy instead, leave these unset.
+Both variables are required together, and `SERVER_URL` must start with `https://`. If you terminate TLS at a reverse proxy instead, leave these unset.
 
 ## Reverse proxy
 

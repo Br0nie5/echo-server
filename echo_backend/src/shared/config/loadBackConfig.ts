@@ -72,7 +72,7 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
       host: '0.0.0.0',
       port: parseHttpPort(requireEnv(processEnv, 'HTTP_PORT')),
       allowedDomain,
-      tls: parseTlsConfig(processEnv, { mode, serverUrl: config.SERVER_URL }),
+      tls: parseTlsConfig(processEnv, { serverUrl: config.SERVER_URL }),
       frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
     },
     auth: {

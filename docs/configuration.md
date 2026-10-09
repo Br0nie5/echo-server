@@ -35,7 +35,7 @@ Parsed by [loadBackConfig.ts](../echo_backend/src/shared/config/loadBackConfig.t
 | --------------- | :------: | ----------- |
 | `HTTP_PORT`     | yes | Integer between 1 and 65535. |
 | `LOGS_DIR_PATH` | yes | Directory scanned for `.jsonl` files. Relative paths resolve from the backend's working directory. |
-| `TLS_CERT_PATH`, `TLS_KEY_PATH` | no | Enable HTTPS. Both or neither; `SERVER_URL` must be `https://`; production mode only. |
+| `TLS_CERT_PATH`, `TLS_KEY_PATH` | no | Enable HTTPS. Both or neither; `SERVER_URL` must be `https://`. |
 | `LOGS_NOTIFIER_SCHEDULE_REGEX` | no* | Cron expression ([node-cron](https://github.com/node-cron/node-cron) syntax). |
 | `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` | no* | Comma-separated subset of `SUCCESS,INFO,WARNING,ERROR`. Invalid entries are dropped. |
 | `TELEGRAM_CHAT_ID` | no* | Telegram chat id. |
