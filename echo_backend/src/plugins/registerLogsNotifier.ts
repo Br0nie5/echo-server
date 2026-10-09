@@ -1,16 +1,30 @@
 import type { LogsRepository } from '../modules/logs/domain/logs.repository.js'
-import type { LogsFilesApi } from '../modules/logs/infra/logsFiles.api.js'
 import { createFileCheckDateApi } from '../modules/logs/modules/logsNotifier/infra/fileCheckDate.api.js'
 import { createFileCheckDateRepository } from '../modules/logs/modules/logsNotifier/infra/fileCheckDate.repository.js'
 import logsNotifier from '../modules/logs/modules/logsNotifier/presentation/logs.notifier.js'
 import { createTelegramNotifierApi } from '../modules/notification/infra/telegramNotifier.api.js'
 import { createTelegramNotifier } from '../modules/notification/infra/telegramNotifier.js'
+import type { SelfReportRepository } from '../modules/selfReport/domain/selfReport.repository.js'
 import type { BackConfig } from '../shared/config/backConfig.js'
 
 import type { EchoServer } from './types/echoServer.js'
 import { getSelfReportRepository } from './utils/getSelfReportRepository.js'
 
-/** Registers the cron notifying the problem logs, only when it is configured along with the notifications. */
+/** What `buildServer` already built that the cron notifying the problem logs is built with. */
+export interface LogsNotifierDependencies {
+  logsRepository: LogsRepository
+  /** Where the stored entries that hold no valid log are reported. */
+  selfReportRepository: SelfReportRepository
+}
+
+/**
+ * Registers the cron notifying the problem logs, only when it is configured along with the
+ * notifications.
+ *
+ * The cron reads the logs like the routes do, from `logsRepository` and reporting to
+ * `selfReportRepository`, and is given a self-report repository of its own, storing as logs of
+ * `logsRepository` too, for the problem logs it could not notify.
+ */
 export const registerLogsNotifier = async (
   server: EchoServer,
   {
@@ -18,8 +32,7 @@ export const registerLogsNotifier = async (
     selfReports: selfReportsConfig,
     notification: notificationConfig
   }: BackConfig,
-  logsFilesApi: LogsFilesApi,
-  logsRepository: LogsRepository
+  { logsRepository, selfReportRepository }: LogsNotifierDependencies
 ): Promise<void> => {
   if (logsNotifierConfig === undefined || notificationConfig === undefined) {
     server.log.info('The logs notifier is not configured, skipping its registration')
@@ -29,6 +42,7 @@ export const registerLogsNotifier = async (
   await server.register(logsNotifier, {
     logsNotifierConfig,
     logsRepository,
+    logsSelfReportRepository: selfReportRepository,
     notifier: createTelegramNotifier(
       createTelegramNotifierApi(notificationConfig),
       notificationConfig
@@ -36,7 +50,7 @@ export const registerLogsNotifier = async (
     checkDateRepository: createFileCheckDateRepository(createFileCheckDateApi(logsNotifierConfig)),
     selfReportRepository: await getSelfReportRepository(
       server,
-      logsFilesApi,
+      logsRepository,
       selfReportsConfig,
       ({ logsNotifierSelfReportFileName }) => logsNotifierSelfReportFileName
     )

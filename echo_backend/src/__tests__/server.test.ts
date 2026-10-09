@@ -100,14 +100,17 @@ describe('server', () => {
         getMockSelfReportsConfig().parseLogFileSelfReportFileName
       )
       expect(registerAuthRoutes).toHaveBeenCalledExactlyOnceWith(server, config)
-      expect(registerLogsRoutes).toHaveBeenCalledExactlyOnceWith(server, config, expect.anything())
-      expect(registerFrontend).toHaveBeenCalledExactlyOnceWith(server, config.server)
-      expect(registerLogsNotifier).toHaveBeenCalledExactlyOnceWith(
+      expect(registerLogsRoutes).toHaveBeenCalledExactlyOnceWith(
         server,
         config,
         expect.anything(),
-        expect.anything()
+        selfReportRepository
       )
+      expect(registerFrontend).toHaveBeenCalledExactlyOnceWith(server, config.server)
+      expect(registerLogsNotifier).toHaveBeenCalledExactlyOnceWith(server, config, {
+        logsRepository: expect.anything(),
+        selfReportRepository
+      })
       expect(server.getSchema('EchoError')).toBeDefined()
 
       const [securityOrder, documentationOrder, authRoutesOrder, logsRoutesOrder] = [

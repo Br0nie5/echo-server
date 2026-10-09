@@ -18,7 +18,7 @@ export interface LogsByGroup {
 /** Consecutive logs of one job, in one file. */
 export interface LogsByJob {
   id: string
-  fileName: string
+  locationName: string
   jobId: number
   logs: Log[]
 }

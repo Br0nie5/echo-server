@@ -17,6 +17,8 @@ export interface ProblemLogsCheck {
   /** Luxon zone the dates of the logs are shown in. */
   timezone: string
   logsRepository: LogsRepository
+  /** Where the stored entries that hold no valid log are reported. */
+  logsSelfReportRepository: SelfReportRepository
   notifier: Notifier
   checkDateRepository: CheckDateRepository
   /** Where the check reports the problem logs it could not notify. */
@@ -25,6 +27,9 @@ export interface ProblemLogsCheck {
 
 /**
  * Notifies the problem logs logged since the previous check, then saves the date of this one.
+ *
+ * The logs are looked up with `getFilteredLogs`, which reports the stored entries that hold no
+ * valid log to `logsSelfReportRepository`.
  *
  * The notification is one message telling about the logs (see {@link buildNotifierMessage}), built
  * for the size limit of `notifier`. Nothing is sent when there is no problem log.
@@ -41,6 +46,7 @@ export interface ProblemLogsCheck {
  *   serverName: logsNotifierConfig.serverName,
  *   timezone: logsNotifierConfig.notifierTimezone,
  *   logsRepository,
+ *   logsSelfReportRepository,
  *   notifier,
  *   checkDateRepository,
  *   selfReportRepository
@@ -52,6 +58,7 @@ export async function checkProblemLogsAndNotify({
   serverName,
   timezone,
   logsRepository,
+  logsSelfReportRepository,
   notifier,
   checkDateRepository,
   selfReportRepository
@@ -65,7 +72,7 @@ export async function checkProblemLogsAndNotify({
     return
   }
 
-  const problemLogs = await getFilteredLogs(logsRepository, {
+  const problemLogs = await getFilteredLogs(logsRepository, logsSelfReportRepository, {
     fromDate: previousCheck.lastCheckDate,
     categories: watchedLogsCategories,
     searchFilters: []
@@ -83,8 +90,7 @@ export async function checkProblemLogsAndNotify({
             `The problem logs were not notified: the notifier takes messages of ` +
             `${messageSizeLimit} characters at most, which is not enough for any message`,
           level: 'warning',
-          reportedFile: 'checkProblemLogsAndNotify',
-          reportedLine: 0
+          reportedFile: 'checkProblemLogsAndNotify'
         }
       ])
     } else {

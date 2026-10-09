@@ -3,56 +3,63 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../../modules/selfReport/infra/fileSessionJobId.api.js')
 vi.mock('../../../modules/selfReport/infra/noopSelfReport.repository.js')
-vi.mock('../../../modules/selfReport/infra/selfFileReport.repository.js')
+vi.mock('../../../modules/selfReport/infra/selfLogReport.repository.js')
 
-import type { LogsFilesApi } from '../../../modules/logs/infra/logsFiles.api.js'
+import type { LogsRepository } from '../../../modules/logs/domain/logs.repository.js'
 import type { SelfReportRepository } from '../../../modules/selfReport/domain/selfReport.repository.js'
 import {
   createFileSessionJobIdApi as actualCreateFileSessionJobIdApi,
   type SessionJobIdApi
 } from '../../../modules/selfReport/infra/fileSessionJobId.api.js'
 import { createNoopSelfReportRepository as actualCreateNoopSelfReportRepository } from '../../../modules/selfReport/infra/noopSelfReport.repository.js'
-import { createSelfFileReportRepository as actualCreateSelfFileReportRepository } from '../../../modules/selfReport/infra/selfFileReport.repository.js'
+import { createSelfLogReportRepository as actualCreateSelfLogReportRepository } from '../../../modules/selfReport/infra/selfLogReport.repository.js'
 import { getMockSelfReportsConfig } from '../../../test/mocks/configs.js'
 import { getSelfReportRepository } from '../getSelfReportRepository.js'
 
 const createFileSessionJobIdApi = vi.mocked(actualCreateFileSessionJobIdApi)
 const createNoopSelfReportRepository = vi.mocked(actualCreateNoopSelfReportRepository)
-const createSelfFileReportRepository = vi.mocked(actualCreateSelfFileReportRepository)
+const createSelfLogReportRepository = vi.mocked(actualCreateSelfLogReportRepository)
 
 const server = Fastify()
-const logsFilesApi = {} as LogsFilesApi
+const logsRepository: LogsRepository = {
+  getAllLogs: vi.fn(),
+  getLogs: vi.fn(),
+  saveLogs: vi.fn(),
+  deleteLogs: vi.fn()
+}
 const sessionJobIdApi = {} as SessionJobIdApi
-const selfFileReportRepository: SelfReportRepository = { saveSelfReports: vi.fn() }
+const selfLogReportRepository: SelfReportRepository = { saveSelfReports: vi.fn() }
 const noopSelfReportRepository: SelfReportRepository = { saveSelfReports: vi.fn() }
 
 describe('getSelfReportRepository', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     createFileSessionJobIdApi.mockReturnValue(sessionJobIdApi)
-    createSelfFileReportRepository.mockResolvedValue(selfFileReportRepository)
+    createSelfLogReportRepository.mockResolvedValue(selfLogReportRepository)
     createNoopSelfReportRepository.mockReturnValue(noopSelfReportRepository)
   })
 
-  it('should give the repository storing in the picked file when there is a self reports config', async () => {
+  it('should give the repository storing at the picked file of the self-reports directory when there is a self reports config', async () => {
     const selfReportsConfig = getMockSelfReportsConfig({
+      selfReportsDirPath: '/server_logs/self_reports/Echo/log',
       parseLogFileSelfReportFileName: 'parseLogFile.jsonl'
     })
 
     const selfReportRepository = await getSelfReportRepository(
       server,
-      logsFilesApi,
+      logsRepository,
       selfReportsConfig,
       ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName
     )
 
-    expect(selfReportRepository).toBe(selfFileReportRepository)
+    expect(selfReportRepository).toBe(selfLogReportRepository)
     expect(createFileSessionJobIdApi).toHaveBeenCalledWith(selfReportsConfig)
-    expect(createSelfFileReportRepository).toHaveBeenCalledWith({
-      logsFilesApi,
+    expect(createSelfLogReportRepository).toHaveBeenCalledWith({
+      logsRepository,
       sessionJobIdApi,
       selfReportsConfig,
-      selfReportFileName: 'parseLogFile.jsonl',
+      selfReportsLocation: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
+      selfReportsLocationName: 'parseLogFile',
       logger: server.log
     })
   })
@@ -60,12 +67,12 @@ describe('getSelfReportRepository', () => {
   it('should give a repository storing nothing when there is no self reports config', async () => {
     const selfReportRepository = await getSelfReportRepository(
       server,
-      logsFilesApi,
+      logsRepository,
       undefined,
       ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName
     )
 
     expect(selfReportRepository).toBe(noopSelfReportRepository)
-    expect(createSelfFileReportRepository).not.toHaveBeenCalled()
+    expect(createSelfLogReportRepository).not.toHaveBeenCalled()
   })
 })

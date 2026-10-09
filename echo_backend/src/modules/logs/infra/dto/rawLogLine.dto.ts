@@ -10,7 +10,7 @@ export interface RawLogLineDto {
   logFile: LogFileDto
   /** Position of the line among the non-blank lines of its file, starting at 0. */
   index: number
-  /** The text of the line, expected to be the JSON of a `RawJsonLogLine`. */
+  /** The text of the line, expected to be the JSON `RawJsonLogLineSchema` describes. */
   content: string
 }
 
@@ -18,7 +18,7 @@ export interface RawLogLineDto {
  * Converts a stored line to the `Log` it holds.
  *
  * Returns `undefined` when the line does not hold a log: its content is not JSON, does not have
- * the shape of a `RawJsonLogLine`, has an unknown status or a timestamp that is not a date.
+ * the shape `RawJsonLogLineSchema` describes, has an unknown status or a timestamp that is not a date.
  *
  * ```ts
  * const logs = rawLogLines.map(convertRawLogLineToLog).filter((log) => log !== undefined)
@@ -54,7 +54,8 @@ export const convertRawLogLineToLog = ({
     id: `${index} [${logFile.groupName}] [${logFile.fileName}] ${content}`,
     date,
     groupName: logFile.groupName,
-    fileName: logFile.fileName,
+    location: logFile.path,
+    locationName: logFile.fileName,
     jobId: job_id,
     category: status,
     message,

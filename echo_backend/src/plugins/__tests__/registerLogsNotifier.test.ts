@@ -7,7 +7,6 @@ vi.mock('node-cron')
 vi.mock('../utils/getSelfReportRepository.js')
 
 import type { LogsRepository } from '../../modules/logs/domain/logs.repository.js'
-import type { LogsFilesApi } from '../../modules/logs/infra/logsFiles.api.js'
 import type { LogsNotifierPluginOptions } from '../../modules/logs/modules/logsNotifier/presentation/logs.notifier.js'
 import type { SelfReportRepository } from '../../modules/selfReport/domain/selfReport.repository.js'
 import {
@@ -17,14 +16,23 @@ import {
   getMockNotificationConfig,
   getMockSelfReportsConfig
 } from '../../test/mocks/configs.js'
-import { registerLogsNotifier } from '../registerLogsNotifier.js'
+import { registerLogsNotifier, type LogsNotifierDependencies } from '../registerLogsNotifier.js'
 import { getSelfReportRepository as actualGetSelfReportRepository } from '../utils/getSelfReportRepository.js'
 
 const getSelfReportRepository = vi.mocked(actualGetSelfReportRepository)
 
-const logsFilesApi = {} as LogsFilesApi
-const logsRepository: LogsRepository = { findAllLogs: vi.fn() }
+const logsRepository: LogsRepository = {
+  getAllLogs: vi.fn(),
+  getLogs: vi.fn(),
+  saveLogs: vi.fn(),
+  deleteLogs: vi.fn()
+}
+const logsSelfReportRepository: SelfReportRepository = { saveSelfReports: vi.fn() }
 const selfReportRepository: SelfReportRepository = { saveSelfReports: vi.fn() }
+const dependencies: LogsNotifierDependencies = {
+  logsRepository,
+  selfReportRepository: logsSelfReportRepository
+}
 const logsNotifierConfig = getMockLogsNotifierConfig()
 const notificationConfig = getMockNotificationConfig()
 
@@ -51,8 +59,7 @@ describe('registerLogsNotifier', () => {
         logs: getMockLogsConfig({ logsNotifier: logsNotifierConfig }),
         notification: notificationConfig
       }),
-      logsFilesApi,
-      logsRepository
+      dependencies
     )
     await server.close()
 
@@ -60,18 +67,18 @@ describe('registerLogsNotifier', () => {
     expect(stopCron).toHaveBeenCalledTimes(1)
   })
 
-  it('should give the cron the logs repository and its own self-report repository', async () => {
+  it('should give the cron the logs repository, the self-report repository of the logs and its own', async () => {
     const register = vi.spyOn(server, 'register')
     const config = getMockBackConfig({
       logs: getMockLogsConfig({ logsNotifier: logsNotifierConfig }),
       notification: notificationConfig
     })
 
-    await registerLogsNotifier(server, config, logsFilesApi, logsRepository)
+    await registerLogsNotifier(server, config, dependencies)
 
     expect(getSelfReportRepository).toHaveBeenCalledWith(
       server,
-      logsFilesApi,
+      logsRepository,
       config.selfReports,
       expect.any(Function)
     )
@@ -81,6 +88,7 @@ describe('registerLogsNotifier', () => {
     const pluginOptions = register.mock.calls[0][1] as LogsNotifierPluginOptions
     expect(pluginOptions.logsNotifierConfig).toBe(logsNotifierConfig)
     expect(pluginOptions.logsRepository).toBe(logsRepository)
+    expect(pluginOptions.logsSelfReportRepository).toBe(logsSelfReportRepository)
     expect(pluginOptions.selfReportRepository).toBe(selfReportRepository)
     expect(pluginOptions.notifier.getMessageSizeLimit()).toBe(
       notificationConfig.telegramMessageSizeLimit
@@ -91,8 +99,7 @@ describe('registerLogsNotifier', () => {
     await registerLogsNotifier(
       server,
       getMockBackConfig({ notification: notificationConfig }),
-      logsFilesApi,
-      logsRepository
+      dependencies
     )
 
     expect(cron.schedule).not.toHaveBeenCalled()
@@ -106,8 +113,7 @@ describe('registerLogsNotifier', () => {
     await registerLogsNotifier(
       server,
       getMockBackConfig({ logs: getMockLogsConfig({ logsNotifier: logsNotifierConfig }) }),
-      logsFilesApi,
-      logsRepository
+      dependencies
     )
 
     expect(cron.schedule).not.toHaveBeenCalled()

@@ -6,7 +6,7 @@ type LogFieldMatcher = (log: Log, search: string) => boolean
 
 /** How to look for a search in each searchable field, case-insensitively. */
 const logFieldMatchers: Record<LogSearchableKeys, LogFieldMatcher> = {
-  fileName: (log, search) => log.fileName.toLowerCase().includes(search),
+  locationName: (log, search) => log.locationName.toLowerCase().includes(search),
   groupName: (log, search) => log.groupName?.toLowerCase().includes(search) ?? false,
   jobId: (log, search) => log.jobId.toString().includes(search),
   message: (log, search) => log.message.toLowerCase().includes(search)

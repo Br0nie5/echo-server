@@ -181,7 +181,7 @@ describe('LogsScreen', () => {
 
         const filterLogSearchQuery =
           `jobId:${filterLog.jobId} ` +
-          `fileName:${filterLog.fileName} ` +
+          `locationName:${filterLog.locationName} ` +
           `groupName:${filterLog.groupName} ` +
           `message:${filterLog.message}`
 
@@ -279,7 +279,7 @@ describe('LogsScreen', () => {
 
         const filterLogSearchQuery =
           `jobId:${filterLog.jobId} ` +
-          `fileName:${filterLog.fileName} ` +
+          `locationName:${filterLog.locationName} ` +
           `groupName:${filterLog.groupName} ` +
           `message:${filterLog.message}`
 

@@ -37,6 +37,7 @@ export const getMockSelfReportsConfig = (
   overrides: Partial<SelfReportsConfig> = {}
 ): SelfReportsConfig => ({
   retentionDays: 10,
+  selfReportsGroupName: 'Echo',
   selfReportsDirPath: '/server_logs/self_reports/Echo/log',
   parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
   logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
@@ -70,6 +71,7 @@ export const getMockNotificationConfig = (
 export const getMockLogsConfig = (overrides: Partial<LogsConfig> = {}): LogsConfig => ({
   logsDirsPaths: ['/logs'],
   logFileExtension: '.jsonl',
+  logFilesDirName: 'log',
   ...overrides
 })
 

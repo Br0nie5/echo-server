@@ -1,22 +1,25 @@
-import type { LogsFilesApi } from '../../modules/logs/infra/logsFiles.api.js'
+import path from 'path'
+
+import type { LogsRepository } from '../../modules/logs/domain/logs.repository.js'
 import type { SelfReportRepository } from '../../modules/selfReport/domain/selfReport.repository.js'
 import { createFileSessionJobIdApi } from '../../modules/selfReport/infra/fileSessionJobId.api.js'
 import { createNoopSelfReportRepository } from '../../modules/selfReport/infra/noopSelfReport.repository.js'
-import { createSelfFileReportRepository } from '../../modules/selfReport/infra/selfFileReport.repository.js'
+import { createSelfLogReportRepository } from '../../modules/selfReport/infra/selfLogReport.repository.js'
 import type { SelfReportsConfig } from '../../shared/config/backConfig.js'
 import type { EchoServer } from '../types/echoServer.js'
 
 /**
  * Gives the repository a part of the backend stores its self reports in.
  *
- * It stores them through `logsFilesApi`, in the file of `selfReportsConfig` that
- * `getSelfReportFileName` picks. Without a `selfReportsConfig`, the self reports are disabled, and
- * it stores nothing:
+ * It stores them as logs of `logsRepository`, at the location made of the self-reports directory
+ * of `selfReportsConfig` and of the file name `getSelfReportFileName` picks in it, named after that
+ * file without its extension. Without a
+ * `selfReportsConfig`, the self reports are disabled, and it stores nothing:
  *
  * ```ts
  * const selfReportRepository = await getSelfReportRepository(
  *   server,
- *   logsFilesApi,
+ *   logsRepository,
  *   config.selfReports,
  *   ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName
  * )
@@ -24,16 +27,22 @@ import type { EchoServer } from '../types/echoServer.js'
  */
 export const getSelfReportRepository = (
   server: EchoServer,
-  logsFilesApi: LogsFilesApi,
+  logsRepository: LogsRepository,
   selfReportsConfig: SelfReportsConfig | undefined,
   getSelfReportFileName: (selfReportsConfig: SelfReportsConfig) => string
-): Promise<SelfReportRepository> | SelfReportRepository =>
-  selfReportsConfig !== undefined
-    ? createSelfFileReportRepository({
-        logsFilesApi,
-        sessionJobIdApi: createFileSessionJobIdApi(selfReportsConfig),
-        selfReportsConfig,
-        selfReportFileName: getSelfReportFileName(selfReportsConfig),
-        logger: server.log
-      })
-    : createNoopSelfReportRepository()
+): Promise<SelfReportRepository> | SelfReportRepository => {
+  if (selfReportsConfig === undefined) {
+    return createNoopSelfReportRepository()
+  }
+
+  const selfReportFileName = getSelfReportFileName(selfReportsConfig)
+
+  return createSelfLogReportRepository({
+    logsRepository,
+    sessionJobIdApi: createFileSessionJobIdApi(selfReportsConfig),
+    selfReportsConfig,
+    selfReportsLocation: path.join(selfReportsConfig.selfReportsDirPath, selfReportFileName),
+    selfReportsLocationName: path.parse(selfReportFileName).name,
+    logger: server.log
+  })
+}

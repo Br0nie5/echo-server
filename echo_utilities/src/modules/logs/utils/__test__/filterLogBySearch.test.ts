@@ -10,7 +10,8 @@ describe('filterLogBySearch', () => {
     id: 'log id 1',
     date: '2026-04-25T22:00:00.000Z',
     groupName: 'log group name',
-    fileName: 'log_file_name',
+    location: '/logs/log_file_name.jsonl',
+    locationName: 'log_file_name',
     jobId: 123,
     category: LogCategory.INFO,
     message: 'some log message',
@@ -56,7 +57,7 @@ describe('filterLogBySearch', () => {
   }
 
   it('Should match log individual fields', () => {
-    expectMatch('fileName')
+    expectMatch('locationName')
     expectMatch('groupName')
     expectMatch('jobId')
     expectMatch('message')
@@ -76,9 +77,9 @@ describe('filterLogBySearch', () => {
 
   it('Should match without being case sensitive', () => {
     expect(
-      filterLogBySearch({ ...log, fileName: 'MY_FILE_NAME' }, [
+      filterLogBySearch({ ...log, locationName: 'MY_FILE_NAME' }, [
         {
-          key: 'fileName',
+          key: 'locationName',
           mode: 'find',
           search: 'my_file_name'
         }
@@ -106,7 +107,7 @@ describe('filterLogBySearch', () => {
       filterLogBySearch(log, [
         {
           mode: 'find',
-          search: log.fileName
+          search: log.locationName
         }
       ])
     ).toBeTruthy()

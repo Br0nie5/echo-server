@@ -14,33 +14,26 @@ const BCRYPT_SALT_ROUNDS = 12
  *
  * Passwords are stored bcrypt-hashed, never in clear.
  */
-export const createAuthUsersDbRepository = (usersDb: Database): AuthRepository => {
-  const hasAnyUser = (): boolean =>
-    usersDb.prepare('SELECT id FROM users LIMIT 1').get() !== undefined
+export const createAuthUsersDbRepository = (usersDb: Database): AuthRepository => ({
+  hasAnyUser: async (): Promise<boolean> =>
+    usersDb.prepare('SELECT id FROM users LIMIT 1').get() !== undefined,
 
-  return {
-    needsSignup: (): boolean => !hasAnyUser(),
+  createUser: async ({ username, password, isAdmin }): Promise<void> => {
+    const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS)
+    const isAdminColumn: UserDto['is_admin'] = isAdmin ? 1 : 0
 
-    signUpFirstAdmin: async (username: string, password: string): Promise<boolean> => {
-      if (hasAnyUser()) {
-        return false
-      }
+    usersDb
+      .prepare('INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)')
+      .run(username, passwordHash, isAdminColumn)
+  },
 
-      const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS)
-      usersDb
-        .prepare('INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, 1)')
-        .run(username, passwordHash)
-      return true
-    },
-
-    areCredentialsValid: async (username: string, password: string): Promise<boolean> => {
-      const user = usersDb.prepare('SELECT * FROM users WHERE username = ?').get(username) as
-        UserDto | undefined
-      if (!user) {
-        return false
-      }
-
-      return bcrypt.compare(password, user.password_hash)
+  areCredentialsValid: async (username: string, password: string): Promise<boolean> => {
+    const user = usersDb.prepare('SELECT * FROM users WHERE username = ?').get(username) as
+      UserDto | undefined
+    if (!user) {
+      return false
     }
+
+    return bcrypt.compare(password, user.password_hash)
   }
-}
+})

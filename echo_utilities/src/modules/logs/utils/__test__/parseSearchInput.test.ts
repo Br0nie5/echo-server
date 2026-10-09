@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 import type { LogSearchableKeys, LogSearchFilter } from '../../types/logSearchFilter'
 import { parseLogSearchInput } from '../parseLogSearchInput'
 
-const VALID_SEARCH_KEY: LogSearchableKeys = 'fileName'
+const VALID_SEARCH_KEY: LogSearchableKeys = 'locationName'
 
 describe('parseLogSearchInput', () => {
   describe('splitLogSearchInput', () => {

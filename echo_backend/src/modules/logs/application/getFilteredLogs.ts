@@ -6,6 +6,7 @@ import {
   type LogSearchFilter
 } from '@echo/utilities'
 
+import type { SelfReportRepository } from '../../selfReport/domain/selfReport.repository.js'
 import type { LogsRepository } from '../domain/logs.repository.js'
 
 /** Filters of a logs lookup. An empty `categories` or `searchFilters` matches everything. */
@@ -16,19 +17,33 @@ interface LogsFilters {
 }
 
 /**
- * Returns the logs of `repository` matching `filters`, from the newest to the oldest.
+ * Returns the logs of `logsRepository` matching `filters`, from the newest to the oldest.
  *
  * A log matches when it was logged at `fromDate` or later, is in one of the `categories` and
  * passes every one of the `searchFilters`. The filtering is done in memory, with the same
  * functions the frontend uses.
+ *
+ * The self reports `logsRepository` gives along with its logs, about the stored entries that hold
+ * no valid log, are saved to `selfReportRepository`, all in a single save.
+ *
+ * ```ts
+ * const logs = await getFilteredLogs(logsRepository, selfReportRepository, {
+ *   fromDate,
+ *   categories: ['ERROR'],
+ *   searchFilters: []
+ * })
+ * ```
  */
 export const getFilteredLogs = async (
-  repository: LogsRepository,
+  logsRepository: LogsRepository,
+  selfReportRepository: SelfReportRepository,
   { fromDate, categories, searchFilters }: LogsFilters
 ): Promise<Log[]> => {
-  const allLogs = await repository.findAllLogs()
+  const { logs, selfReports } = await logsRepository.getAllLogs()
 
-  return allLogs
+  await selfReportRepository.saveSelfReports(selfReports)
+
+  return logs
     .filter((log) => new Date(log.date).getTime() >= fromDate.getTime())
     .filter((log) => filterLogByCategories(log, categories))
     .filter((log) => filterLogBySearch(log, searchFilters))

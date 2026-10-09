@@ -1,14 +1,14 @@
 import type { Log } from '@echo/utilities'
 import { DateTime } from 'luxon'
 
-/** One line of the message: `[jobId] [date UTC±offset] [category] - fileName > message`, the date shown in `timezone`. */
+/** One line of the message: `[jobId] [date UTC±offset] [category] - locationName > message`, the date shown in `timezone`. */
 export function formatLogLine(log: Log, timezone: string): string {
   const date = DateTime.fromISO(log.date).setZone(timezone)
   const offsetLabel = date.offset === 0 ? 'UTC' : `UTC${date.toFormat('Z')}`
 
   return (
     `[${log.jobId}] [${date.toFormat('yyyy-MM-dd HH:mm:ss')} ${offsetLabel}]` +
-    ` [${log.category}] - ${log.fileName} > ${log.message}`
+    ` [${log.category}] - ${log.locationName} > ${log.message}`
   )
 }
 

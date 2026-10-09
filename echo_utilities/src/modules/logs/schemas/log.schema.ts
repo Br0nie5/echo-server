@@ -15,8 +15,10 @@ export const LogSchema = z.strictObject({
   date: z.string().meta({ format: 'date-time' }),
   /** The group of scripts the log belongs to, when it has one. */
   groupName: z.string().optional(),
-  /** Name of the script the log comes from. */
-  fileName: z.string(),
+  /** Where the log is stored, whatever the storage is: the path of a file, the address of another server... */
+  location: z.string(),
+  /** Short name of `location`, the one shown to the user: usually the name of the script the log comes from. */
+  locationName: z.string(),
   /** The run of the script that emitted the log. */
   jobId: z.int(),
   category: LogCategorySchema,

@@ -6,9 +6,12 @@ import type { Log } from '../schemas/log.schema.js'
  * It is the single source of truth of the searchable fields: `LogSearchableKeys` is derived from it,
  * and `parseLogSearchInput` recognizes these keys only.
  */
-export const logSearchSuggestions = ['jobId', 'fileName', 'message', 'groupName'] satisfies Array<
-  keyof Log
->
+export const logSearchSuggestions = [
+  'jobId',
+  'locationName',
+  'message',
+  'groupName'
+] satisfies Array<keyof Log>
 
 /** A log field a search can target with `key:`. */
 export type LogSearchableKeys = (typeof logSearchSuggestions)[number]

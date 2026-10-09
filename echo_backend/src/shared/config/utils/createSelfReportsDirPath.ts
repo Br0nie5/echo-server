@@ -1,19 +1,16 @@
 import path from 'path'
 
 /**
- * Builds the path of the directory of the self-report files of the server named `serverName`:
- * `<serverLogsRootDirPath>/self_reports/<serverName>/log`.
+ * Builds the path of the directory of the self-report files of the group `selfReportsGroupName`:
+ * `<serverLogsRootDirPath>/self_reports/<selfReportsGroupName>/<logFilesDirName>`.
  *
- * In that path, every character of `serverName` other than a letter, a digit, `-`, `_` or a space
- * is replaced with `_`.
+ * The logs being read from `serverLogsRootDirPath` too, the self reports stored there are read
+ * back as logs of that group: `logFilesDirName`, the name of the directory log files are put in,
+ * is left out of it. `selfReportsGroupName` has to be safe for a path, which the one
+ * `createSelfReportsGroupName` gives is.
  */
 export const createSelfReportsDirPath = (
   serverLogsRootDirPath: string,
-  serverName: string
-): string => {
-  // SERVER_NAME is a free-text display value, not a path-safe identifier: `/` and `..` would
-  // otherwise move the self reports out of their directory.
-  const serverDirectoryName = serverName.replace(/[^a-zA-Z0-9-_ ]/g, '_')
-
-  return path.join(serverLogsRootDirPath, 'self_reports', serverDirectoryName, 'log')
-}
+  selfReportsGroupName: string,
+  logFilesDirName: string
+): string => path.join(serverLogsRootDirPath, 'self_reports', selfReportsGroupName, logFilesDirName)

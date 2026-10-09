@@ -1,34 +1,32 @@
 import type { Log } from '@echo/utilities'
 
 import type { SelfReport } from '../../selfReport/domain/selfReport.js'
-import type { SelfReportRepository } from '../../selfReport/domain/selfReport.repository.js'
-import type { LogsRepository } from '../domain/logs.repository.js'
+import type { FoundLogs, LogsRepository } from '../domain/logs.repository.js'
 
 import type { LogFileDto } from './dto/logFile.dto.js'
+import { convertLogToRawJsonLogLine } from './dto/rawJsonLog.dto.js'
 import { convertRawLogLineToLog } from './dto/rawLogLine.dto.js'
 import type { LogsFilesApi } from './logsFiles.api.js'
 
-/** What reading a log file gives: the logs it holds, and a warning for each line that holds none. */
-interface ParsedLogFile {
-  logs: Log[]
-  parseFailures: SelfReport[]
-}
-
 /**
- * Builds the `LogsRepository` that takes its logs from the files given by `logsFilesApi`.
+ * Builds the `LogsRepository` that keeps its logs in the files given by `logsFilesApi`.
  *
- * The lines that hold no valid log are left out and reported to `selfReportRepository` as warnings,
- * those of every file in a single save: the message is the line itself, `reportedFile` the name of
- * its file and `reportedLine` its position among the non-blank lines of that file, starting at 1.
- * They are all dated from when the files were read.
+ * A location is the path of a log file, and the locations it watches are the log files of the logs
+ * directories. Each log is one line of its file, which holds neither its `id`, its `locationName`
+ * nor its `groupName`: those of a log that is saved are not stored, and come from the path of the
+ * file when it is read back. The logs that are saved are written from the oldest to the newest,
+ * as if each had been added at the end of its file when it was logged; those with the same date
+ * keep the order they are given in. A location with nothing stored at is an empty file.
+ *
+ * The lines that hold no valid log are left out of the logs, and given as warning self reports:
+ * the message is the line itself, `reportedFile` the name of its file and `reportedLine` its
+ * position among the non-blank lines of that file, starting at 1. Each is dated from when its line
+ * was found to hold no log.
  */
-export const createLogsFilesRepository = (
-  logsFilesApi: LogsFilesApi,
-  selfReportRepository: SelfReportRepository
-): LogsRepository => {
-  const parseLogFile = async (logFile: LogFileDto, readDate: Date): Promise<ParsedLogFile> => {
+export const createLogsFilesRepository = (logsFilesApi: LogsFilesApi): LogsRepository => {
+  const parseLogFile = async (logFile: LogFileDto): Promise<FoundLogs> => {
     const logs: Log[] = []
-    const parseFailures: SelfReport[] = []
+    const selfReports: SelfReport[] = []
 
     const rawLogLines = await logsFilesApi.getRawLogLines(logFile)
 
@@ -36,8 +34,8 @@ export const createLogsFilesRepository = (
       const log = convertRawLogLineToLog(rawLogLine)
 
       if (log === undefined) {
-        parseFailures.push({
-          date: readDate,
+        selfReports.push({
+          date: new Date(),
           message: rawLogLine.content,
           level: 'warning',
           reportedFile: logFile.fileName,
@@ -48,22 +46,51 @@ export const createLogsFilesRepository = (
       }
     }
 
-    return { logs, parseFailures }
+    return { logs, selfReports }
   }
 
   return {
-    findAllLogs: async (): Promise<Log[]> => {
-      const readDate = new Date()
+    getAllLogs: async (): Promise<FoundLogs> => {
       const logFiles = await logsFilesApi.getAllLogFiles()
-      const parsedLogFiles = await Promise.all(
-        logFiles.map((logFile) => parseLogFile(logFile, readDate))
-      )
+      const parsedLogFiles = await Promise.all(logFiles.map(parseLogFile))
 
-      await selfReportRepository.saveSelfReports(
-        parsedLogFiles.flatMap(({ parseFailures }) => parseFailures)
-      )
+      return {
+        logs: parsedLogFiles.flatMap(({ logs }) => logs),
+        selfReports: parsedLogFiles.flatMap(({ selfReports }) => selfReports)
+      }
+    },
 
-      return parsedLogFiles.flatMap(({ logs }) => logs)
-    }
+    getLogs: (location): Promise<FoundLogs> => parseLogFile(logsFilesApi.getLogFile(location)),
+
+    saveLogs: async (logs): Promise<void> => {
+      const logsByLocation = new Map<string, Log[]>()
+
+      for (const log of logs) {
+        logsByLocation.set(log.location, [...(logsByLocation.get(log.location) ?? []), log])
+      }
+
+      await Promise.all(
+        [...logsByLocation].map(([location, locationLogs]) => {
+          const logFile = logsFilesApi.getLogFile(location)
+
+          return logsFilesApi.saveRawLogLines(
+            logFile,
+            locationLogs
+              .sort(
+                (firstLog, secondLog) =>
+                  new Date(firstLog.date).getTime() - new Date(secondLog.date).getTime()
+              )
+              .map((log, index) => ({
+                logFile,
+                index,
+                content: JSON.stringify(convertLogToRawJsonLogLine(log))
+              }))
+          )
+        })
+      )
+    },
+
+    deleteLogs: (location): Promise<void> =>
+      logsFilesApi.saveRawLogLines(logsFilesApi.getLogFile(location), [])
   }
 }

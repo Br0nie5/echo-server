@@ -34,7 +34,8 @@ describe('LogsController.getLogs', () => {
     {
       id: '1',
       date: new Date().toISOString(),
-      fileName: 'f',
+      location: '/logs/f.jsonl',
+      locationName: 'f',
       groupName: 'grp',
       jobId: 1,
       category: 'INFO',
@@ -45,8 +46,14 @@ describe('LogsController.getLogs', () => {
   ]
 
   const mockGetFilteredLogs = vi.mocked(getFilteredLogs)
-  const logsRepository = { findAllLogs: vi.fn() }
-  const LogsController = createLogsController(logsRepository)
+  const logsRepository = {
+    getAllLogs: vi.fn(),
+    getLogs: vi.fn(),
+    saveLogs: vi.fn(),
+    deleteLogs: vi.fn()
+  }
+  const selfReportRepository = { saveSelfReports: vi.fn() }
+  const LogsController = createLogsController(logsRepository, selfReportRepository)
 
   beforeEach(() => {
     vi.resetAllMocks()
@@ -102,7 +109,11 @@ describe('LogsController.getLogs', () => {
 
     await LogsController.getLogs(request, reply)
 
-    expect(mockGetFilteredLogs).toHaveBeenCalledWith(logsRepository, expect.any(Object))
+    expect(mockGetFilteredLogs).toHaveBeenCalledWith(
+      logsRepository,
+      selfReportRepository,
+      expect.any(Object)
+    )
     expect(reply.status).toHaveBeenCalledWith(200)
     expect(reply.send).toHaveBeenCalledWith(mockLogs)
   })

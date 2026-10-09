@@ -1,6 +1,8 @@
+import type { Log } from '@echo/utilities'
 import { describe, it, expect } from 'vitest'
 
-import { RawJsonLogLineSchema } from '../rawJsonLog.dto.js'
+import { convertLogToRawJsonLogLine, RawJsonLogLineSchema } from '../rawJsonLog.dto.js'
+import { convertRawLogLineToLog } from '../rawLogLine.dto.js'
 
 describe('RawJsonLogLineSchema', () => {
   it('should accept a valid raw JSON log line', () => {
@@ -37,5 +39,43 @@ describe('RawJsonLogLineSchema', () => {
 
   it('should reject a non-object value', () => {
     expect(RawJsonLogLineSchema.safeParse('not an object').success).toBeFalsy()
+  })
+})
+
+describe('convertLogToRawJsonLogLine', () => {
+  const log: Log = {
+    id: 'whatever',
+    location: '/logs/myGroup/file1.jsonl',
+    locationName: 'file1',
+    groupName: 'myGroup',
+    date: '2024-05-12T14:30:00.386Z',
+    jobId: 123,
+    category: 'INFO',
+    message: 'Something happened',
+    callFile: 'check_logs.sh',
+    callLine: 4
+  }
+
+  it('should give the JSON of the line of the log, without what says where it is stored', () => {
+    expect(convertLogToRawJsonLogLine(log)).toEqual({
+      job_id: 123,
+      timestamp: '2024-05-12T14:30:00.386Z',
+      status: 'INFO',
+      message: 'Something happened',
+      call_file: 'check_logs.sh',
+      call_line: 4
+    })
+  })
+
+  it('should give a line that is read back as the same log, with the id of its line', () => {
+    const content = JSON.stringify(convertLogToRawJsonLogLine(log))
+
+    expect(
+      convertRawLogLineToLog({
+        logFile: { path: '/logs/myGroup/file1.jsonl', fileName: 'file1', groupName: 'myGroup' },
+        index: 0,
+        content
+      })
+    ).toEqual({ ...log, id: `0 [myGroup] [file1] ${content}` })
   })
 })

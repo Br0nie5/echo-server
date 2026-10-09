@@ -31,7 +31,7 @@ const LogsByJobsLayoutComponent: React.FC<LogsByJobsLayoutProps> = ({ logs }) =>
               id={logsByJob.id}
               title={
                 <Typography variant="body1" align="center" sx={{ fontWeight: 'bold' }}>
-                  {`[${logsByJob.fileName}] > [${logsByJob.jobId}]`}
+                  {`[${logsByJob.locationName}] > [${logsByJob.jobId}]`}
                 </Typography>
               }
               isOpenedAtStart

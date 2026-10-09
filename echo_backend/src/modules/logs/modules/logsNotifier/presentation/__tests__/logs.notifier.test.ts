@@ -15,7 +15,8 @@ const logsNotifierConfig = getMockLogsNotifierConfig()
 
 const pluginOptions: LogsNotifierPluginOptions = {
   logsNotifierConfig,
-  logsRepository: { findAllLogs: vi.fn() },
+  logsRepository: { getAllLogs: vi.fn(), getLogs: vi.fn(), saveLogs: vi.fn(), deleteLogs: vi.fn() },
+  logsSelfReportRepository: { saveSelfReports: vi.fn() },
   notifier: { getMessageSizeLimit: vi.fn(), notify: vi.fn() },
   checkDateRepository: { getLastCheckDate: vi.fn(), saveLastCheckDate: vi.fn() },
   selfReportRepository: { saveSelfReports: vi.fn() }
@@ -78,6 +79,7 @@ describe('logsNotifier plugin', () => {
       serverName: logsNotifierConfig.serverName,
       timezone: logsNotifierConfig.notifierTimezone,
       logsRepository: pluginOptions.logsRepository,
+      logsSelfReportRepository: pluginOptions.logsSelfReportRepository,
       notifier: pluginOptions.notifier,
       checkDateRepository: pluginOptions.checkDateRepository,
       selfReportRepository: pluginOptions.selfReportRepository

@@ -7,6 +7,7 @@ import dotenv from 'dotenv'
 import type { BackConfig } from './backConfig.js'
 import { addEnvNameToError } from './utils/addEnvNameToError.js'
 import { createSelfReportsDirPath } from './utils/createSelfReportsDirPath.js'
+import { createSelfReportsGroupName } from './utils/createSelfReportsGroupName.js'
 import { parseAllowedDomain } from './utils/parseAllowedDomain.js'
 import { parseCookieSerializeOptions } from './utils/parseCookieSerializeOptions.js'
 import { parseDaysNumber } from './utils/parseDaysNumber.js'
@@ -26,6 +27,9 @@ const DATA_DIR_PATH = path.join(REPOSITORY_ROOT_PATH, 'data')
 
 /** Extension of the files the logs are read from, and of the files the self reports are written to. */
 const LOG_FILE_EXTENSION = '.jsonl'
+
+/** Name of the directory scripts put their log files in, and the backend its self-report files. */
+const LOG_FILES_DIR_NAME = 'log'
 
 /** Maximum length of a message, set by the Telegram bot API. */
 const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
@@ -67,6 +71,8 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
     parseOptionalBoolean(processEnv.SELF_REPORTS_ENABLED)
   )
 
+  const selfReportsGroupName = createSelfReportsGroupName(config.SERVER_NAME)
+
   const notification = parseNotificationConfig(processEnv, {
     telegramMessageSizeLimit: TELEGRAM_MESSAGE_SIZE_LIMIT
   })
@@ -95,6 +101,7 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
     logs: {
       logsDirsPaths: areSelfReportsEnabled ? [logsDirPath, serverLogsRootDirPath] : [logsDirPath],
       logFileExtension: LOG_FILE_EXTENSION,
+      logFilesDirName: LOG_FILES_DIR_NAME,
       logsNotifier:
         notification &&
         parseLogsNotifierConfig(processEnv, {
@@ -107,7 +114,12 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
           retentionDays: addEnvNameToError('SELF_REPORTS_RETENTION_DAYS', () =>
             parseDaysNumber(processEnv.SELF_REPORTS_RETENTION_DAYS, 10)
           ),
-          selfReportsDirPath: createSelfReportsDirPath(serverLogsRootDirPath, config.SERVER_NAME),
+          selfReportsGroupName,
+          selfReportsDirPath: createSelfReportsDirPath(
+            serverLogsRootDirPath,
+            selfReportsGroupName,
+            LOG_FILES_DIR_NAME
+          ),
           parseLogFileSelfReportFileName: `parseLogFile${LOG_FILE_EXTENSION}`,
           logsNotifierSelfReportFileName: `logsNotifier${LOG_FILE_EXTENSION}`,
           sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')

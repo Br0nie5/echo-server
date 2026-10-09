@@ -11,14 +11,21 @@ const log: Log = {
   jobId: 1,
   date: '2026-01-01T10:00:00.000Z',
   category: 'ERROR',
-  fileName: 'worker',
+  location: '/logs/worker.jsonl',
+  locationName: 'worker',
   message: 'Something broke',
   callFile: 'worker.sh',
   callLine: 1
 }
 
 const getFilteredLogs = vi.mocked(actualGetFilteredLogs)
-const logsRepository = { findAllLogs: vi.fn() }
+const logsRepository = {
+  getAllLogs: vi.fn(),
+  getLogs: vi.fn(),
+  saveLogs: vi.fn(),
+  deleteLogs: vi.fn()
+}
+const logsSelfReportRepository = { saveSelfReports: vi.fn() }
 const notifier = { getMessageSizeLimit: vi.fn(), notify: vi.fn() }
 const checkDateRepository = { getLastCheckDate: vi.fn(), saveLastCheckDate: vi.fn() }
 const selfReportRepository = { saveSelfReports: vi.fn() }
@@ -31,6 +38,7 @@ const check = (): Promise<void> =>
     serverName: 'test-device',
     timezone: 'UTC+2',
     logsRepository,
+    logsSelfReportRepository,
     notifier,
     checkDateRepository,
     selfReportRepository
@@ -61,7 +69,7 @@ describe('checkProblemLogsAndNotify', () => {
 
     await check()
 
-    expect(getFilteredLogs).toHaveBeenCalledWith(logsRepository, {
+    expect(getFilteredLogs).toHaveBeenCalledWith(logsRepository, logsSelfReportRepository, {
       fromDate: PREVIOUS_CHECK.lastCheckDate,
       categories: WATCHED,
       searchFilters: []
@@ -100,8 +108,7 @@ describe('checkProblemLogsAndNotify', () => {
         message:
           'The problem logs were not notified: the notifier takes messages of 10 characters at most, which is not enough for any message',
         level: 'warning',
-        reportedFile: 'checkProblemLogsAndNotify',
-        reportedLine: 0
+        reportedFile: 'checkProblemLogsAndNotify'
       }
     ])
     expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledTimes(1)

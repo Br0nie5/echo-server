@@ -1,70 +1,27 @@
-import { constants as fsConstants } from 'fs'
 import path from 'path'
 
-import { describe, it, expect, vi } from 'vitest'
+import { beforeEach, describe, it, expect, vi } from 'vitest'
 
 import { getMockLogsConfig } from '../../../../test/mocks/configs.js'
 import type { LogFileDto } from '../dto/logFile.dto.js'
-import { createLogsFilesApi, type FileSystem } from '../logsFiles.api.js'
+import { createLogsFilesApi } from '../logsFiles.api.js'
 
 const logsConfig = getMockLogsConfig({ logsDirsPaths: ['/logs'], logFileExtension: '.jsonl' })
 
-const entry = (name: string, type: 'file' | 'directory' | 'other'): object => ({
-  name,
-  isFile: (): boolean => type === 'file',
-  isDirectory: (): boolean => type === 'directory'
-})
+const filesService = {
+  getFilesPaths: vi.fn(),
+  getFileLines: vi.fn(),
+  createDirectory: vi.fn(),
+  replaceFileLines: vi.fn()
+}
 
-const buildFileSystem = ({
-  directories = {},
-  files = {},
-  missing = [],
-  unreadable = [],
-  overrides = {}
-}: {
-  directories?: Record<string, object[]>
-  files?: Record<string, string>
-  missing?: string[]
-  unreadable?: string[]
-  overrides?: Partial<FileSystem>
-}): FileSystem =>
-  ({
-    readdir: vi.fn(async (directory: string) => directories[directory]),
-    access: vi.fn(async (filePath: string, mode: number) => {
-      if (missing.includes(filePath)) {
-        throw new Error('ENOENT')
-      }
-      if (unreadable.includes(filePath) && mode === fsConstants.R_OK) {
-        throw new Error('EACCES')
-      }
-    }),
-    readFile: vi.fn(async (filePath: string) => files[filePath]),
-    mkdir: vi.fn(),
-    writeFile: vi.fn(),
-    rename: vi.fn(),
-    appendFile: vi.fn(),
-    ...overrides
-  }) as unknown as FileSystem
-
-const WRITTEN_FILE_PATH = '/server_logs/self_reports/Echo/log/parseLogFile.jsonl'
-
-const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
-
-const logLine = (overrides: Record<string, unknown> = {}): string =>
-  JSON.stringify({
-    job_id: 1,
-    timestamp: '2026-09-19T14:41:09.669Z',
-    status: 'WARNING',
-    message: 'bad line',
-    call_file: 'someFile',
-    call_line: 3,
-    ...overrides
-  })
-
-const datedLine = (timestamp: unknown): string => logLine({ timestamp })
-
-const daysAgo = (days: number): string =>
-  new Date(Date.now() - days * MILLISECONDS_PER_DAY).toISOString()
+/** Makes `filesService` find, among `filesPathsByDirectory`, the files its caller asks for. */
+const mockFoundFiles = (filesPathsByDirectory: Record<string, string[]>): void => {
+  filesService.getFilesPaths.mockImplementation(
+    async (directoryPath: string, isFileIncluded: (filePath: string) => boolean) =>
+      filesPathsByDirectory[directoryPath].filter(isFileIncluded)
+  )
+}
 
 const logFile = (filePath: string): LogFileDto => ({
   path: filePath,
@@ -72,35 +29,24 @@ const logFile = (filePath: string): LogFileDto => ({
   groupName: undefined
 })
 
+beforeEach(() => {
+  vi.resetAllMocks()
+})
+
 describe('LogsFilesApi', () => {
   describe('getAllLogFiles', () => {
-    it('should list the .jsonl files recursively, with their name and group', async () => {
-      const logsFilesApi = createLogsFilesApi(
-        logsConfig,
-        buildFileSystem({
-          directories: {
-            '/logs': [
-              entry('root.jsonl', 'file'),
-              entry('notes.txt', 'file'),
-              entry('docker', 'directory')
-            ],
-            [path.join('/logs', 'docker')]: [entry('utils', 'directory')],
-            [path.join('/logs', 'docker', 'utils')]: [entry('log', 'directory')],
-            [path.join('/logs', 'docker')]: [
-              entry('compose.jsonl', 'file'),
-              entry('utils', 'directory')
-            ],
-            [path.join('/logs', 'docker', 'utils')]: [
-              entry('log', 'directory'),
-              entry('backups', 'directory')
-            ],
-            [path.join('/logs', 'docker', 'utils', 'log')]: [entry('backup.jsonl', 'file')],
-            [path.join('/logs', 'docker', 'utils', 'backups')]: [entry('daily.jsonl', 'file')]
-          }
-        })
-      )
+    it('should list the files with the log file extension, with their name and group', async () => {
+      mockFoundFiles({
+        '/logs': [
+          '/logs/root.jsonl',
+          '/logs/notes.txt',
+          '/logs/docker/compose.jsonl',
+          '/logs/docker/utils/log/backup.jsonl',
+          '/logs/docker/utils/backups/daily.jsonl'
+        ]
+      })
 
-      expect(await logsFilesApi.getAllLogFiles()).toEqual([
+      expect(await createLogsFilesApi(logsConfig, filesService).getAllLogFiles()).toEqual([
         { path: '/logs/root.jsonl', fileName: 'root', groupName: undefined },
         { path: '/logs/docker/compose.jsonl', fileName: 'compose', groupName: undefined },
         { path: '/logs/docker/utils/log/backup.jsonl', fileName: 'backup', groupName: 'utils' },
@@ -112,22 +58,45 @@ describe('LogsFilesApi', () => {
       ])
     })
 
+    it('should list the files with another log file extension when the config gives one', async () => {
+      mockFoundFiles({ '/logs': ['/logs/root.jsonl', '/logs/notes.txt'] })
+
+      const logsFilesApi = createLogsFilesApi(
+        getMockLogsConfig({ logsDirsPaths: ['/logs'], logFileExtension: '.txt' }),
+        filesService
+      )
+
+      expect(await logsFilesApi.getAllLogFiles()).toEqual([
+        { path: '/logs/notes.txt', fileName: 'notes', groupName: undefined }
+      ])
+    })
+
+    it('should leave the directories named like the log files directory of the config out of the group', async () => {
+      mockFoundFiles({ '/logs': ['/logs/docker/utils/output/log/backup.jsonl'] })
+
+      const logsFilesApi = createLogsFilesApi(
+        getMockLogsConfig({ logsDirsPaths: ['/logs'], logFilesDirName: 'output' }),
+        filesService
+      )
+
+      expect(await logsFilesApi.getAllLogFiles()).toEqual([
+        {
+          path: '/logs/docker/utils/output/log/backup.jsonl',
+          fileName: 'backup',
+          groupName: 'utils_log'
+        }
+      ])
+    })
+
     it('should list the files of every logs directory, each grouped from its own directory', async () => {
+      mockFoundFiles({
+        '/logs': ['/logs/docker/utils/backup.jsonl'],
+        '/server_logs': ['/server_logs/self_reports/Echo/log/parseLogFile.jsonl']
+      })
+
       const logsFilesApi = createLogsFilesApi(
         getMockLogsConfig({ logsDirsPaths: ['/logs', '/server_logs'] }),
-        buildFileSystem({
-          directories: {
-            '/logs': [entry('docker', 'directory')],
-            [path.join('/logs', 'docker')]: [entry('utils', 'directory')],
-            [path.join('/logs', 'docker', 'utils')]: [entry('backup.jsonl', 'file')],
-            '/server_logs': [entry('self_reports', 'directory')],
-            [path.join('/server_logs', 'self_reports')]: [entry('Echo', 'directory')],
-            [path.join('/server_logs', 'self_reports', 'Echo')]: [entry('log', 'directory')],
-            [path.join('/server_logs', 'self_reports', 'Echo', 'log')]: [
-              entry('parseLogFile.jsonl', 'file')
-            ]
-          }
-        })
+        filesService
       )
 
       expect(await logsFilesApi.getAllLogFiles()).toEqual([
@@ -143,259 +112,114 @@ describe('LogsFilesApi', () => {
     it.each(['/logs/', './logs', 'logs'])(
       'should group the files the same way when the logs directory is written %s',
       async (logsDirPath) => {
+        const filePath = path.join(logsDirPath, 'docker', 'utils', 'backup.jsonl')
+        mockFoundFiles({ [logsDirPath]: [filePath] })
+
         const logsFilesApi = createLogsFilesApi(
           getMockLogsConfig({ logsDirsPaths: [logsDirPath] }),
-          buildFileSystem({
-            directories: {
-              [logsDirPath]: [entry('docker', 'directory')],
-              [path.join(logsDirPath, 'docker')]: [entry('utils', 'directory')],
-              [path.join(logsDirPath, 'docker', 'utils')]: [entry('backup.jsonl', 'file')]
-            }
-          })
+          filesService
         )
 
         expect(await logsFilesApi.getAllLogFiles()).toEqual([
-          {
-            path: path.join(logsDirPath, 'docker', 'utils', 'backup.jsonl'),
-            fileName: 'backup',
-            groupName: 'utils'
-          }
+          { path: filePath, fileName: 'backup', groupName: 'utils' }
         ])
       }
     )
 
-    it('should ignore the entries that are neither directories nor files', async () => {
-      const logsFilesApi = createLogsFilesApi(
-        logsConfig,
-        buildFileSystem({ directories: { '/logs': [entry('socket.jsonl', 'other')] } })
-      )
+    it('should throw the error of the files service when a logs directory cannot be read', async () => {
+      filesService.getFilesPaths.mockRejectedValue(new Error('ENOENT'))
 
-      expect(await logsFilesApi.getAllLogFiles()).toEqual([])
+      await expect(createLogsFilesApi(logsConfig, filesService).getAllLogFiles()).rejects.toThrow(
+        'ENOENT'
+      )
     })
   })
 
   describe('getRawLogLines', () => {
-    it('should return the non-blank lines of the file with their position', async () => {
+    it('should return the lines of the file with their position', async () => {
       const file = logFile('/logs/file.jsonl')
-      const logsFilesApi = createLogsFilesApi(
-        logsConfig,
-        buildFileSystem({ files: { '/logs/file.jsonl': 'foo\n\nbar\n  \n' } })
-      )
+      filesService.getFileLines.mockResolvedValue(['foo', 'bar'])
 
-      expect(await logsFilesApi.getRawLogLines(file)).toEqual([
+      expect(await createLogsFilesApi(logsConfig, filesService).getRawLogLines(file)).toEqual([
         { logFile: file, index: 0, content: 'foo' },
         { logFile: file, index: 1, content: 'bar' }
       ])
+      expect(filesService.getFileLines).toHaveBeenCalledWith('/logs/file.jsonl')
     })
 
-    it('should return no line when the file does not exist', async () => {
-      const fileSystem = buildFileSystem({ missing: ['/logs/nope.jsonl'] })
+    it('should throw the error of the files service when the file cannot be read', async () => {
+      filesService.getFileLines.mockRejectedValue(new Error('EACCES'))
+
+      await expect(
+        createLogsFilesApi(logsConfig, filesService).getRawLogLines(logFile('/logs/locked.jsonl'))
+      ).rejects.toThrow('EACCES')
+    })
+  })
+
+  describe('getLogFile', () => {
+    it('should give the name and the group of a file of a logs directory', () => {
+      const logsFilesApi = createLogsFilesApi(
+        getMockLogsConfig({ logsDirsPaths: ['/logs', '/server_logs'] }),
+        filesService
+      )
 
       expect(
-        await createLogsFilesApi(logsConfig, fileSystem).getRawLogLines(logFile('/logs/nope.jsonl'))
-      ).toEqual([])
-      expect(fileSystem.readFile).not.toHaveBeenCalled()
-    })
-
-    it('should throw the error of the file system when the file exists but is not readable', async () => {
-      const fileSystem = buildFileSystem({ unreadable: ['/logs/locked.jsonl'] })
-
-      await expect(
-        createLogsFilesApi(logsConfig, fileSystem).getRawLogLines(logFile('/logs/locked.jsonl'))
-      ).rejects.toThrow('EACCES')
-      expect(fileSystem.readFile).not.toHaveBeenCalled()
-    })
-
-    it('should use the real file system by default', async () => {
-      const logsFilesApi = createLogsFilesApi(
-        getMockLogsConfig({ logsDirsPaths: ['/does/not/exist'] })
-      )
-
-      expect(await logsFilesApi.getRawLogLines(logFile('/does/not/exist/file.jsonl'))).toEqual([])
-    })
-  })
-
-  describe('createDirectory', () => {
-    it('should create the directory and its parents', async () => {
-      const fileSystem = buildFileSystem({})
-
-      await createLogsFilesApi(logsConfig, fileSystem).createDirectory(
-        '/server_logs/self_reports/Echo/log'
-      )
-
-      expect(fileSystem.mkdir).toHaveBeenCalledWith('/server_logs/self_reports/Echo/log', {
-        recursive: true
+        logsFilesApi.getLogFile('/server_logs/self_reports/Echo/log/parseLogFile.jsonl')
+      ).toEqual({
+        path: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
+        fileName: 'parseLogFile',
+        groupName: 'Echo'
       })
     })
+
+    it.each(['/elsewhere/docker/utils/backup.jsonl', '/logs_backup/docker/utils/backup.jsonl'])(
+      'should give no group to %s, which is in none of the logs directories',
+      (filePath) => {
+        expect(createLogsFilesApi(logsConfig, filesService).getLogFile(filePath)).toEqual({
+          path: filePath,
+          fileName: 'backup',
+          groupName: undefined
+        })
+      }
+    )
   })
 
-  describe('rotateLogFile', () => {
-    it('should remove the lines older than retentionDays and keep the rest, replacing the file in one step', async () => {
-      const oldLine = datedLine(daysAgo(20))
-      const recentLine = datedLine(daysAgo(1))
+  describe('saveRawLogLines', () => {
+    it('should create the directory of the file, then replace its lines, in the order they are given', async () => {
       const steps: string[] = []
-      const fileSystem = buildFileSystem({
-        files: { [WRITTEN_FILE_PATH]: `${oldLine}\n${recentLine}\n` },
-        overrides: {
-          writeFile: vi.fn(async () => {
-            steps.push('writeFile')
-          }),
-          rename: vi.fn(async () => {
-            steps.push('rename')
-          })
-        }
+      filesService.createDirectory.mockImplementation(async () => {
+        steps.push('createDirectory')
+      })
+      filesService.replaceFileLines.mockImplementation(async () => {
+        steps.push('replaceFileLines')
       })
 
-      await createLogsFilesApi(logsConfig, fileSystem).rotateLogFile(WRITTEN_FILE_PATH, 10)
+      const file = logFile('/server_logs/self_reports/Echo/log/parseLogFile.jsonl')
 
-      expect(fileSystem.writeFile).toHaveBeenCalledWith(
-        `${WRITTEN_FILE_PATH}.tmp`,
-        `${recentLine}\n`,
-        'utf-8'
-      )
-      expect(fileSystem.rename).toHaveBeenCalledWith(`${WRITTEN_FILE_PATH}.tmp`, WRITTEN_FILE_PATH)
-      expect(steps).toEqual(['writeFile', 'rename'])
-    })
-
-    it('should empty the file when every line is older than retentionDays', async () => {
-      const fileSystem = buildFileSystem({
-        files: { [WRITTEN_FILE_PATH]: `${datedLine(daysAgo(20))}\n` }
-      })
-
-      await createLogsFilesApi(logsConfig, fileSystem).rotateLogFile(WRITTEN_FILE_PATH, 10)
-
-      expect(fileSystem.writeFile).toHaveBeenCalledWith(`${WRITTEN_FILE_PATH}.tmp`, '', 'utf-8')
-    })
-
-    it('should leave the file untouched when no line is older than retentionDays', async () => {
-      const fileSystem = buildFileSystem({
-        files: { [WRITTEN_FILE_PATH]: `${datedLine(daysAgo(1))}\n` }
-      })
-
-      await createLogsFilesApi(logsConfig, fileSystem).rotateLogFile(WRITTEN_FILE_PATH, 10)
-
-      expect(fileSystem.writeFile).not.toHaveBeenCalled()
-      expect(fileSystem.rename).not.toHaveBeenCalled()
-    })
-
-    it('should remove the lines that hold no log line or whose timestamp is not a date', async () => {
-      const recentLine = datedLine(daysAgo(1))
-      const fileSystem = buildFileSystem({
-        files: {
-          [WRITTEN_FILE_PATH]: `not json\n${datedLine('not a date')}\n${recentLine}\n${datedLine(42)}\n`
-        }
-      })
-
-      await createLogsFilesApi(logsConfig, fileSystem).rotateLogFile(WRITTEN_FILE_PATH, 10)
-
-      expect(fileSystem.writeFile).toHaveBeenCalledWith(
-        `${WRITTEN_FILE_PATH}.tmp`,
-        `${recentLine}\n`,
-        'utf-8'
-      )
-    })
-  })
-
-  describe('deleteLogFileSelectedLines', () => {
-    it('should remove every log line to delete and keep the others in order', async () => {
-      const firstLine = logLine({ job_id: 1 })
-      const secondLine = logLine({ job_id: 2 })
-      const thirdLine = logLine({ job_id: 3 })
-      const fileSystem = buildFileSystem({
-        files: {
-          [WRITTEN_FILE_PATH]: `${firstLine}\n${secondLine}\n\n  \n${thirdLine}\n${secondLine}\n`
-        }
-      })
-
-      await createLogsFilesApi(logsConfig, fileSystem).deleteLogFileSelectedLines(
-        WRITTEN_FILE_PATH,
-        ({ job_id }) => job_id === 2
-      )
-
-      expect(fileSystem.readFile).toHaveBeenCalledWith(WRITTEN_FILE_PATH, 'utf-8')
-      expect(fileSystem.writeFile).toHaveBeenCalledWith(
-        `${WRITTEN_FILE_PATH}.tmp`,
-        `${firstLine}\n${thirdLine}\n`,
-        'utf-8'
-      )
-      expect(fileSystem.rename).toHaveBeenCalledWith(`${WRITTEN_FILE_PATH}.tmp`, WRITTEN_FILE_PATH)
-    })
-
-    it('should remove the lines that hold no log line', async () => {
-      const validLine = logLine()
-      const fileSystem = buildFileSystem({
-        files: {
-          [WRITTEN_FILE_PATH]: `not json\n${validLine}\n${logLine({ call_line: undefined })}\n`
-        }
-      })
-
-      await createLogsFilesApi(logsConfig, fileSystem).deleteLogFileSelectedLines(
-        WRITTEN_FILE_PATH,
-        () => false
-      )
-
-      expect(fileSystem.writeFile).toHaveBeenCalledWith(
-        `${WRITTEN_FILE_PATH}.tmp`,
-        `${validLine}\n`,
-        'utf-8'
-      )
-    })
-
-    it('should leave the file untouched when there is no line to delete', async () => {
-      const fileSystem = buildFileSystem({
-        files: { [WRITTEN_FILE_PATH]: `${logLine({ job_id: 1 })}\n${logLine({ job_id: 2 })}\n` }
-      })
-
-      await createLogsFilesApi(logsConfig, fileSystem).deleteLogFileSelectedLines(
-        WRITTEN_FILE_PATH,
-        () => false
-      )
-
-      expect(fileSystem.writeFile).not.toHaveBeenCalled()
-      expect(fileSystem.rename).not.toHaveBeenCalled()
-    })
-
-    it('should leave alone a file that does not exist yet', async () => {
-      const fileSystem = buildFileSystem({ missing: [WRITTEN_FILE_PATH] })
-
-      await createLogsFilesApi(logsConfig, fileSystem).deleteLogFileSelectedLines(
-        WRITTEN_FILE_PATH,
-        () => true
-      )
-
-      expect(fileSystem.writeFile).not.toHaveBeenCalled()
-    })
-
-    it('should throw the error of the file system when the file exists but is not readable', async () => {
-      const fileSystem = buildFileSystem({ unreadable: [WRITTEN_FILE_PATH] })
-
-      await expect(
-        createLogsFilesApi(logsConfig, fileSystem).deleteLogFileSelectedLines(
-          WRITTEN_FILE_PATH,
-          () => true
-        )
-      ).rejects.toThrow('EACCES')
-      expect(fileSystem.writeFile).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('appendLogFileLines', () => {
-    it('should append one JSON line per log line to the file in a single write', async () => {
-      const fileSystem = buildFileSystem({})
-      const firstLine = logLine({ job_id: 1 })
-      const secondLine = logLine({ job_id: 2 })
-
-      await createLogsFilesApi(logsConfig, fileSystem).appendLogFileLines(WRITTEN_FILE_PATH, [
-        JSON.parse(firstLine),
-        JSON.parse(secondLine)
+      await createLogsFilesApi(logsConfig, filesService).saveRawLogLines(file, [
+        { logFile: file, index: 0, content: 'foo' },
+        { logFile: file, index: 1, content: 'bar' }
       ])
 
-      expect(fileSystem.appendFile).toHaveBeenCalledTimes(1)
-      expect(fileSystem.appendFile).toHaveBeenCalledWith(
-        WRITTEN_FILE_PATH,
-        `${firstLine}\n${secondLine}\n`,
-        'utf-8'
+      expect(filesService.createDirectory).toHaveBeenCalledWith(
+        '/server_logs/self_reports/Echo/log'
       )
+      expect(filesService.replaceFileLines).toHaveBeenCalledWith(
+        '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
+        ['foo', 'bar']
+      )
+      expect(steps).toEqual(['createDirectory', 'replaceFileLines'])
+    })
+
+    it('should throw the error of the files service when the file cannot be written', async () => {
+      filesService.replaceFileLines.mockRejectedValue(new Error('EACCES'))
+
+      await expect(
+        createLogsFilesApi(logsConfig, filesService).saveRawLogLines(
+          logFile('/logs/file.jsonl'),
+          []
+        )
+      ).rejects.toThrow('EACCES')
     })
   })
 })

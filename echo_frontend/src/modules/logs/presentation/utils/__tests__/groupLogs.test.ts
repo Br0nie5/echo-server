@@ -8,7 +8,8 @@ const buildLog = (overrides: Partial<Log>): Log => ({
   date: '2026-01-02T10:00:00.000Z',
   jobId: 1,
   category: 'INFO',
-  fileName: 'file',
+  location: '/logs/file.jsonl',
+  locationName: 'file',
   message: 'message',
   callFile: 'file.sh',
   callLine: 1,
@@ -66,7 +67,7 @@ describe('groupLogsByJob', () => {
       buildLog({ id: 'a', jobId: 2, date: '2026-01-02T10:00:00.000Z' }),
       buildLog({ id: 'b', jobId: 2, date: '2026-01-02T09:59:00.000Z' }),
       buildLog({ id: 'c', jobId: 1, date: '2026-01-02T09:00:00.000Z' }),
-      buildLog({ id: 'd', jobId: 2, fileName: 'other', date: '2026-01-02T08:00:00.000Z' }),
+      buildLog({ id: 'd', jobId: 2, locationName: 'other', date: '2026-01-02T08:00:00.000Z' }),
       buildLog({ id: 'e', jobId: 2, date: '2026-01-02T07:00:00.000Z' })
     ]
 

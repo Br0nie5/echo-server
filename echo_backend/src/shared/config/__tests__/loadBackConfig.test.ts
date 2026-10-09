@@ -130,6 +130,7 @@ describe('loadBackConfig', () => {
       logs: {
         logsDirsPaths: ['/some/path'],
         logFileExtension: '.jsonl',
+        logFilesDirName: 'log',
         logsNotifier: undefined
       },
       selfReports: undefined,
@@ -190,6 +191,7 @@ describe('loadBackConfig', () => {
       logs: {
         logsDirsPaths: ['/watched_logs', '/server_logs'],
         logFileExtension: '.jsonl',
+        logFilesDirName: 'log',
         logsNotifier: {
           schedule: '*/30 * * * *',
           watchedLogsCategories: ['WARNING', 'ERROR'],
@@ -200,6 +202,7 @@ describe('loadBackConfig', () => {
       },
       selfReports: {
         retentionDays: 30,
+        selfReportsGroupName: 'Docker Prod',
         selfReportsDirPath: '/server_logs/self_reports/Docker Prod/log',
         parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
         logsNotifierSelfReportFileName: 'logsNotifier.jsonl',

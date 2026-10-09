@@ -39,7 +39,8 @@ Each returned log:
   "id": "0 [docker_utils] [prune] {\"job_id\":1,...}",
   "date": "2026-09-19T14:41:09.669Z",
   "groupName": "docker_utils",
-  "fileName": "prune",
+  "location": "/watched_logs/scripts/docker/utils/log/prune.jsonl",
+  "locationName": "prune",
   "jobId": 1,
   "category": "INFO",
   "message": "Starting rotate_logs script.",
@@ -47,6 +48,8 @@ Each returned log:
   "callLine": 12
 }
 ```
+
+`location` is where the log is stored (the path of its file on the server) and `locationName` its short name, the one the app shows: the name of the file without its extension. A search can target `locationName`, `groupName`, `jobId` or `message` with `key:` (`locationName:prune`).
 
 Errors use the `EchoError` schema: `400` invalid params, `401` unauthenticated, `500` server error.
 

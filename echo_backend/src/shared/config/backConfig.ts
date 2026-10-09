@@ -47,6 +47,8 @@ export type AuthConfig = {
 export type SelfReportsConfig = {
   /** Number of days a stored self report is kept (`SELF_REPORTS_RETENTION_DAYS`). */
   retentionDays: number
+  /** Group the self reports are shown under in the app, among the other logs: the name of the server (`SERVER_NAME`), made safe for a path. */
+  selfReportsGroupName: string
   /** Directory holding the self-report files, inside `SERVER_LOGS_DIR_PATH`, which the logs are read from too, so they are read back like any other log. */
   selfReportsDirPath: string
   /** Name of the self-report file the lines of the log files that hold no log are reported to, with its extension. */
@@ -80,6 +82,11 @@ export type LogsConfig = {
   logsDirsPaths: string[]
   /** Extension, with its dot, a file of a logs directory must have to be read as a log file. */
   logFileExtension: string
+  /**
+   * Name of the directory scripts put their log files in, next to what they log about. It only
+   * holds the files, so it is left out of the name of their group.
+   */
+  logFilesDirName: string
   /**
    * Missing when the cron notifying the problem logs is not configured, or when there is no
    * `NotificationConfig` to notify with, which disables it.

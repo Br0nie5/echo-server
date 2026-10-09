@@ -22,6 +22,14 @@ const config: IConfiguration = {
       from: {},
       to: { circular: true }
     },
+    {
+      name: 'not-to-unresolvable',
+      severity: 'error',
+      comment:
+        'An import that resolves to no file or package is a typo or a missing dependency, and no other rule can check where it goes.',
+      from: {},
+      to: { couldNotResolve: true }
+    },
 
     // ── shared/ is a leaf: it never depends on domain modules ──────────────
     {
@@ -79,20 +87,32 @@ const config: IConfiguration = {
     },
 
     // ── package boundaries ─────────────────────────────────────────────────
+    // They hold for the tests too: a test is part of its package.
+    {
+      name: 'no-relative-import-outside-package',
+      severity: 'error',
+      comment:
+        'A relative import stays inside echo_frontend. What is outside is either a package, imported by its name, or a file read when the app runs, whose path is in the config.',
+      from: {},
+      to: { path: '^\\.\\./', dependencyTypes: ['local'] }
+    },
     {
       name: 'frontend-not-to-backend',
       severity: 'error',
       comment: 'Backend and frontend share code only through @echo/utilities.',
-      from: { pathNot: TESTS },
+      from: {},
       to: { path: '(^|/)echo_backend/' }
     },
     {
       name: 'utilities-only-through-barrel',
       severity: 'error',
       comment:
-        'Import from "@echo/utilities", never reach into echo_utilities by path (package-path deep imports are already blocked by its "exports" field).',
+        'Import from "@echo/utilities", which resolves to its barrel, and nothing else of echo_utilities (its "exports" field blocks the other paths of the package, and no-relative-import-outside-package the relative ones).',
       from: {},
-      to: { path: '(^|/)echo_utilities/(?!dist/index\\.js$|package\\.json$)' }
+      to: {
+        path: '(^|/)echo_utilities/',
+        pathNot: '(^|/)echo_utilities/dist/index\\.(js|d\\.ts)$'
+      }
     },
 
     // ── production code vs tests ───────────────────────────────────────────
@@ -106,8 +126,10 @@ const config: IConfiguration = {
   ],
 
   options: {
-    doNotFollow: { path: 'node_modules' },
-    exclude: { path: ['/dist/', '/coverage/'] },
+    // What is outside the package is in the graph, so the package boundary rules see it, without
+    // being cruised itself: its own package checks it.
+    doNotFollow: { path: ['node_modules', '^\\.\\./'] },
+    exclude: { path: ['^dist/', '/coverage/'] },
     tsPreCompilationDeps: true,
     tsConfig: { fileName: 'tsconfig.app.json' },
     enhancedResolveOptions: {

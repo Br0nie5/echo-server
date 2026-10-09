@@ -13,7 +13,8 @@ const buildLogsRequestMock = (params: GetLogsParams): nock.Interceptor => {
 const logMock: Log = {
   id: '1 [group] [file] [1] [2026-04-27 10:00:00.000] [INFO] some message',
   date: '2026-04-27T10:00:00.000Z',
-  fileName: 'file',
+  location: '/logs/file.jsonl',
+  locationName: 'file',
   jobId: 1,
   category: LogCategory.INFO,
   message: 'some message',

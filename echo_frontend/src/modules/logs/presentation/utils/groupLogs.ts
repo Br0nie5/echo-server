@@ -68,15 +68,15 @@ export const groupLogsByJob = (logs: Log[]): LogsByJob[] => {
     if (
       previousLogsByJob !== undefined &&
       previousLogsByJob.jobId === log.jobId &&
-      previousLogsByJob.fileName === log.fileName
+      previousLogsByJob.locationName === log.locationName
     ) {
       previousLogsByJob.logs.push(log)
       return
     }
 
     logsByJobs.push({
-      id: `${logIndex} - ${log.fileName} - ${log.jobId}`,
-      fileName: log.fileName,
+      id: `${logIndex} - ${log.locationName} - ${log.jobId}`,
+      locationName: log.locationName,
       jobId: log.jobId,
       logs: [log]
     })

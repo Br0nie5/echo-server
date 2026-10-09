@@ -15,41 +15,49 @@ describe('createAuthUsersDbRepository', () => {
     vi.clearAllMocks()
   })
 
-  describe('needsSignup', () => {
-    it('should be true when there is no user', () => {
+  describe('hasAnyUser', () => {
+    it('should be false when there is no user', async () => {
       get.mockReturnValueOnce(undefined)
 
-      expect(AuthRepository.needsSignup()).toBe(true)
+      expect(await AuthRepository.hasAnyUser()).toBe(false)
       expect(usersDb.prepare).toHaveBeenCalledWith('SELECT id FROM users LIMIT 1')
     })
 
-    it('should be false when a user exists', () => {
+    it('should be true when a user exists', async () => {
       get.mockReturnValueOnce({ id: 1 })
 
-      expect(AuthRepository.needsSignup()).toBe(false)
+      expect(await AuthRepository.hasAnyUser()).toBe(true)
     })
   })
 
-  describe('signUpFirstAdmin', () => {
-    it('should insert an admin with a hashed password when no user exists', async () => {
-      get.mockReturnValueOnce(undefined)
+  describe('createUser', () => {
+    it.each([
+      { isAdmin: true, isAdminColumn: 1 },
+      { isAdmin: false, isAdminColumn: 0 }
+    ])(
+      'should insert the user with a hashed password and is_admin $isAdminColumn when isAdmin is $isAdmin',
+      async ({ isAdmin, isAdminColumn }) => {
+        await AuthRepository.createUser({ username: 'admin', password: 'secret', isAdmin })
 
-      expect(await AuthRepository.signUpFirstAdmin('admin', 'secret')).toBe(true)
+        expect(usersDb.prepare).toHaveBeenCalledWith(
+          'INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)'
+        )
+        const [username, passwordHash, storedIsAdmin] = run.mock.calls[0]
+        expect(username).toBe('admin')
+        expect(passwordHash).not.toBe('secret')
+        expect(await bcrypt.compare('secret', passwordHash)).toBe(true)
+        expect(storedIsAdmin).toBe(isAdminColumn)
+      }
+    )
 
-      expect(usersDb.prepare).toHaveBeenCalledWith(
-        'INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, 1)'
-      )
-      const [username, passwordHash] = run.mock.calls[0]
-      expect(username).toBe('admin')
-      expect(passwordHash).not.toBe('secret')
-      expect(await bcrypt.compare('secret', passwordHash)).toBe(true)
-    })
+    it('should throw the error of the database when the user cannot be inserted', async () => {
+      run.mockImplementationOnce(() => {
+        throw new Error('UNIQUE constraint failed: users.username')
+      })
 
-    it('should refuse when a user already exists', async () => {
-      get.mockReturnValueOnce({ id: 1 })
-
-      expect(await AuthRepository.signUpFirstAdmin('admin', 'secret')).toBe(false)
-      expect(run).not.toHaveBeenCalled()
+      await expect(
+        AuthRepository.createUser({ username: 'admin', password: 'secret', isAdmin: true })
+      ).rejects.toThrow('UNIQUE constraint failed')
     })
   })
 

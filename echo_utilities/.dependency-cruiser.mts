@@ -16,8 +16,24 @@ const config: IConfiguration = {
       from: {},
       to: { circular: true }
     },
+    {
+      name: 'not-to-unresolvable',
+      severity: 'error',
+      comment:
+        'An import that resolves to no file or package is a typo or a missing dependency, and no other rule can check where it goes.',
+      from: {},
+      to: { couldNotResolve: true }
+    },
 
     // ── package boundaries ─────────────────────────────────────────────────
+    {
+      name: 'no-relative-import-outside-package',
+      severity: 'error',
+      comment:
+        'A relative import stays inside echo_utilities. What is outside is either a package, imported by its name, or a file read when the app runs, whose path is in the config.',
+      from: {},
+      to: { path: '^\\.\\./', dependencyTypes: ['local'] }
+    },
     {
       name: 'utilities-not-to-apps',
       severity: 'error',
@@ -37,8 +53,10 @@ const config: IConfiguration = {
   ],
 
   options: {
-    doNotFollow: { path: 'node_modules' },
-    exclude: { path: ['/dist/', '/coverage/'] },
+    // What is outside the package is in the graph, so the package boundary rules see it, without
+    // being cruised itself: its own package checks it.
+    doNotFollow: { path: ['node_modules', '^\\.\\./'] },
+    exclude: { path: ['^dist/', '/coverage/'] },
     tsPreCompilationDeps: true,
     tsConfig: { fileName: 'tsconfig.json' },
     enhancedResolveOptions: {

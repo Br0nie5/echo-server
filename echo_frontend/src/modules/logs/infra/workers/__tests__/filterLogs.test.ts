@@ -9,7 +9,8 @@ const buildLog = (id: string): Log => ({
   date: '2026-01-02T10:00:00.000Z',
   jobId: 1,
   category: 'INFO',
-  fileName: 'file',
+  location: '/logs/file.jsonl',
+  locationName: 'file',
   message: 'message',
   callFile: 'file.sh',
   callLine: 1

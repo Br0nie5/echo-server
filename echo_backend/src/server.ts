@@ -17,6 +17,7 @@ import { normalizeToEchoError } from './plugins/utils/normalizeToEchoError.js'
 import type { BackConfig } from './shared/config/backConfig.js'
 import { loadBackConfig } from './shared/config/loadBackConfig.js'
 import { EchoErrorJsonSchema } from './shared/schemas/errors.schemas.js'
+import { createFilesService } from './shared/services/files.service.js'
 
 /**
  * Composition root: builds the dependency graph from `config` (the one `loadBackConfig` gives by
@@ -46,23 +47,25 @@ export const buildServer = async (config: BackConfig = loadBackConfig()): Promis
 
   server.addSchema(EchoErrorJsonSchema)
 
-  const logsFilesApi = createLogsFilesApi(config.logs)
-  const logsFilesRepository = createLogsFilesRepository(
-    logsFilesApi,
-    await getSelfReportRepository(
-      server,
-      logsFilesApi,
-      config.selfReports,
-      ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName
-    )
+  const logsRepository = createLogsFilesRepository(
+    createLogsFilesApi(config.logs, createFilesService())
+  )
+  const selfReportRepository = await getSelfReportRepository(
+    server,
+    logsRepository,
+    config.selfReports,
+    ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName
   )
 
   await registerAuthRoutes(server, config)
-  await registerLogsRoutes(server, config, logsFilesRepository)
+  await registerLogsRoutes(server, config, logsRepository, selfReportRepository)
 
   await registerFrontend(server, config.server)
 
-  await registerLogsNotifier(server, config, logsFilesApi, logsFilesRepository)
+  await registerLogsNotifier(server, config, {
+    logsRepository,
+    selfReportRepository
+  })
 
   return server
 }

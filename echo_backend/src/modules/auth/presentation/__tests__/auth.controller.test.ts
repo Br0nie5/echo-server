@@ -3,6 +3,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { getMockAuthConfig } from '../../../../test/mocks/configs.js'
+import { SignUpRefusedError } from '../../domain/signUpRefusedError.js'
 import { createAuthController } from '../auth.controller.js'
 
 const mockReply = (): FastifyReply<{ Reply: AuthToken }> => {
@@ -20,6 +21,7 @@ const mockRequest = (
   return {
     body,
     server: { jwt: { sign: vi.fn().mockReturnValue('mocked.jwt.token') } },
+    log: { warn: vi.fn() },
     jwtVerify
   } as unknown as FastifyRequest<{ Body: LoginRequest }>
 }
@@ -29,8 +31,8 @@ const password = 'some_password'
 
 const authConfig = getMockAuthConfig()
 const AuthRepository = {
-  needsSignup: vi.fn(),
-  signUpFirstAdmin: vi.fn(),
+  hasAnyUser: vi.fn(),
+  createUser: vi.fn(),
   areCredentialsValid: vi.fn()
 }
 const AuthController = createAuthController(AuthRepository, authConfig)
@@ -42,12 +44,14 @@ describe('AuthController', () => {
 
   describe('signUp', () => {
     it('should successfully sign up, set a cookie, and return 200 for first user', async () => {
-      vi.mocked(AuthRepository.signUpFirstAdmin).mockResolvedValue(true)
+      vi.mocked(AuthRepository.hasAnyUser).mockResolvedValue(false)
 
       const request = mockRequest({ username: username, password: password })
       const reply = mockReply()
 
       await AuthController.signUp(request, reply)
+
+      expect(AuthRepository.createUser).toHaveBeenCalledWith({ username, password, isAdmin: true })
 
       expect(request.server.jwt.sign).toHaveBeenCalledWith({ user: username })
       expect(reply.setCookie).toHaveBeenCalledWith(
@@ -60,18 +64,39 @@ describe('AuthController', () => {
     })
 
     it('should return a 403 if an user had already signed up', async () => {
-      vi.mocked(AuthRepository.signUpFirstAdmin).mockResolvedValue(false)
+      vi.mocked(AuthRepository.hasAnyUser).mockResolvedValue(true)
 
       const request = mockRequest({ username: username, password: password })
       const reply = mockReply()
 
       await AuthController.signUp(request, reply)
 
+      expect(AuthRepository.createUser).not.toHaveBeenCalled()
+      expect(request.log.warn).toHaveBeenCalledWith(
+        { err: new SignUpRefusedError('An account already exists.') },
+        'Sign up refused'
+      )
+
       expect(request.server.jwt.sign).not.toHaveBeenCalled()
       expect(reply.setCookie).not.toHaveBeenCalled()
 
       expect(reply.status).toHaveBeenCalledWith(403)
       expect(reply.send).toHaveBeenCalledWith({ success: false, message: 'Unauthorized.' })
+    })
+  })
+
+  describe('signUp failing', () => {
+    it('should throw the error of a sign up that fails for another reason than being refused', async () => {
+      vi.mocked(AuthRepository.hasAnyUser).mockResolvedValue(false)
+      vi.mocked(AuthRepository.createUser).mockRejectedValueOnce(new Error('SQLITE_BUSY'))
+
+      const request = mockRequest({ username: username, password: password })
+      const reply = mockReply()
+
+      await expect(AuthController.signUp(request, reply)).rejects.toThrow('SQLITE_BUSY')
+
+      expect(reply.setCookie).not.toHaveBeenCalled()
+      expect(reply.send).not.toHaveBeenCalled()
     })
   })
 
@@ -125,7 +150,7 @@ describe('AuthController', () => {
 
   describe('check', () => {
     it('should return 200 when the JWT is successfully verified', async () => {
-      vi.mocked(AuthRepository.needsSignup).mockReturnValue(false)
+      vi.mocked(AuthRepository.hasAnyUser).mockResolvedValue(true)
 
       const request = mockRequest({}, vi.fn().mockResolvedValue({}))
       const reply = mockReply()
@@ -138,7 +163,7 @@ describe('AuthController', () => {
     })
 
     it('should return 401 when JWT verification fails', async () => {
-      vi.mocked(AuthRepository.needsSignup).mockReturnValue(false)
+      vi.mocked(AuthRepository.hasAnyUser).mockResolvedValue(true)
 
       const request = mockRequest({}, vi.fn().mockRejectedValue(new Error('Invalid token')))
       const reply = mockReply()
@@ -151,7 +176,7 @@ describe('AuthController', () => {
     })
 
     it('should return 401 when no user are found in the db', async () => {
-      vi.mocked(AuthRepository.needsSignup).mockReturnValue(true)
+      vi.mocked(AuthRepository.hasAnyUser).mockResolvedValue(false)
 
       const request = mockRequest({}, vi.fn().mockRejectedValue(new Error(needsSignupMessage)))
       const reply = mockReply()

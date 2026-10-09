@@ -13,6 +13,8 @@ import type { CheckDateRepository } from '../domain/checkDate.repository.js'
 export interface LogsNotifierPluginOptions extends FastifyPluginOptions {
   logsNotifierConfig: LogsNotifierConfig
   logsRepository: LogsRepository
+  /** Where the stored entries that hold no valid log are reported. */
+  logsSelfReportRepository: SelfReportRepository
   notifier: Notifier
   checkDateRepository: CheckDateRepository
   selfReportRepository: SelfReportRepository
@@ -26,7 +28,14 @@ export interface LogsNotifierPluginOptions extends FastifyPluginOptions {
  */
 const logsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = async (
   fastify,
-  { logsNotifierConfig, logsRepository, notifier, checkDateRepository, selfReportRepository }
+  {
+    logsNotifierConfig,
+    logsRepository,
+    logsSelfReportRepository,
+    notifier,
+    checkDateRepository,
+    selfReportRepository
+  }
 ) => {
   fastify.log.info('Registering logs notifier')
 
@@ -37,6 +46,7 @@ const logsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = async (
         serverName: logsNotifierConfig.serverName,
         timezone: logsNotifierConfig.notifierTimezone,
         logsRepository,
+        logsSelfReportRepository,
         notifier,
         checkDateRepository,
         selfReportRepository
