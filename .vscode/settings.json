@@ -13,6 +13,7 @@
     "linux",
     "luxon",
     "nodenext",
+    "spinbutton",
     "sqlite",
     "SSSZ",
     "testid",
@@ -21,6 +22,7 @@
     "typebox",
     "unstub",
     "uuidv",
+    "valuenow",
     "vitest"
   ],
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",

@@ -18,7 +18,7 @@ interface UseLogsScreenReturnType {
   logs: Log[] | undefined
   logsStatus: QueryStatus
   refetchLogs: () => void
-  logsFromDateState: ControlledState<string>
+  logsFromDateState: ControlledState<Date>
   availableLogCategories: LogCategory[] | undefined
   logCategoriesFiltersState: ControlledState<LogCategory[]>
   logSearchState: ControlledState<string>
@@ -33,7 +33,7 @@ export const useLogsScreen = (): UseLogsScreenReturnType => {
     data: logs,
     status: logsStatus,
     refetch: refetchLogs
-  } = useGetLogs({ fromDate: logsFromDateState.value })
+  } = useGetLogs({ fromDate: logsFromDateState.value.toISOString() })
 
   const availableLogCategories = useMemo(() => {
     return logs !== undefined

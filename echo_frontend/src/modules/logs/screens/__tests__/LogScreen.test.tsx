@@ -2,19 +2,22 @@ import { LogCategory, type GetLogsParams, type Log, type LogSearchFilter } from 
 import { waitForElementToBeRemoved, type RenderResult } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import nock from 'nock'
+import type { Location } from 'react-router-dom'
 import { vi, vitest, type Mock } from 'vitest'
 
 import i18n from '../../../../shared/i18n/i18n'
 import type { AppTranslation } from '../../../../shared/i18n/useAppTranslation'
 import { AppPathNames } from '../../../../shared/navigation/pathNames'
 import { formatDate } from '../../../../shared/utils/formatDate'
+import { getDateFromDaysAgo } from '../../../../shared/utils/getDateFromDaysAgo'
 import { renderApp } from '../../../../test/renderApp'
 import { testConfig } from '../../../../test/utils/config'
+import { expectDateToBeSelected, getDateSection } from '../../../../test/utils/dateSelector'
 import { resizeWindow } from '../../../../test/utils/resizeWindow'
 import { testUrl } from '../../../../test/utils/url'
 import { getGetLogsQueryKey } from '../../infra/getLogsQueryKey'
+import { LOGS_INITIAL_DAYS_AGO } from '../hooks/useLogsFilters'
 import { LogsScreen } from '../LogsScreen'
-import { getLogsInitialDate } from '../utils/getLogsDates'
 
 import { getLogsMock } from './logs.mock'
 
@@ -102,13 +105,18 @@ const buildLogsErrorRequestMock = (params: GetLogsParams, statusCode: number = 4
 }
 
 type RenderLogsScreenMode = { status: 'success' } | { status: 'error'; statusCode?: number }
-type RenderLogsScreenParams = { pathname?: string; logsInitialDateOverride?: string }
+type RenderLogsScreenParams = {
+  pathname?: string
+  logsInitialDateOverride?: string
+  onLocationChange?: (location: Location) => void
+}
 
 const renderLogsScreen = async (
   mode: RenderLogsScreenMode,
   params?: RenderLogsScreenParams
 ): Promise<RenderResult> => {
-  const fromDate = params?.logsInitialDateOverride ?? getLogsInitialDate()
+  const fromDate =
+    params?.logsInitialDateOverride ?? getDateFromDaysAgo(LOGS_INITIAL_DAYS_AGO).toISOString()
 
   let textToFind: string
 
@@ -123,7 +131,9 @@ const renderLogsScreen = async (
       break
   }
 
-  const screen = await renderApp(AppPathNames.logs, <LogsScreen />, params?.pathname)
+  const screen = await renderApp(AppPathNames.logs, <LogsScreen />, params?.pathname, {
+    onLocationChange: params?.onLocationChange
+  })
 
   await screen.findAllByText(textToFind)
 
@@ -193,7 +203,7 @@ describe('LogsScreen', () => {
       })
 
       test('Should directly filter all the logs older that fromDate if it is present as a query parameter', async () => {
-        const lastLogsSeenDate = new Date(getLogsInitialDate())
+        const lastLogsSeenDate = getDateFromDaysAgo(LOGS_INITIAL_DAYS_AGO)
 
         const newLogsFromDate = new Date(lastLogsSeenDate.getTime() + 1 * 24 * 60 * 60 * 1000)
 
@@ -210,6 +220,37 @@ describe('LogsScreen', () => {
             formatDate(lastLogsSeenDate, 'dayName day monthName year', appTranslation)
           )
         ).not.toBeInTheDocument()
+      })
+
+      test('Should replace the wrong values of the query parameters and display the logs', async () => {
+        const defaultLogsFromDate = getDateFromDaysAgo(LOGS_INITIAL_DAYS_AGO)
+        const wrongLogCategory = 'WRONG_CATEGORY'
+        const wrongQueryParameters =
+          '?fromDate=not-a-date' + `&logCategories=${wrongLogCategory}` + '&logCategories=WARNING'
+
+        const fixedQueryParameters = new URLSearchParams({
+          fromDate: defaultLogsFromDate.toISOString(),
+          logCategories: 'WARNING'
+        })
+        const onLocationChange = vi.fn<(location: Location) => void>()
+
+        const screen = await renderLogsScreen(
+          { status: 'success' },
+          { pathname: wrongQueryParameters, onLocationChange }
+        )
+
+        await waitForElementToBeRemoved(screen.getAllByText(logsMock[0].message))
+
+        expect(onLocationChange.mock.lastCall?.[0].search).toBe(`?${fixedQueryParameters}`)
+
+        expectDateToBeSelected(screen, defaultLogsFromDate)
+
+        expect(screen.queryByText(wrongLogCategory)).not.toBeInTheDocument()
+
+        const warningLog = logsMock.find((log) => log.category === LogCategory.WARNING)
+        expect(warningLog).not.toBeUndefined()
+
+        expect(screen.getByText(warningLog!.message)).toBeInTheDocument()
       })
     })
 
@@ -281,7 +322,7 @@ describe('LogsScreen', () => {
 
         const screen = await renderLogsScreen({ status: 'success' })
 
-        const lastLogsSeenDate = new Date(getLogsInitialDate())
+        const lastLogsSeenDate = getDateFromDaysAgo(LOGS_INITIAL_DAYS_AGO)
 
         expect(
           screen.getByText(
@@ -295,8 +336,7 @@ describe('LogsScreen', () => {
 
         await user.click(screen.getByLabelText(/Choose date/))
 
-        const daySpinner = screen.getByRole('spinbutton', { name: 'Day' })
-        await userEvent.click(daySpinner)
+        await userEvent.click(getDateSection(screen, 'Day'))
         await userEvent.keyboard('{ArrowUp}')
 
         await screen.findAllByText(logsMock[0].message)
@@ -334,7 +374,9 @@ describe('LogsScreen', () => {
 
       const refetchButton = screen.getByText(appTranslation('query.refetchButton'))
 
-      buildLogsSuccessRequestMock({ fromDate: getLogsInitialDate() })
+      buildLogsSuccessRequestMock({
+        fromDate: getDateFromDaysAgo(LOGS_INITIAL_DAYS_AGO).toISOString()
+      })
 
       await user.click(refetchButton)
 

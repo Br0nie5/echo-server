@@ -1,21 +1,23 @@
 import type { LogCategory } from '@echo/utilities'
 import { logSearchSuggestions } from '@echo/utilities'
 import { Box, Stack, Typography } from '@mui/material'
-import { DatePicker } from '@mui/x-date-pickers'
-import dayjs from 'dayjs'
 import { memo } from 'react'
 
+import { DateSelector } from '../../../../shared/components/DateSelector'
 import { FilterChips } from '../../../../shared/components/FilterChips'
 import { useConfig } from '../../../../shared/config/useConfig'
 import { useWindowSize } from '../../../../shared/hooks/useWindowSize'
 import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
 import type { ControlledState } from '../../../../shared/types/controlledState'
-import { getLogsMaximalDate, getLogsMinimalDate } from '../utils/getLogsDates'
+import { getDateFromDaysAgo } from '../../../../shared/utils/getDateFromDaysAgo'
 
 import { SearchBar } from './SearchBar'
 
+/** How many days back the logs can start at most. */
+const LOGS_MINIMAL_DAYS_AGO = 14
+
 type LogsScreenHeaderProps = {
-  logsFromDateState: ControlledState<string>
+  logsFromDateState: ControlledState<Date>
   availableLogCategories: LogCategory[] | undefined
   logCategoriesFiltersState: ControlledState<LogCategory[]>
   logSearchState: ControlledState<string>
@@ -40,19 +42,11 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
           justifyContent: 'flex-end'
         }}
       >
-        <DatePicker
+        <DateSelector
           label={translation('logs.from')}
-          sx={{ flexShrink: 1 }}
-          value={dayjs(logsFromDateState.value)}
-          minDate={dayjs(getLogsMinimalDate())}
-          maxDate={dayjs(getLogsMaximalDate())}
-          onChange={(value) => {
-            const newDate = value?.toDate()
-            if (newDate !== undefined) {
-              newDate.setHours(0, 0, 0, 0)
-              logsFromDateState.setValue(newDate.toISOString())
-            }
-          }}
+          minimalDate={getDateFromDaysAgo(LOGS_MINIMAL_DAYS_AGO)}
+          maximalDate={getDateFromDaysAgo(0)}
+          controlledState={logsFromDateState}
         />
       </Box>
       <Typography variant="h4" gutterBottom align="center" sx={{ mt: 3 }}>

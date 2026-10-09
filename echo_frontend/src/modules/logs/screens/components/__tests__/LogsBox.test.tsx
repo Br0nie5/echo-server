@@ -20,7 +20,7 @@ describe('LogsBox', () => {
     expect(component.getByRole('button')).toHaveAttribute('aria-expanded', 'true')
   })
 
-  test('Should reopen or reclose when isOpenedAtStart changes on rerender', () => {
+  test('Should re-open or re-close when isOpenedAtStart changes on rerender', () => {
     const component = render(<LogsBox id="1" title={<span>Title</span>} isOpenedAtStart={false} />)
 
     expect(component.getByRole('button')).toHaveAttribute('aria-expanded', 'false')

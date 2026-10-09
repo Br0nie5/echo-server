@@ -3,22 +3,27 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import type { ControlledState } from '../../../../shared/types/controlledState'
-import { getLogsInitialDate } from '../utils/getLogsDates'
+import { getDateFromDaysAgo } from '../../../../shared/utils/getDateFromDaysAgo'
+import { parseDateQueryParam } from '../utils/parseDateQueryParam'
+
+/** How many days back the logs start when the URL gives no `fromDate`. */
+export const LOGS_INITIAL_DAYS_AGO = 2
 
 interface UseLogsFiltersReturnType {
-  logsFromDateState: ControlledState<string>
+  logsFromDateState: ControlledState<Date>
   logCategoriesFiltersState: ControlledState<LogCategory[]>
   logSearchState: ControlledState<string>
 }
 
-/** The logs filters chosen by the user, initialized from and mirrored to the URL query params. */
+/** The logs filters chosen by the user, initialized from and mirrored to the URL query params. A `fromDate` param that is not a date is replaced by the default start of the logs. */
 export const useLogsFilters = (): UseLogsFiltersReturnType => {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const [logsFromDate, setLogsFromDate] = useState<string>(
-    searchParams.get('fromDate') ?? getLogsInitialDate()
+  const [logsFromDate, setLogsFromDate] = useState<Date>(
+    () =>
+      parseDateQueryParam(searchParams.get('fromDate')) ?? getDateFromDaysAgo(LOGS_INITIAL_DAYS_AGO)
   )
-  const logsFromDateState = useMemo<ControlledState<string>>(
+  const logsFromDateState = useMemo<ControlledState<Date>>(
     () => ({ value: logsFromDate, setValue: setLogsFromDate }),
     [logsFromDate]
   )
@@ -40,7 +45,7 @@ export const useLogsFilters = (): UseLogsFiltersReturnType => {
   useEffect(() => {
     const params = new URLSearchParams()
 
-    params.append('fromDate', logsFromDate)
+    params.append('fromDate', logsFromDate.toISOString())
 
     if (logSearch) {
       params.set('logSearch', logSearch)
