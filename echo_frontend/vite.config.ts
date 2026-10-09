@@ -31,7 +31,7 @@ export default defineConfig({
         'src/main.tsx',
         'src/App.tsx',
         'src/test/**',
-        '**/__workers__/**',
+        'src/modules/logs/infra/workers/filterWorker.ts',
         '**/__snapshots__/**',
         '**/.DS_Store'
       ]

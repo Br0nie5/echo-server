@@ -15,12 +15,11 @@ import { testConfig } from '../../../../test/utils/config'
 import { expectDateToBeSelected, getDateSection } from '../../../../test/utils/dateSelector'
 import { resizeWindow } from '../../../../test/utils/resizeWindow'
 import { testUrl } from '../../../../test/utils/url'
-import { getGetLogsQueryKey } from '../../infra/getLogsQueryKey'
 import { LogsScreen } from '../LogsScreen'
 
 import { getLogsMock } from './logs.mock'
 
-vi.mock('../../infra/__workers__/filterLogs.ts', async () => {
+vi.mock('../../infra/workers/filterLogs.ts', async () => {
   const { filterLogByCategories, filterLogBySearch } = await vi.importActual<{
     filterLogByCategories: (log: Log, categories: LogCategory[]) => boolean
     filterLogBySearch: (log: Log, searchFilters: LogSearchFilter[]) => boolean
@@ -87,9 +86,7 @@ const buildRequestMockScope = (): nock.Scope => {
 }
 
 const buildLogsRequestMock = (params: GetLogsParams): nock.Interceptor => {
-  const logsUri = getGetLogsQueryKey(params)[0]
-
-  return buildRequestMockScope().get(logsUri).query(params)
+  return buildRequestMockScope().get('/logs').query(params)
 }
 
 const buildLogsSuccessRequestMock = (params: GetLogsParams): void => {

@@ -1,10 +1,10 @@
 import type { Log } from '@echo/utilities'
 import { Box, Stack, Typography, useTheme } from '@mui/material'
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 
 import { CollapsibleBox } from '../../../../shared/components/CollapsibleBox'
 import { LogCard } from '../components/LogCard'
-import { useLogsByJobsLayout } from '../hooks/useLogsByJobsLayout'
+import { groupLogsByJob } from '../utils/groupLogs'
 
 type LogsByJobsLayoutProps = {
   logs: Log[]
@@ -13,7 +13,7 @@ type LogsByJobsLayoutProps = {
 const LogsByJobsLayoutComponent: React.FC<LogsByJobsLayoutProps> = ({ logs }) => {
   const theme = useTheme()
 
-  const { logsByJobs } = useLogsByJobsLayout(logs)
+  const logsByJobs = useMemo(() => groupLogsByJob(logs), [logs])
 
   return (
     <Stack spacing={2} sx={{ overflowX: 'auto' }}>

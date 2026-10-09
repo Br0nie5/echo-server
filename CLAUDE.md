@@ -75,15 +75,19 @@ The backend `auth` module has `domain/`, `infra/` and `presentation/`, and no `a
 - `infra/` — `users.db.ts` (`createUsersDb`) opens the SQLite database, `dto/user.dto.ts` describes a row of its `users` table, `authUsersDb.repository.ts` implements the contract by querying that database, hashing the passwords with bcrypt
 - `presentation/` — `auth.routes.ts`, `auth.controller.ts` (the request handlers, signing the JWT and setting the session cookie), `auth.schemas.ts` (the JSON schemas of the routes, derived from the zod schemas of `@echo/utilities`) and `auth.hooks.ts`, the `authPreHandler` rejecting the requests without a valid JWT. No other module imports it: `plugins/registerLogsRoutes.ts` hands it to the routes to protect as their `preHandler` option (`logsRoutes`), only when authentication is enabled
 
-The frontend `logs` module is split into `infra/` (TanStack Query hooks + query/mutation keys, one file per hook) and `screens/` (the screen component plus its `hooks/`, `layouts/`, `components/`, `utils/`).
+The frontend modules are layered like the backend ones, with imports only going `presentation → application → infra → domain` (enforced by `npm run arch:check`): there is no injection, so `application/` imports the hook or the function of `infra/` directly, where the backend goes through the contract of `domain/`.
 
-The frontend `auth` module is layered like a backend module:
+The frontend `logs` module:
+- `domain/` — the contract the module needs from the outside: `logs.repository.ts`, the `LogsRepository`, which fetches the logs (`findLogs`) and gives those matching the category and search filters, wherever they are filtered (`filterLogs`); the models (`Log`, `LogCategory`) are imported from `@echo/utilities`
+- `infra/` — `useLogsRepository.ts`, the hook giving the `LogsRepository`: `findLogs` on top of the logs endpoint of the backend (it sends the request, validates the answer against `LogArraySchema` and sends the user to the auth screen on a 401), `filterLogs` on top of the Web Worker of `workers/`. The worker is one way to implement `filterLogs`, which filtering on the main thread or through the API would be others. In `workers/`: `filterWorkerMessages.ts` types the messages both sides exchange, `filterLogs.ts` wraps the worker into a promise-returning function (one request at a time, the logs sent only when they change, indexes sent back so the logs keep their identity, a rejection when the request is aborted or the worker fails), `createFilterWorkerRequestHandler.ts` is what the worker does with a request, and `filterWorker.ts`, its entry point, is the only file excluded from the coverage
+- `application/` — the TanStack Query hooks: `useGetLogs` and `useFilteredLogs` (debounced, and cancelled when its filters change before it ends). There is no query key file: each query key is written in its hook
+- `presentation/` — `LogsScreen`, plus its `hooks/`, `layouts/`, `components/` and `utils/` (the grouping of the logs by day, group and job, the log categories to offer, the `fromDate` query param)
+
+The frontend `auth` module:
 - `domain/` — the `AuthRepository` contract (`checkAuthentication`, `login`, `signUp`) and, in the same file, what it gives and throws: `AuthCheckResult` and `InvalidCredentialsError`
 - `infra/useAuthRepository.ts` — the hook giving the `AuthRepository` on top of the auth endpoints of the backend: it sends the requests, validates the answers against `AuthTokenSchema` and turns the 401 of the backend into the `AuthCheckResult` of the auth check (`login` or `signUp`) and into the `InvalidCredentialsError` of the login, so that no layer above it reads an HTTP status or an axios error
-- `application/` — the TanStack Query hooks: `useGetAuthCheck`, `usePostLogin` and `usePostSignUp`, the two mutations. They import `useAuthRepository` from `infra/` directly: there is no injection, and no query or mutation key file (the one query key is written in its hook)
+- `application/` — the TanStack Query hooks: `useGetAuthCheck`, `usePostLogin` and `usePostSignUp`, the two mutations
 - `presentation/` — `AuthScreen`, which shows one of two layouts after the auth check: `AuthFormLayout`, the credentials form of the login or of the sign up depending on its `formMode` (`useAuthForm` holds its state, submits with the mutation of that mode, alerts the outcome and redirects), or `RedirectLayout`. `hooks/useRedirectionOnAuth.ts` says where to go once authenticated
-
-The dependency-cruiser rules of the frontend do not cover these layers yet.
 
 `shared/` in each workspace holds cross-module code (the config, API client setup, i18n, layouts, generic components).
 
@@ -100,7 +104,7 @@ Env vars are parsed and validated once at startup, not read ad hoc via `process.
 
 ### Log storage and parsing
 
-Logs are read directly from `.jsonl` files on disk (path from `LOGS_DIR_PATH`), not from a database — `infra/logsFiles.api.ts` is the one access to the log files: it walks the directory and reads the lines of each file, and writes the lines of the files the backend stores its own self reports in; `infra/logsFiles.repository.ts` converts each line to a log (`convertRawLogLineToLog` in `infra/dto/rawLogLine.dto.ts`) to implement the `LogsRepository` of `domain/`, and `getFilteredLogs` (`application/getFilteredLogs.ts`) filters them and sorts them from the newest to the oldest, in memory. `filterLogByCategories` / `filterLogBySearch` (in `@echo/utilities`, shared with the frontend) implement the actual filter logic so backend filtering and frontend live-filtering (`echo_frontend/src/modules/logs/infra/__workers__/filterWorker.ts`, a Web Worker) stay in sync.
+Logs are read directly from `.jsonl` files on disk (path from `LOGS_DIR_PATH`), not from a database — `infra/logsFiles.api.ts` is the one access to the log files: it walks the directory and reads the lines of each file, and writes the lines of the files the backend stores its own self reports in; `infra/logsFiles.repository.ts` converts each line to a log (`convertRawLogLineToLog` in `infra/dto/rawLogLine.dto.ts`) to implement the `LogsRepository` of `domain/`, and `getFilteredLogs` (`application/getFilteredLogs.ts`) filters them and sorts them from the newest to the oldest, in memory. `filterLogByCategories` / `filterLogBySearch` (in `@echo/utilities`, shared with the frontend) implement the actual filter logic so backend filtering and frontend live-filtering (`echo_frontend/src/modules/logs/infra/workers/createFilterWorkerRequestHandler.ts`, run in a Web Worker) stay in sync.
 
 ### Auth
 

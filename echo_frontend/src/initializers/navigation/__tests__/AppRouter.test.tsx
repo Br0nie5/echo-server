@@ -11,7 +11,7 @@ vi.mock('../../../modules/auth/presentation/AuthScreen', () => ({
 }))
 
 const logsTestId = 'logs-screen'
-vi.mock('../../../modules/logs/screens/LogsScreen', () => ({
+vi.mock('../../../modules/logs/presentation/LogsScreen', () => ({
   LogsScreen: (): JSX.Element => <div data-testid={logsTestId} />
 }))
 

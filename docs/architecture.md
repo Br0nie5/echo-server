@@ -97,21 +97,34 @@ A `SelfFileReportRepository` stores its self reports in one file, given when it 
 
 ## Frontend layout
 
-`echo_frontend/src/modules/logs` is split into:
+The modules of `echo_frontend/src/modules` are layered like the backend ones, with imports only going `presentation → application → infra → domain`. Nothing is injected: `application/` imports the hook or the function of `infra/` directly, where the backend goes through the contract of `domain/`.
 
-- `infra/`: TanStack Query hooks plus query and mutation keys, one file per hook.
-- `screens/`: the screen component and its `hooks/`, `layouts/`, `components/`, `utils/`.
+`modules/logs`:
 
-`echo_frontend/src/modules/auth` is layered like a backend module:
+| Folder | Content |
+| ------ | ------- |
+| `domain/` | `LogsRepository`, the contract the module needs from the outside: it fetches the logs (`findLogs`) and gives those matching the category and search filters, wherever they are filtered (`filterLogs`). The models (`Log`, `LogCategory`) come from `@echo/utilities` |
+| `infra/` | `useLogsRepository`, the hook giving the `LogsRepository`: `findLogs` on top of the logs endpoint (it sends the request, validates the answer against `LogArraySchema` and sends the user to the auth screen on a 401), `filterLogs` on top of the Web Worker of `workers/` (see below). The worker is one way to implement `filterLogs`, which filtering on the main thread or through the API would be others |
+| `application/` | The TanStack Query hooks: `useGetLogs` and `useFilteredLogs`, which is debounced, cancelled when its filters change before it ends, and keeps its previous result until the new one is ready |
+| `presentation/` | `LogsScreen` and its `hooks/`, `layouts/`, `components/` and `utils/` (the grouping of the logs by day, group and job, the log categories to offer, the `fromDate` query param) |
+
+The logs are filtered in a Web Worker, with the same functions as the backend. `infra/workers/` holds both sides of it:
+
+| File | Content |
+| ---- | ------- |
+| `filterWorkerMessages.ts` | The messages the two sides exchange: `setLogs` gives the worker the logs to keep, `filterLogs` asks which of them match the filters, and the answer is their indexes |
+| `filterLogs.ts` | The main-thread side: it wraps the worker into a promise-returning function. The worker gets one request at a time, so a request aborted while it waits is never sent. The logs are sent only when they are another list, and the answer being indexes, the logs given back are the very objects passed in. The promise rejects when the request is aborted, and when the worker fails, after which every request is rejected |
+| `createFilterWorkerRequestHandler.ts` | What the worker does with a request: it keeps the logs and filters them |
+| `filterWorker.ts` | The entry point of the worker, which only passes the messages on. It is the one file excluded from the coverage |
+
+`modules/auth`:
 
 | Folder | Content |
 | ------ | ------- |
 | `domain/` | `AuthRepository`, the contract the backend is reached through (`checkAuthentication`, `login`, `signUp`), and, in the same file, what it gives and throws: `AuthCheckResult` and `InvalidCredentialsError` |
 | `infra/` | `useAuthRepository`, the hook giving the `AuthRepository` on top of the auth endpoints: it sends the requests, validates the answers against `AuthTokenSchema` and turns the 401 of the backend into the `AuthCheckResult` of the auth check (`login` or `signUp`) and into the `InvalidCredentialsError` of the login, so that no layer above it reads an HTTP status or an axios error |
-| `application/` | The TanStack Query hooks: `useGetAuthCheck`, `usePostLogin` and `usePostSignUp`, the two mutations. They import `useAuthRepository` from `infra/` directly |
+| `application/` | The TanStack Query hooks: `useGetAuthCheck`, `usePostLogin` and `usePostSignUp`, the two mutations |
 | `presentation/` | `AuthScreen`, which shows one of two layouts after the auth check: `AuthFormLayout`, the credentials form of the login or of the sign up depending on its `formMode` (`useAuthForm` holds its state, submits with the mutation of that mode, alerts the outcome and redirects), or `RedirectLayout`. `hooks/useRedirectionOnAuth.ts` says where to go once authenticated |
-
-The frontend rules of `arch:check` do not cover these layers yet.
 
 `Initializers/` sets up the API client, config loading and routing. `shared/` holds i18n (English only for now), layouts, theme and generic utilities.
 
@@ -160,7 +173,7 @@ The script runs `arch:check` in every workspace. Each one has its own rules, wit
 | `backend-submodule-not-to-parent-internals` | A submodule importing its parent, except its `domain/` and `infra/`, and its `application/` from the `application/` of the submodule |
 | `frontend-modules-isolated` | A frontend module importing another module |
 | `backend-domain-is-independent`, `backend-application-not-to-outer-layers`, `backend-infra-only-to-domain`, `backend-presentation-not-to-infra` | Any import other than `presentation → application → domain ← infra`, within a module and across modules: only an `infra/` may import the `infra/` of another module or submodule |
-| `frontend-infra-not-to-screens` | `infra/` importing from `screens/` |
+| `frontend-domain-is-independent`, `frontend-infra-only-to-domain`, `frontend-application-not-to-presentation`, `frontend-presentation-not-to-infra` | Any import other than `presentation → application → infra → domain`, within a frontend module |
 | `utilities-not-to-apps`, `backend-frontend-independent`, `frontend-not-to-backend` | Cross-package imports; apps share code only through `@echo/utilities` |
 | `utilities-only-through-barrel` | Reaching into `echo_utilities` by path |
 | `prod-not-to-tests` | Production code importing test files or helpers |

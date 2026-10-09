@@ -1,11 +1,11 @@
 import type { Log } from '@echo/utilities'
 import { Stack, Typography } from '@mui/material'
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 
 import { CollapsibleBox } from '../../../../shared/components/CollapsibleBox'
 import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
 import { formatDate } from '../../../../shared/utils/formatDate'
-import { useLogsByDaysLayout } from '../hooks/useLogsByDaysLayout'
+import { groupLogsByDay } from '../utils/groupLogs'
 
 import { LogsByGroupsLayout } from './LogsByGroupsLayout'
 
@@ -15,7 +15,7 @@ type LogsByDaysLayoutProps = {
 
 const LogsByDaysLayoutComponent: React.FC<LogsByDaysLayoutProps> = ({ filteredLogs }) => {
   const translation = useAppTranslation()
-  const { logsByDays } = useLogsByDaysLayout(filteredLogs)
+  const logsByDays = useMemo(() => groupLogsByDay(filteredLogs), [filteredLogs])
 
   return (
     <Stack spacing={2} sx={{ overflowX: 'auto' }}>

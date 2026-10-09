@@ -1,9 +1,7 @@
 import type { Log } from '@echo/utilities'
 import { describe, expect, it } from 'vitest'
 
-import { groupLogsByDay } from '../groupLogsByDay'
-import { groupLogsByGroup } from '../groupLogsByGroup'
-import { groupLogsByJob } from '../groupLogsByJob'
+import { groupLogsByDay, groupLogsByGroup, groupLogsByJob } from '../groupLogs'
 
 const buildLog = (overrides: Partial<Log>): Log => ({
   id: 'id',

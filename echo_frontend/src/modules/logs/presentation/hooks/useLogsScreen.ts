@@ -8,9 +8,8 @@ import type { QueryStatus } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
 import type { ControlledState } from '../../../../shared/types/controlledState'
-import { useGetLogs } from '../../infra/useGetLogs'
-import { combineLogCategories } from '../utils/combineLogCategories'
-import { extractLogsLogCategories } from '../utils/extractLogsLogCategories'
+import { useGetLogs } from '../../application/useGetLogs'
+import { sortLogCategories } from '../utils/sortLogCategories'
 
 import { useLogsFilters } from './useLogsFilters'
 
@@ -36,9 +35,19 @@ export const useLogsScreen = (): UseLogsScreenReturnType => {
   } = useGetLogs({ fromDate: logsFromDateState.value.toISOString() })
 
   const availableLogCategories = useMemo(() => {
-    return logs !== undefined
-      ? combineLogCategories(extractLogsLogCategories(logs), logCategoriesFiltersState.value)
-      : undefined
+    if (logs === undefined) {
+      return undefined
+    }
+    const logCategoriesFromLogs = Array.from(new Set(logs.map((log) => log.category))).sort(
+      sortLogCategories
+    )
+    const logCategoriesFromFilters = logCategoriesFiltersState.value
+
+    const combinedLogCategories = Array.from(
+      new Set([...logCategoriesFromLogs, ...logCategoriesFromFilters])
+    ).sort(sortLogCategories)
+
+    return combinedLogCategories
   }, [logs, logCategoriesFiltersState.value])
 
   const logSearchFilters = useMemo(() => {

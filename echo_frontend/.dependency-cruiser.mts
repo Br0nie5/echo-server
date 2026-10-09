@@ -10,6 +10,9 @@ const SHARED = '^src/shared'
 const TEST_HELPERS = '^src/test/'
 const TESTS = '(^|/)(__tests__|__test__)/|\\.test\\.tsx?$'
 
+/** Folders of one layer of a module split into `domain/`, `application/`, `infra/` and `presentation/`. */
+const layer = (names: string): string => `${MODULES}/[^/]+/(${names})/`
+
 const config: IConfiguration = {
   forbidden: [
     {
@@ -45,13 +48,34 @@ const config: IConfiguration = {
       to: { path: '^src/(App|main)\\.tsx$' }
     },
 
-    // ── layering: screens → infra ──────────────────────────────────────────
+    // ── layering: presentation → application → infra → domain ──────────────
     {
-      name: 'frontend-infra-not-to-screens',
+      name: 'frontend-domain-is-independent',
       severity: 'error',
-      comment: 'infra/ (query hooks) must not depend on screens/.',
-      from: { path: `${MODULES}/[^/]+/infra/`, pathNot: TESTS },
-      to: { path: `${MODULES}/[^/]+/screens/` }
+      comment: 'domain/ holds the contracts the other layers build on, it depends on none of them.',
+      from: { path: layer('domain'), pathNot: TESTS },
+      to: { path: layer('application|infra|presentation') }
+    },
+    {
+      name: 'frontend-infra-only-to-domain',
+      severity: 'error',
+      comment: 'infra/ implements the contracts of domain/ and knows nothing of the layers above.',
+      from: { path: layer('infra'), pathNot: TESTS },
+      to: { path: layer('application|presentation') }
+    },
+    {
+      name: 'frontend-application-not-to-presentation',
+      severity: 'error',
+      comment: 'application/ (the query and mutation hooks) does not know the screens.',
+      from: { path: layer('application'), pathNot: TESTS },
+      to: { path: layer('presentation') }
+    },
+    {
+      name: 'frontend-presentation-not-to-infra',
+      severity: 'error',
+      comment: 'presentation/ talks to application/, never directly to infra/.',
+      from: { path: layer('presentation'), pathNot: TESTS },
+      to: { path: layer('infra') }
     },
 
     // ── package boundaries ─────────────────────────────────────────────────

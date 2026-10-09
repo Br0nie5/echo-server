@@ -24,10 +24,14 @@ src/
   modules/
     auth/           sign-up and login
     logs/           log list, filters, filter Web Worker
-      infra/        TanStack Query hooks + keys (one file per hook)
-      screens/      screen component with hooks/, layouts/, components/, utils/
+      domain/         contracts the module needs from the outside
+      infra/          their implementations: backend endpoints, Web Worker
+      application/    TanStack Query hooks (one file per hook)
+      presentation/   screen component with hooks/, layouts/, components/, utils/
   shared/           i18n (English), layouts, theme, utils
   test/             render helpers for tests
 ```
 
-Live filtering runs in a Web Worker (`modules/logs/infra/__workers__/filterWorker.ts`) using the same functions as the backend, from `@echo/utilities`.
+Both modules have these four layers, with imports only going `presentation → application → infra → domain` (see [docs/architecture.md](../docs/architecture.md#frontend-layout)).
+
+Live filtering runs in a Web Worker (`modules/logs/infra/workers/`) using the same functions as the backend, from `@echo/utilities`.

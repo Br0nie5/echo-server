@@ -1,11 +1,11 @@
 import type { Log } from '@echo/utilities'
 import { Stack, Typography } from '@mui/material'
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 
 import { CollapsibleBox } from '../../../../shared/components/CollapsibleBox'
 import { useWindowSize } from '../../../../shared/hooks/useWindowSize'
 import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
-import { useLogsByGroupsLayout } from '../hooks/useLogsByGroupsLayout'
+import { groupLogsByGroup } from '../utils/groupLogs'
 
 import { LogsByJobsLayout } from './LogsByJobsLayout'
 
@@ -17,7 +17,7 @@ type LogsByGroupsLayoutProps = {
 const LogsByGroupsLayoutComponent: React.FC<LogsByGroupsLayoutProps> = ({ logs, logsByDayId }) => {
   const translation = useAppTranslation()
   const { windowSize, isSmallScreen } = useWindowSize()
-  const { logsByGroups } = useLogsByGroupsLayout(logs, logsByDayId)
+  const logsByGroups = useMemo(() => groupLogsByGroup(logs, logsByDayId), [logs, logsByDayId])
 
   return (
     <Stack direction={isSmallScreen ? 'column' : 'row'} sx={{ overflowX: 'auto' }} spacing={1}>

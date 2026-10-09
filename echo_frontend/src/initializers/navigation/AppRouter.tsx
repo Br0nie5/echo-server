@@ -13,7 +13,7 @@ const AuthScreen = lazy(() =>
   }))
 )
 const LogsScreen = lazy(() =>
-  import('../../modules/logs/screens/LogsScreen').then((module) => ({
+  import('../../modules/logs/presentation/LogsScreen').then((module) => ({
     default: module.LogsScreen
   }))
 )

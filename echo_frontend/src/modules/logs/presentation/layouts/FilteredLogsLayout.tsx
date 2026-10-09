@@ -2,7 +2,7 @@ import type { Log, LogCategory, LogSearchFilter } from '@echo/utilities'
 import { Box, LinearProgress } from '@mui/material'
 import { memo } from 'react'
 
-import { useFilteredLogs } from '../../infra/useFilteredLogs'
+import { useFilteredLogs } from '../../application/useFilteredLogs'
 
 import { LogsByDaysLayout } from './LogsByDaysLayout'
 
