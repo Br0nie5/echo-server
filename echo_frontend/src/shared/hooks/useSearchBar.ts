@@ -1,16 +1,18 @@
 import { useMemo, useState, type Dispatch, type SetStateAction } from 'react'
 
-import { useWindowSize } from '../../../../shared/hooks/useWindowSize'
-import { useAppTranslation, type AppTranslation } from '../../../../shared/i18n/useAppTranslation'
+import { useAppTranslation, type AppTranslation } from '../i18n/useAppTranslation'
+import type { ControlledState } from '../types/controlledState'
 import { applySearchSuggestion, getSearchSuggestions } from '../utils/searchSuggestions'
+
+import { useSyncedState } from './useSyncedState'
+import { useWindowSize } from './useWindowSize'
 
 /** No suggestion highlighted. */
 const SUGGESTION_DEFAULT_INDEX = -1
 
 interface UseSearchBarParams {
   suggestions?: string[]
-  initialInputValue?: string
-  onSearch: (search: string) => void
+  controlledState?: ControlledState<string>
 }
 
 interface UseSearchBarReturnType {
@@ -30,15 +32,22 @@ interface UseSearchBarReturnType {
   applySuggestion: (option: string) => void
 }
 
-/** State and keyboard handling of the search bar: the input, the suggestions list (arrows to move, Enter to apply, Escape to close), and submit. */
+/**
+ * State and keyboard handling of the search bar: the input, the suggestions list (arrows to move,
+ * Enter to apply, Escape to close), and submit.
+ *
+ * The input holds the text being typed. `controlledState` is the submitted search: submitting gives
+ * it the text of the input, and the input takes its value back whenever it changes.
+ */
 export const useSearchBar = ({
   suggestions,
-  initialInputValue,
-  onSearch
+  controlledState
 }: UseSearchBarParams): UseSearchBarReturnType => {
   const translation = useAppTranslation()
 
-  const [inputValue, setInputValue] = useState(initialInputValue ?? '')
+  const submittedSearch = controlledState?.value ?? ''
+
+  const [inputValue, setInputValue] = useSyncedState(submittedSearch)
 
   const [showSuggestions, setShowSuggestions] = useState(false)
   const updateShowSuggestions = (filteredSuggestionsLength: number): void =>
@@ -67,7 +76,7 @@ export const useSearchBar = ({
     event.preventDefault()
     setShowSuggestions(false)
 
-    onSearch(inputValue)
+    controlledState?.setValue(inputValue)
   }
 
   const applySuggestion = (option: string): void => {

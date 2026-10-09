@@ -5,13 +5,12 @@ import { memo } from 'react'
 
 import { DateSelector } from '../../../../shared/components/DateSelector'
 import { FilterChips } from '../../../../shared/components/FilterChips'
+import { SearchBar } from '../../../../shared/components/SearchBar'
 import { useConfig } from '../../../../shared/config/useConfig'
 import { useWindowSize } from '../../../../shared/hooks/useWindowSize'
 import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
 import type { ControlledState } from '../../../../shared/types/controlledState'
 import { getDateFromDaysAgo } from '../../../../shared/utils/getDateFromDaysAgo'
-
-import { SearchBar } from './SearchBar'
 
 /** How many days back the logs can start at most. */
 const LOGS_MINIMAL_DAYS_AGO = 14
@@ -73,8 +72,8 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
           </Box>
           <SearchBar
             suggestions={logSearchSuggestions}
-            initialInputValue={logSearchState.value}
-            onSearch={logSearchState.setValue}
+            placeholder={translation('logs.searchPlaceholder')}
+            controlledState={logSearchState}
           />
         </Stack>
       )}

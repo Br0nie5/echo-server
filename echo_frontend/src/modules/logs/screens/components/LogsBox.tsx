@@ -1,6 +1,8 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { Accordion, AccordionDetails, AccordionSummary, Box } from '@mui/material'
-import { memo, useState } from 'react'
+import { memo } from 'react'
+
+import { useSyncedState } from '../../../../shared/hooks/useSyncedState'
 
 interface LogsBoxProps {
   id: string
@@ -17,13 +19,7 @@ const LogsBoxComponent: React.FC<LogsBoxProps> = ({
   isOpenedAtStart,
   width
 }) => {
-  const [previousIsOpenedAtStart, setPreviousIsOpenedAtStart] = useState(isOpenedAtStart)
-  const [isOpen, setIsOpen] = useState(isOpenedAtStart)
-
-  if (isOpenedAtStart !== previousIsOpenedAtStart) {
-    setPreviousIsOpenedAtStart(isOpenedAtStart)
-    setIsOpen(isOpenedAtStart)
-  }
+  const [isOpen, setIsOpen] = useSyncedState(isOpenedAtStart)
 
   return (
     <Box sx={{ width }}>

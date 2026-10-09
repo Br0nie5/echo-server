@@ -28,7 +28,6 @@ export interface TranslationKeys {
     from: string
     filterByCategory: string
     searchPlaceholder: string
-    searchButton: string
     noGroupLabel: string
   }
   query: {
@@ -39,5 +38,7 @@ export interface TranslationKeys {
   utils: {
     today: string
     yesterday: string
+    searchPlaceholder: string
+    searchButton: string
   }
 }

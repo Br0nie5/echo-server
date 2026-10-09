@@ -29,7 +29,6 @@ export const english: TranslationKeys = {
     from: 'From',
     filterByCategory: 'Filter Logs by Category:',
     searchPlaceholder: 'Search... (ex: jobId:123 message:"My wanted message")',
-    searchButton: 'Search',
     noGroupLabel: 'No group'
   },
   query: {
@@ -39,6 +38,8 @@ export const english: TranslationKeys = {
   },
   utils: {
     today: 'Today',
-    yesterday: 'Yesterday'
+    yesterday: 'Yesterday',
+    searchPlaceholder: 'Type your search here...',
+    searchButton: 'Search'
   }
 }

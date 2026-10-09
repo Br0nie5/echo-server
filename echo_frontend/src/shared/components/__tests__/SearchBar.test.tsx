@@ -1,8 +1,9 @@
 import userEvent, { type UserEvent } from '@testing-library/user-event'
+import { useState, type JSX } from 'react'
 
-import i18n from '../../../../../shared/i18n/i18n'
-import type { AppTranslation } from '../../../../../shared/i18n/useAppTranslation'
-import { renderComponent } from '../../../../../test/renderComponent'
+import { renderComponent } from '../../../test/renderComponent'
+import i18n from '../../i18n/i18n'
+import type { AppTranslation } from '../../i18n/useAppTranslation'
 import { SearchBar } from '../SearchBar'
 
 const appTranslation: AppTranslation = (key) => i18n.t(key)
@@ -15,9 +16,9 @@ beforeEach(() => {
 
 describe('SearchBar', () => {
   test('Should display the text a user enter', async () => {
-    const component = await renderComponent(<SearchBar onSearch={() => {}} />)
+    const component = await renderComponent(<SearchBar />)
 
-    const input = component.getByPlaceholderText(appTranslation('logs.searchPlaceholder'))
+    const input = component.getByPlaceholderText(appTranslation('utils.searchPlaceholder'))
 
     const userInputText = 'My custom input'
     await user.type(input, userInputText)
@@ -25,42 +26,75 @@ describe('SearchBar', () => {
     expect(component.getByDisplayValue(userInputText)).toBeInTheDocument()
   })
 
-  describe('onSearch', () => {
-    test('Should call onSearch callback with the input when clicking the Search button after writing my input', async () => {
-      let mySearch = ''
-      const component = await renderComponent(
-        <SearchBar
-          onSearch={(search) => {
-            mySearch = search
-          }}
-        />
-      )
+  test('Should display the given placeholder in place of the default one', async () => {
+    const placeholder = 'My custom placeholder'
 
-      const input = component.getByPlaceholderText(appTranslation('logs.searchPlaceholder'))
+    const component = await renderComponent(<SearchBar placeholder={placeholder} />)
 
-      const userTextInput = 'some text'
-      await user.type(input, userTextInput)
+    expect(component.getByPlaceholderText(placeholder)).toBeInTheDocument()
+    expect(
+      component.queryByPlaceholderText(appTranslation('utils.searchPlaceholder'))
+    ).not.toBeInTheDocument()
+  })
 
-      expect(component.getByDisplayValue(userTextInput)).toBeInTheDocument()
+  describe('controlledState', () => {
+    test('Should display values from controlledState if given', async () => {
+      const initialSearch = 'initial search'
+      const typedSearch = 'some text'
+      const resetSearch = 'reset search'
 
-      const searchButton = component.getByText(appTranslation('logs.searchButton'))
+      const resetSearchButtonLabel = 'Reset search'
 
-      await user.click(searchButton)
+      const setValue = vi.fn()
 
-      expect(mySearch).toBe(userTextInput)
+      const Parent = (): JSX.Element => {
+        const [search, setSearch] = useState<string>(initialSearch)
+
+        return (
+          <>
+            <SearchBar
+              controlledState={{
+                value: search,
+                setValue: (newSearch) => {
+                  setValue(newSearch)
+                  setSearch(newSearch)
+                }
+              }}
+            />
+            <button onClick={() => setSearch(resetSearch)}>{resetSearchButtonLabel}</button>
+          </>
+        )
+      }
+
+      const component = await renderComponent(<Parent />)
+
+      const input = component.getByDisplayValue(initialSearch)
+
+      await user.clear(input)
+      await user.type(input, typedSearch)
+
+      expect(setValue).not.toHaveBeenCalled()
+      expect(component.getByDisplayValue(typedSearch)).toBeInTheDocument()
+
+      await user.click(component.getByText(appTranslation('utils.searchButton')))
+
+      expect(setValue).toHaveBeenCalledExactlyOnceWith(typedSearch)
+      expect(component.getByDisplayValue(typedSearch)).toBeInTheDocument()
+
+      await user.click(component.getByText(resetSearchButtonLabel))
+
+      expect(component.queryByDisplayValue(typedSearch)).not.toBeInTheDocument()
+      expect(component.getByDisplayValue(resetSearch)).toBeInTheDocument()
     })
 
-    test('Should call onSearch callback with the input when pressing enter after writing my input', async () => {
-      let mySearch = ''
+    test('Should give the input to setValue when pressing enter after writing my input', async () => {
+      const setValue = vi.fn()
+
       const component = await renderComponent(
-        <SearchBar
-          onSearch={(search) => {
-            mySearch = search
-          }}
-        />
+        <SearchBar controlledState={{ value: '', setValue }} />
       )
 
-      const input = component.getByPlaceholderText(appTranslation('logs.searchPlaceholder'))
+      const input = component.getByPlaceholderText(appTranslation('utils.searchPlaceholder'))
 
       const userTextInput = 'some text'
       await user.type(input, userTextInput)
@@ -69,7 +103,7 @@ describe('SearchBar', () => {
 
       await user.keyboard('{Enter}')
 
-      expect(mySearch).toBe(userTextInput)
+      expect(setValue).toHaveBeenCalledExactlyOnceWith(userTextInput)
     })
   })
 
@@ -77,11 +111,9 @@ describe('SearchBar', () => {
     test('Should show suggestions when using ":" writing helper', async () => {
       const suggestion = 'My super suggestion'
 
-      const component = await renderComponent(
-        <SearchBar suggestions={[suggestion]} onSearch={() => {}} />
-      )
+      const component = await renderComponent(<SearchBar suggestions={[suggestion]} />)
 
-      const input = component.getByPlaceholderText(appTranslation('logs.searchPlaceholder'))
+      const input = component.getByPlaceholderText(appTranslation('utils.searchPlaceholder'))
 
       await user.type(input, 'some text then :')
 
@@ -91,11 +123,9 @@ describe('SearchBar', () => {
     test('Should show filtered suggestions continuing writing after using ":" writing helper', async () => {
       const suggestions = ['1 suggestion', '2 suggestions', '3 suggestions']
 
-      const component = await renderComponent(
-        <SearchBar suggestions={suggestions} onSearch={() => {}} />
-      )
+      const component = await renderComponent(<SearchBar suggestions={suggestions} />)
 
-      const input = component.getByPlaceholderText(appTranslation('logs.searchPlaceholder'))
+      const input = component.getByPlaceholderText(appTranslation('utils.searchPlaceholder'))
 
       await user.type(input, 'some text then :')
 
@@ -117,11 +147,9 @@ describe('SearchBar', () => {
     test('Should replace the writing helper ":" with the correct suggestion when clicking on one of the suggestions', async () => {
       const suggestions = ['1 suggestion', '2 suggestions', '3 suggestions']
 
-      const component = await renderComponent(
-        <SearchBar suggestions={suggestions} onSearch={() => {}} />
-      )
+      const component = await renderComponent(<SearchBar suggestions={suggestions} />)
 
-      const input = component.getByPlaceholderText(appTranslation('logs.searchPlaceholder'))
+      const input = component.getByPlaceholderText(appTranslation('utils.searchPlaceholder'))
 
       const userInputBaseText = 'some text then '
       await user.type(input, `${userInputBaseText}:`)
@@ -138,11 +166,9 @@ describe('SearchBar', () => {
     test('Should replace the writing helper ":" alongside the word preceding it with the correct suggestion', async () => {
       const suggestions = ['1 suggestion', '2 suggestions', '3 suggestions']
 
-      const component = await renderComponent(
-        <SearchBar suggestions={suggestions} onSearch={() => {}} />
-      )
+      const component = await renderComponent(<SearchBar suggestions={suggestions} />)
 
-      const input = component.getByPlaceholderText(appTranslation('logs.searchPlaceholder'))
+      const input = component.getByPlaceholderText(appTranslation('utils.searchPlaceholder'))
 
       const userInputBaseText = 'some text then '
       const userInputLastWord = 'do'
@@ -160,11 +186,9 @@ describe('SearchBar', () => {
     test('Should keep the hyphen "-" when replacing the writing helper ":" alongside the word preceding it with the correct suggestion', async () => {
       const suggestions = ['1 suggestion', '2 suggestions', '3 suggestions']
 
-      const component = await renderComponent(
-        <SearchBar suggestions={suggestions} onSearch={() => {}} />
-      )
+      const component = await renderComponent(<SearchBar suggestions={suggestions} />)
 
-      const input = component.getByPlaceholderText(appTranslation('logs.searchPlaceholder'))
+      const input = component.getByPlaceholderText(appTranslation('utils.searchPlaceholder'))
 
       const userInputBaseText = 'some text then '
       const userInputLastWord = 'do'
@@ -182,11 +206,9 @@ describe('SearchBar', () => {
     test('Should replace the writing helper ":" with the correct suggestion when selecting a suggestion though the keyboard', async () => {
       const suggestions = ['1 suggestion', '2 suggestions', '3 suggestions']
 
-      const component = await renderComponent(
-        <SearchBar suggestions={suggestions} onSearch={() => {}} />
-      )
+      const component = await renderComponent(<SearchBar suggestions={suggestions} />)
 
-      const input = component.getByPlaceholderText(appTranslation('logs.searchPlaceholder'))
+      const input = component.getByPlaceholderText(appTranslation('utils.searchPlaceholder'))
 
       const userInputBaseText = 'some text then '
       await user.type(input, `${userInputBaseText}:`)
@@ -221,11 +243,9 @@ describe('SearchBar', () => {
     test('Should loop though the suggestions when going up or down to much', async () => {
       const suggestions = ['1 suggestion', '2 suggestions', '3 suggestions']
 
-      const component = await renderComponent(
-        <SearchBar suggestions={suggestions} onSearch={() => {}} />
-      )
+      const component = await renderComponent(<SearchBar suggestions={suggestions} />)
 
-      const input = component.getByPlaceholderText(appTranslation('logs.searchPlaceholder'))
+      const input = component.getByPlaceholderText(appTranslation('utils.searchPlaceholder'))
 
       await user.type(input, 'some text then :')
 
@@ -255,11 +275,9 @@ describe('SearchBar', () => {
     test('Should not apply a suggestion when pressing Enter before selecting one', async () => {
       const suggestions = ['1 suggestion', '2 suggestions', '3 suggestions']
 
-      const component = await renderComponent(
-        <SearchBar suggestions={suggestions} onSearch={() => {}} />
-      )
+      const component = await renderComponent(<SearchBar suggestions={suggestions} />)
 
-      const input = component.getByPlaceholderText(appTranslation('logs.searchPlaceholder'))
+      const input = component.getByPlaceholderText(appTranslation('utils.searchPlaceholder'))
 
       const userInputBaseText = 'some text then '
       await user.type(input, `${userInputBaseText}:`)
@@ -274,11 +292,9 @@ describe('SearchBar', () => {
     test('Should hide suggestions when typing on Escape button', async () => {
       const suggestion = 'My super suggestion'
 
-      const component = await renderComponent(
-        <SearchBar suggestions={[suggestion]} onSearch={() => {}} />
-      )
+      const component = await renderComponent(<SearchBar suggestions={[suggestion]} />)
 
-      const input = component.getByPlaceholderText(appTranslation('logs.searchPlaceholder'))
+      const input = component.getByPlaceholderText(appTranslation('utils.searchPlaceholder'))
 
       await user.type(input, 'some text then :')
 
