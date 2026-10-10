@@ -11,7 +11,7 @@ export const registerAuthRoutes = async (
   server: EchoServer,
   { auth: authConfig, server: { apiRoutePrefix } }: BackConfig
 ): Promise<void> => {
-  if (!authConfig.hasAuthentication) {
+  if (!authConfig) {
     server.log.info('Authentication is disabled, skipping its registration')
     return
   }

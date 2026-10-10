@@ -16,7 +16,7 @@ const DYNAMIC_JWT_SECRET = crypto.randomBytes(256).toString('hex')
 export const registerSecurity = async (server: EchoServer, config: BackConfig): Promise<void> => {
   const { allowedDomain } = config.server
 
-  if (config.auth.hasAuthentication) {
+  if (config.auth) {
     await server.register(fastifyCookie)
 
     await server.register(fastifyJwt, {

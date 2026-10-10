@@ -32,10 +32,8 @@ export type ServerConfig = {
   frontendDistDirPath: string
 }
 
-/** What the authentication needs: whether it is on, its session cookie and where the users are stored. */
+/** What the authentication needs: its session cookie and where the users are stored. */
 export type AuthConfig = {
-  /** Whether the routes are protected by a login (`HAS_AUTHENTICATION`). */
-  hasAuthentication: boolean
   /** Name of the cookie holding the JWT of the session. */
   cookieName: string
   cookieSerializeOptions: CookieSerializeOptions
@@ -117,7 +115,7 @@ export type NotificationConfig = {
  * const usersDb = await createUsersDb(config.auth)
  * ```
  *
- * `selfReports` and `notification` are missing when what they configure is disabled: whoever takes
+ * `auth`, `selfReports` and `notification` are missing when what they configure is disabled: whoever takes
  * one is only built when it is there.
  *
  * A value needed in two places is in both configs (`serverName` is in `ServerConfig` and
@@ -125,7 +123,8 @@ export type NotificationConfig = {
  */
 export type BackConfig = {
   server: ServerConfig
-  auth: AuthConfig
+  /** Missing when the authentication is disabled (`HAS_AUTHENTICATION`): the routes are then open to anyone. */
+  auth?: AuthConfig
   logs: LogsConfig
   /** Missing when the self reports are disabled (`SELF_REPORTS_ENABLED`): the backend then stores none. */
   selfReports?: SelfReportsConfig

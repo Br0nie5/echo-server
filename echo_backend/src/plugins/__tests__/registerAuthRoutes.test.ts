@@ -33,7 +33,7 @@ describe('registerAuthRoutes', () => {
   })
 
   it('should register the routes under the API prefix, on top of the users database', async () => {
-    const authConfig = getMockAuthConfig({ hasAuthentication: true })
+    const authConfig = getMockAuthConfig()
 
     await registerAuthRoutes(
       server,
@@ -50,10 +50,7 @@ describe('registerAuthRoutes', () => {
   })
 
   it('should register no route and open no database when authentication is disabled', async () => {
-    await registerAuthRoutes(
-      server,
-      getMockBackConfig({ auth: getMockAuthConfig({ hasAuthentication: false }) })
-    )
+    await registerAuthRoutes(server, getMockBackConfig({ auth: undefined }))
     await server.ready()
 
     expect(createUsersDb).not.toHaveBeenCalled()

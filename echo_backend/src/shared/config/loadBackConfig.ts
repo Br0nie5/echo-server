@@ -46,7 +46,8 @@ const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
  * disabled, when one of its required variables is, and the cron is left out too when the
  * notifications are, since it would have no channel to notify through. The self reports are left
  * out unless `SELF_REPORTS_ENABLED` is `true`: they are then stored under `SERVER_LOGS_DIR_PATH`,
- * which is always required, and the logs are read from it too, next to `LOGS_DIR_PATH`.
+ * which is always required, and the logs are read from it too, next to `LOGS_DIR_PATH`. The
+ * authentication is left out unless `HAS_AUTHENTICATION` is `true`.
  *
  * It is meant to be called once, when the server starts, the config then being handed down:
  *
@@ -91,13 +92,14 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
       tls: parseTlsConfig(processEnv, { serverUrl: config.SERVER_URL }),
       frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
     },
-    auth: {
-      hasAuthentication: config.HAS_AUTHENTICATION,
-      // The brackets and the colons of an IPv6 address are not allowed in the name of a cookie.
-      cookieName: `${allowedDomain.replace(/[^a-zA-Z0-9.-]/g, '_')}_access_token`,
-      cookieSerializeOptions: parseCookieSerializeOptions(allowedDomain),
-      usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')
-    },
+    auth: config.HAS_AUTHENTICATION
+      ? {
+          // The brackets and the colons of an IPv6 address are not allowed in the name of a cookie.
+          cookieName: `${allowedDomain.replace(/[^a-zA-Z0-9.-]/g, '_')}_access_token`,
+          cookieSerializeOptions: parseCookieSerializeOptions(allowedDomain),
+          usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')
+        }
+      : undefined,
     logs: {
       logsDirsPaths: areSelfReportsEnabled ? [logsDirPath, serverLogsRootDirPath] : [logsDirPath],
       logFileExtension: LOG_FILE_EXTENSION,

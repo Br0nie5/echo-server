@@ -114,19 +114,7 @@ describe('loadBackConfig', () => {
         tls: undefined,
         frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
       },
-      auth: {
-        hasAuthentication: false,
-        cookieName: 'localhost_access_token',
-        cookieSerializeOptions: {
-          domain: undefined,
-          path: '/',
-          secure: false,
-          httpOnly: true,
-          sameSite: 'lax',
-          maxAge: 86400
-        },
-        usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')
-      },
+      auth: undefined,
       logs: {
         logsDirsPaths: ['/some/path'],
         logFileExtension: '.jsonl',
@@ -176,7 +164,6 @@ describe('loadBackConfig', () => {
         frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
       },
       auth: {
-        hasAuthentication: true,
         cookieName: 'allowed-domain.com_access_token',
         cookieSerializeOptions: {
           domain: 'allowed-domain.com',

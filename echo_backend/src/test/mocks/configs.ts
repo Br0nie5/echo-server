@@ -25,7 +25,6 @@ export const getMockServerConfig = (overrides: Partial<ServerConfig> = {}): Serv
 
 /** An `AuthConfig` for the tests, with `overrides` on top of its defaults. */
 export const getMockAuthConfig = (overrides: Partial<AuthConfig> = {}): AuthConfig => ({
-  hasAuthentication: true,
   cookieName: 'test-cookie',
   cookieSerializeOptions: { httpOnly: true, path: '/' },
   usersDbFilePath: '/fake/data/users.db',
@@ -77,7 +76,7 @@ export const getMockLogsConfig = (overrides: Partial<LogsConfig> = {}): LogsConf
 
 /**
  * A `BackConfig` for the tests, made of the default mock of each of its parts, with `overrides` on
- * top: it has self reports, and no logs notifier and no notification unless they are given.
+ * top: it has authentication and self reports, and no logs notifier and no notification unless they are given.
  */
 export const getMockBackConfig = (overrides: Partial<BackConfig> = {}): BackConfig => ({
   server: getMockServerConfig(),

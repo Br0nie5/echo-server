@@ -16,13 +16,13 @@ import type { EchoServer } from './types/echoServer.js'
  */
 export const registerLogsRoutes = async (
   server: EchoServer,
-  { auth: { hasAuthentication }, server: { apiRoutePrefix } }: BackConfig,
+  { auth, server: { apiRoutePrefix } }: BackConfig,
   logsRepository: LogsRepository,
   selfReportRepository: SelfReportRepository
 ): Promise<void> => {
   await server.register(logsRoutes, {
     prefix: apiRoutePrefix,
     controller: createLogsController(logsRepository, selfReportRepository),
-    preHandler: hasAuthentication ? authPreHandler : undefined
+    preHandler: auth ? authPreHandler : undefined
   })
 }

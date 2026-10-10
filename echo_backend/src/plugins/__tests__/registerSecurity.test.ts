@@ -17,7 +17,7 @@ const getConfig = ({
 }: { hasAuthentication?: boolean; allowedDomain?: string } = {}): BackConfig =>
   getMockBackConfig({
     server: getMockServerConfig({ allowedDomain }),
-    auth: getMockAuthConfig({ hasAuthentication, cookieName: COOKIE_NAME })
+    auth: hasAuthentication ? getMockAuthConfig({ cookieName: COOKIE_NAME }) : undefined
   })
 
 describe('registerSecurity', () => {

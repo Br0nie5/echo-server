@@ -36,7 +36,7 @@ describe('registerLogsRoutes', () => {
       server,
       getMockBackConfig({
         server: getMockServerConfig({ apiRoutePrefix: '/custom-api' }),
-        auth: getMockAuthConfig({ hasAuthentication })
+        auth: hasAuthentication ? getMockAuthConfig() : undefined
       }),
       logsRepository,
       selfReportRepository
