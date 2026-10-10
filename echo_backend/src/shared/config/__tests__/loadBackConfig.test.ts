@@ -93,7 +93,7 @@ describe('loadBackConfig', () => {
     { variable: 'HTTP_PORT', value: 'not-a-number' },
     { variable: 'LOGS_DIR_PATH', value: '' },
     { variable: 'SERVER_LOGS_DIR_PATH', value: '' },
-    { variable: 'SELF_REPORTS_ENABLED', value: 'maybe' },
+    { variable: 'SAVE_SELF_REPORTS_TO_FILE', value: 'maybe' },
     { variable: 'SELF_REPORTS_RETENTION_DAYS', value: '0' }
   ])(
     'should throw when the parser of $variable throws on "$value"',
@@ -101,7 +101,7 @@ describe('loadBackConfig', () => {
       await expect(
         loadBackConfig(filesService, {
           ...REQUIRED_ENV,
-          SELF_REPORTS_ENABLED: 'true',
+          SAVE_SELF_REPORTS_TO_FILE: 'true',
           [variable]: value
         })
       ).rejects.toThrow()
@@ -145,7 +145,7 @@ describe('loadBackConfig', () => {
       LOGS_DIR_PATH: '/watched_logs',
       TLS_CERT_PATH,
       TLS_KEY_PATH,
-      SELF_REPORTS_ENABLED: 'true',
+      SAVE_SELF_REPORTS_TO_FILE: 'true',
       SERVER_LOGS_DIR_PATH: '/server_logs',
       SELF_REPORTS_RETENTION_DAYS: '30',
       LOGS_NOTIFIER_SCHEDULE_REGEX: '*/30 * * * *',
@@ -212,7 +212,7 @@ describe('loadBackConfig', () => {
   it('should leave the self reports out when they are disabled, whatever their other variables', async () => {
     const config = await loadBackConfig(filesService, {
       ...REQUIRED_ENV,
-      SELF_REPORTS_ENABLED: 'false',
+      SAVE_SELF_REPORTS_TO_FILE: 'false',
       SELF_REPORTS_RETENTION_DAYS: '0'
     })
 

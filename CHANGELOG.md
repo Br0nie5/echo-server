@@ -27,10 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   | Before | After |
   | ------ | ----- |
-  | `SELF_LOGS_ENABLED` | `SELF_REPORTS_ENABLED` |
+  | `SELF_LOGS_ENABLED` | `SAVE_SELF_REPORTS_TO_FILE` |
   | `SELF_LOGS_RETENTION_DAYS` | `SELF_REPORTS_RETENTION_DAYS` |
 
-- **Breaking:** the self reports are no longer stored inside the watched logs, in `/watched_logs/server/<SERVER_NAME>/log`, but in a directory of their own, `/server_logs/self_reports/<SERVER_NAME>/log` (under `SERVER_LOGS_DIR_PATH`, default `/server_logs`), which is scanned along with `/watched_logs` when `SELF_REPORTS_ENABLED=true`. Replace the `/watched_logs/server` sub-mount with a writable `/server_logs` volume (to keep the existing self reports, move the content of the former host directory into a `self_reports` directory of the new one); the `server` directory created in your logs for that sub-mount is no longer needed.
+- **Breaking:** the self reports are no longer stored inside the watched logs, in `/watched_logs/server/<SERVER_NAME>/log`, but in a directory of their own, `/server_logs/self_reports/<SERVER_NAME>/log` (under `SERVER_LOGS_DIR_PATH`, default `/server_logs`), which is scanned along with `/watched_logs` when `SAVE_SELF_REPORTS_TO_FILE=true`. Replace the `/watched_logs/server` sub-mount with a writable `/server_logs` volume (to keep the existing self reports, move the content of the former host directory into a `self_reports` directory of the new one); the `server` directory created in your logs for that sub-mount is no longer needed.
 
 - **Breaking:** an unknown path outside `/app` and `/api` now gets the same error body as the API, `{ "statusCode": 404, "message": "Not found." }`, instead of `{ "error": "Not found" }`.
 

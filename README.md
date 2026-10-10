@@ -69,11 +69,11 @@ services:
       # - TELEGRAM_CHAT_ID=123456789
       # - TELEGRAM_BASE_URL=https://api.telegram.org/bot<token>
       # Optional: surface log-parsing failures in the UI, see the section below
-      # - SELF_REPORTS_ENABLED=true
+      # - SAVE_SELF_REPORTS_TO_FILE=true
       # - SELF_REPORTS_RETENTION_DAYS=10
     volumes:
       - /path/to/your/logs:/watched_logs:ro
-      # Needed if SELF_REPORTS_ENABLED=true: a writable volume of its own, so /watched_logs stays read-only.
+      # Needed if SAVE_SELF_REPORTS_TO_FILE=true: a writable volume of its own, so /watched_logs stays read-only.
       # - /path/to/echo/server-logs:/server_logs
       - /path/to/echo/data:/app/data
     ports:
@@ -96,7 +96,7 @@ docker run -d \
   ghcr.io/br0nie5/echo:latest
 ```
 
-If you enable `SELF_REPORTS_ENABLED` (see below), also add `-e SELF_REPORTS_ENABLED=true` and a writable volume of its own: `-v /path/to/echo/server-logs:/server_logs`.
+If you enable `SAVE_SELF_REPORTS_TO_FILE` (see below), also add `-e SAVE_SELF_REPORTS_TO_FILE=true` and a writable volume of its own: `-v /path/to/echo/server-logs:/server_logs`.
 
 ## Parameters
 
@@ -126,8 +126,8 @@ Container parameters are given as `<external>:<internal>` for ports and volumes.
 | `LOGS_NOTIFIER_TIMEZONE`              | `UTC`                      | Timezone the dates of Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`, follows daylight saving). An unknown value stops the server at startup. |
 | `TLS_CERT_PATH`                       | _(empty)_                  | Path (inside the container) to a PEM certificate. Set with `TLS_KEY_PATH` to serve HTTPS. |
 | `TLS_KEY_PATH`                        | _(empty)_                  | Path (inside the container) to the PEM private key. |
-| `SELF_REPORTS_ENABLED`                | `false`                    | When `true`, `.jsonl` lines the backend fails to parse are written to `/server_logs/self_reports/<SERVER_NAME>/log/parseLogFile.jsonl`, and `/server_logs` is scanned too, so they show up in the UI like any other log. Requires a writable volume, see Volumes below. |
-| `SERVER_LOGS_DIR_PATH`                | `/server_logs`             | Directory the backend writes its own logs under: the self reports, in its `self_reports` subdirectory. Scanned for `.jsonl` files next to `LOGS_DIR_PATH` when `SELF_REPORTS_ENABLED=true`, and unused otherwise. Normally left as is and controlled via the volume. Keep it outside `LOGS_DIR_PATH`, otherwise its files are scanned twice. |
+| `SAVE_SELF_REPORTS_TO_FILE`           | `false`                    | When `true`, `.jsonl` lines the backend fails to parse are written to `/server_logs/self_reports/<SERVER_NAME>/log/parseLogFile.jsonl`, and `/server_logs` is scanned too, so they show up in the UI like any other log. Requires a writable volume, see Volumes below. |
+| `SERVER_LOGS_DIR_PATH`                | `/server_logs`             | Directory the backend writes its own logs under: the self reports, in its `self_reports` subdirectory. Scanned for `.jsonl` files next to `LOGS_DIR_PATH` when `SAVE_SELF_REPORTS_TO_FILE=true`, and unused otherwise. Normally left as is and controlled via the volume. Keep it outside `LOGS_DIR_PATH`, otherwise its files are scanned twice. |
 | `SELF_REPORTS_RETENTION_DAYS`         | `10`                       | Self-report lines older than this many days are pruned once at each server start. |
 
 The Telegram job only starts when `LOGS_NOTIFIER_SCHEDULE_REGEX`, `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES`, `TELEGRAM_CHAT_ID` and `TELEGRAM_BASE_URL` are all set and valid. Otherwise it is silently disabled.
@@ -137,7 +137,7 @@ The Telegram job only starts when `LOGS_NOTIFIER_SCHEDULE_REGEX`, `LOGS_NOTIFIER
 | Parameter        | Function |
 | ---------------- | -------- |
 | `/watched_logs`  | The directory containing your `.jsonl` logs (subdirectories are scanned). Read-only (`:ro`) is enough. |
-| `/server_logs`   | Optional, only needed when `SELF_REPORTS_ENABLED=true`: a writable volume for the backend's own self reports, apart from `/watched_logs`, which can stay read-only. Without it, the self reports are lost when the container is recreated. |
+| `/server_logs`   | Optional, only needed when `SAVE_SELF_REPORTS_TO_FILE=true`: a writable volume for the backend's own self reports, apart from `/watched_logs`, which can stay read-only. Without it, the self reports are lost when the container is recreated. |
 | `/app/data`      | Persistent state: `users.db` (SQLite, hashed passwords) and `last_logs_check.json` (Telegram checkpoint). Without this volume, the admin account is lost when the container is recreated. |
 
 ## Log file format
@@ -157,7 +157,7 @@ Echo reads every `.jsonl` file under the logs directory. Each line must be one J
 | `call_file` | string | Name of the file that emitted the line, e.g. `rotate_logs.sh`. |
 | `call_line` | integer | Line number in `call_file` that emitted the line. |
 
-Lines that are not valid JSON, do not match this shape, have an unknown `status`, or have an unparsable timestamp are skipped without error (unless `SELF_REPORTS_ENABLED=true`, see below).
+Lines that are not valid JSON, do not match this shape, have an unknown `status`, or have an unparsable timestamp are skipped without error (unless `SAVE_SELF_REPORTS_TO_FILE=true`, see below).
 
 **Grouping.** Logs are grouped by their directory. The first directory level under the logs root is dropped, any directory named `log` is ignored, and the rest are joined with `_`. For example, with the logs root mounted at `/watched_logs`:
 
@@ -170,7 +170,7 @@ The file name (without its extension) is shown as the log source.
 
 ## Self reports
 
-Set `SELF_REPORTS_ENABLED=true` to have the backend report the `.jsonl` lines it fails to parse as regular log entries, so they show up in the UI instead of only in the container's own logs. Each failing line becomes a `WARNING` entry in group `<SERVER_NAME>`, source `parseLogFile`, at `/server_logs/self_reports/<SERVER_NAME>/log/parseLogFile.jsonl` (under `SERVER_LOGS_DIR_PATH`, which is scanned along with `/watched_logs`). This needs a writable volume of its own (see Volumes above), so `/watched_logs` can stay read-only. All entries written to one self-report file during one server run share the same `job_id`, and each self-report file takes its own, so a server start uses as many `job_id`s as it has self-report files; entries older than `SELF_REPORTS_RETENTION_DAYS` (default `10`) are pruned once at each start.
+Set `SAVE_SELF_REPORTS_TO_FILE=true` to have the backend report the `.jsonl` lines it fails to parse as regular log entries, so they show up in the UI instead of only in the container's own logs. Each failing line becomes a `WARNING` entry in group `<SERVER_NAME>`, source `parseLogFile`, at `/server_logs/self_reports/<SERVER_NAME>/log/parseLogFile.jsonl` (under `SERVER_LOGS_DIR_PATH`, which is scanned along with `/watched_logs`). This needs a writable volume of its own (see Volumes above), so `/watched_logs` can stay read-only. All entries written to one self-report file during one server run share the same `job_id`, and each self-report file takes its own, so a server start uses as many `job_id`s as it has self-report files; entries older than `SELF_REPORTS_RETENTION_DAYS` (default `10`) are pruned once at each start.
 
 Since every request re-scans and re-parses all `.jsonl` files, a line that still fails to parse is reported again on every request. It is not written a second time: each entry's `call_file` is the name of the log file the failing line comes from, and its `call_line` is that line's position (1-based, among the non-blank lines of that file), and reporting a failure that already has an entry with the same `call_file`, `call_line` and message only brings the `timestamp` of that entry up to now. So the entry of a problem that is still there always has a recent date, and the entry of a problem you fixed keeps the date it was last seen at, until `SELF_REPORTS_RETENTION_DAYS` prunes it at a later start. A line of a self-report file that fails to parse is reported the same way, with `call_file` set to `parseLogFile`, and is then removed from that file the next time it is written or at the next start.
 

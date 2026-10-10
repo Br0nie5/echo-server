@@ -48,7 +48,7 @@ const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
  * and the cron notifying the problem logs are the exception: each is left out of the config, hence
  * disabled, when one of its required variables is, and the cron is left out too when the
  * notifications are, since it would have no channel to notify through. The self reports are left
- * out unless `SELF_REPORTS_ENABLED` is `true`: they are then stored under `SERVER_LOGS_DIR_PATH`,
+ * out unless `SAVE_SELF_REPORTS_TO_FILE` is `true`: they are then stored under `SERVER_LOGS_DIR_PATH`,
  * which is always required, and the logs are read from it too, next to `LOGS_DIR_PATH`. The
  * authentication is left out unless `HAS_AUTHENTICATION` is `true`.
  *
@@ -75,8 +75,8 @@ export const loadBackConfig = async (
   const logsDirPath = requireEnv(processEnv, 'LOGS_DIR_PATH')
   const serverLogsRootDirPath = requireEnv(processEnv, 'SERVER_LOGS_DIR_PATH')
 
-  const areSelfReportsEnabled = addEnvNameToError('SELF_REPORTS_ENABLED', () =>
-    parseOptionalBoolean(processEnv.SELF_REPORTS_ENABLED)
+  const areSelfReportsEnabled = addEnvNameToError('SAVE_SELF_REPORTS_TO_FILE', () =>
+    parseOptionalBoolean(processEnv.SAVE_SELF_REPORTS_TO_FILE)
   )
 
   const selfReportsGroupName = createSelfReportsGroupName(config.SERVER_NAME)

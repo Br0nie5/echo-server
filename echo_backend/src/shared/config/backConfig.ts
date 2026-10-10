@@ -126,7 +126,7 @@ export type BackConfig = {
   /** Missing when the authentication is disabled (`HAS_AUTHENTICATION`): the routes are then open to anyone. */
   auth?: AuthConfig
   logs: LogsConfig
-  /** Missing when the self reports are disabled (`SELF_REPORTS_ENABLED`): the backend then stores none. */
+  /** Missing when the self reports are disabled (`SAVE_SELF_REPORTS_TO_FILE`): the backend then stores none. */
   selfReports?: SelfReportsConfig
   /** Missing when Telegram is not configured: the backend then has no channel to notify through. */
   notification?: NotificationConfig

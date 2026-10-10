@@ -25,7 +25,7 @@ docker run \
   -e SERVER_URL="https://localhost:4000" \
   -e TLS_CERT_PATH=/certs/localhost-cert.pem \
   -e TLS_KEY_PATH=/certs/localhost-key.pem \
-  -e SELF_REPORTS_ENABLED=true \
+  -e SAVE_SELF_REPORTS_TO_FILE=true \
   -v ./test_logs:/watched_logs:ro \
   -v ./server_logs:/server_logs \
   -v ./data:/app/data \
