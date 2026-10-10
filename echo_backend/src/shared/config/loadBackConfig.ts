@@ -33,6 +33,9 @@ const LOG_FILE_EXTENSION = '.jsonl'
 /** Name of the directory scripts put their log files in, and the backend its self-report files. */
 const LOG_FILES_DIR_NAME = 'log'
 
+/** Base URL of the Telegram bot API, which the path of a bot is appended to. */
+const TELEGRAM_BASE_URL = 'https://api.telegram.org'
+
 /** Maximum length of a message, set by the Telegram bot API. */
 const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
 
@@ -82,6 +85,7 @@ export const loadBackConfig = async (
   const selfReportsGroupName = createSelfReportsGroupName(config.SERVER_NAME)
 
   const notification = parseNotificationConfig(processEnv, {
+    telegramBaseUrl: TELEGRAM_BASE_URL,
     telegramMessageSizeLimit: TELEGRAM_MESSAGE_SIZE_LIMIT
   })
 

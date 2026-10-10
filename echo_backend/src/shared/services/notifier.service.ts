@@ -23,8 +23,9 @@ export interface NotifierService {
 }
 
 /**
- * Builds the notifier service, sending its messages to the chat `telegramChatId` from the bot
- * behind `telegramBaseUrl`, within the `telegramMessageSizeLimit`.
+ * Builds the notifier service, sending its messages to the chat `telegramChatId` from the bot of
+ * `telegramBotToken`, through the Telegram bot API at `telegramBaseUrl`, within the
+ * `telegramMessageSizeLimit`.
  *
  * It is meant to be built once, when the notifications are configured, and handed to whatever
  * notifies:
@@ -36,13 +37,14 @@ export interface NotifierService {
  */
 export const createNotifierService = ({
   telegramBaseUrl,
+  telegramBotToken,
   telegramChatId,
   telegramMessageSizeLimit
 }: NotificationConfig): NotifierService => ({
   getMessageSizeLimit: (): number => telegramMessageSizeLimit,
 
   notify: async (message): Promise<void> => {
-    const response = await fetch(`${telegramBaseUrl}/sendMessage`, {
+    const response = await fetch(`${telegramBaseUrl}/bot${telegramBotToken}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: telegramChatId, text: message })

@@ -61,7 +61,8 @@ export const getMockNotificationConfig = (
   overrides: Partial<NotificationConfig> = {}
 ): NotificationConfig => ({
   telegramChatId: 'chat-123',
-  telegramBaseUrl: 'https://api.telegram.org/bot-fake',
+  telegramBotToken: 'fake-bot-token',
+  telegramBaseUrl: 'https://api.telegram.org',
   telegramMessageSizeLimit: 4096,
   ...overrides
 })

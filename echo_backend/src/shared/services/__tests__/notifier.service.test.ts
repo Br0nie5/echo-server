@@ -3,7 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { getMockNotificationConfig } from '../../../test/mocks/configs.js'
 import { createNotifierService } from '../notifier.service.js'
 
-const notificationConfig = getMockNotificationConfig({ telegramMessageSizeLimit: 120 })
+const notificationConfig = getMockNotificationConfig({
+  telegramChatId: 'chat-123',
+  telegramBotToken: 'bot-token',
+  telegramBaseUrl: 'https://telegram.test',
+  telegramMessageSizeLimit: 120
+})
 const notifierService = createNotifierService(notificationConfig)
 
 beforeEach(() => {
@@ -28,10 +33,10 @@ describe('NotifierService', () => {
 
       await notifierService.notify('Hello')
 
-      expect(fetch).toHaveBeenCalledWith(`${notificationConfig.telegramBaseUrl}/sendMessage`, {
+      expect(fetch).toHaveBeenCalledWith('https://telegram.test/botbot-token/sendMessage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: notificationConfig.telegramChatId, text: 'Hello' })
+        body: JSON.stringify({ chat_id: 'chat-123', text: 'Hello' })
       })
     })
 

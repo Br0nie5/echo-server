@@ -92,11 +92,13 @@ export type LogsConfig = {
   logsNotifier?: LogsNotifierConfig
 }
 
-/** What sending a notification needs: the Telegram chat it goes to. */
+/** What sending a notification needs: the Telegram bot sending it and the chat it goes to. */
 export type NotificationConfig = {
   /** Chat the messages are sent to (`TELEGRAM_CHAT_ID`). */
   telegramChatId: string
-  /** URL of the Telegram bot API, token included (`TELEGRAM_BASE_URL`). */
+  /** Token of the bot the messages are sent by (`TELEGRAM_BOT_TOKEN`). A secret. */
+  telegramBotToken: string
+  /** Base URL of the Telegram bot API, without the token. */
   telegramBaseUrl: string
   /** Maximum length of a Telegram message. */
   telegramMessageSizeLimit: number

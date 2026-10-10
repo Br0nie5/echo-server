@@ -151,7 +151,7 @@ describe('loadBackConfig', () => {
       LOGS_NOTIFIER_SCHEDULE_REGEX: '*/30 * * * *',
       LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: 'WARNING,ERROR',
       TELEGRAM_CHAT_ID: '123456789',
-      TELEGRAM_BASE_URL: 'https://api.telegram.org/bot123456789',
+      TELEGRAM_BOT_TOKEN: '123456:ABC-DEF',
       LOGS_NOTIFIER_TIMEZONE: 'Europe/Paris'
     })
 
@@ -203,7 +203,8 @@ describe('loadBackConfig', () => {
       },
       notification: {
         telegramChatId: '123456789',
-        telegramBaseUrl: 'https://api.telegram.org/bot123456789',
+        telegramBotToken: '123456:ABC-DEF',
+        telegramBaseUrl: 'https://api.telegram.org',
         telegramMessageSizeLimit: 4096
       }
     })

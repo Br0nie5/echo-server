@@ -21,7 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `LOGS_CRON_WATCHED_LOGS_CATEGORIES` | `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` |
   | `LOGS_CRON_TELEGRAM_TIMEZONE` | `LOGS_NOTIFIER_TIMEZONE` |
   | `LOGS_CRON_TELEGRAM_CHAT_ID` | `TELEGRAM_CHAT_ID` |
-  | `LOGS_CRON_TELEGRAM_BASE_URL` | `TELEGRAM_BASE_URL` |
+
+- **Breaking:** `LOGS_CRON_TELEGRAM_BASE_URL`, which held the URL of the Telegram bot API with the token of the bot, is replaced by `TELEGRAM_BOT_TOKEN`, which holds the token alone: set it to what followed `https://api.telegram.org/bot` in the former value. Without it, the Telegram notifications are disabled.
 
 - **Breaking:** the self logs are now called self reports, and their environment variables are renamed. Update the environment of your container, otherwise the self reports are disabled and their retention goes back to its default:
 

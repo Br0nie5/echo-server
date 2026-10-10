@@ -67,7 +67,7 @@ services:
       # - LOGS_NOTIFIER_SCHEDULE_REGEX=*/30 * * * *
       # - LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES=ERROR,WARNING
       # - TELEGRAM_CHAT_ID=123456789
-      # - TELEGRAM_BASE_URL=https://api.telegram.org/bot<token>
+      # - TELEGRAM_BOT_TOKEN=<token>
       # Optional: surface log-parsing failures in the UI, see the section below
       # - SAVE_SELF_REPORTS_TO_FILE=true
       # - SELF_REPORTS_RETENTION_DAYS=10
@@ -122,7 +122,7 @@ Container parameters are given as `<external>:<internal>` for ports and volumes.
 | `LOGS_NOTIFIER_SCHEDULE_REGEX`        | `*/30 * * * *`             | Cron expression for the Telegram check. |
 | `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` | `ERROR,WARNING`            | Comma-separated categories that trigger a notification. Valid values: `SUCCESS`, `INFO`, `WARNING`, `ERROR`. |
 | `TELEGRAM_CHAT_ID`                    | _(empty)_                  | Telegram chat that receives notifications. |
-| `TELEGRAM_BASE_URL`                   | _(empty)_                  | Bot API base URL, `https://api.telegram.org/bot<token>`. Treat as a secret. |
+| `TELEGRAM_BOT_TOKEN`                  | _(empty)_                  | Token of the Telegram bot, as given by BotFather (`123456:ABC-DEF…`), without the `https://api.telegram.org/bot` prefix. Treat as a secret. |
 | `LOGS_NOTIFIER_TIMEZONE`              | `UTC`                      | Timezone the dates of Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`, follows daylight saving). An unknown value stops the server at startup. |
 | `TLS_CERT_PATH`                       | _(empty)_                  | Path (inside the container) to a PEM certificate. Set with `TLS_KEY_PATH` to serve HTTPS. |
 | `TLS_KEY_PATH`                        | _(empty)_                  | Path (inside the container) to the PEM private key. |
@@ -130,7 +130,7 @@ Container parameters are given as `<external>:<internal>` for ports and volumes.
 | `SERVER_LOGS_DIR_PATH`                | `/server_logs`             | Directory the backend writes its own logs under: the self reports, in its `self_reports` subdirectory. Scanned for `.jsonl` files next to `LOGS_DIR_PATH` when `SAVE_SELF_REPORTS_TO_FILE=true`, and unused otherwise. Normally left as is and controlled via the volume. Keep it outside `LOGS_DIR_PATH`, otherwise its files are scanned twice. |
 | `SELF_REPORTS_RETENTION_DAYS`         | `10`                       | Self-report lines older than this many days are pruned once at each server start. |
 
-The Telegram job only starts when `LOGS_NOTIFIER_SCHEDULE_REGEX`, `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES`, `TELEGRAM_CHAT_ID` and `TELEGRAM_BASE_URL` are all set and valid. Otherwise it is silently disabled.
+The Telegram job only starts when `LOGS_NOTIFIER_SCHEDULE_REGEX`, `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES`, `TELEGRAM_CHAT_ID` and `TELEGRAM_BOT_TOKEN` are all set and valid. Otherwise it is silently disabled.
 
 ### Volumes
 
@@ -196,7 +196,7 @@ environment:
   - LOGS_NOTIFIER_SCHEDULE_REGEX=*/30 * * * *
   - LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES=ERROR,WARNING
   - TELEGRAM_CHAT_ID=123456789
-  - TELEGRAM_BASE_URL=https://api.telegram.org/bot<token>
+  - TELEGRAM_BOT_TOKEN=<token>
   - LOGS_NOTIFIER_TIMEZONE=UTC+2 # optional, UTC by default
 ```
 

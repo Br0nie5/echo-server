@@ -39,7 +39,7 @@ Parsed by [loadBackConfig.ts](../echo_backend/src/shared/config/loadBackConfig.t
 | `LOGS_NOTIFIER_SCHEDULE_REGEX` | no* | Cron expression ([node-cron](https://github.com/node-cron/node-cron) syntax). |
 | `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` | no* | Comma-separated subset of `SUCCESS,INFO,WARNING,ERROR`. Invalid entries are dropped. |
 | `TELEGRAM_CHAT_ID` | no* | Telegram chat id. |
-| `TELEGRAM_BASE_URL` | no* | `https://api.telegram.org/bot<token>`. |
+| `TELEGRAM_BOT_TOKEN` | no* | Token of the Telegram bot, as given by BotFather (`123456:ABC-DEF…`), without the `https://api.telegram.org/bot` prefix. Treat as a secret. |
 | `LOGS_NOTIFIER_TIMEZONE` | no | Default `UTC`. Timezone the dates of Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`). Throws at startup if unknown. |
 | `SAVE_SELF_REPORTS_TO_FILE` | no | `true` or `false`, default `false`. When enabled, `.jsonl` lines the backend fails to parse are written to `SERVER_LOGS_DIR_PATH/self_reports/<SERVER_NAME>/log/parseLogFile.jsonl`, and `SERVER_LOGS_DIR_PATH` is scanned next to `LOGS_DIR_PATH`, so they show up in the app like any other log. |
 | `SERVER_LOGS_DIR_PATH` | yes | Directory the backend writes its own logs under: the self reports, in its `self_reports` subdirectory, hence writable (see the Volumes section of the [README](../README.md)). Scanned for `.jsonl` files when the self reports are enabled. Relative paths resolve from the backend's working directory. Keep it outside `LOGS_DIR_PATH`, otherwise its files are scanned twice. Always required, but unused when the self reports are disabled. |
