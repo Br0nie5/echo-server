@@ -1,4 +1,4 @@
-import { authPreHandler } from '../modules/auth/presentation/auth.hooks.js'
+import { rejectUnauthenticatedRequest } from '../modules/auth/presentation/auth.hooks.js'
 import type { LogsRepository } from '../modules/logs/domain/logs.repository.js'
 import { createLogsController } from '../modules/logs/presentation/logs.controller.js'
 import { logsRoutes } from '../modules/logs/presentation/logs.routes.js'
@@ -23,6 +23,6 @@ export const registerLogsRoutes = async (
   await server.register(logsRoutes, {
     prefix: apiRoutePrefix,
     controller: createLogsController(logsRepository, selfReportRepository),
-    preHandler: auth ? authPreHandler : undefined
+    authenticate: auth ? rejectUnauthenticatedRequest : undefined
   })
 }

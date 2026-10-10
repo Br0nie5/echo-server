@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --mode development",
     "build": "tsc -b && vite build --mode production",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format": "prettier --write . --ignore-path ../.gitignore --ignore-path ../.prettierignore",
     "lint": "eslint . --fix",
     "preview": "vite preview",
     "test": "vitest run",
@@ -56,7 +56,6 @@
     "globals": "^17.13.0",
     "jsdom": "^30.1.2",
     "nock": "^15.0.1",
-    "prettier": "^3.9.9",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.1",
     "vite": "^8.3.3",

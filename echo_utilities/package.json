@@ -12,8 +12,9 @@
   },
   "scripts": {
     "build": "npm run clean && tsc --project tsconfig.build.json",
+    "dev": "tsc --project tsconfig.build.json --watch --preserveWatchOutput",
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format": "prettier --write . --ignore-path ../.gitignore --ignore-path ../.prettierignore",
     "lint": "eslint . --fix",
     "test": "vitest run",
     "test:watch": "vitest --watch",
@@ -36,7 +37,6 @@
     "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-tsdoc": "^0.5.4",
     "globals": "^17.13.0",
-    "prettier": "^3.9.9",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.1",
     "vitest": "^5.0.3"

@@ -109,6 +109,17 @@ describe('loadBackConfig', () => {
     }
   )
 
+  it('Should throw in development when the TLS variables are set', async () => {
+    await expect(
+      loadBackConfig(filesService, {
+        ...REQUIRED_ENV,
+        SERVER_URL: 'https://localhost:5173',
+        TLS_CERT_PATH,
+        TLS_KEY_PATH
+      })
+    ).rejects.toThrow('TLS_CERT_PATH and TLS_KEY_PATH cannot be set in development')
+  })
+
   it('Should build the whole config, with its defaults, from the required variables alone', async () => {
     expect(await loadBackConfig(filesService, { ...REQUIRED_ENV })).toStrictEqual({
       server: {
@@ -151,7 +162,7 @@ describe('loadBackConfig', () => {
       SAVE_SELF_REPORTS_TO_FILE: 'true',
       SERVER_LOGS_DIR_PATH: '/server_logs',
       SELF_REPORTS_RETENTION_DAYS: '30',
-      LOGS_NOTIFIER_SCHEDULE_REGEX: '*/30 * * * *',
+      LOGS_NOTIFIER_SCHEDULE: '*/30 * * * *',
       LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: 'WARNING,ERROR',
       TELEGRAM_CHAT_ID: '123456789',
       TELEGRAM_BOT_TOKEN: '123456:ABC-DEF',
@@ -231,7 +242,7 @@ describe('loadBackConfig', () => {
   it('Should leave the logs notifier out when there is no notification config', async () => {
     const config = await loadBackConfig(filesService, {
       ...REQUIRED_ENV,
-      LOGS_NOTIFIER_SCHEDULE_REGEX: '*/30 * * * *',
+      LOGS_NOTIFIER_SCHEDULE: '*/30 * * * *',
       LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: 'WARNING,ERROR',
       LOGS_NOTIFIER_TIMEZONE: 'Mars/Olympus'
     })

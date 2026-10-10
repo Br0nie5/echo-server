@@ -22,18 +22,18 @@ describe('logsRoutes', () => {
     }
   })
 
-  it('Should run the given preHandler before the handler of the route', async () => {
-    const preHandler = vi.fn()
+  it('Should run the given authenticate as the onRequest hook of the route', async () => {
+    const authenticate = vi.fn()
 
-    await logsRoutes(mockServer as unknown as FastifyInstance, { controller, preHandler })
+    await logsRoutes(mockServer as unknown as FastifyInstance, { controller, authenticate })
 
-    expect(mockServer.route.mock.calls[0][0].preHandler).toBe(preHandler)
+    expect(mockServer.route.mock.calls[0][0].onRequest).toBe(authenticate)
   })
 
-  it('Should set no preHandler when none is given', async () => {
+  it('Should set no onRequest hook when no authenticate is given', async () => {
     await logsRoutes(mockServer as unknown as FastifyInstance, { controller })
 
-    expect(mockServer.route.mock.calls[0][0]).not.toHaveProperty('preHandler')
+    expect(mockServer.route.mock.calls[0][0]).not.toHaveProperty('onRequest')
   })
 
   it('Should register schemas and /logs route correctly', async () => {

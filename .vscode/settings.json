@@ -12,6 +12,7 @@
     "GHSA",
     "github",
     "initializers",
+    "lefthook",
     "linux",
     "luxon",
     "nodenext",
@@ -33,7 +34,6 @@
     "source.fixAll.eslint": "always"
   },
   "js/ts.tsdk.path": "node_modules/typescript/lib",
-  "yaml.schemas": {},
   "files.associations": {
     ".dockerignore": "ignore"
   }

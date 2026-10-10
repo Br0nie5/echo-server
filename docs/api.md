@@ -37,20 +37,20 @@ Each returned log:
 
 ```json
 {
-  "id": "0 [docker_utils] [prune] {\"job_id\":1,...}",
+  "id": "0 [docker_utils] [prune.log] {\"job_id\":1,...}",
   "date": "2026-09-19T14:41:09.669Z",
   "groupName": "docker_utils",
-  "location": "/watched_logs/scripts/docker/utils/log/prune.jsonl",
-  "locationName": "prune",
+  "location": "/watched_logs/scripts/docker/utils/log/prune.log.jsonl",
+  "locationName": "prune.log",
   "jobId": 1,
   "category": "INFO",
-  "message": "Starting rotate_logs script.",
+  "message": "Pruning the unused Docker images.",
   "callFile": "prune.sh",
   "callLine": 12
 }
 ```
 
-`location` is where the log is stored (the path of its file on the server) and `locationName` its short name, the one the app shows: the name of the file without its extension. A search can target `locationName`, `groupName`, `jobId` or `message` with `key:` (`locationName:prune`).
+`location` is where the log is stored (the path of its file on the server) and `locationName` its short name, the one the app shows: the name of the file without its last extension. A search can target `locationName`, `groupName`, `jobId` or `message` with `key:` (`locationName:prune`).
 
 Errors use the `EchoError` schema: `400` invalid params, `401` unauthenticated, `429` too many login or sign-up attempts from one address (5 a minute), `500` server error.
 

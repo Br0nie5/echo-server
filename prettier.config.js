@@ -1,8 +1,7 @@
-// prettier.config.js
 export default {
   semi: false, // ❌ No semicolons at the end of statements
   singleQuote: true, // ✅ Use single quotes instead of double
-  trailingComma: 'none', // ✅ Adds trailing commas wherever possible (ES5 compatible)
+  trailingComma: 'none', // ❌ No trailing commas, in objects, arrays or parameters
   printWidth: 100, // ✅ Line length limit before wrapping
   tabWidth: 2, // ✅ Use 2 spaces per indentation level
   useTabs: false, // ✅ Use spaces, not tabs

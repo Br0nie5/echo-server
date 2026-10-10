@@ -1,6 +1,6 @@
 # @echo/utilities
 
-Shared package used by both `echo_backend` and `echo_frontend`. It is built to `dist/` and must be built before the other workspaces can type-check.
+Shared package used by both `echo_backend` and `echo_frontend`. It is built to `dist/`, which the other workspaces import, so it must be built before they can run or type-check: `npm run dev` and `npm run build`, at the root, build it first, and `npm run dev` rebuilds it on every change.
 
 ## Contents
 
@@ -17,5 +17,6 @@ It runs in the browser as well as in Node.js, so it imports no built-in module o
 
 ```bash
 npm run build --workspace=echo_utilities
+npm run dev --workspace=echo_utilities     # tsc --watch
 npm run test:coverage --workspace=echo_utilities
 ```

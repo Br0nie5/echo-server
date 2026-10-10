@@ -9,13 +9,15 @@
     "echo_backend"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
-    "start": "npm run build && npm run start --workspace=echo_backend",
+    "build": "npm run build --workspaces && tsc",
+    "prestart": "npm run build",
+    "start": "npm run start --workspace=echo_backend",
     "start:docker": "bash scripts/start_docker.sh",
-    "dev": "concurrently --names \"backend,frontend\" \"npm run dev --workspace=echo_backend\" \"npm run dev --workspace=echo_frontend\"",
+    "predev": "npm run build --workspace=echo_utilities",
+    "dev": "concurrently --names \"utilities,backend,frontend\" \"npm run dev --workspace=echo_utilities\" \"npm run dev --workspace=echo_backend\" \"npm run dev --workspace=echo_frontend\"",
     "deploy:server": "bash scripts/deploy_server.sh",
-    "format": "npm run format --workspaces && prettier --write \"*.md\" \"docs/**/*.md\"",
-    "lint": "npm run lint --workspaces",
+    "format": "npm run format --workspaces && prettier --write \"*.{ts,js,json,md}\" \"docs/**/*.md\"",
+    "lint": "npm run lint --workspaces && eslint . --fix",
     "test:coverage": "npm run test:coverage --workspaces",
     "open:coverage": "npm run open:coverage --workspaces",
     "arch:check": "npm run arch:check --workspaces",
@@ -23,16 +25,24 @@
     "dead-code:check": "knip"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@types/node": "^24.19.1",
     "concurrently": "^10.0.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.13.0",
     "knip": "^6.41.0",
-    "prettier": "^3.9.10"
+    "lefthook": "^2.2.1",
+    "prettier": "^3.9.10",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.1"
   },
   "allowScripts": {
     "bcrypt@6.0.0": true,
     "better-sqlite3@13.0.3": true,
     "esbuild@0.28.2": true,
-    "unrs-resolver@1.12.2": true
+    "unrs-resolver@1.12.2": true,
+    "lefthook@2.2.1": true
   },
   "//": "overrides: concurrently 10.0.5 pins shell-quote to 1.9.0, which has a critical command injection (GHSA-pqg4-j6r4-53mv, fixed in 1.11.0). Remove the override once concurrently depends on a patched shell-quote.",
   "overrides": {

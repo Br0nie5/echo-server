@@ -21,7 +21,7 @@ Thanks for your interest in Echo. Bug reports, ideas and pull requests are welco
 - Import shared code from `@echo/utilities`, never from its internal paths.
 - Read configuration (settings, paths, file names) through the `BackConfig` built by `loadBackConfig` (`echo_backend/src/shared/config/`), not `process.env` directly. A function takes the config of its domain (`ServerConfig`, `AuthConfig`, `LogsConfig`, `LogsNotifierConfig`, `SelfReportsConfig`, `NotificationConfig`) rather than loose values.
 - Never declare by hand a type the API exchanges: change its zod schema in `echo_utilities` (the type and the schema of the route are derived from it).
-- Run `npm run arch:check`: it enforces the import boundaries above (no `shared/` → `modules/`, no cross-module imports, no cycles).
+- Run `npm run arch:check`: it enforces the import boundaries above (no `shared/` → `modules/`, a module importing only the `domain/` and the `infra/` of another one, no cycles).
 - Keep filtering logic in `@echo/utilities` so client and server stay identical.
 
 ## Reporting security issues

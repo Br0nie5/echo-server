@@ -1,41 +1,22 @@
-# Node
-**/node_modules
+# Everything is left out of the build context, but what the Dockerfile copies: the built
+# workspaces, and what `npm ci` needs to install the dependencies of the backend.
+*
 
-# dev database
-/data
+!package.json
+!package-lock.json
+!docker-entrypoint.sh
+!docker-health-check.ts
 
-# Tests
-**/coverage
-**/__tests__
+# `npm ci` checks the lockfile against every workspace, the frontend included
+!echo_utilities/package.json
+!echo_backend/package.json
+!echo_frontend/package.json
 
-# Source code (we need build, not source)
-**/src
+!echo_utilities/dist
+!echo_backend/dist
+!echo_frontend/dist
 
-# Env
-**/.env.*
-**/env.*.json
+# Vite copies them from public/ into dist/: the entrypoint writes its own at every start
+echo_frontend/dist/env.*.json
 
-# Apps not needed files
-**/echo_frontend/index.html
-**/echo_frontend/public
-
-# Mac configs
 **/.DS_Store
-
-# Git configs
-**/.gitignore
-
-# Eslint/Prettier/dependency-cruiser configs
-**/eslint.config.js
-**/prettier.config.js
-**/.dependency-cruiser.mts
-
-# Typescript configs
-**/tsconfig.json
-**/tsconfig.app.json
-**/tsconfig.node.json
-**/tsconfig.build.json
-
-# Vite configs
-**/vite.config.ts
-**/vitest.config.ts

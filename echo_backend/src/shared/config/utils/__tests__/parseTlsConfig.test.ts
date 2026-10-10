@@ -11,7 +11,7 @@ const FILES_CONTENTS: Record<string, string> = {
 }
 
 const TLS_ENV: NodeJS.ProcessEnv = { TLS_CERT_PATH: CERT_PATH, TLS_KEY_PATH: KEY_PATH }
-const HTTPS_SERVER = { serverUrl: 'https://allowed-domain.com:3700' }
+const HTTPS_SERVER = { serverUrl: 'https://allowed-domain.com:3700', isDevelopment: false }
 
 const filesService = getMockFilesService()
 
@@ -39,6 +39,23 @@ describe('parseTlsConfig', () => {
     ).toBeUndefined()
   })
 
+  it('Should be undefined in development when neither TLS variable is set', async () => {
+    expect(
+      await parseTlsConfig({}, { ...HTTPS_SERVER, isDevelopment: true }, filesService)
+    ).toBeUndefined()
+  })
+
+  it.each([
+    { TLS_CERT_PATH: CERT_PATH, TLS_KEY_PATH: KEY_PATH },
+    { TLS_CERT_PATH: CERT_PATH },
+    { TLS_KEY_PATH: KEY_PATH }
+  ])('Should throw in development when a TLS variable is set: %o', async (processEnv) => {
+    await expect(
+      parseTlsConfig(processEnv, { ...HTTPS_SERVER, isDevelopment: true }, filesService)
+    ).rejects.toThrow('TLS_CERT_PATH and TLS_KEY_PATH cannot be set in development')
+    expect(filesService.getFileContent).not.toHaveBeenCalled()
+  })
+
   it('Should throw if only TLS_CERT_PATH is set', async () => {
     await expect(
       parseTlsConfig({ TLS_CERT_PATH: CERT_PATH }, HTTPS_SERVER, filesService)
@@ -53,7 +70,11 @@ describe('parseTlsConfig', () => {
 
   it('Should throw if SERVER_URL is not https when TLS is enabled', async () => {
     await expect(
-      parseTlsConfig(TLS_ENV, { serverUrl: 'http://allowed-domain.com:3700' }, filesService)
+      parseTlsConfig(
+        TLS_ENV,
+        { serverUrl: 'http://allowed-domain.com:3700', isDevelopment: false },
+        filesService
+      )
     ).rejects.toThrow('SERVER_URL must use https:// when TLS_CERT_PATH and TLS_KEY_PATH are set')
   })
 

@@ -1,6 +1,6 @@
 # Echo
 
-[![Docker image](https://img.shields.io/badge/ghcr.io-br0nie5%2Fecho-blue?logo=docker)](https://github.com/br0nie5/echo/pkgs/container/echo)
+[![Docker image](https://img.shields.io/badge/ghcr.io-br0nie5%2Fecho-blue?logo=docker)](https://github.com/Br0nie5/echo-server/pkgs/container/echo)
 
 Echo is a self-hosted log viewer. Point it at a directory of `.jsonl` log files and it serves them through a web UI where you can browse, filter by category, and search. Optionally, it can push warnings and errors to Telegram on a schedule.
 
@@ -23,6 +23,7 @@ Echo is a self-hosted log viewer. Point it at a directory of `.jsonl` log files 
   - [Volumes](#volumes)
   - [Ports](#ports)
 - [Log file format](#log-file-format)
+- [Self reports](#self-reports)
 - [Authentication](#authentication)
 - [Telegram notifications](#telegram-notifications)
 - [HTTPS](#https)
@@ -45,7 +46,7 @@ Pulling `ghcr.io/br0nie5/echo:latest` retrieves the right image for your platfor
 The web UI is available at `SERVER_URL/app` (for example `http://localhost:4000/app`). The REST API lives under `/api` and interactive API docs under `/documentation`.
 
 1. Mount the directory that holds your `.jsonl` logs at `/watched_logs`.
-2. Set `SERVER_URL` to the exact URL you use in your browser to reach Echo (scheme, host and port). It is used for cookie configuration and by the frontend, so a mismatch will break login.
+2. Set `SERVER_URL` to the exact URL you use in your browser to reach Echo (scheme, host, port, and path if a reverse proxy serves it under one). It is used for cookie configuration and by the frontend, so a mismatch will break login.
 3. Open `SERVER_URL/app`. With authentication enabled (the default), the first visit asks you to create the admin account. See [Authentication](#authentication).
 
 Your logs must follow the [log file format](#log-file-format), otherwise lines are silently skipped.
@@ -64,7 +65,7 @@ services:
       - SERVER_URL=http://localhost:4000
       - HAS_AUTHENTICATION=true
       # Optional: Telegram notifications, see the section below
-      # - LOGS_NOTIFIER_SCHEDULE_REGEX=*/30 * * * *
+      # - LOGS_NOTIFIER_SCHEDULE=*/30 * * * *
       # - LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES=ERROR,WARNING
       # - TELEGRAM_CHAT_ID=123456789
       # - TELEGRAM_BOT_TOKEN=<token>
@@ -110,27 +111,25 @@ Container parameters are given as `<external>:<internal>` for ports and volumes.
 
 ### Environment variables
 
-| Variable                                | Default                        | Description                                                                                                                                                                                                                                                                                                                                       |
-| --------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SERVER_NAME`                           | `Docker Production`            | Display name of this instance. Shown in the UI and in Telegram messages.                                                                                                                                                                                                                                                                          |
-| `SERVER_URL`                            | `http://localhost:<HTTP_PORT>` | Public URL of the instance, **as reached by the browser**, with the path of your reverse proxy if any (see [Reverse proxy](#reverse-proxy)). Determines the cookie domain and the `secure` flag. Use `https://` when serving over TLS.                                                                                                            |
-| `HTTP_PORT`                             | `4000`                         | Port the server listens on inside the container.                                                                                                                                                                                                                                                                                                  |
-| `HAS_AUTHENTICATION`                    | `true`                         | `true` enables login (cookie + JWT). `false` disables auth entirely and exposes logs to anyone who can reach the port.                                                                                                                                                                                                                            |
-| `LOGS_DIR_PATH`                         | `/watched_logs`                | Directory scanned for `.jsonl` files. Normally left as is and controlled via the volume.                                                                                                                                                                                                                                                          |
-| `LOGS_INITIAL_DATE_DAYS_AGO`            | `2`                            | How many days back the logs shown in the UI start by default. A positive integer or zero, at most `LOGS_MINIMAL_DATE_DAYS_AGO`.                                                                                                                                                                                                                   |
-| `LOGS_MINIMAL_DATE_DAYS_AGO`            | `14`                           | How many days back the start date of the logs can be set in the UI at most. A positive integer or zero.                                                                                                                                                                                                                                           |
-| `LOGS_NOTIFIER_SCHEDULE_REGEX`          | `*/30 * * * *`                 | Cron expression for the Telegram check.                                                                                                                                                                                                                                                                                                           |
-| `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` | `ERROR,WARNING`                | Comma-separated categories that trigger a notification. Valid values: `SUCCESS`, `INFO`, `WARNING`, `ERROR`.                                                                                                                                                                                                                                      |
-| `TELEGRAM_CHAT_ID`                      | _(empty)_                      | Telegram chat that receives notifications.                                                                                                                                                                                                                                                                                                        |
-| `TELEGRAM_BOT_TOKEN`                    | _(empty)_                      | Token of the Telegram bot, as given by BotFather (`123456:ABC-DEF…`), without the `https://api.telegram.org/bot` prefix. Treat as a secret.                                                                                                                                                                                                       |
-| `LOGS_NOTIFIER_TIMEZONE`                | `UTC`                          | Timezone the dates of Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`, follows daylight saving). An unknown value stops the server at startup.                                                                                                                                                  |
-| `TLS_CERT_PATH`                         | _(empty)_                      | Path (inside the container) to a PEM certificate. Set with `TLS_KEY_PATH` to serve HTTPS.                                                                                                                                                                                                                                                         |
-| `TLS_KEY_PATH`                          | _(empty)_                      | Path (inside the container) to the PEM private key.                                                                                                                                                                                                                                                                                               |
-| `SAVE_SELF_REPORTS_TO_FILE`             | `false`                        | When `true`, `.jsonl` lines the backend fails to parse are written to `/server_logs/self_reports/<SERVER_NAME>/log/parseLogFile.jsonl`, and `/server_logs` is scanned too, so they show up in the UI like any other log. Requires a writable volume, see Volumes below.                                                                           |
-| `SERVER_LOGS_DIR_PATH`                  | `/server_logs`                 | Directory the backend writes its own logs under: the self reports, in its `self_reports` subdirectory. Scanned for `.jsonl` files next to `LOGS_DIR_PATH` when `SAVE_SELF_REPORTS_TO_FILE=true`, and unused otherwise. Normally left as is and controlled via the volume. Keep it outside `LOGS_DIR_PATH`, otherwise its files are scanned twice. |
-| `SELF_REPORTS_RETENTION_DAYS`           | `10`                           | Self-report lines older than this many days are pruned once at each server start.                                                                                                                                                                                                                                                                 |
+| Variable                                | Default                        | Description                                                                                                                                                                                                                                                             |
+| --------------------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SERVER_NAME`                           | `Docker Production`            | Display name of this instance. Shown in the UI and in Telegram messages.                                                                                                                                                                                                |
+| `SERVER_URL`                            | `http://localhost:<HTTP_PORT>` | Public URL of the instance, **as reached by the browser**, with the path of your reverse proxy if any (see [Reverse proxy](#reverse-proxy)). Determines the cookie domain and the `secure` flag. Use `https://` when serving over TLS.                                  |
+| `HTTP_PORT`                             | `4000`                         | Port the server listens on inside the container.                                                                                                                                                                                                                        |
+| `HAS_AUTHENTICATION`                    | `true`                         | `true` enables login (cookie + JWT). `false` disables auth entirely and exposes logs to anyone who can reach the port.                                                                                                                                                  |
+| `LOGS_INITIAL_DATE_DAYS_AGO`            | `2`                            | How many days back the logs shown in the UI start by default. A positive integer or zero, at most `LOGS_MINIMAL_DATE_DAYS_AGO`.                                                                                                                                         |
+| `LOGS_MINIMAL_DATE_DAYS_AGO`            | `14`                           | How many days back the start date of the logs can be set in the UI at most. A positive integer or zero.                                                                                                                                                                 |
+| `LOGS_NOTIFIER_SCHEDULE`                | `*/30 * * * *`                 | Cron expression for the Telegram check.                                                                                                                                                                                                                                 |
+| `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` | `ERROR,WARNING`                | Comma-separated categories that trigger a notification. Valid values: `SUCCESS`, `INFO`, `WARNING`, `ERROR`.                                                                                                                                                            |
+| `TELEGRAM_CHAT_ID`                      | _(empty)_                      | Telegram chat that receives notifications.                                                                                                                                                                                                                              |
+| `TELEGRAM_BOT_TOKEN`                    | _(empty)_                      | Token of the Telegram bot, as given by BotFather (`123456:ABC-DEF…`), without the `https://api.telegram.org/bot` prefix. Treat as a secret.                                                                                                                             |
+| `LOGS_NOTIFIER_TIMEZONE`                | `UTC`                          | Timezone the dates of Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`, follows daylight saving). An unknown value stops the server at startup.                                                                        |
+| `TLS_CERT_PATH`                         | _(empty)_                      | Path (inside the container) to a PEM certificate. Set with `TLS_KEY_PATH` to serve HTTPS.                                                                                                                                                                               |
+| `TLS_KEY_PATH`                          | _(empty)_                      | Path (inside the container) to the PEM private key.                                                                                                                                                                                                                     |
+| `SAVE_SELF_REPORTS_TO_FILE`             | `false`                        | When `true`, `.jsonl` lines the backend fails to parse are written to `/server_logs/self_reports/<SERVER_NAME>/log/parseLogFile.jsonl`, and `/server_logs` is scanned too, so they show up in the UI like any other log. Requires a writable volume, see Volumes below. |
+| `SELF_REPORTS_RETENTION_DAYS`           | `10`                           | Self-report lines older than this many days are pruned once at each server start.                                                                                                                                                                                       |
 
-The Telegram job only starts when `LOGS_NOTIFIER_SCHEDULE_REGEX`, `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES`, `TELEGRAM_CHAT_ID` and `TELEGRAM_BOT_TOKEN` are all set. Otherwise it is disabled. Once they are, an invalid `LOGS_NOTIFIER_SCHEDULE_REGEX` or `LOGS_NOTIFIER_TIMEZONE` stops the server at startup.
+The Telegram job only starts when `LOGS_NOTIFIER_SCHEDULE`, `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES`, `TELEGRAM_CHAT_ID` and `TELEGRAM_BOT_TOKEN` are all set. Otherwise it is disabled. Once they are, an invalid `LOGS_NOTIFIER_SCHEDULE` or `LOGS_NOTIFIER_TIMEZONE` stops the server at startup.
 
 ### Volumes
 
@@ -139,6 +138,10 @@ The Telegram job only starts when `LOGS_NOTIFIER_SCHEDULE_REGEX`, `LOGS_NOTIFIER
 | `/watched_logs` | The directory containing your `.jsonl` logs (subdirectories are scanned). Read-only (`:ro`) is enough.                                                                                                                                          |
 | `/server_logs`  | Optional, only needed when `SAVE_SELF_REPORTS_TO_FILE=true`: a writable volume for the backend's own self reports, apart from `/watched_logs`, which can stay read-only. Without it, the self reports are lost when the container is recreated. |
 | `/app/data`     | Persistent state: `users.db` (SQLite, hashed passwords) and `last_logs_check.json` (Telegram checkpoint). Without this volume, the admin account is lost when the container is recreated.                                                       |
+
+Choose the host directories with the volumes, and leave these paths as they are: they are the defaults of `LOGS_DIR_PATH` and `SERVER_LOGS_DIR_PATH`, directories the image creates, `/server_logs` writable by its user.
+
+The container runs as the unprivileged `node` user (uid `1000`, gid `1000`), not as root. It must be able to read the logs, and to write to `/app/data` and `/server_logs`: with bind mounts, give the host directories to that user, for example `sudo chown -R 1000:1000 /path/to/echo/data /path/to/echo/server-logs`. A new named volume needs nothing: Docker gives it the owner of the directory of the image.
 
 ## Log file format
 
@@ -167,11 +170,11 @@ Lines that are not valid JSON, do not match this shape, have an unknown `status`
 | `/watched_logs/backup/log/nightly.log.jsonl`             | _(none)_       |
 | `/watched_logs/scripts/docker/utils/log/prune.log.jsonl` | `docker_utils` |
 
-The file name (without its extension) is shown as the log source.
+The file name, without its last extension, is shown as the log source: `nightly.log.jsonl` shows as `nightly.log`.
 
 ## Self reports
 
-Set `SAVE_SELF_REPORTS_TO_FILE=true` to have the backend report the `.jsonl` lines it fails to parse as regular log entries, so they show up in the UI instead of only in the container's own logs. Each failing line becomes a `WARNING` entry in group `<SERVER_NAME>`, source `parseLogFile`, at `/server_logs/self_reports/<SERVER_NAME>/log/parseLogFile.jsonl` (under `SERVER_LOGS_DIR_PATH`, which is scanned along with `/watched_logs`). This needs a writable volume of its own (see Volumes above), so `/watched_logs` can stay read-only. All entries written to one self-report file during one server run share the same `job_id`, and each self-report file takes its own, so a server start uses as many `job_id`s as it has self-report files; entries older than `SELF_REPORTS_RETENTION_DAYS` (default `10`) are pruned once at each start.
+Set `SAVE_SELF_REPORTS_TO_FILE=true` to have the backend report the `.jsonl` lines it fails to parse as regular log entries, so they show up in the UI instead of only in the container's own logs. Each failing line becomes a `WARNING` entry in group `<SERVER_NAME>`, source `parseLogFile`, at `/server_logs/self_reports/<SERVER_NAME>/log/parseLogFile.jsonl` (scanned along with `/watched_logs`). This needs a writable volume of its own (see Volumes above), so `/watched_logs` can stay read-only. All entries written to one self-report file during one server run share the same `job_id`, and each self-report file takes its own, so a server start uses as many `job_id`s as it has self-report files; entries older than `SELF_REPORTS_RETENTION_DAYS` (default `10`) are pruned once at each start.
 
 Since every request re-scans and re-parses all `.jsonl` files, a line that still fails to parse is reported again on every request. It is not written a second time: each entry's `call_file` is the name of the log file the failing line comes from, and its `call_line` is that line's position (1-based, among the non-blank lines of that file), and reporting a failure that already has an entry with the same `call_file`, `call_line` and message only brings the `timestamp` of that entry up to now. So the entry of a problem that is still there always has a recent date, and the entry of a problem you fixed keeps the date it was last seen at, until `SELF_REPORTS_RETENTION_DAYS` prunes it at a later start. A line of a self-report file that fails to parse is reported the same way, with `call_file` set to `parseLogFile`, and is then removed from that file the next time it is written or at the next start.
 
@@ -195,7 +198,7 @@ With `HAS_AUTHENTICATION=false`, no auth routes exist and anyone with network ac
 
 ```yaml
 environment:
-  - LOGS_NOTIFIER_SCHEDULE_REGEX=*/30 * * * *
+  - LOGS_NOTIFIER_SCHEDULE=*/30 * * * *
   - LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES=ERROR,WARNING
   - TELEGRAM_CHAT_ID=123456789
   - TELEGRAM_BOT_TOKEN=<token>
@@ -217,7 +220,7 @@ volumes:
   - /path/to/certs:/certs:ro
 ```
 
-Both variables are required together, and `SERVER_URL` must start with `https://`. If you terminate TLS at a reverse proxy instead, leave these unset.
+Both variables are required together, and `SERVER_URL` must start with `https://`. The files must be readable by the `node` user of the container (uid `1000`). If you terminate TLS at a reverse proxy instead, leave these unset.
 
 ## Reverse proxy
 
@@ -228,10 +231,11 @@ Set `SERVER_URL` to the **public** URL, path included when Echo is not at the ro
 Requirements: Node.js 24 (see [.tool-versions](.tool-versions)), Docker.
 
 ```bash
-git clone https://github.com/br0nie5/echo.git
-cd echo
+git clone https://github.com/Br0nie5/echo-server.git
+cd echo-server
 npm ci
-npm run build:docker
+npm run build
+docker build -t echo .
 ```
 
 `npm run start:docker` builds the image and runs it against the sample logs in `test_logs/`, using the self-signed development certificate in `certs/` (**never use those certificates outside local testing**).
@@ -243,7 +247,7 @@ npm ci
 npm run dev
 ```
 
-This starts the backend on `http://localhost:4000` and the Vite frontend on `http://localhost:5173` (open the latter). By default the backend reads logs from `test_logs/` (create it and add some `.jsonl` files, it is git-ignored).
+This builds `echo_utilities`, then starts it in watch mode with the backend on `http://localhost:4000` and the Vite frontend on `http://localhost:5173` (open the latter). Development is HTTP only: the backend refuses to start there when `TLS_CERT_PATH` or `TLS_KEY_PATH` is set. By default the backend reads logs from `test_logs/` (create it and add some `.jsonl` files, it is git-ignored).
 
 Common commands:
 

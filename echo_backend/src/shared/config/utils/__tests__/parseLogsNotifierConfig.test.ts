@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { parseLogsNotifierConfig } from '../parseLogsNotifierConfig.js'
 
 const CRON_ENV: NodeJS.ProcessEnv = {
-  LOGS_NOTIFIER_SCHEDULE_REGEX: '*/30 * * * *',
+  LOGS_NOTIFIER_SCHEDULE: '*/30 * * * *',
   LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: 'WARNING,ERROR'
 }
 
@@ -23,7 +23,7 @@ describe('parseLogsNotifierConfig', () => {
     })
   })
 
-  it.each(['LOGS_NOTIFIER_SCHEDULE_REGEX', 'LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES'])(
+  it.each(['LOGS_NOTIFIER_SCHEDULE', 'LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES'])(
     'Should not define the logs notifier config if %s is not set',
     (key) => {
       expect(
@@ -35,18 +35,15 @@ describe('parseLogsNotifierConfig', () => {
   it('Should throw if the schedule is not a cron expression', () => {
     expect(() =>
       parseLogsNotifierConfig(
-        { ...CRON_ENV, LOGS_NOTIFIER_SCHEDULE_REGEX: 'invalid-cron-expression' },
+        { ...CRON_ENV, LOGS_NOTIFIER_SCHEDULE: 'invalid-cron-expression' },
         CRON_CONSTANTS
       )
-    ).toThrow('LOGS_NOTIFIER_SCHEDULE_REGEX: Invalid cron expression: invalid-cron-expression')
+    ).toThrow('LOGS_NOTIFIER_SCHEDULE: Invalid cron expression: invalid-cron-expression')
   })
 
   it('Should not read the schedule if no category is watched', () => {
     expect(
-      parseLogsNotifierConfig(
-        { LOGS_NOTIFIER_SCHEDULE_REGEX: 'invalid-cron-expression' },
-        CRON_CONSTANTS
-      )
+      parseLogsNotifierConfig({ LOGS_NOTIFIER_SCHEDULE: 'invalid-cron-expression' }, CRON_CONSTANTS)
     ).toBeUndefined()
   })
 

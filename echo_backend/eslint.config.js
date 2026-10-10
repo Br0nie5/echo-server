@@ -1,5 +1,5 @@
 import js from '@eslint/js'
-import { globalIgnores } from 'eslint/config'
+import { defineConfig, globalIgnores } from 'eslint/config'
 import importPlugin from 'eslint-plugin-import'
 import jsdoc from 'eslint-plugin-jsdoc'
 import nodePlugin from 'eslint-plugin-n'
@@ -8,9 +8,7 @@ import tsdoc from 'eslint-plugin-tsdoc'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
-import prettierConfig from './prettier.config.js'
-
-export default tseslint.config([
+export default defineConfig([
   globalIgnores(['dist', 'coverage']),
   {
     files: ['**/*.{js,ts,mts}'],
@@ -84,7 +82,7 @@ export default tseslint.config([
       'import/default': 'error', // ✅ Validates default import exists
       'import/no-named-as-default': 'error', // Optional: catches named as default
       // Prettier
-      'prettier/prettier': ['error', prettierConfig]
+      'prettier/prettier': 'error'
     }
   },
   {

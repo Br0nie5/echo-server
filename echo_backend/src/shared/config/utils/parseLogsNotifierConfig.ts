@@ -10,10 +10,10 @@ import { parseTimezone } from './parseTimezone.js'
  * Parses the `LOGS_NOTIFIER_*` variables of `processEnv` into the config of the cron notifying the
  * problem logs, completed with `serverName` and `lastLogsCheckFilePath`.
  *
- * It is `undefined`, which disables the cron, unless `LOGS_NOTIFIER_SCHEDULE_REGEX` is set and
+ * It is `undefined`, which disables the cron, unless `LOGS_NOTIFIER_SCHEDULE` is set and
  * `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` names at least one log category (it is a comma-separated
  * list, whose unknown categories are ignored). When the cron is enabled, throws when
- * `LOGS_NOTIFIER_SCHEDULE_REGEX` is not a cron expression or `LOGS_NOTIFIER_TIMEZONE` is not a
+ * `LOGS_NOTIFIER_SCHEDULE` is not a cron expression or `LOGS_NOTIFIER_TIMEZONE` is not a
  * known zone.
  */
 export const parseLogsNotifierConfig = (
@@ -23,7 +23,7 @@ export const parseLogsNotifierConfig = (
     lastLogsCheckFilePath
   }: Pick<LogsNotifierConfig, 'serverName' | 'lastLogsCheckFilePath'>
 ): LogsNotifierConfig | undefined => {
-  const schedule = processEnv.LOGS_NOTIFIER_SCHEDULE_REGEX
+  const schedule = processEnv.LOGS_NOTIFIER_SCHEDULE
 
   const watchedLogsCategories = processEnv.LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES?.split(',')
     .map((category) => category.trim())
@@ -34,7 +34,7 @@ export const parseLogsNotifierConfig = (
   }
 
   if (!cron.validate(schedule)) {
-    throw new Error(`LOGS_NOTIFIER_SCHEDULE_REGEX: Invalid cron expression: ${schedule}`)
+    throw new Error(`LOGS_NOTIFIER_SCHEDULE: Invalid cron expression: ${schedule}`)
   }
 
   return {

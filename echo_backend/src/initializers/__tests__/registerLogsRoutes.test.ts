@@ -79,6 +79,15 @@ describe('registerLogsRoutes', () => {
     expect(logsRepository.getAllLogs).not.toHaveBeenCalled()
   })
 
+  it('Should reject a request without valid JWT before validating its query', async () => {
+    await registerRoutes(true)
+
+    const response = await server.inject({ method: 'GET', url: '/custom-api/logs' })
+
+    expect(response.statusCode).toBe(401)
+    expect(response.json()).toStrictEqual({ statusCode: 401, message: 'Invalid token.' })
+  })
+
   it('Should serve the logs to a request with a valid JWT when authentication is enabled', async () => {
     await registerRoutes(true)
     await server.ready()

@@ -79,7 +79,7 @@ export type SelfReportsConfig = {
 
 /** What the cron notifying the problem logs needs, the channel it notifies through apart (`NotificationConfig`). */
 export type LogsNotifierConfig = {
-  /** Cron expression saying when the logs are checked (`LOGS_NOTIFIER_SCHEDULE_REGEX`). */
+  /** Cron expression saying when the logs are checked (`LOGS_NOTIFIER_SCHEDULE`). */
   schedule: string
   /** Categories that make a log a problem log (`LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES`). */
   watchedLogsCategories: LogCategory[]

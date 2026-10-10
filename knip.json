@@ -2,7 +2,7 @@
   "$schema": "./node_modules/knip/schema.json",
   "workspaces": {
     ".": {
-      "entry": ["docker-health-check.js"]
+      "entry": ["docker-health-check.ts"]
     },
     "echo_frontend": {
       "ignoreDependencies": ["eslint-import-resolver-node"]

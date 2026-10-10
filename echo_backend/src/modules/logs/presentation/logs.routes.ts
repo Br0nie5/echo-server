@@ -3,7 +3,7 @@ import type {
   FastifyInstance,
   FastifyPluginAsync,
   FastifyPluginOptions,
-  preHandlerAsyncHookHandler
+  onRequestAsyncHookHandler
 } from 'fastify'
 
 import type { LogsController } from './logs.controller.js'
@@ -12,14 +12,17 @@ import { GetLogsParamsJsonSchema, LogJsonSchema, LogCategoryJsonSchema } from '.
 /** Options of the `logsRoutes` plugin. */
 export interface LogsRoutesOptions extends FastifyPluginOptions {
   controller: LogsController
-  /** Runs before the handler of each route, and may answer in its place. */
-  preHandler?: preHandlerAsyncHookHandler
+  /**
+   * Checks who sends each request, before anything else is done with it (its query is not
+   * validated yet), and may answer in place of the route.
+   */
+  authenticate?: onRequestAsyncHookHandler
 }
 
-/** Registers `GET /logs`, which runs `preHandler` first when one is given. */
+/** Registers `GET /logs`, which runs `authenticate` first when one is given. */
 export const logsRoutes: FastifyPluginAsync<LogsRoutesOptions> = async (
   server: FastifyInstance,
-  { controller, preHandler }
+  { controller, authenticate }
 ): Promise<void> => {
   server.addSchema(LogCategoryJsonSchema)
   server.addSchema(LogJsonSchema)
@@ -48,7 +51,7 @@ export const logsRoutes: FastifyPluginAsync<LogsRoutesOptions> = async (
       },
       tags: ['Logs']
     },
-    ...(preHandler && { preHandler }),
+    ...(authenticate && { onRequest: authenticate }),
     handler: controller.getLogs
   })
 }

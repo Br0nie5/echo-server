@@ -58,7 +58,9 @@ const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
  * `.env.<mode>` is loaded into `processEnv` first, without overriding the variables already set;
  * `<mode>` is `production` when `NODE_ENV` is, `development` otherwise. Each variable is then read
  * by its parser (`utils/`). Throws as soon as one of them does, that is on the first required
- * variable that is missing or invalid, so a misconfigured server never starts. The notifications
+ * variable that is missing or invalid, so a misconfigured server never starts. In development, it
+ * also throws when the TLS variables are set, since the Vite dev server in front of the backend
+ * serves HTTP only. The notifications
  * and the cron notifying the problem logs are the exception: each is left out of the config, hence
  * disabled, when one of its required variables is, and the cron is left out too when the
  * notifications are, since it would have no channel to notify through. The self reports are left
@@ -123,7 +125,11 @@ export const loadBackConfig = async (
       host: '0.0.0.0',
       port: parseHttpPort(requireEnv(processEnv, 'HTTP_PORT')),
       allowedDomain,
-      tls: await parseTlsConfig(processEnv, { serverUrl }, filesService),
+      tls: await parseTlsConfig(
+        processEnv,
+        { serverUrl, isDevelopment: mode === 'development' },
+        filesService
+      ),
       frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
     },
     auth: config.HAS_AUTHENTICATION
