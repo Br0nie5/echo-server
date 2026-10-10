@@ -14,7 +14,7 @@ In dev, Vite proxies `/api` to the backend on port 4000 (see `vite.config.ts`), 
 
 ## Runtime configuration
 
-The bundle contains no configuration. On load it fetches `env.<mode>.json` (`SERVER_NAME`, `SERVER_URL`, `HAS_AUTHENTICATION`, `LOGS_INITIAL_DATE_DAYS_AGO`, `LOGS_MINIMAL_DATE_DAYS_AGO`) and parses it into the `FrontConfig` (`shared/config/utils/parseFrontConfig.ts`), read through `useConfig`. In dev these come from `public/`; in Docker the entrypoint regenerates `env.production.json` on every start. The app handles both authenticated and open modes.
+The bundle contains no configuration. On load it fetches `env.<mode>.json` (`SERVER_NAME`, `HAS_AUTHENTICATION`, `LOGS_INITIAL_DATE_DAYS_AGO`, `LOGS_MINIMAL_DATE_DAYS_AGO`) and parses it into the `FrontConfig` (`shared/config/utils/parseFrontConfig.ts`), read through `useConfig`. Where the app and the API are reached (`APP_URL`, `API_URL`) is not in it: `parseAppUrls` reads it from the `<base>` of the page, which the backend adds to `index.html` (and a plugin of `vite.config.ts` in dev), so the app works at any path behind a reverse proxy and on any address that reaches it. In dev these come from `public/`; in Docker the entrypoint regenerates `env.production.json` on every start. The app handles both authenticated and open modes.
 
 ## Layout
 

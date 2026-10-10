@@ -22,7 +22,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         throw new Error(`Failed to load config: ${response.status}`)
       }
       const rawConfig = await response.json()
-      return parseFrontConfig(rawConfig)
+      return parseFrontConfig(rawConfig, document.baseURI)
     },
     staleTime: Infinity, // never refetch
     retry: false

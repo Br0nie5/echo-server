@@ -13,7 +13,7 @@ import tseslint from 'typescript-eslint'
 import prettierConfig from './prettier.config.js'
 
 export default tseslint.config([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'coverage']),
   {
     files: ['**/*.{js,ts,tsx}'],
     extends: [

@@ -6,7 +6,16 @@ export default defineConfig(({ command }) => ({
   // The build does not know the path a reverse proxy serves Echo under: its URLs are relative, and
   // the backend gives index.html the <base> they resolve against. The dev server has none in front.
   base: command === 'build' ? './' : '/app',
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      // The backend gives index.html the <base> the app reads where it is reached from; in
+      // development, the Vite dev server serves it without the backend.
+      name: 'echo-app-base',
+      apply: 'serve',
+      transformIndexHtml: (html): string => html.replace('<head>', '<head><base href="/app/">')
+    }
+  ],
   server: {
     host: '127.0.0.1',
     proxy: {

@@ -19,22 +19,19 @@ Parsed by [parseConfig.ts](../echo_utilities/src/shared/config/parseConfig.ts).
 | Variable             | Required | Description |
 | -------------------- | :------: | ----------- |
 | `SERVER_NAME`        | yes | Display name of the instance. |
-| `SERVER_URL`         | yes | Public URL of the instance, possibly with the path a reverse proxy serves it under (`https://example.com/echo`). Must be a valid URL, whose path does not start with `/api`, `/app` or `/documentation`. |
 | `HAS_AUTHENTICATION` | yes | `true` or `false`. |
 
-Two values are derived from `SERVER_URL` and are not separate variables:
-
-- `API_URL` = `${SERVER_URL}/api`
-- `APP_URL` = `${SERVER_URL}/app`
-
-Both keep the path of `SERVER_URL`: `https://example.com/echo` gives `https://example.com/echo/api`. The backend answers a request whether the reverse proxy forwards it with that path or strips it, and gives the frontend the `<base>` its files resolve against, so the same image works at any path.
+The frontend is not given where Echo is reached: it reads it from the page it was loaded from. The backend gives `index.html` a `<base>` (`<path of SERVER_URL>/app/`): the app is there, and the API next to it, under `/api`, on whatever address the user reached, a LAN IP included.
 
 ## Backend only
+
+Two values are derived from `SERVER_URL` and are not separate variables: the URL of the API, `${SERVER_URL}/api`, and the one of the app, `${SERVER_URL}/app`. Both keep the path of `SERVER_URL`: `https://example.com/echo` gives `https://example.com/echo/api`. The backend answers a request whether the reverse proxy forwards it with that path or strips it, so the same image works at any path.
 
 Parsed by [loadBackConfig.ts](../echo_backend/src/shared/config/loadBackConfig.ts), which builds the `BackConfig` ([backConfig.ts](../echo_backend/src/shared/config/backConfig.ts)) the backend is wired with. Each variable is read by its own parser, in [utils/](../echo_backend/src/shared/config/utils/).
 
 | Variable        | Required | Description |
 | --------------- | :------: | ----------- |
+| `SERVER_URL`    | yes | Public URL of the instance, possibly with the path a reverse proxy serves it under (`https://example.com/echo`). Must be a valid URL, whose path does not start with `/api`, `/app` or `/documentation`. |
 | `HTTP_PORT`     | yes | Integer between 1 and 65535. |
 | `LOGS_DIR_PATH` | yes | Directory scanned for `.jsonl` files. Relative paths resolve from the backend's working directory. |
 | `TLS_CERT_PATH`, `TLS_KEY_PATH` | no | Enable HTTPS. Both or neither; `SERVER_URL` must be `https://`. |

@@ -5,7 +5,7 @@ Shared package used by both `echo_backend` and `echo_frontend`. It is built to `
 ## Contents
 
 - **Types**: the types the API exchanges, each inferred from its zod schema (`src/**/schemas/`), which also validates it at runtime and gives the backend the schema of its routes.
-- **Env parsing**: `parseConfig` for the variables common to frontend and backend (`SERVER_NAME`, `SERVER_URL`, `HAS_AUTHENTICATION`; `API_URL` and `APP_URL` are derived).
+- **Env parsing**: `parseConfig` for the variables common to frontend and backend (`SERVER_NAME`, `HAS_AUTHENTICATION`), and `apiRoutePrefix` and `appRoutePrefix`, the paths the API and the frontend are served under. Where Echo is reached is not shared: the backend reads it from `SERVER_URL`, the frontend from the page it was loaded from.
 - **Log filtering**: `filterLogByCategories`, `filterLogBySearch`, and `parseLogSearchInput`, which turns what the user typed in the search field into the filters `filterLogBySearch` applies (`src/modules/logs/consts/logSearchFilter.ts` lists the fields a search can target). Shared so server and client filter identically.
 - **Auth**: `needsSignupMessage`, the message of the 401 answer of the auth check when no account exists yet, which the frontend compares against.
 

@@ -18,6 +18,7 @@ import { parseHttpPort } from './utils/parseHttpPort.js'
 import { parseLogsNotifierConfig } from './utils/parseLogsNotifierConfig.js'
 import { parseNotificationConfig } from './utils/parseNotificationConfig.js'
 import { parseOptionalBoolean } from './utils/parseOptionalBoolean.js'
+import { parseServerUrls } from './utils/parseServerUrls.js'
 import { parseTlsConfig } from './utils/parseTlsConfig.js'
 import { requireEnv } from './utils/requireEnv.js'
 
@@ -83,8 +84,13 @@ export const loadBackConfig = async (
 
   const config = parseConfig({ ...processEnv })
 
-  const allowedDomain = parseAllowedDomain(config.SERVER_URL)
-  const basePath = parseBasePath(config.SERVER_URL, [
+  const { serverUrl, apiUrl, appUrl } = parseServerUrls(
+    requireEnv(processEnv, 'SERVER_URL'),
+    apiRoutePrefix,
+    appRoutePrefix
+  )
+  const allowedDomain = parseAllowedDomain(serverUrl)
+  const basePath = parseBasePath(serverUrl, [
     apiRoutePrefix,
     appRoutePrefix,
     DOCUMENTATION_ROUTE_PREFIX
@@ -107,9 +113,9 @@ export const loadBackConfig = async (
   return {
     server: {
       serverName: config.SERVER_NAME,
-      serverUrl: config.SERVER_URL,
-      apiUrl: config.API_URL,
-      appUrl: config.APP_URL,
+      serverUrl,
+      apiUrl,
+      appUrl,
       basePath,
       apiRoutePrefix,
       appRoutePrefix,
@@ -117,7 +123,7 @@ export const loadBackConfig = async (
       host: '0.0.0.0',
       port: parseHttpPort(requireEnv(processEnv, 'HTTP_PORT')),
       allowedDomain,
-      tls: await parseTlsConfig(processEnv, { serverUrl: config.SERVER_URL }, filesService),
+      tls: await parseTlsConfig(processEnv, { serverUrl }, filesService),
       frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
     },
     auth: config.HAS_AUTHENTICATION
@@ -128,7 +134,7 @@ export const loadBackConfig = async (
           cookieName: `${allowedDomain.replace(/[^a-zA-Z0-9.-]/g, '_')}_access_token`,
           cookieSerializeOptions: parseCookieSerializeOptions(
             allowedDomain,
-            config.SERVER_URL,
+            serverUrl,
             basePath,
             SESSION_DURATION_SECONDS
           ),
