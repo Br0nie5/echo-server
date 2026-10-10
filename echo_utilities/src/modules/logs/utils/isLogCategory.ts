@@ -1,6 +1,5 @@
-import { LogCategory as LogCategoryConst, type LogCategory } from '../schemas/logCategory.schema.js'
+import { LogCategorySchema, type LogCategory } from '../schemas/logCategory.schema.js'
 
-/** Type guard telling whether a raw string is a known `LogCategory`. */
-export const isLogCategory = (rawLogCategory: string): rawLogCategory is LogCategory => {
-  return Object.values(LogCategoryConst).includes(rawLogCategory as LogCategory)
-}
+/** Tells whether `rawLogCategory` is one of the severities a log can have. */
+export const isLogCategory = (rawLogCategory: string): rawLogCategory is LogCategory =>
+  LogCategorySchema.safeParse(rawLogCategory).success

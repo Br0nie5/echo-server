@@ -1,11 +1,11 @@
+import type { LogSearchableKey, LogSearchFilter } from '../consts/logSearchFilter.js'
 import type { Log } from '../schemas/log.schema.js'
-import type { LogSearchableKeys, LogSearchFilter } from '../types/logSearchFilter.js'
 
 /** Whether a field of the log contains `search` (already lower-cased). */
 type LogFieldMatcher = (log: Log, search: string) => boolean
 
 /** How to look for a search in each searchable field, case-insensitively. */
-const logFieldMatchers: Record<LogSearchableKeys, LogFieldMatcher> = {
+const logFieldMatchers: Record<LogSearchableKey, LogFieldMatcher> = {
   locationName: (log, search) => log.locationName.toLowerCase().includes(search),
   groupName: (log, search) => log.groupName?.toLowerCase().includes(search) ?? false,
   jobId: (log, search) => log.jobId.toString().includes(search),

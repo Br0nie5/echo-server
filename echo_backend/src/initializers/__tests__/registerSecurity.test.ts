@@ -36,7 +36,7 @@ describe('registerSecurity', () => {
   })
 
   describe('when authentication is enabled', () => {
-    it('should verify the JWT held by the session cookie', async () => {
+    it('Should verify the JWT held by the session cookie', async () => {
       await buildSecuredServer(getConfig({ hasAuthentication: true }))
       server.get('/session', async (request) => request.jwtVerify())
       await server.ready()
@@ -52,7 +52,7 @@ describe('registerSecurity', () => {
       expect(response.json()).toMatchObject({ username: 'admin' })
     })
 
-    it('should sign JWTs that expire with the session', async () => {
+    it('Should sign JWTs that expire with the session', async () => {
       await buildSecuredServer(getConfig({ hasAuthentication: true }))
       await server.ready()
 
@@ -63,7 +63,7 @@ describe('registerSecurity', () => {
       expect(exp - iat).toBe(getMockAuthConfig().sessionDurationSeconds)
     })
 
-    it('should reject a request without session cookie', async () => {
+    it('Should reject a request without session cookie', async () => {
       await buildSecuredServer(getConfig({ hasAuthentication: true }))
       server.get('/session', async (request) => request.jwtVerify())
 
@@ -74,7 +74,7 @@ describe('registerSecurity', () => {
   })
 
   describe('when authentication is disabled', () => {
-    it('should register neither the JWT nor the cookie support', async () => {
+    it('Should register neither the JWT nor the cookie support', async () => {
       await buildSecuredServer(getConfig({ hasAuthentication: false }))
       await server.ready()
 
@@ -84,7 +84,7 @@ describe('registerSecurity', () => {
   })
 
   describe('CORS', () => {
-    it('should accept a request without origin', async () => {
+    it('Should accept a request without origin', async () => {
       await buildSecuredServer(getConfig())
 
       const response = await server.inject({ method: 'GET', url: '/ping' })
@@ -92,7 +92,7 @@ describe('registerSecurity', () => {
       expect(response.statusCode).toBe(200)
     })
 
-    it('should allow a subdomain of the allowed domain, with its credentials', async () => {
+    it('Should allow a subdomain of the allowed domain, with its credentials', async () => {
       await buildSecuredServer(getConfig())
       const origin = 'https://logs.allowed-domain.com'
 
@@ -103,7 +103,7 @@ describe('registerSecurity', () => {
       expect(response.headers['access-control-allow-credentials']).toBe('true')
     })
 
-    it('should reject another domain', async () => {
+    it('Should reject another domain', async () => {
       await buildSecuredServer(getConfig())
 
       const response = await server.inject({
@@ -118,7 +118,7 @@ describe('registerSecurity', () => {
       )
     })
 
-    it('should allow the origin the request is sent to, even outside the allowed domain', async () => {
+    it('Should allow the origin the request is sent to, even outside the allowed domain', async () => {
       await buildSecuredServer(getConfig({ allowedDomain: 'localhost' }))
       const origin = 'http://192.168.1.1:4000'
 
@@ -131,7 +131,7 @@ describe('registerSecurity', () => {
       expect(response.headers['access-control-allow-origin']).toBe(origin)
     })
 
-    it('should reject any other origin when the allowed domain is localhost', async () => {
+    it('Should reject any other origin when the allowed domain is localhost', async () => {
       await buildSecuredServer(getConfig({ allowedDomain: 'localhost' }))
 
       const response = await server.inject({
@@ -144,7 +144,7 @@ describe('registerSecurity', () => {
       expect(response.headers['access-control-allow-origin']).toBeUndefined()
     })
 
-    it('should reject an origin that is not a URL', async () => {
+    it('Should reject an origin that is not a URL', async () => {
       await buildSecuredServer(getConfig())
 
       const response = await server.inject({
@@ -157,7 +157,7 @@ describe('registerSecurity', () => {
       expect(response.json().message).toBe('Invalid Origin Header')
     })
 
-    it('should announce the allowed methods and headers to a preflight request', async () => {
+    it('Should announce the allowed methods and headers to a preflight request', async () => {
       await buildSecuredServer(getConfig())
 
       const response = await server.inject({

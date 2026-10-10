@@ -25,7 +25,7 @@ const logMock: Log = {
 
 describe('useLogsRepository', () => {
   describe('findLogs', () => {
-    test('should throw if the API response does not match the Log schema', async () => {
+    test('Should throw if the API response does not match the Log schema', async () => {
       const params: GetLogsParams = { fromDate: '2026-04-26T00:00:00.000Z' }
 
       buildLogsRequestMock(params).reply(200, [{ ...logMock, jobId: 'not a number' }])

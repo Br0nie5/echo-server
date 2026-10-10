@@ -84,14 +84,14 @@ afterEach(() => {
 })
 
 describe('createSelfLogReportRepository', () => {
-  it('should save the last session jobId plus one as its session jobId', async () => {
+  it('Should save the last session jobId plus one as its session jobId', async () => {
     await createSelfLogReportRepository(options)
 
     expect(sessionJobIdApi.saveLastSessionJobId).toHaveBeenCalledTimes(1)
     expect(sessionJobIdApi.saveLastSessionJobId).toHaveBeenCalledWith(5)
   })
 
-  it('should take 1 as its session jobId when there is no last session jobId', async () => {
+  it('Should take 1 as its session jobId when there is no last session jobId', async () => {
     sessionJobIdApi.getLastSessionJobId.mockRejectedValueOnce(new Error('ENOENT'))
 
     const selfReportRepository = await createSelfLogReportRepository(options)
@@ -101,7 +101,7 @@ describe('createSelfLogReportRepository', () => {
     expect(lastSavedLogs()[0].jobId).toBe(1)
   })
 
-  it('should save its location again without the logs older than retentionDays', async () => {
+  it('Should save its location again without the logs older than retentionDays', async () => {
     const recentLog = storedLog({ date: daysAgo(1) })
     mockStoredLogs([storedLog({ date: daysAgo(20) }), recentLog])
 
@@ -112,7 +112,7 @@ describe('createSelfLogReportRepository', () => {
     expect(logsRepository.deleteLogs).not.toHaveBeenCalled()
   })
 
-  it('should keep a log exactly retentionDays old, and leave out one a millisecond older', async () => {
+  it('Should keep a log exactly retentionDays old, and leave out one a millisecond older', async () => {
     const retentionLimitLog = storedLog({ date: '2026-09-21T00:00:00.000Z' })
     mockStoredLogs([storedLog({ date: '2026-09-20T23:59:59.999Z' }), retentionLimitLog])
 
@@ -121,7 +121,7 @@ describe('createSelfLogReportRepository', () => {
     expect(logsRepository.saveLogs).toHaveBeenCalledExactlyOnceWith([retentionLimitLog])
   })
 
-  it('should delete the logs of its location when they are all older than retentionDays', async () => {
+  it('Should delete the logs of its location when they are all older than retentionDays', async () => {
     mockStoredLogs([storedLog({ date: daysAgo(20) })])
 
     await createSelfLogReportRepository(options)
@@ -130,13 +130,13 @@ describe('createSelfLogReportRepository', () => {
     expect(logsRepository.saveLogs).not.toHaveBeenCalled()
   })
 
-  it('should delete the logs of its location even when nothing is stored there yet, to know it can be written', async () => {
+  it('Should delete the logs of its location even when nothing is stored there yet, to know it can be written', async () => {
     await createSelfLogReportRepository(options)
 
     expect(logsRepository.deleteLogs).toHaveBeenCalledExactlyOnceWith(SELF_REPORTS_LOCATION)
   })
 
-  it('should save its session jobId once its location is saved', async () => {
+  it('Should save its session jobId once its location is saved', async () => {
     const steps: string[] = []
     logsRepository.deleteLogs.mockImplementationOnce(async () => {
       steps.push('storeLogs')
@@ -159,7 +159,7 @@ describe('createSelfLogReportRepository', () => {
       'its location cannot be written',
       (): unknown => logsRepository.deleteLogs.mockRejectedValueOnce(new Error('EACCES'))
     ]
-  ])('should not save its session jobId when %s', async (_, failSetup) => {
+  ])('Should not save its session jobId when %s', async (_, failSetup) => {
     failSetup()
 
     await createSelfLogReportRepository(options)
@@ -181,7 +181,7 @@ describe('createSelfLogReportRepository', () => {
       (): unknown => sessionJobIdApi.saveLastSessionJobId.mockRejectedValueOnce(new Error('EACCES'))
     ]
   ])(
-    'should fall back to a repository that stores nothing and log the error when %s',
+    'Should fall back to a repository that stores nothing and log the error when %s',
     async (_, failSetup) => {
       failSetup()
 
@@ -199,7 +199,7 @@ describe('createSelfLogReportRepository', () => {
   )
 
   describe('saveSelfReports', () => {
-    it('should do nothing when there is no self report', async () => {
+    it('Should do nothing when there is no self report', async () => {
       const selfReportRepository = await createSelfLogReportRepository(options)
       vi.clearAllMocks()
 
@@ -209,7 +209,7 @@ describe('createSelfLogReportRepository', () => {
       expect(logsRepository.saveLogs).not.toHaveBeenCalled()
     })
 
-    it('should store one log per self report after the stored ones, with the session job and its own date', async () => {
+    it('Should store one log per self report after the stored ones, with the session job and its own date', async () => {
       const selfReportRepository = await createSelfLogReportRepository(options)
       const alreadyStoredLog = storedLog({ message: 'other' })
       mockStoredLogs([alreadyStoredLog])
@@ -253,7 +253,7 @@ describe('createSelfLogReportRepository', () => {
       ])
     })
 
-    it('should leave out the stored logs with the same file, line and message as a self report', async () => {
+    it('Should leave out the stored logs with the same file, line and message as a self report', async () => {
       const selfReportRepository = await createSelfLogReportRepository(options)
       const otherMessageLog = storedLog({ message: 'other' })
       const otherLineLog = storedLog({ callLine: 9 })
@@ -288,7 +288,7 @@ describe('createSelfLogReportRepository', () => {
         (): unknown => logsRepository.saveLogs.mockRejectedValueOnce(new Error('EACCES'))
       ]
     ])(
-      'should log the error and not throw when %s, and still run the next save',
+      'Should log the error and not throw when %s, and still run the next save',
       async (_, failSave) => {
         const selfReportRepository = await createSelfLogReportRepository(options)
         logsRepository.saveLogs.mockClear()

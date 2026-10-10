@@ -13,7 +13,7 @@ const NOTIFICATION_CONSTANTS = {
 }
 
 describe('parseNotificationConfig', () => {
-  it('should define the notification config if all the required variables are set', () => {
+  it('Should define the notification config if all the required variables are set', () => {
     expect(parseNotificationConfig(NOTIFICATION_ENV, NOTIFICATION_CONSTANTS)).toStrictEqual({
       telegramChatId: '123456789',
       telegramBotToken: '123456:ABC-DEF',
@@ -23,7 +23,7 @@ describe('parseNotificationConfig', () => {
   })
 
   it.each(['TELEGRAM_CHAT_ID', 'TELEGRAM_BOT_TOKEN'])(
-    'should not define the notification config if %s is not set',
+    'Should not define the notification config if %s is not set',
     (key) => {
       expect(
         parseNotificationConfig({ ...NOTIFICATION_ENV, [key]: undefined }, NOTIFICATION_CONSTANTS)

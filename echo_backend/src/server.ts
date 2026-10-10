@@ -10,7 +10,9 @@ import { registerLogsNotifier } from './initializers/registerLogsNotifier.js'
 import { registerLogsRoutes } from './initializers/registerLogsRoutes.js'
 import { registerSecurity } from './initializers/registerSecurity.js'
 import type { EchoServer } from './initializers/types/echoServer.js'
+import { addBasePath } from './initializers/utils/addBasePath.js'
 import { normalizeToEchoError } from './initializers/utils/normalizeToEchoError.js'
+import { removeBasePath } from './initializers/utils/removeBasePath.js'
 import { createLogsFilesApi } from './modules/logs/infra/logsFiles.api.js'
 import { createLogsFilesRepository } from './modules/logs/infra/logsFiles.repository.js'
 import { createSelfReportRepository } from './modules/selfReport/infra/selfReport.repository.js'
@@ -22,7 +24,10 @@ import { createFilesService, type FilesService } from './shared/services/files.s
 /**
  * Composition root: builds the dependency graph from `config` and wires it into the Fastify app.
  *
- * Whatever reads or writes files is given `filesService`, the one access to the file system.
+ * Whatever reads or writes files is given `filesService`, the one access to the file system. A
+ * request is routed the same whether the reverse proxy forwarded it with the `basePath` of the
+ * config or without it, and a redirection to a path of the server is sent below `basePath`, where
+ * the browser reaches it.
  */
 export const buildServer = async (
   config: BackConfig,
@@ -34,10 +39,22 @@ export const buildServer = async (
   // plain-http shape Fastify's default overload expects; `https` still drives TLS at runtime.
   const serverOptions = {
     logger: true,
+    rewriteUrl: (request: IncomingMessage) =>
+      removeBasePath(request.url ?? '/', config.server.basePath),
     ...(config.server.tls && { https: config.server.tls })
   } as FastifyServerOptions<Server<typeof IncomingMessage, typeof ServerResponse>>
 
   const server = Fastify(serverOptions)
+
+  server.addHook('onSend', async (_request, reply, payload) => {
+    const location = reply.getHeader('location')
+
+    if (typeof location === 'string') {
+      reply.header('location', addBasePath(location, config.server.basePath))
+    }
+
+    return payload
+  })
 
   server.setErrorHandler((error, request, reply) => {
     const echoError = normalizeToEchoError(error)
@@ -63,7 +80,7 @@ export const buildServer = async (
   await registerAuthRoutes(server, config, filesService)
   await registerLogsRoutes(server, config, logsRepository, selfReportRepository)
 
-  await registerFrontend(server, config.server)
+  await registerFrontend(server, config.server, filesService)
 
   await registerLogsNotifier(server, config, {
     logsRepository,

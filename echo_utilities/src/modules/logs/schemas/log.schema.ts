@@ -21,7 +21,9 @@ export const LogSchema = z.strictObject({
   locationName: z.string(),
   /** The run of the script that emitted the log. */
   jobId: z.int(),
+  /** The severity of the log. */
   category: LogCategorySchema,
+  /** What the script reported, as it wrote it. */
   message: z.string(),
   /** File the log was emitted from. */
   callFile: z.string(),

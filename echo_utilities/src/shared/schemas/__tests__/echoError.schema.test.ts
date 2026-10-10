@@ -6,21 +6,21 @@ import { EchoErrorSchema } from '../echoError.schema.js'
 const validEchoError: EchoError = { statusCode: 400, message: 'Bad input.' }
 
 describe('EchoErrorSchema', () => {
-  it('should accept a status code and a message', () => {
+  it('Should accept a status code and a message', () => {
     expect(EchoErrorSchema.safeParse(validEchoError).success).toBeTruthy()
   })
 
-  it('should leave out the properties it does not describe', () => {
+  it('Should leave out the properties it does not describe', () => {
     expect(EchoErrorSchema.parse({ ...validEchoError, code: 'FST_ERR_VALIDATION' })).toEqual(
       validEchoError
     )
   })
 
-  it('should reject an EchoError missing the message', () => {
+  it('Should reject an EchoError missing the message', () => {
     expect(EchoErrorSchema.safeParse({ statusCode: 400 }).success).toBeFalsy()
   })
 
-  it('should reject an EchoError with a non-integer statusCode', () => {
+  it('Should reject an EchoError with a non-integer statusCode', () => {
     expect(EchoErrorSchema.safeParse({ ...validEchoError, statusCode: 400.5 }).success).toBeFalsy()
     expect(EchoErrorSchema.safeParse({ ...validEchoError, statusCode: '400' }).success).toBeFalsy()
   })

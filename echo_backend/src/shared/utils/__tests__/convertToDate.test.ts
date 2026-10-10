@@ -6,7 +6,7 @@ import { convertToDateFromISO } from '../convertToDate.js'
 // getters would depend on the timezone of the machine running the tests.
 
 describe('convertToDateFromISO', () => {
-  it('should parse a valid ISO string', () => {
+  it('Should parse a valid ISO string', () => {
     const result = convertToDateFromISO('2024-05-12T14:30:00.000Z')
     expect(result).toBeInstanceOf(Date)
     expect(result?.getUTCFullYear()).toBe(2024)
@@ -15,22 +15,22 @@ describe('convertToDateFromISO', () => {
     expect(result?.getUTCHours()).toBe(14)
   })
 
-  it('should respect the offset of an ISO string', () => {
+  it('Should respect the offset of an ISO string', () => {
     const result = convertToDateFromISO('2024-05-12T14:30:00.000+02:00')
     expect(result?.toISOString()).toBe('2024-05-12T12:30:00.000Z')
   })
 
-  it('should read an ISO string without offset as UTC', () => {
+  it('Should read an ISO string without offset as UTC', () => {
     const result = convertToDateFromISO('2024-05-12T14:30:00.000')
     expect(result?.toISOString()).toBe('2024-05-12T14:30:00.000Z')
   })
 
-  it('should return undefined for a date in the old `yyyy-MM-dd HH:mm:ss.SSS` format', () => {
+  it('Should return undefined for a date in the old `yyyy-MM-dd HH:mm:ss.SSS` format', () => {
     const result = convertToDateFromISO('2024-05-12 14:30:00.123')
     expect(result).toBeUndefined()
   })
 
-  it('should return undefined for an invalid ISO string', () => {
+  it('Should return undefined for an invalid ISO string', () => {
     const result = convertToDateFromISO('not-a-date')
     expect(result).toBeUndefined()
   })

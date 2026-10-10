@@ -42,7 +42,7 @@ const getSentRequestTypes = (worker: FakeWorker): string[] =>
   worker.postMessage.mock.calls.map(([request]) => request.type)
 
 describe('createFilterLogs', () => {
-  test('should give the worker the logs then the filters, and resolve with the very logs the worker points at', async () => {
+  test('Should give the worker the logs then the filters, and resolve with the very logs the worker points at', async () => {
     const worker = buildFakeWorker()
     const filterLogs = createFilterLogs(worker)
 
@@ -66,7 +66,7 @@ describe('createFilterLogs', () => {
     expect(secondLog).toBe(logs[2])
   })
 
-  test('should only give the worker the logs again when they are another list', async () => {
+  test('Should only give the worker the logs again when they are another list', async () => {
     const worker = buildFakeWorker()
     const filterLogs = createFilterLogs(worker)
     const otherLogs = [buildLog('d')]
@@ -92,7 +92,7 @@ describe('createFilterLogs', () => {
     ])
   })
 
-  test('should give the worker one request at a time, each answered in turn', async () => {
+  test('Should give the worker one request at a time, each answered in turn', async () => {
     const worker = buildFakeWorker()
     const filterLogs = createFilterLogs(worker)
 
@@ -111,7 +111,7 @@ describe('createFilterLogs', () => {
     await expect(secondFiltering).resolves.toEqual([logs[1]])
   })
 
-  test('should reject a request aborted while it waits, without ever sending it to the worker', async () => {
+  test('Should reject a request aborted while it waits, without ever sending it to the worker', async () => {
     const worker = buildFakeWorker()
     const filterLogs = createFilterLogs(worker)
     const abortController = new AbortController()
@@ -127,7 +127,7 @@ describe('createFilterLogs', () => {
     expect(getSentRequestTypes(worker)).toEqual(['setLogs', 'filterLogs'])
   })
 
-  test('should reject a request aborted while it runs, and start the next one once the worker has answered it', async () => {
+  test('Should reject a request aborted while it runs, and start the next one once the worker has answered it', async () => {
     const worker = buildFakeWorker()
     const filterLogs = createFilterLogs(worker)
     const abortController = new AbortController()
@@ -146,7 +146,7 @@ describe('createFilterLogs', () => {
     await expect(nextFiltering).resolves.toEqual([logs[1]])
   })
 
-  test('should reject every request, running, waiting and to come, once the worker has failed', async () => {
+  test('Should reject every request, running, waiting and to come, once the worker has failed', async () => {
     const worker = buildFakeWorker()
     const filterLogs = createFilterLogs(worker)
 
@@ -161,7 +161,7 @@ describe('createFilterLogs', () => {
     expect(getSentRequestTypes(worker)).toEqual(['setLogs', 'filterLogs'])
   })
 
-  test('should reject the requests to come when the worker fails while idle', async () => {
+  test('Should reject the requests to come when the worker fails while idle', async () => {
     const worker = buildFakeWorker()
     const filterLogs = createFilterLogs(worker)
 
@@ -171,7 +171,7 @@ describe('createFilterLogs', () => {
     expect(worker.postMessage).not.toHaveBeenCalled()
   })
 
-  test('should ignore an answer when no request is running', () => {
+  test('Should ignore an answer when no request is running', () => {
     const worker = buildFakeWorker()
     createFilterLogs(worker)
 
@@ -186,7 +186,7 @@ describe('filterLogs', () => {
     vi.resetModules()
   })
 
-  test('should start the app-wide worker at the first filtering only', async () => {
+  test('Should start the app-wide worker at the first filtering only', async () => {
     const startedWorkers: FakeWorker[] = []
     vi.stubGlobal(
       'Worker',

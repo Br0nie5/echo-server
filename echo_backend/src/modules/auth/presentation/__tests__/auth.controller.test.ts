@@ -43,7 +43,7 @@ describe('AuthController', () => {
   })
 
   describe('signUp', () => {
-    it('should successfully sign up, set a cookie, and return 200 for first user', async () => {
+    it('Should successfully sign up, set a cookie, and return 200 for first user', async () => {
       vi.mocked(AuthRepository.hasAnyUser).mockResolvedValue(false)
 
       const request = mockRequest({ username: username, password: password })
@@ -63,7 +63,7 @@ describe('AuthController', () => {
       expect(reply.send).toHaveBeenCalledWith({ success: true, message: 'Sign up successful.' })
     })
 
-    it('should return a 403 if an user had already signed up', async () => {
+    it('Should return a 403 if an user had already signed up', async () => {
       vi.mocked(AuthRepository.hasAnyUser).mockResolvedValue(true)
 
       const request = mockRequest({ username: username, password: password })
@@ -86,7 +86,7 @@ describe('AuthController', () => {
   })
 
   describe('signUp failing', () => {
-    it('should throw the error of a sign up that fails for another reason than being refused', async () => {
+    it('Should throw the error of a sign up that fails for another reason than being refused', async () => {
       vi.mocked(AuthRepository.hasAnyUser).mockResolvedValue(false)
       vi.mocked(AuthRepository.createUser).mockRejectedValueOnce(new Error('SQLITE_BUSY'))
 
@@ -101,7 +101,7 @@ describe('AuthController', () => {
   })
 
   describe('login', () => {
-    it('should successfully log in, set a cookie, and return 200 for valid credentials', async () => {
+    it('Should successfully log in, set a cookie, and return 200 for valid credentials', async () => {
       vi.mocked(AuthRepository.areCredentialsValid).mockResolvedValue(true)
 
       const request = mockRequest({ username: username, password: password })
@@ -119,7 +119,7 @@ describe('AuthController', () => {
       expect(reply.send).toHaveBeenCalledWith({ success: true, message: 'Login successful.' })
     })
 
-    it('should return 401 for invalid username', async () => {
+    it('Should return 401 for invalid username', async () => {
       vi.mocked(AuthRepository.areCredentialsValid).mockResolvedValue(false)
 
       const request = mockRequest({ username: 'wrong_user', password: 'any_password' })
@@ -133,7 +133,7 @@ describe('AuthController', () => {
       expect(reply.send).toHaveBeenCalledWith({ success: false, message: 'Invalid credentials.' })
     })
 
-    it('should return 401 for valid username but invalid password', async () => {
+    it('Should return 401 for valid username but invalid password', async () => {
       vi.mocked(AuthRepository.areCredentialsValid).mockResolvedValue(false)
 
       const request = mockRequest({ username: username, password: 'wrong_password' })
@@ -149,7 +149,7 @@ describe('AuthController', () => {
   })
 
   describe('check', () => {
-    it('should return 200 when the JWT is successfully verified', async () => {
+    it('Should return 200 when the JWT is successfully verified', async () => {
       vi.mocked(AuthRepository.hasAnyUser).mockResolvedValue(true)
 
       const request = mockRequest({}, vi.fn().mockResolvedValue({}))
@@ -162,7 +162,7 @@ describe('AuthController', () => {
       expect(reply.send).toHaveBeenCalledWith({ success: true, message: 'Token is valid.' })
     })
 
-    it('should return 401 when JWT verification fails', async () => {
+    it('Should return 401 when JWT verification fails', async () => {
       vi.mocked(AuthRepository.hasAnyUser).mockResolvedValue(true)
 
       const request = mockRequest({}, vi.fn().mockRejectedValue(new Error('Invalid token')))
@@ -175,7 +175,7 @@ describe('AuthController', () => {
       expect(reply.send).toHaveBeenCalledWith({ success: false, message: 'Invalid token.' })
     })
 
-    it('should return 401 when no user are found in the db', async () => {
+    it('Should return 401 when no user are found in the db', async () => {
       vi.mocked(AuthRepository.hasAnyUser).mockResolvedValue(false)
 
       const request = mockRequest({}, vi.fn().mockRejectedValue(new Error(needsSignupMessage)))
@@ -189,7 +189,7 @@ describe('AuthController', () => {
   })
 
   describe('logout', () => {
-    it('should clear the cookie and return 200', async () => {
+    it('Should clear the cookie and return 200', async () => {
       const request = mockRequest({})
       const reply = mockReply()
 

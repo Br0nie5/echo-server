@@ -4,7 +4,7 @@ export const toggleTagFromList = <TTag extends string>(
   tagToToggle: TTag
 ): TTag[] => {
   if (previousTags.includes(tagToToggle)) {
-    return previousTags.filter((tag) => tag != tagToToggle)
+    return previousTags.filter((tag) => tag !== tagToToggle)
   }
   return [...previousTags, tagToToggle]
 }

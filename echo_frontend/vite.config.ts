@@ -2,8 +2,10 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
 // https://vite.dev/config/
-export default defineConfig({
-  base: '/app',
+export default defineConfig(({ command }) => ({
+  // The build does not know the path a reverse proxy serves Echo under: its URLs are relative, and
+  // the backend gives index.html the <base> they resolve against. The dev server has none in front.
+  base: command === 'build' ? './' : '/app',
   plugins: [react()],
   server: {
     host: '127.0.0.1',
@@ -37,4 +39,4 @@ export default defineConfig({
       ]
     }
   }
-})
+}))

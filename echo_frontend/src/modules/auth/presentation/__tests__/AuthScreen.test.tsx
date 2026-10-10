@@ -129,7 +129,7 @@ describe('AuthScreen', () => {
       expect(screen.asFragment()).toMatchSnapshot()
     })
 
-    test('should display error when submitting with empty fields', async () => {
+    test('Should display error when submitting with empty fields', async () => {
       const user = userEvent.setup()
 
       const screen = await renderAuthScreen('login')
@@ -144,7 +144,7 @@ describe('AuthScreen', () => {
   })
 
   describe('AuthLogin', () => {
-    test('should call the API and redirect to the protected resource on successful login', async () => {
+    test('Should call the API and redirect to the protected resource on successful login', async () => {
       const user = userEvent.setup()
 
       const redirectUrl = 'https://logs.test.cc/status'
@@ -168,7 +168,7 @@ describe('AuthScreen', () => {
       expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(redirectUrl)
     })
 
-    test('should call the API and display the children screen on successful login', async () => {
+    test('Should call the API and display the children screen on successful login', async () => {
       const user = userEvent.setup()
 
       const usernameInput = 'test-user'
@@ -190,7 +190,7 @@ describe('AuthScreen', () => {
       expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(`${testConfig.APP_URL}/logs`)
     })
 
-    test('should call the API and display an error message on failed login', async () => {
+    test('Should call the API and display an error message on failed login', async () => {
       const user = userEvent.setup()
 
       const usernameInput = 'bad-user'
@@ -211,7 +211,7 @@ describe('AuthScreen', () => {
       expect(mockSetHref).not.toHaveBeenCalled()
     })
 
-    test('should call the API and display a specific error message on failed login (401)', async () => {
+    test('Should call the API and display a specific error message on failed login (401)', async () => {
       const user = userEvent.setup()
 
       const usernameInput = 'bad-user'
@@ -234,7 +234,7 @@ describe('AuthScreen', () => {
   })
 
   describe('AuthSignUp', () => {
-    test('should call the API and redirect to the protected resource on successful sign up', async () => {
+    test('Should call the API and redirect to the protected resource on successful sign up', async () => {
       const user = userEvent.setup()
 
       const redirectUrl = 'https://logs.test.cc/status'
@@ -258,7 +258,7 @@ describe('AuthScreen', () => {
       expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(redirectUrl)
     })
 
-    test('should call the API and display the children screen on successful sign up', async () => {
+    test('Should call the API and display the children screen on successful sign up', async () => {
       const user = userEvent.setup()
 
       const usernameInput = 'test-user'
@@ -280,7 +280,7 @@ describe('AuthScreen', () => {
       expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(`${testConfig.APP_URL}/logs`)
     })
 
-    test('should call the API and display an error message on failed sign up', async () => {
+    test('Should call the API and display an error message on failed sign up', async () => {
       const user = userEvent.setup()
 
       const usernameInput = 'bad-user'
@@ -303,7 +303,7 @@ describe('AuthScreen', () => {
   })
 
   describe('Redirection', () => {
-    test('should directly redirect to the protected resource if already authenticated', async () => {
+    test('Should directly redirect to the protected resource if already authenticated', async () => {
       const redirectUrl = 'https://logs.test.cc/status'
 
       await renderAuthScreen('redirect', {
@@ -313,13 +313,13 @@ describe('AuthScreen', () => {
       expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(redirectUrl)
     })
 
-    test('should directly redirect to the config logs url if no redirection is provided', async () => {
+    test('Should directly redirect to the config logs url if no redirection is provided', async () => {
       await renderAuthScreen('redirect')
 
       expect(mockSetHref).toHaveBeenCalledExactlyOnceWith(`${testConfig.APP_URL}/logs`)
     })
 
-    test('should redirect by clicking on the redirect button', async () => {
+    test('Should redirect by clicking on the redirect button', async () => {
       const user = userEvent.setup()
 
       const screen = await renderAuthScreen('redirect')

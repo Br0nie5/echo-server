@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest'
 
-import type { LogSearchableKeys, LogSearchFilter } from '../../types/logSearchFilter'
-import { parseLogSearchInput } from '../parseLogSearchInput'
+import type { LogSearchableKey, LogSearchFilter } from '../../consts/logSearchFilter.js'
+import { parseLogSearchInput } from '../parseLogSearchInput.js'
 
-const VALID_SEARCH_KEY: LogSearchableKeys = 'locationName'
+const VALID_SEARCH_KEY: LogSearchableKey = 'locationName'
 
 describe('parseLogSearchInput', () => {
   describe('splitLogSearchInput', () => {
-    it('Should splits search input on bare spaces', () => {
+    it('Should split the search input on bare spaces', () => {
       const searchFilters: LogSearchFilter[] = [
         { mode: 'find', search: 'foo' },
         { mode: 'find', search: 'bar' }
@@ -65,7 +65,7 @@ describe('parseLogSearchInput', () => {
   })
 
   describe('key detection', () => {
-    it('Should set key to all when no known key prefix was found', () => {
+    it('Should leave the key out when no known key prefix was found', () => {
       expect(parseLogSearchInput('unknown:value')[0].key).toBeUndefined()
     })
 
@@ -91,7 +91,7 @@ describe('parseLogSearchInput', () => {
   })
 
   describe('combined', () => {
-    it('parses a complex multi-token query', () => {
+    it('Should parse a complex multi-part query', () => {
       const searchFilters: LogSearchFilter[] = [
         { key: VALID_SEARCH_KEY, mode: 'find', search: 'error' },
         { mode: 'remove', search: 'notAKey:auth' },

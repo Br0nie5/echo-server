@@ -20,7 +20,7 @@ afterEach(() => {
 })
 
 describe('AppRouter', () => {
-  it('should render AuthScreen if HAS_AUTHENTICATION is true', async () => {
+  it('Should render AuthScreen if HAS_AUTHENTICATION is true', async () => {
     const screen = await renderComponent(<AppRouter />, {
       configOverride: { ...testConfig, HAS_AUTHENTICATION: true }
     })
@@ -29,7 +29,7 @@ describe('AppRouter', () => {
     expect(screen.queryByTestId(logsTestId)).not.toBeInTheDocument()
   })
 
-  it('should render LogsScreen if HAS_AUTHENTICATION is false', async () => {
+  it('Should render LogsScreen if HAS_AUTHENTICATION is false', async () => {
     const screen = await renderComponent(<AppRouter />, {
       configOverride: { ...testConfig, HAS_AUTHENTICATION: false }
     })

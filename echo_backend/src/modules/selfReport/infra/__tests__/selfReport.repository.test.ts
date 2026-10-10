@@ -41,7 +41,7 @@ describe('createSelfReportRepository', () => {
     createNoopSelfReportRepository.mockReturnValue(noopSelfReportRepository)
   })
 
-  it('should create the repository storing at the picked file of the self-reports directory when there is a self reports config', async () => {
+  it('Should create the repository storing at the picked file of the self-reports directory when there is a self reports config', async () => {
     const selfReportsConfig = getMockSelfReportsConfig({
       selfReportsDirPath: '/server_logs/self_reports/Echo/log',
       parseLogFileSelfReportFileName: 'parseLogFile.jsonl'
@@ -67,7 +67,7 @@ describe('createSelfReportRepository', () => {
     })
   })
 
-  it('should create a repository storing nothing when there is no self reports config', async () => {
+  it('Should create a repository storing nothing when there is no self reports config', async () => {
     const selfReportRepository = await createSelfReportRepository({
       logsRepository,
       filesService,

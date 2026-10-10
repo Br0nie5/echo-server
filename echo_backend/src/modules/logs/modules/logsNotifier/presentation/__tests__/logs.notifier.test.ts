@@ -49,7 +49,7 @@ beforeEach(() => {
 })
 
 describe('logsNotifier plugin', () => {
-  it('should register the cron task and onClose hook when it is configured', async () => {
+  it('Should register the cron task and onClose hook when it is configured', async () => {
     const stopMock = vi.fn()
     vi.mocked(cron.schedule).mockReturnValueOnce({
       stop: stopMock
@@ -70,7 +70,7 @@ describe('logsNotifier plugin', () => {
     expect(stopMock).toHaveBeenCalledTimes(1)
   })
 
-  it('should check the problem logs of the watched categories at each run', async () => {
+  it('Should check the problem logs of the watched categories at each run', async () => {
     const fastify = mockFastify()
     const cronCallback = await registerAndGetCronCallback(fastify)
 
@@ -89,7 +89,7 @@ describe('logsNotifier plugin', () => {
     expect(fastify.log.error).not.toHaveBeenCalled()
   })
 
-  it('should log an error when a run throws', async () => {
+  it('Should log an error when a run throws', async () => {
     checkProblemLogsAndNotify.mockRejectedValueOnce(new Error('DB down'))
 
     const fastify = mockFastify()

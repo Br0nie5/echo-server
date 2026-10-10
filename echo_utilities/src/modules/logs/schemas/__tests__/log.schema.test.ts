@@ -18,11 +18,11 @@ const validLog: Log = {
 }
 
 describe('LogSchema', () => {
-  it('should accept a valid Log', () => {
+  it('Should accept a valid Log', () => {
     expect(LogSchema.safeParse(validLog).success).toBeTruthy()
   })
 
-  it('should accept a valid Log without the optional groupName', () => {
+  it('Should accept a valid Log without the optional groupName', () => {
     const logWithoutGroupName: Omit<Log, 'groupName'> = {
       id: validLog.id,
       date: validLog.date,
@@ -38,7 +38,7 @@ describe('LogSchema', () => {
     expect(LogSchema.safeParse(logWithoutGroupName).success).toBeTruthy()
   })
 
-  it('should reject a Log missing a required field', () => {
+  it('Should reject a Log missing a required field', () => {
     const invalidLog: Omit<Log, 'message'> = {
       id: validLog.id,
       date: validLog.date,
@@ -54,25 +54,25 @@ describe('LogSchema', () => {
     expect(LogSchema.safeParse(invalidLog).success).toBeFalsy()
   })
 
-  it('should reject a Log with an invalid category', () => {
+  it('Should reject a Log with an invalid category', () => {
     expect(LogSchema.safeParse({ ...validLog, category: 'NOT_A_CATEGORY' }).success).toBeFalsy()
   })
 
-  it('should reject a Log with a non-integer jobId', () => {
+  it('Should reject a Log with a non-integer jobId', () => {
     expect(LogSchema.safeParse({ ...validLog, jobId: 1.5 }).success).toBeFalsy()
   })
 
-  it('should reject a Log with an unknown extra property', () => {
+  it('Should reject a Log with an unknown extra property', () => {
     expect(LogSchema.safeParse({ ...validLog, extra: 'not allowed' }).success).toBeFalsy()
   })
 })
 
 describe('LogArraySchema', () => {
-  it('should accept an array of valid Logs', () => {
+  it('Should accept an array of valid Logs', () => {
     expect(LogArraySchema.safeParse([validLog, validLog]).success).toBeTruthy()
   })
 
-  it('should reject an array containing an invalid Log', () => {
+  it('Should reject an array containing an invalid Log', () => {
     expect(
       LogArraySchema.safeParse([validLog, { ...validLog, jobId: 'not a number' }]).success
     ).toBeFalsy()

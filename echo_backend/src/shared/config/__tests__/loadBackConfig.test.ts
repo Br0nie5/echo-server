@@ -52,7 +52,7 @@ describe('loadBackConfig', () => {
   })
 
   describe('environment', () => {
-    it('should load .env.development when NODE_ENV is not production', async () => {
+    it('Should load .env.development when NODE_ENV is not production', async () => {
       stubEnvFile('.env.development', { ...REQUIRED_ENV, SERVER_NAME: 'Development Echo' })
 
       const config = await loadBackConfig(filesService, { NODE_ENV: 'test' })
@@ -60,7 +60,7 @@ describe('loadBackConfig', () => {
       expect(config.server.serverName).toBe('Development Echo')
     })
 
-    it('should load .env.production when NODE_ENV is production', async () => {
+    it('Should load .env.production when NODE_ENV is production', async () => {
       stubEnvFile('.env.production', { ...REQUIRED_ENV, SERVER_NAME: 'Production Echo' })
 
       const config = await loadBackConfig(filesService, { NODE_ENV: 'production' })
@@ -68,7 +68,7 @@ describe('loadBackConfig', () => {
       expect(config.server.serverName).toBe('Production Echo')
     })
 
-    it('should keep the variables already set over the ones of the env file', async () => {
+    it('Should keep the variables already set over the ones of the env file', async () => {
       stubEnvFile('.env.development', { ...REQUIRED_ENV, SERVER_NAME: 'Development Echo' })
 
       const config = await loadBackConfig(filesService, { SERVER_NAME: 'Already Set Echo' })
@@ -76,7 +76,7 @@ describe('loadBackConfig', () => {
       expect(config.server.serverName).toBe('Already Set Echo')
     })
 
-    it('should read the environment of the process by default', async () => {
+    it('Should read the environment of the process by default', async () => {
       Object.entries(REQUIRED_ENV).forEach(([key, value]) => vi.stubEnv(key, value))
       vi.stubEnv('SERVER_NAME', 'Process Echo')
 
@@ -89,6 +89,7 @@ describe('loadBackConfig', () => {
   it.each([
     { variable: 'SERVER_NAME', value: '' },
     { variable: 'SERVER_URL', value: 'not-a-url' },
+    { variable: 'SERVER_URL', value: 'https://domain.com/api' },
     { variable: 'HAS_AUTHENTICATION', value: 'maybe' },
     { variable: 'HTTP_PORT', value: 'not-a-number' },
     { variable: 'LOGS_DIR_PATH', value: '' },
@@ -96,7 +97,7 @@ describe('loadBackConfig', () => {
     { variable: 'SAVE_SELF_REPORTS_TO_FILE', value: 'maybe' },
     { variable: 'SELF_REPORTS_RETENTION_DAYS', value: '0' }
   ])(
-    'should throw when the parser of $variable throws on "$value"',
+    'Should throw when the parser of $variable throws on "$value"',
     async ({ variable, value }) => {
       await expect(
         loadBackConfig(filesService, {
@@ -108,15 +109,17 @@ describe('loadBackConfig', () => {
     }
   )
 
-  it('should build the whole config, with its defaults, from the required variables alone', async () => {
+  it('Should build the whole config, with its defaults, from the required variables alone', async () => {
     expect(await loadBackConfig(filesService, { ...REQUIRED_ENV })).toStrictEqual({
       server: {
         serverName: 'Echo',
         serverUrl: 'http://localhost:5173',
         apiUrl: 'http://localhost:5173/api',
         appUrl: 'http://localhost:5173/app',
+        basePath: '',
         apiRoutePrefix: '/api',
         appRoutePrefix: '/app',
+        documentationRoutePrefix: '/documentation',
         host: '0.0.0.0',
         port: 4000,
         allowedDomain: 'localhost',
@@ -135,7 +138,7 @@ describe('loadBackConfig', () => {
     })
   })
 
-  it('should build the whole config from every possible variables', async () => {
+  it('Should build the whole config from every possible variables', async () => {
     const config = await loadBackConfig(filesService, {
       NODE_ENV: 'production',
       SERVER_NAME: 'Docker Prod',
@@ -161,8 +164,10 @@ describe('loadBackConfig', () => {
         serverUrl: 'https://allowed-domain.com:3700',
         apiUrl: 'https://allowed-domain.com:3700/api',
         appUrl: 'https://allowed-domain.com:3700/app',
+        basePath: '',
         apiRoutePrefix: '/api',
         appRoutePrefix: '/app',
+        documentationRoutePrefix: '/documentation',
         host: '0.0.0.0',
         port: 3700,
         allowedDomain: 'allowed-domain.com',
@@ -212,7 +217,7 @@ describe('loadBackConfig', () => {
     })
   })
 
-  it('should leave the self reports out when they are disabled, whatever their other variables', async () => {
+  it('Should leave the self reports out when they are disabled, whatever their other variables', async () => {
     const config = await loadBackConfig(filesService, {
       ...REQUIRED_ENV,
       SAVE_SELF_REPORTS_TO_FILE: 'false',
@@ -223,7 +228,7 @@ describe('loadBackConfig', () => {
     expect(config.logs.logsDirsPaths).toEqual(['/some/path'])
   })
 
-  it('should leave the logs notifier out when there is no notification config', async () => {
+  it('Should leave the logs notifier out when there is no notification config', async () => {
     const config = await loadBackConfig(filesService, {
       ...REQUIRED_ENV,
       LOGS_NOTIFIER_SCHEDULE_REGEX: '*/30 * * * *',

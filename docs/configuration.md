@@ -19,13 +19,15 @@ Parsed by [parseConfig.ts](../echo_utilities/src/shared/config/parseConfig.ts).
 | Variable             | Required | Description |
 | -------------------- | :------: | ----------- |
 | `SERVER_NAME`        | yes | Display name of the instance. |
-| `SERVER_URL`         | yes | Public URL of the instance. Must be a valid URL. |
+| `SERVER_URL`         | yes | Public URL of the instance, possibly with the path a reverse proxy serves it under (`https://example.com/echo`). Must be a valid URL, whose path does not start with `/api`, `/app` or `/documentation`. |
 | `HAS_AUTHENTICATION` | yes | `true` or `false`. |
 
 Two values are derived from `SERVER_URL` and are not separate variables:
 
 - `API_URL` = `${SERVER_URL}/api`
 - `APP_URL` = `${SERVER_URL}/app`
+
+Both keep the path of `SERVER_URL`: `https://example.com/echo` gives `https://example.com/echo/api`. The backend answers a request whether the reverse proxy forwards it with that path or strips it, and gives the frontend the `<base>` its files resolve against, so the same image works at any path.
 
 ## Backend only
 
@@ -51,19 +53,24 @@ The server always binds to `0.0.0.0`.
 
 ## Derived cookie settings
 
-The auth cookie is named `<hostname>_access_token`. Its domain and flags come from `SERVER_URL`:
+The auth cookie is named `<hostname>_access_token`. Its domain, path and flags come from `SERVER_URL`:
 
 | `SERVER_URL` host | Cookie domain |
 | ----------------- | ------------- |
 | `localhost` or an IP address | not set |
 | a hostname, e.g. `echo.example.com` | its registrable domain, `example.com`, subdomains included |
 
+| `SERVER_URL` path | Cookie path |
+| ----------------- | ----------- |
+| none, e.g. `https://echo.example.com` | `/` |
+| a path, e.g. `https://example.com/echo` | that path, `/echo`: two instances served at two paths of one domain keep their own session |
+
 | `SERVER_URL` scheme | `secure` |
 | ------------------- | :------: |
 | `https://` | yes: browsers only send the cookie over HTTPS |
 | `http://` | no: a browser refuses a secure cookie set over HTTP, so login over HTTP (in development, for instance) keeps working |
 
-Other flags are fixed: `httpOnly`, `sameSite=lax`, `path=/`, max age 24 hours. Use `https://` in `SERVER_URL` for any public deployment, behind a reverse proxy terminating TLS included, since it is the address the browser reaches.
+Other flags are fixed: `httpOnly`, `sameSite=lax`, max age 24 hours. Use `https://` in `SERVER_URL` for any public deployment, behind a reverse proxy terminating TLS included, since it is the address the browser reaches.
 
 ## Derived CORS settings
 

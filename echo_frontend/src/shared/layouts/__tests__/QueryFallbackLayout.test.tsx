@@ -9,7 +9,7 @@ import { QueryFallbackLayout } from '../QueryFallbackLayout'
 const appTranslation: AppTranslation = (key) => i18n.t(key)
 
 describe('QueryFallbackLayout', () => {
-  it('should render a CircularProgress when status is pending', async () => {
+  it('Should render a CircularProgress when status is pending', async () => {
     const screen = await renderComponent(
       <QueryFallbackLayout status="pending" refetch={() => {}} />
     )
@@ -18,7 +18,7 @@ describe('QueryFallbackLayout', () => {
     expect(spinner).toBeInTheDocument()
   })
 
-  it('should render a no data layout when status is success', async () => {
+  it('Should render a no data layout when status is success', async () => {
     const screen = await renderComponent(
       <QueryFallbackLayout status="success" refetch={() => {}} />
     )
@@ -26,14 +26,14 @@ describe('QueryFallbackLayout', () => {
     expect(screen.getByText(appTranslation('query.noData'))).toBeInTheDocument()
   })
 
-  it('should render an error message when status is error', async () => {
+  it('Should render an error message when status is error', async () => {
     const screen = await renderComponent(<QueryFallbackLayout status="error" refetch={() => {}} />)
 
     expect(screen.getByText(appTranslation('query.error'))).toBeInTheDocument()
     expect(screen.getByText(appTranslation('query.refetchButton'))).toBeInTheDocument()
   })
 
-  it('should execute the refetch callback if the error button is clicked on', async () => {
+  it('Should execute the refetch callback if the error button is clicked on', async () => {
     const user = userEvent.setup()
 
     let hasExecuteRefetchCallback = false

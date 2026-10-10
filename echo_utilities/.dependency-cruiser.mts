@@ -5,7 +5,8 @@
 
 import type { IConfiguration } from 'dependency-cruiser'
 
-const TESTS = '(^|/)(__tests__|__test__)/|\\.test\\.tsx?$'
+const SHARED = '^src/shared/'
+const TESTS = '(^|/)__tests__/|\\.test\\.tsx?$'
 
 const config: IConfiguration = {
   forbidden: [
@@ -40,6 +41,24 @@ const config: IConfiguration = {
       comment: '@echo/utilities is the shared base and must not import backend or frontend code.',
       from: {},
       to: { path: '(^|/)echo_(backend|frontend)/' }
+    },
+
+    // ── shared/ is a leaf, and nothing reaches the machine ─────────────────
+    {
+      name: 'utilities-shared-is-self-contained',
+      severity: 'error',
+      comment:
+        'src/shared is what the modules build on: of the sources of the package, it only imports itself.',
+      from: { path: SHARED, pathNot: TESTS },
+      to: { path: '^src/', pathNot: SHARED }
+    },
+    {
+      name: 'utilities-not-to-node',
+      severity: 'error',
+      comment:
+        'The frontend runs @echo/utilities in the browser, where Node.js is not: it imports no built-in module of Node.js (fs, path, crypto, ...).',
+      from: { pathNot: TESTS },
+      to: { dependencyTypes: ['core'] }
     },
 
     // ── production code vs tests ───────────────────────────────────────────

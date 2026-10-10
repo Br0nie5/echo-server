@@ -6,7 +6,7 @@ import { testConfig } from '../../../test/utils/config'
 import { useApiMutator } from '../useApiMutator'
 
 describe('useApiMutator', () => {
-  test('should return the response data on success', async () => {
+  test('Should return the response data on success', async () => {
     nock(testConfig.API_URL).get('/ok').reply(200, { hello: 'world' })
 
     const { result } = renderAppHook(() => useApiMutator())
@@ -14,7 +14,7 @@ describe('useApiMutator', () => {
     await expect(result.current({ url: '/ok', method: 'GET' })).resolves.toEqual({ hello: 'world' })
   })
 
-  test('should only run the error interceptor of the request that failed', async () => {
+  test('Should only run the error interceptor of the request that failed', async () => {
     nock(testConfig.API_URL).get('/failing').reply(500)
     nock(testConfig.API_URL).get('/ok').delay(20).reply(200, {})
 
@@ -32,7 +32,7 @@ describe('useApiMutator', () => {
     expect(otherRequestInterceptor).not.toHaveBeenCalled()
   })
 
-  test('should not keep the error interceptor of a failed request for later requests', async () => {
+  test('Should not keep the error interceptor of a failed request for later requests', async () => {
     nock(testConfig.API_URL).get('/first').reply(500)
     nock(testConfig.API_URL).get('/second').reply(500)
 

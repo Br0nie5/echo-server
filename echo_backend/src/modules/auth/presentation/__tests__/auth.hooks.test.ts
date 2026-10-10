@@ -7,7 +7,7 @@ const mockReply = (): FastifyReply =>
   ({ status: vi.fn().mockReturnThis(), send: vi.fn() }) as unknown as FastifyReply
 
 describe('authPreHandler', () => {
-  it('should let the request through when the JWT is valid', async () => {
+  it('Should let the request through when the JWT is valid', async () => {
     const request = { jwtVerify: vi.fn().mockResolvedValue({}) } as unknown as FastifyRequest
     const reply = mockReply()
 
@@ -17,7 +17,7 @@ describe('authPreHandler', () => {
     expect(reply.send).not.toHaveBeenCalled()
   })
 
-  it('should replies 401 when the JWT is invalid', async () => {
+  it('Should replies 401 when the JWT is invalid', async () => {
     const request = {
       jwtVerify: vi.fn().mockRejectedValue(new Error('bad'))
     } as unknown as FastifyRequest

@@ -10,9 +10,9 @@ import tseslint from 'typescript-eslint'
 import prettierConfig from './prettier.config.js'
 
 export default tseslint.config([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'coverage']),
   {
-    files: ['**/*.{js,ts,tsx}'],
+    files: ['**/*.{js,ts,mts}'],
     extends: [js.configs.recommended, tseslint.configs.recommended],
     languageOptions: {
       ecmaVersion: 2020,
@@ -59,6 +59,7 @@ export default tseslint.config([
       '@typescript-eslint/no-inferrable-types': 'off',
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/array-type': ['error', { default: 'array-simple' }],
+      eqeqeq: 'error',
       // Import
       'import/order': [
         'error',
@@ -89,7 +90,6 @@ export default tseslint.config([
     files: ['src/**/*.{ts,tsx}'],
     ignores: [
       '**/__tests__/**',
-      '**/__test__/**',
       '**/*.test.{ts,tsx}',
       'src/test/**',
       'src/setupTests.ts',

@@ -45,7 +45,7 @@ describe('LogsFilesRepository', () => {
   })
 
   describe('getAllLogs', () => {
-    it('should convert the valid lines of a file to logs and give a self report for the others', async () => {
+    it('Should convert the valid lines of a file to logs and give a self report for the others', async () => {
       const file = logFile()
       logsFilesApi.getAllLogFiles.mockResolvedValue([file])
       logsFilesApi.getRawLogLines.mockResolvedValue(rawLogLinesOf(file, lineContents))
@@ -97,7 +97,7 @@ describe('LogsFilesRepository', () => {
       ])
     })
 
-    it('should flatten the logs of every file', async () => {
+    it('Should flatten the logs of every file', async () => {
       const fileA = logFile({ fileName: 'a' })
       const fileB = logFile({ fileName: 'b' })
       logsFilesApi.getAllLogFiles.mockResolvedValue([fileA, fileB])
@@ -116,20 +116,20 @@ describe('LogsFilesRepository', () => {
       ])
     })
 
-    it('should give no log and no self report when there are no log files', async () => {
+    it('Should give no log and no self report when there are no log files', async () => {
       logsFilesApi.getAllLogFiles.mockResolvedValue([])
 
       expect(await logsFilesRepository.getAllLogs()).toEqual({ logs: [], selfReports: [] })
     })
 
-    it('should give no log and no self report for an empty file', async () => {
+    it('Should give no log and no self report for an empty file', async () => {
       logsFilesApi.getAllLogFiles.mockResolvedValue([logFile({ fileName: 'empty' })])
       logsFilesApi.getRawLogLines.mockResolvedValue([])
 
       expect(await logsFilesRepository.getAllLogs()).toEqual({ logs: [], selfReports: [] })
     })
 
-    it('should give the self reports of every file, self-report files included', async () => {
+    it('Should give the self reports of every file, self-report files included', async () => {
       const fileA = logFile({ fileName: 'a' })
       const selfReportFile = logFile({
         path: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
@@ -162,7 +162,7 @@ describe('LogsFilesRepository', () => {
   })
 
   describe('getLogs', () => {
-    it('should give the logs of the file at the location, and a self report for its other lines', async () => {
+    it('Should give the logs of the file at the location, and a self report for its other lines', async () => {
       const file = logFile({ path: '/logs/docker/utils/file.jsonl' })
       logsFilesApi.getLogFile.mockReturnValue(file)
       logsFilesApi.getRawLogLines.mockResolvedValue(
@@ -224,7 +224,7 @@ describe('LogsFilesRepository', () => {
       callLine: 2
     }
 
-    it('should make the logs the lines of the file at their location, in order', async () => {
+    it('Should make the logs the lines of the file at their location, in order', async () => {
       await logsFilesRepository.saveLogs([
         logAt('/logs/docker/utils/file.jsonl'),
         logAt('/logs/docker/utils/file.jsonl', secondLogOverrides)
@@ -238,7 +238,7 @@ describe('LogsFilesRepository', () => {
       )
     })
 
-    it('should write the logs from the oldest to the newest, whatever the order they are given in', async () => {
+    it('Should write the logs from the oldest to the newest, whatever the order they are given in', async () => {
       await logsFilesRepository.saveLogs([
         logAt('/logs/file.jsonl', secondLogOverrides),
         logAt('/logs/file.jsonl'),
@@ -256,7 +256,7 @@ describe('LogsFilesRepository', () => {
       )
     })
 
-    it('should save the logs of each location in its own file, all at once', async () => {
+    it('Should save the logs of each location in its own file, all at once', async () => {
       await logsFilesRepository.saveLogs([
         logAt('/logs/a.jsonl'),
         logAt('/logs/b.jsonl', secondLogOverrides),
@@ -276,13 +276,13 @@ describe('LogsFilesRepository', () => {
       )
     })
 
-    it('should write no file when there is no log', async () => {
+    it('Should write no file when there is no log', async () => {
       await logsFilesRepository.saveLogs([])
 
       expect(logsFilesApi.saveRawLogLines).not.toHaveBeenCalled()
     })
 
-    it('should throw the error of the log files API when a file cannot be written', async () => {
+    it('Should throw the error of the log files API when a file cannot be written', async () => {
       logsFilesApi.saveRawLogLines.mockRejectedValue(new Error('EACCES'))
 
       await expect(logsFilesRepository.saveLogs([logAt('/logs/file.jsonl')])).rejects.toThrow(
@@ -294,7 +294,7 @@ describe('LogsFilesRepository', () => {
   describe('deleteLogs', () => {
     beforeEach(mockLogFiles)
 
-    it('should leave the file at the location without any line', async () => {
+    it('Should leave the file at the location without any line', async () => {
       await logsFilesRepository.deleteLogs('/logs/docker/utils/file.jsonl')
 
       expect(logsFilesApi.saveRawLogLines).toHaveBeenCalledExactlyOnceWith(

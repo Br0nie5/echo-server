@@ -113,7 +113,7 @@ Container parameters are given as `<external>:<internal>` for ports and volumes.
 | Variable                              | Default                    | Description |
 | ------------------------------------- | -------------------------- | ----------- |
 | `SERVER_NAME`                         | `Docker Production`        | Display name of this instance. Shown in the UI and in Telegram messages. |
-| `SERVER_URL`                          | `http://localhost:<HTTP_PORT>` | Public URL of the instance, **as reached by the browser**. Determines the cookie domain and the `secure` flag. Use `https://` when serving over TLS. |
+| `SERVER_URL`                          | `http://localhost:<HTTP_PORT>` | Public URL of the instance, **as reached by the browser**, with the path of your reverse proxy if any (see [Reverse proxy](#reverse-proxy)). Determines the cookie domain and the `secure` flag. Use `https://` when serving over TLS. |
 | `HTTP_PORT`                           | `4000`                     | Port the server listens on inside the container. |
 | `HAS_AUTHENTICATION`                  | `true`                     | `true` enables login (cookie + JWT). `false` disables auth entirely and exposes logs to anyone who can reach the port. |
 | `LOGS_DIR_PATH`                       | `/watched_logs`            | Directory scanned for `.jsonl` files. Normally left as is and controlled via the volume. |
@@ -220,7 +220,7 @@ Both variables are required together, and `SERVER_URL` must start with `https://
 
 ## Reverse proxy
 
-Set `SERVER_URL` to the **public** URL (for example `https://echo.example.com`) and proxy everything to the container port. Echo serves the UI, API and docs from one origin, so no path rewriting is needed. The container health check always targets `localhost` inside the container, so it is unaffected by your proxy.
+Set `SERVER_URL` to the **public** URL, path included when Echo is not at the root of its domain (for example `https://echo.example.com` or `https://example.com/echo`), and proxy everything under it to the container port. Your proxy may forward the requests with that path or strip it: Echo answers both. The path cannot start with `/api`, `/app` or `/documentation`, which Echo serves itself. The container health check always targets `localhost` inside the container, so it is unaffected by your proxy.
 
 ## Building locally
 

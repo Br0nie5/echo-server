@@ -3,31 +3,31 @@ import { describe, it, expect } from 'vitest'
 import { parseTimezone } from '../parseTimezone.js'
 
 describe('parseTimezone', () => {
-  it('should default to UTC when unset', () => {
+  it('Should default to UTC when unset', () => {
     expect(parseTimezone(undefined)).toBe('UTC')
   })
 
-  it('should default to UTC when empty', () => {
+  it('Should default to UTC when empty', () => {
     expect(parseTimezone('')).toBe('UTC')
   })
 
-  it('should use the given IANA zone', () => {
+  it('Should use the given IANA zone', () => {
     expect(parseTimezone('Europe/Paris')).toBe('Europe/Paris')
   })
 
-  it('should use the given UTC offset', () => {
+  it('Should use the given UTC offset', () => {
     expect(parseTimezone('UTC+2')).toBe('UTC+2')
   })
 
-  it('should read a GMT offset as the matching UTC offset', () => {
+  it('Should read a GMT offset as the matching UTC offset', () => {
     expect(parseTimezone('GMT+2')).toBe('UTC+2')
   })
 
-  it('should ignore the spaces around the timezone', () => {
+  it('Should ignore the spaces around the timezone', () => {
     expect(parseTimezone(' Europe/Paris ')).toBe('Europe/Paris')
   })
 
-  it('should throw if the timezone is not a known one', () => {
+  it('Should throw if the timezone is not a known one', () => {
     expect(() => parseTimezone('Mars/Olympus')).toThrow('Invalid timezone: Mars/Olympus')
   })
 })

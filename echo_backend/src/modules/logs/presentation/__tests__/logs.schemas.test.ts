@@ -16,14 +16,14 @@ describe('LogCategoryJsonSchema', () => {
     validateCategory = ajv.compile(LogCategoryJsonSchema)
   })
 
-  it('should accept valid categories', () => {
+  it('Should accept valid categories', () => {
     const validCategories = ['SUCCESS', 'INFO', 'WARNING', 'ERROR']
     validCategories.forEach((cat) => {
       expect(validateCategory(cat)).toBe(true)
     })
   })
 
-  it('should reject invalid categories', () => {
+  it('Should reject invalid categories', () => {
     expect(validateCategory('INVALID')).toBe(false)
     expect(validateCategory('success')).toBe(false) // case-sensitive
     expect(validateCategory('')).toBe(false)
@@ -40,7 +40,7 @@ describe('LogJsonSchema', () => {
     validateLog = ajv.compile(LogJsonSchema)
   })
 
-  it('should accept a valid log object', () => {
+  it('Should accept a valid log object', () => {
     const log = {
       id: '0 [myGroup] [file1] [123] Something happened',
       date: LOG_DATE,
@@ -56,7 +56,7 @@ describe('LogJsonSchema', () => {
     expect(validateLog(log)).toBe(true)
   })
 
-  it('should reject log object with missing required fields', () => {
+  it('Should reject log object with missing required fields', () => {
     const log = {
       id: '1',
       date: LOG_DATE,
@@ -72,7 +72,7 @@ describe('LogJsonSchema', () => {
     expect(validateLog.errors?.[0].message).toContain('required')
   })
 
-  it('should reject log object with invalid category', () => {
+  it('Should reject log object with invalid category', () => {
     const log = {
       id: '1',
       date: LOG_DATE,
@@ -89,7 +89,7 @@ describe('LogJsonSchema', () => {
     expect(validateLog.errors?.[0].message).toContain('must be equal to one of the allowed values')
   })
 
-  it('should reject log object with additional properties', () => {
+  it('Should reject log object with additional properties', () => {
     const log = {
       id: '1',
       date: LOG_DATE,
@@ -119,30 +119,30 @@ describe('GetLogsParamsJsonSchema', () => {
     validateQuery = ajv.compile(GetLogsParamsJsonSchema)
   })
 
-  it('should accept a query with only fromDate', () => {
+  it('Should accept a query with only fromDate', () => {
     expect(validateQuery({ fromDate })).toBe(true)
   })
 
-  it('should accept one log category or several ones', () => {
+  it('Should accept one log category or several ones', () => {
     expect(validateQuery({ fromDate, logCategories: 'INFO' })).toBe(true)
     expect(validateQuery({ fromDate, logCategories: ['INFO', 'ERROR'] })).toBe(true)
   })
 
-  it('should accept a logSearch and leave unknown properties alone', () => {
+  it('Should accept a logSearch and leave unknown properties alone', () => {
     expect(validateQuery({ fromDate, logSearch: 'message:boom', unknown: 'value' })).toBe(true)
   })
 
-  it('should reject a query without fromDate', () => {
+  it('Should reject a query without fromDate', () => {
     expect(validateQuery({})).toBe(false)
     expect(validateQuery.errors?.[0].message).toContain('required')
   })
 
-  it('should reject a fromDate that is not a date-time', () => {
+  it('Should reject a fromDate that is not a date-time', () => {
     expect(validateQuery({ fromDate: 'invalid-date' })).toBe(false)
     expect(validateQuery.errors?.[0].message).toContain('must match format "date-time"')
   })
 
-  it('should reject an invalid log category', () => {
+  it('Should reject an invalid log category', () => {
     expect(validateQuery({ fromDate, logCategories: 'INVALID' })).toBe(false)
     expect(validateQuery({ fromDate, logCategories: ['INFO', 'INVALID'] })).toBe(false)
   })

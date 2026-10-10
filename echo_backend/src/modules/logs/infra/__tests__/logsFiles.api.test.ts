@@ -32,7 +32,7 @@ beforeEach(() => {
 
 describe('LogsFilesApi', () => {
   describe('getAllLogFiles', () => {
-    it('should list the files with the log file extension, with their name and group', async () => {
+    it('Should list the files with the log file extension, with their name and group', async () => {
       mockFoundFiles({
         '/logs': [
           '/logs/root.jsonl',
@@ -55,7 +55,7 @@ describe('LogsFilesApi', () => {
       ])
     })
 
-    it('should list the files with another log file extension when the config gives one', async () => {
+    it('Should list the files with another log file extension when the config gives one', async () => {
       mockFoundFiles({ '/logs': ['/logs/root.jsonl', '/logs/notes.txt'] })
 
       const logsFilesApi = createLogsFilesApi(
@@ -68,7 +68,7 @@ describe('LogsFilesApi', () => {
       ])
     })
 
-    it('should leave the directories named like the log files directory of the config out of the group', async () => {
+    it('Should leave the directories named like the log files directory of the config out of the group', async () => {
       mockFoundFiles({ '/logs': ['/logs/docker/utils/output/log/backup.jsonl'] })
 
       const logsFilesApi = createLogsFilesApi(
@@ -85,7 +85,7 @@ describe('LogsFilesApi', () => {
       ])
     })
 
-    it('should list the files of every logs directory, each grouped from its own directory', async () => {
+    it('Should list the files of every logs directory, each grouped from its own directory', async () => {
       mockFoundFiles({
         '/logs': ['/logs/docker/utils/backup.jsonl'],
         '/server_logs': ['/server_logs/self_reports/Echo/log/parseLogFile.jsonl']
@@ -107,7 +107,7 @@ describe('LogsFilesApi', () => {
     })
 
     it.each(['/logs/', './logs', 'logs'])(
-      'should group the files the same way when the logs directory is written %s',
+      'Should group the files the same way when the logs directory is written %s',
       async (logsDirPath) => {
         const filePath = path.join(logsDirPath, 'docker', 'utils', 'backup.jsonl')
         mockFoundFiles({ [logsDirPath]: [filePath] })
@@ -123,7 +123,7 @@ describe('LogsFilesApi', () => {
       }
     )
 
-    it('should throw the error of the files service when a logs directory cannot be read', async () => {
+    it('Should throw the error of the files service when a logs directory cannot be read', async () => {
       filesService.getFilesPaths.mockRejectedValue(new Error('ENOENT'))
 
       await expect(createLogsFilesApi(logsConfig, filesService).getAllLogFiles()).rejects.toThrow(
@@ -133,7 +133,7 @@ describe('LogsFilesApi', () => {
   })
 
   describe('getRawLogLines', () => {
-    it('should return the lines of the file with their position', async () => {
+    it('Should return the lines of the file with their position', async () => {
       const file = logFile('/logs/file.jsonl')
       filesService.getFileLines.mockResolvedValue(['foo', 'bar'])
 
@@ -144,7 +144,7 @@ describe('LogsFilesApi', () => {
       expect(filesService.getFileLines).toHaveBeenCalledWith('/logs/file.jsonl')
     })
 
-    it('should return no line when the file does not exist', async () => {
+    it('Should return no line when the file does not exist', async () => {
       filesService.getFileLines.mockRejectedValue(new FileDoesNotExistError('/logs/missing.jsonl'))
 
       expect(
@@ -154,7 +154,7 @@ describe('LogsFilesApi', () => {
       ).toEqual([])
     })
 
-    it('should throw the error of the files service when the file cannot be read', async () => {
+    it('Should throw the error of the files service when the file cannot be read', async () => {
       filesService.getFileLines.mockRejectedValue(new Error('EACCES'))
 
       await expect(
@@ -164,7 +164,7 @@ describe('LogsFilesApi', () => {
   })
 
   describe('getLogFile', () => {
-    it('should give the name and the group of a file of a logs directory', () => {
+    it('Should give the name and the group of a file of a logs directory', () => {
       const logsFilesApi = createLogsFilesApi(
         getMockLogsConfig({ logsDirsPaths: ['/logs', '/server_logs'] }),
         filesService
@@ -180,7 +180,7 @@ describe('LogsFilesApi', () => {
     })
 
     it.each(['/elsewhere/docker/utils/backup.jsonl', '/logs_backup/docker/utils/backup.jsonl'])(
-      'should give no group to %s, which is in none of the logs directories',
+      'Should give no group to %s, which is in none of the logs directories',
       (filePath) => {
         expect(createLogsFilesApi(logsConfig, filesService).getLogFile(filePath)).toEqual({
           path: filePath,
@@ -192,7 +192,7 @@ describe('LogsFilesApi', () => {
   })
 
   describe('saveRawLogLines', () => {
-    it('should create the directory of the file, then replace its lines, in the order they are given', async () => {
+    it('Should create the directory of the file, then replace its lines, in the order they are given', async () => {
       const steps: string[] = []
       filesService.createDirectory.mockImplementation(async () => {
         steps.push('createDirectory')
@@ -218,7 +218,7 @@ describe('LogsFilesApi', () => {
       expect(steps).toEqual(['createDirectory', 'replaceFileLines'])
     })
 
-    it('should throw the error of the files service when the file cannot be written', async () => {
+    it('Should throw the error of the files service when the file cannot be written', async () => {
       filesService.replaceFileLines.mockRejectedValue(new Error('EACCES'))
 
       await expect(

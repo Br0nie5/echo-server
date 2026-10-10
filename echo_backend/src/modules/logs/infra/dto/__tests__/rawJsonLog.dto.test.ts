@@ -5,7 +5,7 @@ import { convertLogToRawJsonLogLine, RawJsonLogLineSchema } from '../rawJsonLog.
 import { convertRawLogLineToLog } from '../rawLogLine.dto.js'
 
 describe('RawJsonLogLineSchema', () => {
-  it('should accept a valid raw JSON log line', () => {
+  it('Should accept a valid raw JSON log line', () => {
     const rawLine = {
       job_id: 1,
       timestamp: '2024-05-12T14:30:00.386Z',
@@ -18,13 +18,13 @@ describe('RawJsonLogLineSchema', () => {
     expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeTruthy()
   })
 
-  it('should reject a raw log line missing a required field', () => {
+  it('Should reject a raw log line missing a required field', () => {
     const rawLine = { job_id: 1, timestamp: '2024-05-12T14:30:00.386Z', status: 'INFO' }
 
     expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeFalsy()
   })
 
-  it('should reject a raw log line with a non-number job_id', () => {
+  it('Should reject a raw log line with a non-number job_id', () => {
     const rawLine = {
       job_id: '1',
       timestamp: '2024-05-12T14:30:00.386Z',
@@ -37,7 +37,7 @@ describe('RawJsonLogLineSchema', () => {
     expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeFalsy()
   })
 
-  it('should reject a non-object value', () => {
+  it('Should reject a non-object value', () => {
     expect(RawJsonLogLineSchema.safeParse('not an object').success).toBeFalsy()
   })
 })
@@ -56,7 +56,7 @@ describe('convertLogToRawJsonLogLine', () => {
     callLine: 4
   }
 
-  it('should give the JSON of the line of the log, without what says where it is stored', () => {
+  it('Should give the JSON of the line of the log, without what says where it is stored', () => {
     expect(convertLogToRawJsonLogLine(log)).toEqual({
       job_id: 123,
       timestamp: '2024-05-12T14:30:00.386Z',
@@ -67,7 +67,7 @@ describe('convertLogToRawJsonLogLine', () => {
     })
   })
 
-  it('should give a line that is read back as the same log, with the id of its line', () => {
+  it('Should give a line that is read back as the same log, with the id of its line', () => {
     const content = JSON.stringify(convertLogToRawJsonLogLine(log))
 
     expect(

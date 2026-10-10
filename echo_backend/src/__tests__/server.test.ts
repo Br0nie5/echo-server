@@ -1,5 +1,7 @@
+import type { IncomingMessage } from 'http'
+
 import type * as FastifyModule from 'fastify'
-import Fastify, { type FastifyInstance } from 'fastify'
+import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 
 vi.mock('../initializers/registerAuthRoutes.js')
@@ -81,13 +83,17 @@ describe('server', () => {
   })
 
   describe('buildServer', () => {
-    it('should register every part of the server once, the routes after what they rely on', async () => {
+    it('Should register every part of the server once, the routes after what they rely on', async () => {
       const config = getFullConfig()
 
       const server = await buildServer(config, filesService)
       servers.push(server)
 
-      expect(Fastify).toHaveBeenCalledWith({ logger: true, https: config.server.tls })
+      expect(Fastify).toHaveBeenCalledWith({
+        logger: true,
+        rewriteUrl: expect.any(Function),
+        https: config.server.tls
+      })
       expect(registerSecurity).toHaveBeenCalledExactlyOnceWith(server, config)
       expect(registerDocumentation).toHaveBeenCalledExactlyOnceWith(server, config.server)
       expect(createSelfReportRepository).toHaveBeenCalledExactlyOnceWith({
@@ -109,7 +115,7 @@ describe('server', () => {
         expect.anything(),
         selfReportRepository
       )
-      expect(registerFrontend).toHaveBeenCalledExactlyOnceWith(server, config.server)
+      expect(registerFrontend).toHaveBeenCalledExactlyOnceWith(server, config.server, filesService)
       expect(registerLogsNotifier).toHaveBeenCalledExactlyOnceWith(server, config, {
         logsRepository: expect.anything(),
         selfReportRepository,
@@ -128,7 +134,40 @@ describe('server', () => {
       expect(documentationOrder).toBeLessThan(logsRoutesOrder)
     })
 
-    it('should answer a generic 500 when a route handler throws', async () => {
+    it('Should route a request the same with the base path of the config or without it', async () => {
+      const config = getMockBackConfig({ server: getMockServerConfig({ basePath: '/echo' }) })
+
+      servers.push(await buildServer(config, filesService))
+
+      const { rewriteUrl } = vi.mocked(Fastify).mock.calls[0][0] as FastifyServerOptions
+      const rewriteRequestUrl = (url?: string): string | undefined =>
+        rewriteUrl?.call(servers[0], { url } as IncomingMessage)
+
+      expect(rewriteRequestUrl('/echo/api/logs?fromDate=2026')).toBe('/api/logs?fromDate=2026')
+      expect(rewriteRequestUrl('/api/logs')).toBe('/api/logs')
+      expect(rewriteRequestUrl(undefined)).toBe('/')
+    })
+
+    it('Should send a redirection to a path of the server below the base path', async () => {
+      const config = getMockBackConfig({ server: getMockServerConfig({ basePath: '/echo' }) })
+      const server = await buildServer(config, filesService)
+      servers.push(server)
+      server.get('/documentation/static/index.html', async (_request, reply) =>
+        reply.redirect('/documentation/')
+      )
+      server.get('/elsewhere', async (_request, reply) => reply.redirect('https://domain.com/'))
+
+      const documentationResponse = await server.inject({
+        method: 'GET',
+        url: '/documentation/static/index.html'
+      })
+      const elsewhereResponse = await server.inject({ method: 'GET', url: '/elsewhere' })
+
+      expect(documentationResponse.headers.location).toBe('/echo/documentation/')
+      expect(elsewhereResponse.headers.location).toBe('https://domain.com/')
+    })
+
+    it('Should answer a generic 500 when a route handler throws', async () => {
       const server = await buildServer(getFullConfig(), filesService)
       servers.push(server)
       server.get('/failing', async () => {
@@ -167,7 +206,7 @@ describe('server', () => {
       return stubs
     }
 
-    it('should listen on the host and port of the config and say where it is reached', async () => {
+    it('Should listen on the host and port of the config and say where it is reached', async () => {
       const config = getMockBackConfig({
         server: getMockServerConfig({ host: '127.0.0.1', port: 4000 })
       })
@@ -182,7 +221,7 @@ describe('server', () => {
       expect(logInfo).toHaveBeenCalledWith(`App is accessible through ${config.server.appUrl}`)
     })
 
-    it('should exit the process when the config cannot be loaded', async () => {
+    it('Should exit the process when the config cannot be loaded', async () => {
       const error = new Error('Missing required environment variable: HTTP_PORT')
       loadBackConfig.mockRejectedValue(error)
       const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -194,7 +233,7 @@ describe('server', () => {
       expect(exit).toHaveBeenCalledWith(1)
     })
 
-    it('should exit the process when the server cannot be built', async () => {
+    it('Should exit the process when the server cannot be built', async () => {
       loadBackConfig.mockResolvedValue(getFullConfig())
       vi.mocked(registerSecurity).mockRejectedValueOnce(new Error('plugin failure'))
       vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -206,7 +245,7 @@ describe('server', () => {
       expect(exit).toHaveBeenCalledWith(1)
     })
 
-    it('should log the error and exit the process when the server cannot listen', async () => {
+    it('Should log the error and exit the process when the server cannot listen', async () => {
       const error = Object.assign(new Error('listen EADDRINUSE'), { code: 'EADDRINUSE' })
       loadBackConfig.mockResolvedValue(getMockBackConfig())
       const { logError } = await stubNextServer(() => Promise.reject(error))

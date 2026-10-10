@@ -16,10 +16,10 @@ describe('registerDocumentation', () => {
     await server.close()
   })
 
-  it('should describe the API as served from the origin of the API URL', async () => {
+  it('Should describe the API as served below the server URL, base path included', async () => {
     await registerDocumentation(
       server,
-      getMockServerConfig({ apiUrl: 'https://allowed-domain.com:3700/api' })
+      getMockServerConfig({ serverUrl: 'https://allowed-domain.com:3700/echo/', basePath: '/echo' })
     )
     await server.ready()
 
@@ -30,11 +30,11 @@ describe('registerDocumentation', () => {
     }
 
     expect(openApi.info.title).toBe('Echo API')
-    expect(openApi.servers).toEqual([{ url: 'https://allowed-domain.com:3700' }])
+    expect(openApi.servers).toEqual([{ url: 'https://allowed-domain.com:3700/echo' }])
     expect(openApi.tags.map((tag) => tag.name)).toEqual(['Logs', 'Authentication'])
   })
 
-  it('should serve the OpenAPI document and its UI under /documentation', async () => {
+  it('Should serve the OpenAPI document and its UI under /documentation', async () => {
     await registerDocumentation(server, getMockServerConfig())
 
     const jsonResponse = await server.inject({ method: 'GET', url: '/documentation/json' })
@@ -46,7 +46,15 @@ describe('registerDocumentation', () => {
     expect(uiResponse.headers['content-type']).toContain('text/html')
   })
 
-  it('should name a shared schema after its $id', async () => {
+  it('Should make the UI load its files below the base path', async () => {
+    await registerDocumentation(server, getMockServerConfig({ basePath: '/tools/echo' }))
+
+    const uiResponse = await server.inject({ method: 'GET', url: '/documentation' })
+
+    expect(uiResponse.body).toContain('src="/tools/echo/documentation/static/swagger-ui-bundle.js"')
+  })
+
+  it('Should name a shared schema after its $id', async () => {
     await registerDocumentation(server, getMockServerConfig())
     server.addSchema({ $id: 'Thing', type: 'object', properties: { name: { type: 'string' } } })
     server.get('/things', { schema: { response: { 200: { $ref: 'Thing#' } } } }, async () => ({}))
@@ -57,7 +65,7 @@ describe('registerDocumentation', () => {
     expect(Object.keys(openApi.components.schemas)).toEqual(['Thing'])
   })
 
-  it('should name a schema without $id after its position', async () => {
+  it('Should name a schema without $id after its position', async () => {
     const register = vi.spyOn(server, 'register')
     await registerDocumentation(server, getMockServerConfig())
 

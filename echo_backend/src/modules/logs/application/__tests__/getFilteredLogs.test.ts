@@ -18,7 +18,7 @@ describe('getFilteredLogs', () => {
     vi.resetAllMocks()
   })
 
-  it('should return only the logs logged since fromDate, fromDate included', async () => {
+  it('Should return only the logs logged since fromDate, fromDate included', async () => {
     const createLog = (id: string, date: string): Log => ({
       date,
       jobId: 1,
@@ -51,7 +51,7 @@ describe('getFilteredLogs', () => {
     expect(result).toEqual([afterFromDateLog, fromDateLog])
   })
 
-  it('should return only the logs logged before toDate, toDate left out', async () => {
+  it('Should return only the logs logged before toDate, toDate left out', async () => {
     const createLog = (id: string, date: string): Log => ({
       date,
       jobId: 1,
@@ -80,7 +80,7 @@ describe('getFilteredLogs', () => {
     expect(result).toEqual([beforeToDateLog, fromDateLog])
   })
 
-  it('should return the logs from the newest to the oldest, whatever the order of the repository', async () => {
+  it('Should return the logs from the newest to the oldest, whatever the order of the repository', async () => {
     const logAt = (jobId: number, date: string): Log =>
       ({
         date,
@@ -111,7 +111,7 @@ describe('getFilteredLogs', () => {
     expect(result.map((log) => log.jobId)).toEqual([3, 2, 1])
   })
 
-  it('should return an empty array if no logs after fromDate', async () => {
+  it('Should return an empty array if no logs after fromDate', async () => {
     const log = {
       date: '2026-01-01T09:00:00.000Z',
       jobId: 1,
@@ -134,7 +134,7 @@ describe('getFilteredLogs', () => {
     expect(result).toEqual([])
   })
 
-  it('should return an empty array if no logs', async () => {
+  it('Should return an empty array if no logs', async () => {
     mockFindAllLogs.mockResolvedValue({ logs: [], selfReports: [] })
 
     const result = await getFilteredLogs(repository, selfReportRepository, {
@@ -146,7 +146,7 @@ describe('getFilteredLogs', () => {
     expect(result).toEqual([])
   })
 
-  it('should save the self reports of the repository in a single save', async () => {
+  it('Should save the self reports of the repository in a single save', async () => {
     const selfReports: SelfReport[] = [
       {
         date: new Date('2026-09-19T14:41:09.669Z'),

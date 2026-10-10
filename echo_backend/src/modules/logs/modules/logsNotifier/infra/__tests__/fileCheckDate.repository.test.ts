@@ -14,7 +14,7 @@ beforeEach(() => {
 
 describe('FileCheckDateRepository', () => {
   describe('getLastCheckDate', () => {
-    it('should return the date the file holds', async () => {
+    it('Should return the date the file holds', async () => {
       checkDateApi.getRawLastCheckDate.mockResolvedValueOnce(
         JSON.stringify({ lastCheck: '2026-01-01T00:00:00.000Z' })
       )
@@ -24,13 +24,13 @@ describe('FileCheckDateRepository', () => {
       })
     })
 
-    it('should return undefined when the file cannot be read', async () => {
+    it('Should return undefined when the file cannot be read', async () => {
       checkDateApi.getRawLastCheckDate.mockRejectedValueOnce(new Error('ENOENT'))
 
       expect(await checkDateRepository.getLastCheckDate()).toBeUndefined()
     })
 
-    it('should return undefined when the file holds no valid date', async () => {
+    it('Should return undefined when the file holds no valid date', async () => {
       checkDateApi.getRawLastCheckDate.mockResolvedValueOnce('not-json')
 
       expect(await checkDateRepository.getLastCheckDate()).toBeUndefined()
@@ -38,7 +38,7 @@ describe('FileCheckDateRepository', () => {
   })
 
   describe('saveLastCheckDate', () => {
-    it('should save the date as the content of the file', async () => {
+    it('Should save the date as the content of the file', async () => {
       const lastCheckDate = new Date('2026-01-01T00:00:00.000Z')
 
       await checkDateRepository.saveLastCheckDate({ lastCheckDate })

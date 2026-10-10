@@ -16,7 +16,7 @@ beforeEach(() => {
 
 describe('SessionJobIdApi', () => {
   describe('getLastSessionJobId', () => {
-    it('should return the session job id the session file holds', async () => {
+    it('Should return the session job id the session file holds', async () => {
       filesService.getFileContent.mockResolvedValue('{"lastJobId":7}')
 
       const lastSessionJobId = await createFileSessionJobIdApi(
@@ -30,7 +30,7 @@ describe('SessionJobIdApi', () => {
       )
     })
 
-    it('should throw when the file cannot be read', async () => {
+    it('Should throw when the file cannot be read', async () => {
       filesService.getFileContent.mockRejectedValue(new Error('ENOENT'))
 
       await expect(
@@ -43,7 +43,7 @@ describe('SessionJobIdApi', () => {
       ['has no lastJobId', '{}'],
       ['has a lastJobId that is not a number', '{"lastJobId":"not-a-number"}'],
       ['has a lastJobId that is not an integer', '{"lastJobId":1.5}']
-    ])('should throw when the content %s', async (_, content) => {
+    ])('Should throw when the content %s', async (_, content) => {
       filesService.getFileContent.mockResolvedValue(content)
 
       await expect(
@@ -53,7 +53,7 @@ describe('SessionJobIdApi', () => {
   })
 
   describe('saveLastSessionJobId', () => {
-    it('should create the directory of the file, then replace its content with the session job id', async () => {
+    it('Should create the directory of the file, then replace its content with the session job id', async () => {
       const steps: string[] = []
       filesService.createDirectory.mockImplementation(async () => {
         steps.push('createDirectory')

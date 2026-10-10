@@ -8,7 +8,7 @@ import type { IConfiguration } from 'dependency-cruiser'
 const MODULES = '^src/modules'
 const SHARED = '^src/shared'
 const TEST_HELPERS = '^src/test/'
-const TESTS = '(^|/)(__tests__|__test__)/|\\.test\\.tsx?$'
+const TESTS = '(^|/)__tests__/|\\.test\\.tsx?$'
 
 /** Folders of one layer of a module split into `domain/`, `application/`, `infra/` and `presentation/`. */
 const layer = (names: string): string => `${MODULES}/[^/]+/(${names})/`

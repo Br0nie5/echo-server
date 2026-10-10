@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 
-import type { Log } from '../../schemas/log.schema'
-import { LogCategory } from '../../schemas/logCategory.schema'
-import { filterLogByCategories } from '../filterLogByCategories'
+import type { Log } from '../../schemas/log.schema.js'
+import { LogCategory } from '../../schemas/logCategory.schema.js'
+import { filterLogByCategories } from '../filterLogByCategories.js'
 
 describe('filterLogByCategories', () => {
   const log: Log = {

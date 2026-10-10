@@ -21,43 +21,43 @@ describe('parseTlsConfig', () => {
     filesService.getFileContent.mockImplementation(async (filePath) => FILES_CONTENTS[filePath])
   })
 
-  it('should read cert and key file contents when both paths are set', async () => {
+  it('Should read cert and key file contents when both paths are set', async () => {
     expect(await parseTlsConfig(TLS_ENV, HTTPS_SERVER, filesService)).toStrictEqual({
       cert: 'certificate',
       key: 'private key'
     })
   })
 
-  it('should be undefined if neither TLS_CERT_PATH nor TLS_KEY_PATH are set', async () => {
+  it('Should be undefined if neither TLS_CERT_PATH nor TLS_KEY_PATH are set', async () => {
     expect(await parseTlsConfig({}, HTTPS_SERVER, filesService)).toBeUndefined()
     expect(filesService.getFileContent).not.toHaveBeenCalled()
   })
 
-  it('should be undefined if TLS_CERT_PATH and TLS_KEY_PATH are empty', async () => {
+  it('Should be undefined if TLS_CERT_PATH and TLS_KEY_PATH are empty', async () => {
     expect(
       await parseTlsConfig({ TLS_CERT_PATH: '', TLS_KEY_PATH: '' }, HTTPS_SERVER, filesService)
     ).toBeUndefined()
   })
 
-  it('should throw if only TLS_CERT_PATH is set', async () => {
+  it('Should throw if only TLS_CERT_PATH is set', async () => {
     await expect(
       parseTlsConfig({ TLS_CERT_PATH: CERT_PATH }, HTTPS_SERVER, filesService)
     ).rejects.toThrow('TLS_CERT_PATH and TLS_KEY_PATH must both be set to enable HTTPS')
   })
 
-  it('should throw if only TLS_KEY_PATH is set', async () => {
+  it('Should throw if only TLS_KEY_PATH is set', async () => {
     await expect(
       parseTlsConfig({ TLS_KEY_PATH: KEY_PATH }, HTTPS_SERVER, filesService)
     ).rejects.toThrow('TLS_CERT_PATH and TLS_KEY_PATH must both be set to enable HTTPS')
   })
 
-  it('should throw if SERVER_URL is not https when TLS is enabled', async () => {
+  it('Should throw if SERVER_URL is not https when TLS is enabled', async () => {
     await expect(
       parseTlsConfig(TLS_ENV, { serverUrl: 'http://allowed-domain.com:3700' }, filesService)
     ).rejects.toThrow('SERVER_URL must use https:// when TLS_CERT_PATH and TLS_KEY_PATH are set')
   })
 
-  it('should throw the error of the files service when a file cannot be read', async () => {
+  it('Should throw the error of the files service when a file cannot be read', async () => {
     filesService.getFileContent.mockRejectedValue(new Error('ENOENT'))
 
     await expect(parseTlsConfig(TLS_ENV, HTTPS_SERVER, filesService)).rejects.toThrow('ENOENT')

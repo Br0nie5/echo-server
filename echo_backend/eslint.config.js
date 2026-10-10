@@ -69,6 +69,7 @@ export default tseslint.config([
       '@typescript-eslint/no-inferrable-types': 'off',
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/array-type': ['error', { default: 'array-simple' }],
+      eqeqeq: 'error',
       '@typescript-eslint/no-floating-promises': 'error',
       // Import
       'import/order': [
@@ -100,7 +101,6 @@ export default tseslint.config([
     files: ['src/**/*.{ts,tsx}'],
     ignores: [
       '**/__tests__/**',
-      '**/__test__/**',
       '**/*.test.{ts,tsx}',
       'src/test/**',
       'src/setupTests.ts',

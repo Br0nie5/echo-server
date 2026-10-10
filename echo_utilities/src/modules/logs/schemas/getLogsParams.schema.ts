@@ -26,8 +26,9 @@ const describeInvalidLogCategory = (logCategories: unknown): string => {
  * Runtime validation of the query of `GET /logs`, as the client sends it.
  *
  * It is the single source of truth of that query: the `GetLogsParams` type is derived from it, and
- * so is the schema of the route (see `logs.schemas.ts` in the backend), which then turns it into
- * what its service needs. The messages are returned to the client as they are.
+ * so is the schema of the route (see `logs.schemas.ts` in the backend). The backend validates the
+ * query with it and turns it into what its use case needs (see `safeParseGetLogsParams`). The
+ * messages are returned to the client as they are.
  */
 export const GetLogsParamsSchema = z.object({
   /** The logs emitted before this ISO 8601 date are left out. */

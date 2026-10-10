@@ -32,7 +32,7 @@ describe('createUsersDb', () => {
     usersDb = undefined
   })
 
-  it('should create the parent directory, open the file and restrict it to its owner', async () => {
+  it('Should create the parent directory, open the file and restrict it to its owner', async () => {
     usersDb = await createUsersDb(getMockAuthConfig({ usersDbFilePath }), filesService)
 
     expect(filesService.createDirectory).toHaveBeenCalledExactlyOnceWith('/data/nested')
@@ -40,7 +40,7 @@ describe('createUsersDb', () => {
     expect(filesService.restrictFileAccessToOwner).toHaveBeenCalledExactlyOnceWith(usersDbFilePath)
   })
 
-  it('should create the users table with a unique username', async () => {
+  it('Should create the users table with a unique username', async () => {
     usersDb = await createUsersDb(getMockAuthConfig({ usersDbFilePath }), filesService)
     const insert = usersDb.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)')
 
@@ -50,7 +50,7 @@ describe('createUsersDb', () => {
     expect(usersDb.prepare('SELECT is_admin FROM users').get()).toEqual({ is_admin: 0 })
   })
 
-  it('should keep the users of an existing database', async () => {
+  it('Should keep the users of an existing database', async () => {
     const existingDb = new InMemoryDatabase(':memory:')
     existingDb.exec(
       'CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, is_admin INTEGER NOT NULL DEFAULT 0)'

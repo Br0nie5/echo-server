@@ -5,26 +5,26 @@ import { applySearchSuggestion, getSearchSuggestions } from '../searchSuggestion
 const suggestions = ['jobId', 'locationName', 'message', 'groupName']
 
 describe('getSearchSuggestions', () => {
-  it('should return nothing when the last word has no key separator', () => {
+  it('Should return nothing when the last word has no key separator', () => {
     expect(getSearchSuggestions('error', suggestions)).toEqual([])
     expect(getSearchSuggestions('', suggestions)).toEqual([])
   })
 
-  it('should return every suggestion right after the separator', () => {
+  it('Should return every suggestion right after the separator', () => {
     expect(getSearchSuggestions('error :', suggestions)).toEqual(suggestions)
   })
 
-  it('should only return the suggestions starting with the typed text, ignoring case', () => {
+  it('Should only return the suggestions starting with the typed text, ignoring case', () => {
     expect(getSearchSuggestions('error :LOC', suggestions)).toEqual(['locationName'])
   })
 })
 
 describe('applySearchSuggestion', () => {
-  it('should replace the last word by the suggestion', () => {
+  it('Should replace the last word by the suggestion', () => {
     expect(applySearchSuggestion('error :lo', 'locationName')).toBe('error locationName:')
   })
 
-  it('should keep the exclusion prefix', () => {
+  it('Should keep the exclusion prefix', () => {
     expect(applySearchSuggestion('error -:lo', 'locationName')).toBe('error -locationName:')
   })
 })

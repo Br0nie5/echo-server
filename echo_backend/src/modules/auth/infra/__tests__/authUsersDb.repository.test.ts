@@ -20,14 +20,14 @@ describe('createAuthUsersDbRepository', () => {
   })
 
   describe('hasAnyUser', () => {
-    it('should be false when there is no user', async () => {
+    it('Should be false when there is no user', async () => {
       get.mockReturnValueOnce(undefined)
 
       expect(await AuthRepository.hasAnyUser()).toBe(false)
       expect(usersDb.prepare).toHaveBeenCalledWith('SELECT id FROM users LIMIT 1')
     })
 
-    it('should be true when a user exists', async () => {
+    it('Should be true when a user exists', async () => {
       get.mockReturnValueOnce({ id: 1 })
 
       expect(await AuthRepository.hasAnyUser()).toBe(true)
@@ -39,7 +39,7 @@ describe('createAuthUsersDbRepository', () => {
       { isAdmin: true, isAdminColumn: 1 },
       { isAdmin: false, isAdminColumn: 0 }
     ])(
-      'should insert the user with a hashed password and is_admin $isAdminColumn when isAdmin is $isAdmin',
+      'Should insert the user with a hashed password and is_admin $isAdminColumn when isAdmin is $isAdmin',
       async ({ isAdmin, isAdminColumn }) => {
         await AuthRepository.createUser({ username: 'admin', password: 'secret', isAdmin })
 
@@ -54,7 +54,7 @@ describe('createAuthUsersDbRepository', () => {
       }
     )
 
-    it('should throw the error of the database when the user cannot be inserted', async () => {
+    it('Should throw the error of the database when the user cannot be inserted', async () => {
       run.mockImplementationOnce(() => {
         throw new Error('UNIQUE constraint failed: users.username')
       })
@@ -73,7 +73,7 @@ describe('createAuthUsersDbRepository', () => {
       is_admin: 1
     }
 
-    it('should be true for a matching username and password', async () => {
+    it('Should be true for a matching username and password', async () => {
       get.mockReturnValueOnce(user)
 
       expect(await AuthRepository.areCredentialsValid('admin', 'secret')).toBe(true)
@@ -81,13 +81,13 @@ describe('createAuthUsersDbRepository', () => {
       expect(get).toHaveBeenCalledWith('admin')
     })
 
-    it('should be false for a wrong password', async () => {
+    it('Should be false for a wrong password', async () => {
       get.mockReturnValueOnce(user)
 
       expect(await AuthRepository.areCredentialsValid('admin', 'nope')).toBe(false)
     })
 
-    it('should be false for an unknown user, after comparing the password to a hash of the same cost', async () => {
+    it('Should be false for an unknown user, after comparing the password to a hash of the same cost', async () => {
       const compare = vi.spyOn(bcrypt, 'compare')
       get.mockReturnValueOnce(undefined)
 
@@ -98,7 +98,7 @@ describe('createAuthUsersDbRepository', () => {
       )
     })
 
-    it('should make the hash an unknown user is compared to once', async () => {
+    it('Should make the hash an unknown user is compared to once', async () => {
       const hash = vi.spyOn(bcrypt, 'hash')
       const authRepository = createAuthUsersDbRepository(usersDb as unknown as Database)
       get.mockReturnValueOnce(undefined).mockReturnValueOnce(undefined)

@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
 
-import type { Log } from '../../schemas/log.schema'
-import { LogCategory } from '../../schemas/logCategory.schema'
-import type { LogSearchableKeys } from '../../types/logSearchFilter'
-import { filterLogBySearch } from '../filterLogBySearch'
+import type { LogSearchableKey } from '../../consts/logSearchFilter.js'
+import type { Log } from '../../schemas/log.schema.js'
+import { LogCategory } from '../../schemas/logCategory.schema.js'
+import { filterLogBySearch } from '../filterLogBySearch.js'
 
 describe('filterLogBySearch', () => {
   const log: Log = {
@@ -19,7 +19,7 @@ describe('filterLogBySearch', () => {
     callLine: 4
   }
 
-  const expectMatch = (key: LogSearchableKeys): void => {
+  const expectMatch = (key: LogSearchableKey): void => {
     expect(
       filterLogBySearch(log, [
         {
@@ -102,7 +102,7 @@ describe('filterLogBySearch', () => {
     ).toBeFalsy()
   })
 
-  it('Should match any field of log if key is all', () => {
+  it('Should match any searchable field of the log when the key is left out', () => {
     expect(
       filterLogBySearch(log, [
         {

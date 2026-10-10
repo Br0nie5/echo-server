@@ -1,7 +1,7 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-import { parseConfig } from '@echo/utilities'
+import { apiRoutePrefix, appRoutePrefix, parseConfig } from '@echo/utilities'
 import dotenv from 'dotenv'
 
 import type { FilesService } from '../services/files.service.js'
@@ -11,6 +11,7 @@ import { addEnvNameToError } from './utils/addEnvNameToError.js'
 import { createSelfReportsDirPath } from './utils/createSelfReportsDirPath.js'
 import { createSelfReportsGroupName } from './utils/createSelfReportsGroupName.js'
 import { parseAllowedDomain } from './utils/parseAllowedDomain.js'
+import { parseBasePath } from './utils/parseBasePath.js'
 import { parseCookieSerializeOptions } from './utils/parseCookieSerializeOptions.js'
 import { parseDaysNumber } from './utils/parseDaysNumber.js'
 import { parseHttpPort } from './utils/parseHttpPort.js'
@@ -32,6 +33,9 @@ const LOG_FILE_EXTENSION = '.jsonl'
 
 /** Name of the directory scripts put their log files in, and the backend its self-report files. */
 const LOG_FILES_DIR_NAME = 'log'
+
+/** Path the documentation of the API is served under, below the path of `SERVER_URL`. */
+const DOCUMENTATION_ROUTE_PREFIX = '/documentation'
 
 /** How long a session lasts: one day. */
 const SESSION_DURATION_SECONDS = 24 * 60 * 60
@@ -80,6 +84,11 @@ export const loadBackConfig = async (
   const config = parseConfig({ ...processEnv })
 
   const allowedDomain = parseAllowedDomain(config.SERVER_URL)
+  const basePath = parseBasePath(config.SERVER_URL, [
+    apiRoutePrefix,
+    appRoutePrefix,
+    DOCUMENTATION_ROUTE_PREFIX
+  ])
 
   const logsDirPath = requireEnv(processEnv, 'LOGS_DIR_PATH')
   const serverLogsRootDirPath = requireEnv(processEnv, 'SERVER_LOGS_DIR_PATH')
@@ -101,8 +110,10 @@ export const loadBackConfig = async (
       serverUrl: config.SERVER_URL,
       apiUrl: config.API_URL,
       appUrl: config.APP_URL,
-      apiRoutePrefix: new URL(config.API_URL).pathname,
-      appRoutePrefix: new URL(config.APP_URL).pathname,
+      basePath,
+      apiRoutePrefix,
+      appRoutePrefix,
+      documentationRoutePrefix: DOCUMENTATION_ROUTE_PREFIX,
       host: '0.0.0.0',
       port: parseHttpPort(requireEnv(processEnv, 'HTTP_PORT')),
       allowedDomain,
@@ -118,6 +129,7 @@ export const loadBackConfig = async (
           cookieSerializeOptions: parseCookieSerializeOptions(
             allowedDomain,
             config.SERVER_URL,
+            basePath,
             SESSION_DURATION_SECONDS
           ),
           usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')

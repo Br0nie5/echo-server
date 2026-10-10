@@ -58,7 +58,7 @@ afterEach(() => {
 })
 
 describe('checkProblemLogsAndNotify', () => {
-  it('should save the date and skip checking/notifying on the first check (no date stored)', async () => {
+  it('Should save the date and skip checking/notifying on the first check (no date stored)', async () => {
     checkDateRepository.getLastCheckDate.mockResolvedValueOnce(undefined)
 
     await check()
@@ -70,7 +70,7 @@ describe('checkProblemLogsAndNotify', () => {
     })
   })
 
-  it('should notify the problem logs logged since the previous check', async () => {
+  it('Should notify the problem logs logged since the previous check', async () => {
     checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
     getFilteredLogs.mockResolvedValueOnce([log])
 
@@ -91,7 +91,7 @@ describe('checkProblemLogsAndNotify', () => {
     })
   })
 
-  it('should notify a message within the size limit of the notifier', async () => {
+  it('Should notify a message within the size limit of the notifier', async () => {
     checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
     getFilteredLogs.mockResolvedValueOnce([log, log])
     notifierService.getMessageSizeLimit.mockReturnValue(60)
@@ -104,7 +104,7 @@ describe('checkProblemLogsAndNotify', () => {
     expect(selfReportRepository.saveSelfReports).not.toHaveBeenCalled()
   })
 
-  it('should notify nothing, save a warning self report and still save the date when the size limit is too small for any message', async () => {
+  it('Should notify nothing, save a warning self report and still save the date when the size limit is too small for any message', async () => {
     checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
     getFilteredLogs.mockResolvedValueOnce([log])
     notifierService.getMessageSizeLimit.mockReturnValue(10)
@@ -126,7 +126,7 @@ describe('checkProblemLogsAndNotify', () => {
     })
   })
 
-  it('should not notify when no problem logs are found, and still save the date', async () => {
+  it('Should not notify when no problem logs are found, and still save the date', async () => {
     checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
     getFilteredLogs.mockResolvedValueOnce([])
 
@@ -138,7 +138,7 @@ describe('checkProblemLogsAndNotify', () => {
     })
   })
 
-  it('should not save the date when notifying fails', async () => {
+  it('Should not save the date when notifying fails', async () => {
     checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
     getFilteredLogs.mockResolvedValueOnce([log])
     notifierService.notify.mockRejectedValueOnce(new Error('Telegram down'))

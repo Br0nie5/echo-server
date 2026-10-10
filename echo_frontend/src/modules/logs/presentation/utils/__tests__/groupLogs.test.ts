@@ -17,7 +17,7 @@ const buildLog = (overrides: Partial<Log>): Log => ({
 })
 
 describe('groupLogsByDay', () => {
-  it('should group the logs of the same day and put the most recent day first', () => {
+  it('Should group the logs of the same day and put the most recent day first', () => {
     const newestLogs = [
       buildLog({ id: 'a', date: '2026-01-03T10:00:00.000Z' }),
       buildLog({ id: 'b', date: '2026-01-03T09:00:00.000Z' })
@@ -30,13 +30,13 @@ describe('groupLogsByDay', () => {
     expect(result[0].date.getHours()).toBe(12)
   })
 
-  it('should return no group when there are no logs', () => {
+  it('Should return no group when there are no logs', () => {
     expect(groupLogsByDay([])).toEqual([])
   })
 })
 
 describe('groupLogsByGroup', () => {
-  it('should group the logs by group name, keeping the logs without group apart', () => {
+  it('Should group the logs by group name, keeping the logs without group apart', () => {
     const logs = [
       buildLog({ id: 'a', groupName: 'docker', date: '2026-01-02T10:00:00.000Z' }),
       buildLog({ id: 'b', date: '2026-01-02T09:00:00.000Z' }),
@@ -51,7 +51,7 @@ describe('groupLogsByGroup', () => {
     ])
   })
 
-  it('should put the group with the most recent first log first', () => {
+  it('Should put the group with the most recent first log first', () => {
     const olderGroupLog = buildLog({ groupName: 'old', date: '2026-01-02T08:00:00.000Z' })
     const newerGroupLog = buildLog({ groupName: 'new', date: '2026-01-02T10:00:00.000Z' })
 
@@ -62,7 +62,7 @@ describe('groupLogsByGroup', () => {
 })
 
 describe('groupLogsByJob', () => {
-  it('should group consecutive logs of the same job and file only', () => {
+  it('Should group consecutive logs of the same job and file only', () => {
     const logs = [
       buildLog({ id: 'a', jobId: 2, date: '2026-01-02T10:00:00.000Z' }),
       buildLog({ id: 'b', jobId: 2, date: '2026-01-02T09:59:00.000Z' }),
@@ -81,7 +81,7 @@ describe('groupLogsByJob', () => {
     ])
   })
 
-  it('should return no job when there are no logs', () => {
+  it('Should return no job when there are no logs', () => {
     expect(groupLogsByJob([])).toEqual([])
   })
 })

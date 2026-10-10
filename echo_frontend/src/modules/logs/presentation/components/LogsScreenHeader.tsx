@@ -1,5 +1,5 @@
 import type { LogCategory } from '@echo/utilities'
-import { logSearchSuggestions } from '@echo/utilities'
+import { logSearchableKeys } from '@echo/utilities'
 import { Box, Stack, Typography } from '@mui/material'
 import { memo } from 'react'
 
@@ -68,7 +68,7 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
             />
           </Box>
           <SearchBar
-            suggestions={logSearchSuggestions}
+            suggestions={logSearchableKeys}
             placeholder={translation('logs.searchPlaceholder')}
             controlledState={logSearchState}
           />

@@ -38,7 +38,7 @@ describe('registerAuthRoutes', () => {
     usersDb.close()
   })
 
-  it('should register the routes under the API prefix, on top of the users database', async () => {
+  it('Should register the routes under the API prefix, on top of the users database', async () => {
     const authConfig = getMockAuthConfig()
 
     await registerAuthRoutes(
@@ -56,7 +56,7 @@ describe('registerAuthRoutes', () => {
     expect(server.hasRoute({ method: 'GET', url: '/custom-api/auth/check' })).toBe(true)
   })
 
-  it('should answer a 429 once the login attempts of an address reach the limit', async () => {
+  it('Should answer a 429 once the login attempts of an address reach the limit', async () => {
     await registerAuthRoutes(
       server,
       getMockBackConfig({
@@ -82,7 +82,7 @@ describe('registerAuthRoutes', () => {
     expect(limitedResponse.json()).toMatchObject({ statusCode: 429 })
   })
 
-  it('should not limit the routes receiving no credentials', async () => {
+  it('Should not limit the routes receiving no credentials', async () => {
     await registerAuthRoutes(
       server,
       getMockBackConfig({
@@ -102,7 +102,7 @@ describe('registerAuthRoutes', () => {
     expect(response.json()).toMatchObject({ success: false })
   })
 
-  it('should register no route and open no database when authentication is disabled', async () => {
+  it('Should register no route and open no database when authentication is disabled', async () => {
     await registerAuthRoutes(server, getMockBackConfig({ auth: undefined }), filesService)
     await server.ready()
 

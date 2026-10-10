@@ -83,14 +83,14 @@ const FILE_PATH = '/server_logs/self_reports/Echo/log/parseLogFile.jsonl'
 const TEMPORARY_FILE_PATH = `${FILE_PATH}.tmp`
 
 describe('FilesService', () => {
-  it('should use the file system of Node.js by default', async () => {
+  it('Should use the file system of Node.js by default', async () => {
     await createFilesService().createDirectory('/server_logs')
 
     expect(nodeFs.mkdir).toHaveBeenCalledWith('/server_logs', { recursive: true })
   })
 
   describe('createDirectory', () => {
-    it('should create the directory and its parents', async () => {
+    it('Should create the directory and its parents', async () => {
       const fileSystem = buildFileSystem({})
 
       await createFilesService(fileSystem).createDirectory('/server_logs/self_reports/Echo/log')
@@ -102,14 +102,14 @@ describe('FilesService', () => {
   })
 
   describe('getFileContent', () => {
-    it('should return the whole content of the file', async () => {
+    it('Should return the whole content of the file', async () => {
       const fileSystem = buildFileSystem({ files: { [FILE_PATH]: 'foo\n\nbar\n' } })
 
       expect(await createFilesService(fileSystem).getFileContent(FILE_PATH)).toBe('foo\n\nbar\n')
       expect(fileSystem.readFile).toHaveBeenCalledWith(FILE_PATH, 'utf-8')
     })
 
-    it('should throw a FileDoesNotExistError when the file does not exist', async () => {
+    it('Should throw a FileDoesNotExistError when the file does not exist', async () => {
       const fileSystem = buildFileSystem({ missing: [FILE_PATH] })
 
       await expect(createFilesService(fileSystem).getFileContent(FILE_PATH)).rejects.toThrow(
@@ -117,7 +117,7 @@ describe('FilesService', () => {
       )
     })
 
-    it('should throw the error of the file system when the file cannot be reached for another reason', async () => {
+    it('Should throw the error of the file system when the file cannot be reached for another reason', async () => {
       const fileSystem = buildFileSystem({ unreachable: [FILE_PATH] })
 
       await expect(createFilesService(fileSystem).getFileContent(FILE_PATH)).rejects.toThrow(
@@ -125,7 +125,7 @@ describe('FilesService', () => {
       )
     })
 
-    it('should throw the error of the file system when the file exists but is not readable', async () => {
+    it('Should throw the error of the file system when the file exists but is not readable', async () => {
       const fileSystem = buildFileSystem({ unreadable: [FILE_PATH] })
 
       await expect(createFilesService(fileSystem).getFileContent(FILE_PATH)).rejects.toThrow(
@@ -135,13 +135,13 @@ describe('FilesService', () => {
   })
 
   describe('getFileLines', () => {
-    it('should return the non-blank lines of the file in order', async () => {
+    it('Should return the non-blank lines of the file in order', async () => {
       const fileSystem = buildFileSystem({ files: { [FILE_PATH]: 'foo\n\nbar\n  \n' } })
 
       expect(await createFilesService(fileSystem).getFileLines(FILE_PATH)).toEqual(['foo', 'bar'])
     })
 
-    it('should throw a FileDoesNotExistError when the file does not exist', async () => {
+    it('Should throw a FileDoesNotExistError when the file does not exist', async () => {
       const fileSystem = buildFileSystem({ missing: [FILE_PATH] })
 
       await expect(createFilesService(fileSystem).getFileLines(FILE_PATH)).rejects.toBeInstanceOf(
@@ -149,7 +149,7 @@ describe('FilesService', () => {
       )
     })
 
-    it('should throw the error of the file system when the file exists but is not readable', async () => {
+    it('Should throw the error of the file system when the file exists but is not readable', async () => {
       const fileSystem = buildFileSystem({ unreadable: [FILE_PATH] })
 
       await expect(createFilesService(fileSystem).getFileLines(FILE_PATH)).rejects.toThrow('EACCES')
@@ -167,7 +167,7 @@ describe('FilesService', () => {
       [path.join('/logs', 'docker', 'utils')]: [entry('backup.jsonl', 'file')]
     }
 
-    it('should give the files of the directory at any depth', async () => {
+    it('Should give the files of the directory at any depth', async () => {
       const filesService = createFilesService(buildFileSystem({ directories }))
 
       expect(await filesService.getFilesPaths('/logs', () => true)).toEqual([
@@ -178,7 +178,7 @@ describe('FilesService', () => {
       ])
     })
 
-    it('should only give the files to include', async () => {
+    it('Should only give the files to include', async () => {
       const filesService = createFilesService(buildFileSystem({ directories }))
 
       expect(
@@ -186,7 +186,7 @@ describe('FilesService', () => {
       ).toEqual(['/logs/notes.txt'])
     })
 
-    it('should ignore the entries that are neither directories nor files', async () => {
+    it('Should ignore the entries that are neither directories nor files', async () => {
       const filesService = createFilesService(
         buildFileSystem({ directories: { '/logs': [entry('socket.jsonl', 'other')] } })
       )
@@ -194,7 +194,7 @@ describe('FilesService', () => {
       expect(await filesService.getFilesPaths('/logs', () => true)).toEqual([])
     })
 
-    it('should throw the error of the file system when the directory cannot be read', async () => {
+    it('Should throw the error of the file system when the directory cannot be read', async () => {
       const filesService = createFilesService(
         buildFileSystem({
           overrides: { readdir: vi.fn().mockRejectedValue(new Error('ENOENT')) }
@@ -206,7 +206,7 @@ describe('FilesService', () => {
   })
 
   describe('replaceFileContent', () => {
-    it('should write the content to a temporary file, then put it in place of the file', async () => {
+    it('Should write the content to a temporary file, then put it in place of the file', async () => {
       const { fileSystem, steps } = buildRecordingFileSystem()
 
       await createFilesService(fileSystem).replaceFileContent(FILE_PATH, '{"lastJobId":7}')
@@ -220,7 +220,7 @@ describe('FilesService', () => {
       expect(steps).toEqual(['writeFile', 'rename'])
     })
 
-    it('should remove the temporary file and throw the error when it cannot be written', async () => {
+    it('Should remove the temporary file and throw the error when it cannot be written', async () => {
       const { fileSystem, steps } = buildRecordingFileSystem({
         writeFile: vi.fn().mockRejectedValue(new Error('ENOSPC'))
       })
@@ -232,7 +232,7 @@ describe('FilesService', () => {
       expect(steps).toEqual(['rm'])
     })
 
-    it('should remove the temporary file and throw the error when it cannot be put in place', async () => {
+    it('Should remove the temporary file and throw the error when it cannot be put in place', async () => {
       const { fileSystem, steps } = buildRecordingFileSystem({
         rename: vi.fn().mockRejectedValue(new Error('EXDEV'))
       })
@@ -244,7 +244,7 @@ describe('FilesService', () => {
       expect(steps).toEqual(['writeFile', 'rm'])
     })
 
-    it('should throw the error of the write, not the one of the removal, when both fail', async () => {
+    it('Should throw the error of the write, not the one of the removal, when both fail', async () => {
       const { fileSystem } = buildRecordingFileSystem({
         rename: vi.fn().mockRejectedValue(new Error('EXDEV')),
         rm: vi.fn().mockRejectedValue(new Error('EACCES'))
@@ -270,7 +270,7 @@ describe('FilesService', () => {
       vi.useRealTimers()
     })
 
-    it('should wait for the previous write of the same file to end before writing', async () => {
+    it('Should wait for the previous write of the same file to end before writing', async () => {
       const firstWriteFile = createDeferred()
       const { fileSystem, steps } = buildRecordingFileSystem({
         writeFile: vi.fn(async (_filePath, content) => {
@@ -291,7 +291,7 @@ describe('FilesService', () => {
       expect(steps).toEqual(['writeFile first', 'rename', 'writeFile second\n', 'rename'])
     })
 
-    it('should not make the writes of other files wait', async () => {
+    it('Should not make the writes of other files wait', async () => {
       const firstWriteFile = createDeferred()
       const { fileSystem } = buildRecordingFileSystem({
         writeFile: vi.fn(async (filePath) => {
@@ -310,7 +310,7 @@ describe('FilesService', () => {
       await firstWrite
     })
 
-    it('should write after a previous write that failed', async () => {
+    it('Should write after a previous write that failed', async () => {
       const { fileSystem } = buildRecordingFileSystem({
         writeFile: vi.fn().mockRejectedValueOnce(new Error('ENOSPC')).mockResolvedValue(undefined)
       })
@@ -324,7 +324,7 @@ describe('FilesService', () => {
       expect(fileSystem.rename).toHaveBeenCalledOnce()
     })
 
-    it('should throw without writing when the previous write does not end within the timeout', async () => {
+    it('Should throw without writing when the previous write does not end within the timeout', async () => {
       vi.useFakeTimers()
       const stuckWriteFile = createDeferred()
       const { fileSystem } = buildRecordingFileSystem({
@@ -345,7 +345,7 @@ describe('FilesService', () => {
       await stuckWrite
     })
 
-    it('should make a write wait for the one still going on, even after a write that gave up waiting', async () => {
+    it('Should make a write wait for the one still going on, even after a write that gave up waiting', async () => {
       vi.useFakeTimers()
       const stuckWriteFile = createDeferred()
       const { fileSystem, steps } = buildRecordingFileSystem({
@@ -374,7 +374,7 @@ describe('FilesService', () => {
   })
 
   describe('replaceFileLines', () => {
-    it('should write the lines, one each, through a temporary file', async () => {
+    it('Should write the lines, one each, through a temporary file', async () => {
       const { fileSystem, steps } = buildRecordingFileSystem()
 
       await createFilesService(fileSystem).replaceFileLines(FILE_PATH, ['foo', 'bar'])
@@ -384,7 +384,7 @@ describe('FilesService', () => {
       expect(steps).toEqual(['writeFile', 'rename'])
     })
 
-    it('should empty the file when there is no line', async () => {
+    it('Should empty the file when there is no line', async () => {
       const fileSystem = buildFileSystem({})
 
       await createFilesService(fileSystem).replaceFileLines(FILE_PATH, [])
@@ -394,7 +394,7 @@ describe('FilesService', () => {
   })
 
   describe('restrictFileAccessToOwner', () => {
-    it('should make the file readable and writable by its owner only', async () => {
+    it('Should make the file readable and writable by its owner only', async () => {
       const fileSystem = buildFileSystem({})
 
       await createFilesService(fileSystem).restrictFileAccessToOwner(FILE_PATH)

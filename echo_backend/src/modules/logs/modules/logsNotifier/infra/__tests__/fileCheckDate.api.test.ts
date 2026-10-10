@@ -16,7 +16,7 @@ beforeEach(() => {
 
 describe('CheckDateApi', () => {
   describe('getRawLastCheckDate', () => {
-    it('should return the content of the last-check file', async () => {
+    it('Should return the content of the last-check file', async () => {
       filesService.getFileContent.mockResolvedValue('{"lastCheck":"2026-01-01T00:00:00.000Z"}')
 
       const rawLastCheckDate = await createFileCheckDateApi(
@@ -30,7 +30,7 @@ describe('CheckDateApi', () => {
       )
     })
 
-    it('should throw when the file cannot be read', async () => {
+    it('Should throw when the file cannot be read', async () => {
       filesService.getFileContent.mockRejectedValue(new Error('ENOENT'))
 
       await expect(
@@ -40,7 +40,7 @@ describe('CheckDateApi', () => {
   })
 
   describe('saveRawLastCheckDate', () => {
-    it('should create the directory of the file, then replace its content', async () => {
+    it('Should create the directory of the file, then replace its content', async () => {
       const steps: string[] = []
       filesService.createDirectory.mockImplementation(async () => {
         steps.push('createDirectory')

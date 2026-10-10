@@ -22,13 +22,13 @@ afterEach(() => {
 
 describe('NotifierService', () => {
   describe('getMessageSizeLimit', () => {
-    it('should give the size limit of the config', () => {
+    it('Should give the size limit of the config', () => {
       expect(notifierService.getMessageSizeLimit()).toBe(120)
     })
   })
 
   describe('notify', () => {
-    it('should post the message to the configured chat', async () => {
+    it('Should post the message to the configured chat', async () => {
       vi.mocked(fetch).mockResolvedValueOnce({ ok: true } as Response)
 
       await notifierService.notify('Hello')
@@ -40,7 +40,7 @@ describe('NotifierService', () => {
       })
     })
 
-    it('should throw when the Telegram API responds with a non-ok status', async () => {
+    it('Should throw when the Telegram API responds with a non-ok status', async () => {
       vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 500 } as Response)
 
       await expect(notifierService.notify('Hello')).rejects.toThrow('Telegram API error: 500')

@@ -59,7 +59,7 @@ describe('registerLogsRoutes', () => {
     await server.close()
   })
 
-  it('should serve the logs of the repository under the API prefix, and save its self reports', async () => {
+  it('Should serve the logs of the repository under the API prefix, and save its self reports', async () => {
     await registerRoutes(false)
 
     const response = await server.inject({ method: 'GET', url: LOGS_URL })
@@ -70,7 +70,7 @@ describe('registerLogsRoutes', () => {
     expect(selfReportRepository.saveSelfReports).toHaveBeenCalledExactlyOnceWith(selfReports)
   })
 
-  it('should reject a request without valid JWT when authentication is enabled', async () => {
+  it('Should reject a request without valid JWT when authentication is enabled', async () => {
     await registerRoutes(true)
 
     const response = await server.inject({ method: 'GET', url: LOGS_URL })
@@ -79,7 +79,7 @@ describe('registerLogsRoutes', () => {
     expect(logsRepository.getAllLogs).not.toHaveBeenCalled()
   })
 
-  it('should serve the logs to a request with a valid JWT when authentication is enabled', async () => {
+  it('Should serve the logs to a request with a valid JWT when authentication is enabled', async () => {
     await registerRoutes(true)
     await server.ready()
 

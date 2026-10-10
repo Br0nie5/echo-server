@@ -11,16 +11,26 @@ export type TlsConfig = {
 export type ServerConfig = {
   /** Display name of the server (`SERVER_NAME`). */
   serverName: string
-  /** Origin both the API and the frontend are reached at (`SERVER_URL`). */
+  /** URL both the API and the frontend are reached under (`SERVER_URL`): an origin, possibly followed by the path of a reverse proxy. */
   serverUrl: string
-  /** `<serverUrl>/api`. */
+  /** `serverUrl` followed by `apiRoutePrefix`. */
   apiUrl: string
-  /** `<serverUrl>/app`. */
+  /** `serverUrl` followed by `appRoutePrefix`. */
   appUrl: string
-  /** Path the routes of the API are served under: the path of `apiUrl`. */
+  /**
+   * Path of `serverUrl`, without its trailing slash: `/echo` when a reverse proxy serves Echo at
+   * `https://domain.com/echo`, an empty string at the root of its origin.
+   *
+   * The proxy may forward a request with it or without it: the server takes both, and serves its
+   * routes below it.
+   */
+  basePath: string
+  /** Path the routes of the API are served under, below `basePath`. */
   apiRoutePrefix: string
-  /** Path the frontend is served under: the path of `appUrl`. */
+  /** Path the frontend is served under, below `basePath`. */
   appRoutePrefix: string
+  /** Path the documentation of the API is served under, below `basePath`. */
+  documentationRoutePrefix: string
   host: string
   /** Port the server listens on (`HTTP_PORT`). */
   port: number

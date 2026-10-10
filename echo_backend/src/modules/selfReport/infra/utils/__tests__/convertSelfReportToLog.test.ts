@@ -20,7 +20,7 @@ const context: SelfReportLogContext = {
 }
 
 describe('convertSelfReportToLog', () => {
-  it('should build the log a self report is stored as, from the self report and its context', () => {
+  it('Should build the log a self report is stored as, from the self report and its context', () => {
     expect(convertSelfReportToLog(selfReport(), context)).toEqual({
       id: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl Echo parseLogFile 5 2026-09-19T14:41:09.669Z WARNING someFile 4 bad line',
       location: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
@@ -35,17 +35,17 @@ describe('convertSelfReportToLog', () => {
     })
   })
 
-  it('should store an error with the ERROR category', () => {
+  it('Should store an error with the ERROR category', () => {
     expect(convertSelfReportToLog(selfReport({ level: 'error' }), context).category).toBe('ERROR')
   })
 
-  it('should store 0 as the line of a self report that has no reported line', () => {
+  it('Should store 0 as the line of a self report that has no reported line', () => {
     expect(convertSelfReportToLog(selfReport({ reportedLine: undefined }), context).callLine).toBe(
       0
     )
   })
 
-  it('should give different ids to self reports that differ', () => {
+  it('Should give different ids to self reports that differ', () => {
     expect(convertSelfReportToLog(selfReport(), context).id).not.toBe(
       convertSelfReportToLog(selfReport({ message: 'other line' }), context).id
     )

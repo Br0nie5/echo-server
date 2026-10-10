@@ -11,14 +11,14 @@ describe('EchoErrorJsonSchema', () => {
     validate = ajv.compile(EchoErrorJsonSchema)
   })
 
-  it('should be a valid error object', () => {
+  it('Should be a valid error object', () => {
     const data = { statusCode: 500, message: 'Something went wrong' }
     const isValid = validate(data)
 
     expect(isValid).toBe(true)
   })
 
-  it('should reject when statusCode is missing', () => {
+  it('Should reject when statusCode is missing', () => {
     const data = { message: 'oops' }
     const isValid = validate(data)
 
@@ -26,7 +26,7 @@ describe('EchoErrorJsonSchema', () => {
     expect(validate.errors?.[0].message).toContain('required')
   })
 
-  it('should reject when message is not a string', () => {
+  it('Should reject when message is not a string', () => {
     const data = { statusCode: 400, message: 123 }
     const isValid = validate(data)
 
@@ -34,7 +34,7 @@ describe('EchoErrorJsonSchema', () => {
     expect(validate.errors?.[0].message).toContain('string')
   })
 
-  it('should reject when statusCode is not an integer', () => {
+  it('Should reject when statusCode is not an integer', () => {
     const data = { statusCode: '400', message: 'bad request' }
     const isValid = validate(data)
 

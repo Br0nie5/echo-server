@@ -55,7 +55,7 @@ describe('registerLogsNotifier', () => {
     await server.close()
   })
 
-  it('should schedule the cron and stop it when the server closes', async () => {
+  it('Should schedule the cron and stop it when the server closes', async () => {
     await registerLogsNotifier(
       server,
       getMockBackConfig({
@@ -72,7 +72,7 @@ describe('registerLogsNotifier', () => {
     expect(stopCron).toHaveBeenCalledTimes(1)
   })
 
-  it('should give the cron the logs repository, the self-report repository of the logs and its own', async () => {
+  it('Should give the cron the logs repository, the self-report repository of the logs and its own', async () => {
     const register = vi.spyOn(server, 'register')
     const config = getMockBackConfig({
       logs: getMockLogsConfig({ logsNotifier: logsNotifierConfig }),
@@ -105,7 +105,7 @@ describe('registerLogsNotifier', () => {
     )
   })
 
-  it('should register nothing when the logs notifier is not configured', async () => {
+  it('Should register nothing when the logs notifier is not configured', async () => {
     await registerLogsNotifier(
       server,
       getMockBackConfig({ notification: notificationConfig }),
@@ -119,7 +119,7 @@ describe('registerLogsNotifier', () => {
     )
   })
 
-  it('should register nothing when the notifications are not configured', async () => {
+  it('Should register nothing when the notifications are not configured', async () => {
     await registerLogsNotifier(
       server,
       getMockBackConfig({ logs: getMockLogsConfig({ logsNotifier: logsNotifierConfig }) }),

@@ -62,7 +62,7 @@ describe('LogsController.getLogs', () => {
     vi.resetAllMocks()
   })
 
-  it('should return a 400 if fromDate is missing', async () => {
+  it('Should return a 400 if fromDate is missing', async () => {
     const request = mockRequest({})
     const reply = mockReply()
 
@@ -75,7 +75,7 @@ describe('LogsController.getLogs', () => {
     })
   })
 
-  it('should return 400 if fromDate is invalid', async () => {
+  it('Should return 400 if fromDate is invalid', async () => {
     const request = mockRequest({ fromDate: 'invalid-date' })
     const reply = mockReply()
 
@@ -88,7 +88,7 @@ describe('LogsController.getLogs', () => {
     })
   })
 
-  it('should return 400 if an invalid log category is given', async () => {
+  it('Should return 400 if an invalid log category is given', async () => {
     const request = mockRequest({
       fromDate: FROM_DATE,
       logCategories: 'Invalid_log_category' as LogCategory
@@ -104,7 +104,7 @@ describe('LogsController.getLogs', () => {
     })
   })
 
-  it('should return 200 with logs when request is valid', async () => {
+  it('Should return 200 with logs when request is valid', async () => {
     const request = mockRequest({ fromDate: FROM_DATE })
     const reply = mockReply()
 
@@ -121,7 +121,7 @@ describe('LogsController.getLogs', () => {
     expect(reply.send).toHaveBeenCalledWith(mockLogs)
   })
 
-  it('should look the logs up between fromDate and toDate', async () => {
+  it('Should look the logs up between fromDate and toDate', async () => {
     const request = mockRequest({
       fromDate: '2026-01-01T00:00:00.000Z',
       toDate: '2026-01-02T00:00:00.000Z',
@@ -139,7 +139,7 @@ describe('LogsController.getLogs', () => {
     })
   })
 
-  it('should return 200 with an empty array when no logs found', async () => {
+  it('Should return 200 with an empty array when no logs found', async () => {
     const request = mockRequest({ fromDate: FROM_DATE })
     const reply = mockReply()
 

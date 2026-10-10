@@ -3,9 +3,14 @@ import { describe, it, expect } from 'vitest'
 import { parseCookieSerializeOptions } from '../parseCookieSerializeOptions.js'
 
 describe('parseCookieSerializeOptions', () => {
-  it('should bind the cookie to the allowed domain', () => {
+  it('Should bind the cookie to the allowed domain', () => {
     expect(
-      parseCookieSerializeOptions('allowed-domain.com', 'https://logs.allowed-domain.com', 86400)
+      parseCookieSerializeOptions(
+        'allowed-domain.com',
+        'https://logs.allowed-domain.com',
+        '',
+        86400
+      )
     ).toStrictEqual({
       domain: 'allowed-domain.com',
       httpOnly: true,
@@ -17,10 +22,10 @@ describe('parseCookieSerializeOptions', () => {
   })
 
   it.each(['localhost', '192.168.1.1', '[::1]'])(
-    'should not bind the cookie to a domain if the allowed domain is %s',
+    'Should not bind the cookie to a domain if the allowed domain is %s',
     (allowedDomain) => {
       expect(
-        parseCookieSerializeOptions(allowedDomain, `https://${allowedDomain}`, 86400)
+        parseCookieSerializeOptions(allowedDomain, `https://${allowedDomain}`, '', 86400)
       ).toStrictEqual({
         domain: undefined,
         httpOnly: true,
@@ -32,8 +37,19 @@ describe('parseCookieSerializeOptions', () => {
     }
   )
 
-  it('should make the cookie last the session duration', () => {
-    expect(parseCookieSerializeOptions('localhost', 'http://localhost', 3600).maxAge).toBe(3600)
+  it('Should send the cookie to the base path and below it only', () => {
+    expect(
+      parseCookieSerializeOptions(
+        'domain.com',
+        'https://domain.com/tools/echo',
+        '/tools/echo',
+        86400
+      ).path
+    ).toBe('/tools/echo')
+  })
+
+  it('Should make the cookie last the session duration', () => {
+    expect(parseCookieSerializeOptions('localhost', 'http://localhost', '', 3600).maxAge).toBe(3600)
   })
 
   it.each([
@@ -43,7 +59,7 @@ describe('parseCookieSerializeOptions', () => {
     ['https://localhost:4000', 'localhost', true],
     ['https://mylocalhost.com', 'mylocalhost.com', true],
     ['https://192.168.1.1:4000', '192.168.1.1', true]
-  ])('should make the cookie secure only over HTTPS: %s', (serverUrl, allowedDomain, secure) => {
-    expect(parseCookieSerializeOptions(allowedDomain, serverUrl, 86400).secure).toBe(secure)
+  ])('Should make the cookie secure only over HTTPS: %s', (serverUrl, allowedDomain, secure) => {
+    expect(parseCookieSerializeOptions(allowedDomain, serverUrl, '', 86400).secure).toBe(secure)
   })
 })

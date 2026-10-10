@@ -5,7 +5,13 @@ import type { ServerConfig } from '../shared/config/backConfig.js'
 
 import type { EchoServer } from './types/echoServer.js'
 
-/** Registers Swagger, which builds the OpenAPI document from the routes, and its UI, served under `/documentation`. */
+/**
+ * Registers Swagger, which builds the OpenAPI document from the routes, and its UI, served under
+ * `documentationRoutePrefix`.
+ *
+ * Both say where Echo is really reached, `basePath` included: the document gives the routes below
+ * `serverUrl`, and the UI loads its files below the path the reverse proxy serves it under.
+ */
 export const registerDocumentation = async (
   server: EchoServer,
   serverConfig: ServerConfig
@@ -17,7 +23,7 @@ export const registerDocumentation = async (
         description: 'Auto-generated API documentation for the Echo server',
         version: '1.0.0'
       },
-      servers: [{ url: new URL(serverConfig.apiUrl).origin }],
+      servers: [{ url: `${new URL(serverConfig.serverUrl).origin}${serverConfig.basePath}` }],
       tags: [
         {
           name: 'Logs',
@@ -39,7 +45,8 @@ export const registerDocumentation = async (
   })
 
   await server.register(swaggerUI, {
-    routePrefix: '/documentation',
+    routePrefix: serverConfig.documentationRoutePrefix,
+    indexPrefix: serverConfig.basePath,
     uiConfig: {
       docExpansion: 'list',
       deepLinking: false

@@ -2,6 +2,7 @@ export * from './shared/schemas/echoError.schema.js'
 
 export * from './shared/config/config.js'
 export * from './shared/config/parseConfig.js'
+export * from './shared/config/routePrefixes.js'
 
 export * from './modules/auth/consts.js'
 
@@ -9,7 +10,7 @@ export * from './modules/auth/schemas/authToken.schema.js'
 export * from './modules/auth/schemas/loginRequest.schema.js'
 export * from './modules/auth/schemas/signUpRequest.schema.js'
 
-export * from './modules/logs/types/logSearchFilter.js'
+export * from './modules/logs/consts/logSearchFilter.js'
 
 export * from './modules/logs/schemas/getLogsParams.schema.js'
 export * from './modules/logs/schemas/log.schema.js'

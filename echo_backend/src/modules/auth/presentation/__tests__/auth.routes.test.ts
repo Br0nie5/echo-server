@@ -56,7 +56,7 @@ describe('authRoutes', () => {
     }
   })
 
-  it('should register schemas and all auth routes correctly', async () => {
+  it('Should register schemas and all auth routes correctly', async () => {
     await authRoutes(mockServer as unknown as FastifyInstance, {
       controller,
       authConfig
@@ -72,7 +72,7 @@ describe('authRoutes', () => {
     expect(mockServer.route).toHaveBeenCalledTimes(4)
   })
 
-  it('should limit the attempts of the routes receiving credentials only', async () => {
+  it('Should limit the attempts of the routes receiving credentials only', async () => {
     await authRoutes(mockServer as unknown as FastifyInstance, {
       controller,
       authConfig
@@ -91,7 +91,7 @@ describe('authRoutes', () => {
   })
 
   // --- /auth/signup route tests ---
-  it('should register the /auth/signup route with correct schema and handler', async () => {
+  it('Should register the /auth/signup route with correct schema and handler', async () => {
     await authRoutes(mockServer as unknown as FastifyInstance, {
       controller,
       authConfig
@@ -119,7 +119,7 @@ describe('authRoutes', () => {
   })
 
   // --- /auth/login route tests ---
-  it('should register the /auth/login route with correct schema and handler', async () => {
+  it('Should register the /auth/login route with correct schema and handler', async () => {
     await authRoutes(mockServer as unknown as FastifyInstance, {
       controller,
       authConfig
@@ -147,7 +147,7 @@ describe('authRoutes', () => {
   })
 
   // --- /auth/check route tests ---
-  it('should register the /auth/check route with correct schema and handler', async () => {
+  it('Should register the /auth/check route with correct schema and handler', async () => {
     await authRoutes(mockServer as unknown as FastifyInstance, {
       controller,
       authConfig
@@ -174,7 +174,7 @@ describe('authRoutes', () => {
   })
 
   // --- /auth/logout route tests ---
-  it('should register the /auth/logout route with correct schema and handler', async () => {
+  it('Should register the /auth/logout route with correct schema and handler', async () => {
     await authRoutes(mockServer as unknown as FastifyInstance, {
       controller,
       authConfig

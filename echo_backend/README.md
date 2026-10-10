@@ -6,7 +6,7 @@ Fastify API server for Echo. It reads `.jsonl` logs from disk, exposes them unde
 
 ```bash
 npm run dev --workspace=echo_backend            # tsx watch
-npm run build --workspace=echo_backend          # tsc to dist/, the tests left out (tsconfig.build.json)
+npm run build --workspace=echo_backend          # empties dist/, then tsc to it, the tests left out (tsconfig.build.json)
 npm run start --workspace=echo_backend          # NODE_ENV=production node dist/main.js
 npm run test:coverage --workspace=echo_backend
 ```

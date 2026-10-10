@@ -6,7 +6,7 @@ const authRepository = { hasAnyUser: vi.fn(), createUser: vi.fn(), areCredential
 
 describe('validateCredentials', () => {
   it.each([true, false])(
-    'should be %s when the validity of the credentials is',
+    'Should be %s when the validity of the credentials is',
     async (areCredentialsValid) => {
       authRepository.areCredentialsValid.mockResolvedValueOnce(areCredentialsValid)
 

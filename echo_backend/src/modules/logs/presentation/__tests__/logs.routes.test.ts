@@ -22,7 +22,7 @@ describe('logsRoutes', () => {
     }
   })
 
-  it('should run the given preHandler before the handler of the route', async () => {
+  it('Should run the given preHandler before the handler of the route', async () => {
     const preHandler = vi.fn()
 
     await logsRoutes(mockServer as unknown as FastifyInstance, { controller, preHandler })
@@ -30,13 +30,13 @@ describe('logsRoutes', () => {
     expect(mockServer.route.mock.calls[0][0].preHandler).toBe(preHandler)
   })
 
-  it('should set no preHandler when none is given', async () => {
+  it('Should set no preHandler when none is given', async () => {
     await logsRoutes(mockServer as unknown as FastifyInstance, { controller })
 
     expect(mockServer.route.mock.calls[0][0]).not.toHaveProperty('preHandler')
   })
 
-  it('should register schemas and /logs route correctly', async () => {
+  it('Should register schemas and /logs route correctly', async () => {
     await logsRoutes(mockServer as unknown as FastifyInstance, { controller })
 
     // Check schemas were added

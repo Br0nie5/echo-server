@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { createNoopSelfReportRepository } from '../noopSelfReport.repository.js'
 
 describe('createNoopSelfReportRepository', () => {
-  it('should store nothing', async () => {
+  it('Should store nothing', async () => {
     const selfReportRepository = createNoopSelfReportRepository()
 
     await expect(

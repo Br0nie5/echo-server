@@ -14,7 +14,7 @@ const SERVER = '^src/server\\.ts$'
 const ENTRY_POINT = '^src/main\\.ts$'
 const LAYERS = 'domain|application|infra|presentation'
 const TEST_HELPERS = '^src/test/'
-const TESTS = '(^|/)(__tests__|__test__)/|\\.test\\.tsx?$'
+const TESTS = '(^|/)__tests__/|\\.test\\.tsx?$'
 
 /**
  * Folders of one layer of a module split into `domain/`, `application/`, `infra/` and

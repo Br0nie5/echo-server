@@ -23,13 +23,13 @@ const logs = [
 ]
 
 describe('createFilterWorkerRequestHandler', () => {
-  test('should not answer when it is given logs', () => {
+  test('Should not answer when it is given logs', () => {
     const handleFilterWorkerRequest = createFilterWorkerRequestHandler()
 
     expect(handleFilterWorkerRequest({ type: 'setLogs', logs })).toBeUndefined()
   })
 
-  test('should answer with the indexes of the logs matching both the categories and the search', () => {
+  test('Should answer with the indexes of the logs matching both the categories and the search', () => {
     const handleFilterWorkerRequest = createFilterWorkerRequestHandler()
     handleFilterWorkerRequest({ type: 'setLogs', logs })
 
@@ -50,7 +50,7 @@ describe('createFilterWorkerRequestHandler', () => {
     ).toEqual({ matchingLogIndexes: [0] })
   })
 
-  test('should filter the logs it was last given', () => {
+  test('Should filter the logs it was last given', () => {
     const handleFilterWorkerRequest = createFilterWorkerRequestHandler()
     handleFilterWorkerRequest({ type: 'setLogs', logs })
     handleFilterWorkerRequest({ type: 'setLogs', logs: [logs[1], logs[2]] })
@@ -64,7 +64,7 @@ describe('createFilterWorkerRequestHandler', () => {
     ).toEqual({ matchingLogIndexes: [1] })
   })
 
-  test('should answer with no index before it is given logs', () => {
+  test('Should answer with no index before it is given logs', () => {
     const handleFilterWorkerRequest = createFilterWorkerRequestHandler()
 
     expect(
