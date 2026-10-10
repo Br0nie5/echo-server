@@ -38,9 +38,7 @@ export const useLogsScreen = (): UseLogsScreenReturnType => {
     if (logs === undefined) {
       return undefined
     }
-    const logCategoriesFromLogs = Array.from(new Set(logs.map((log) => log.category))).sort(
-      sortLogCategories
-    )
+    const logCategoriesFromLogs = logs.map((log) => log.category)
     const logCategoriesFromFilters = logCategoriesFiltersState.value
 
     const combinedLogCategories = Array.from(

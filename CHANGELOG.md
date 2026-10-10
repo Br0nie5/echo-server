@@ -15,20 +15,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking:** the environment variables of the Telegram notifications are renamed. Update the environment of your container:
 
-  | Before | After |
-  | ------ | ----- |
-  | `LOGS_CRON_SCHEDULE_REGEX` | `LOGS_NOTIFIER_SCHEDULE_REGEX` |
+  | Before                              | After                                   |
+  | ----------------------------------- | --------------------------------------- |
+  | `LOGS_CRON_SCHEDULE_REGEX`          | `LOGS_NOTIFIER_SCHEDULE_REGEX`          |
   | `LOGS_CRON_WATCHED_LOGS_CATEGORIES` | `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` |
-  | `LOGS_CRON_TELEGRAM_TIMEZONE` | `LOGS_NOTIFIER_TIMEZONE` |
-  | `LOGS_CRON_TELEGRAM_CHAT_ID` | `TELEGRAM_CHAT_ID` |
+  | `LOGS_CRON_TELEGRAM_TIMEZONE`       | `LOGS_NOTIFIER_TIMEZONE`                |
+  | `LOGS_CRON_TELEGRAM_CHAT_ID`        | `TELEGRAM_CHAT_ID`                      |
 
 - **Breaking:** `LOGS_CRON_TELEGRAM_BASE_URL`, which held the URL of the Telegram bot API with the token of the bot, is replaced by `TELEGRAM_BOT_TOKEN`, which holds the token alone: set it to what followed `https://api.telegram.org/bot` in the former value. Without it, the Telegram notifications are disabled.
 
 - **Breaking:** the self logs are now called self reports, and their environment variables are renamed. Update the environment of your container, otherwise the self reports are disabled and their retention goes back to its default:
 
-  | Before | After |
-  | ------ | ----- |
-  | `SELF_LOGS_ENABLED` | `SAVE_SELF_REPORTS_TO_FILE` |
+  | Before                     | After                         |
+  | -------------------------- | ----------------------------- |
+  | `SELF_LOGS_ENABLED`        | `SAVE_SELF_REPORTS_TO_FILE`   |
   | `SELF_LOGS_RETENTION_DAYS` | `SELF_REPORTS_RETENTION_DAYS` |
 
 - **Breaking:** the self reports are no longer stored inside the watched logs, in `/watched_logs/server/<SERVER_NAME>/log`, but in a directory of their own, `/server_logs/self_reports/<SERVER_NAME>/log` (under `SERVER_LOGS_DIR_PATH`, default `/server_logs`), which is scanned along with `/watched_logs` when `SAVE_SELF_REPORTS_TO_FILE=true`. Replace the `/watched_logs/server` sub-mount with a writable `/server_logs` volume (to keep the existing self reports, move the content of the former host directory into a `self_reports` directory of the new one); the `server` directory created in your logs for that sub-mount is no longer needed.

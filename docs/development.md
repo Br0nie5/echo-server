@@ -24,18 +24,18 @@ npm run dev
 
 ## Scripts
 
-| Command | Purpose |
-| ------- | ------- |
-| `npm run dev` | Backend and frontend together |
-| `npm run build` | Build all workspaces |
-| `npm start` | Build, then run the backend in production mode |
-| `npm run lint` / `format` | ESLint (with fix) / Prettier |
-| `npm run test:coverage` | Vitest across workspaces, 100% thresholds |
-| `npm run open:coverage` | Open coverage reports |
-| `npm run arch:check` | Architecture rules (import boundaries, cycles), see [architecture](architecture.md#enforcing-the-architecture) |
-| `npm run dead-code:check` | Unused files, exports and dependencies across the workspaces, with [Knip](https://knip.dev) (configured in [knip.json](../knip.json)) |
-| `npm run vulnerabilities:scan` | `npm audit` |
-| `npm run build:docker` / `start:docker` | Build the image / build and run it on `test_logs/` |
+| Command                                 | Purpose                                                                                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`                           | Backend and frontend together                                                                                                         |
+| `npm run build`                         | Build all workspaces                                                                                                                  |
+| `npm start`                             | Build, then run the backend in production mode                                                                                        |
+| `npm run lint` / `format`               | ESLint (with fix) / Prettier                                                                                                          |
+| `npm run test:coverage`                 | Vitest across workspaces, 100% thresholds                                                                                             |
+| `npm run open:coverage`                 | Open coverage reports                                                                                                                 |
+| `npm run arch:check`                    | Architecture rules (import boundaries, cycles), see [architecture](architecture.md#enforcing-the-architecture)                        |
+| `npm run dead-code:check`               | Unused files, exports and dependencies across the workspaces, with [Knip](https://knip.dev) (configured in [knip.json](../knip.json)) |
+| `npm run vulnerabilities:scan`          | `npm audit`                                                                                                                           |
+| `npm run build:docker` / `start:docker` | Build the image / build and run it on `test_logs/`                                                                                    |
 
 Target one workspace with `--workspace=echo_backend` (or `echo_frontend`, `echo_utilities`).
 

@@ -24,7 +24,7 @@ export default tseslint.config([
     ],
     ignores: ['coverage/*', '*.config.js'],
     languageOptions: {
-      ecmaVersion: 2020,
+      ecmaVersion: 2022,
       globals: globals.browser,
       parserOptions: {
         tsconfigRootDir: import.meta.dirname,

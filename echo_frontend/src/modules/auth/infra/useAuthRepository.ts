@@ -5,9 +5,9 @@ import {
   type LoginRequest,
   type SignUpRequest
 } from '@echo/utilities'
-import axios, { type AxiosError } from 'axios'
 
-import { useApiMutator } from '../../../shared/api/useApiMutator'
+import { isUnauthorizedError } from '../../../shared/api/isUnauthorizedError'
+import { useSendApiRequest } from '../../../shared/api/useSendApiRequest'
 import {
   InvalidCredentialsError,
   type AuthCheckResult,
@@ -17,9 +17,6 @@ import {
 const authCheckUrl = '/auth/check'
 const loginUrl = '/auth/login'
 const signUpUrl = '/auth/signup'
-
-const isUnauthorizedError = (error: unknown): error is AxiosError<AuthToken> =>
-  axios.isAxiosError<AuthToken>(error) && error.response?.status === 401
 
 /**
  * The `AuthRepository` on top of the auth endpoints of the backend.
@@ -34,10 +31,10 @@ const isUnauthorizedError = (error: unknown): error is AxiosError<AuthToken> =>
  * ```
  */
 export const useAuthRepository = (): AuthRepository => {
-  const axiosMutator = useApiMutator()
+  const sendApiRequest = useSendApiRequest()
 
   const postCredentials = async <TRequest>(url: string, request: TRequest): Promise<void> => {
-    const data = await axiosMutator<AuthToken, unknown, TRequest>({
+    const data = await sendApiRequest<AuthToken, unknown, TRequest>({
       url,
       method: 'POST',
       data: request
@@ -49,7 +46,7 @@ export const useAuthRepository = (): AuthRepository => {
   return {
     checkAuthentication: async (signal?: AbortSignal): Promise<AuthCheckResult> => {
       try {
-        const data = await axiosMutator<AuthToken>({
+        const data = await sendApiRequest<AuthToken>({
           url: authCheckUrl,
           method: 'GET',
           signal,
@@ -61,7 +58,7 @@ export const useAuthRepository = (): AuthRepository => {
         }
         return 'redirect'
       } catch (error) {
-        if (isUnauthorizedError(error)) {
+        if (isUnauthorizedError<AuthToken>(error)) {
           const parsedBody = AuthTokenSchema.safeParse(error.response?.data)
           return parsedBody.success && parsedBody.data.message === needsSignupMessage
             ? 'signUp'

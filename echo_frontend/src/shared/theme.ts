@@ -7,6 +7,9 @@ export const theme = createTheme({
     primary: {
       main: '#bc0470'
     },
+    secondary: {
+      main: '#ce93d8'
+    },
     success: {
       main: 'rgba(56, 142, 60, 0.3)' // Darker muted green with transparency for SUCCESS
     },

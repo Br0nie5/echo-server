@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { TranslationKeys } from './locales/types'
@@ -16,8 +17,8 @@ type TranslationKeyPaths = FlattenKeys<TranslationKeys>
 /** Translates a key, which is type-checked against the locale keys. */
 export type AppTranslation = (key: TranslationKeyPaths) => string
 
-/** Type-safe `t` function: an unknown translation key is a compile error. */
+/** Type-safe `t` function: an unknown translation key is a compile error. It stays the same function as long as the language does. */
 export const useAppTranslation = (): AppTranslation => {
-  const { t: tRaw } = useTranslation()
-  return (key: TranslationKeyPaths) => tRaw(key)
+  const { t: translate } = useTranslation()
+  return useCallback((key: TranslationKeyPaths) => translate(key), [translate])
 }

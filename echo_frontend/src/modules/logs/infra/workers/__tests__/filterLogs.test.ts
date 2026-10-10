@@ -146,6 +146,32 @@ describe('createFilterLogs', () => {
     await expect(nextFiltering).resolves.toEqual([logs[1]])
   })
 
+  test('Should reject a request already aborted when it is given, without ever sending it to the worker', async () => {
+    const worker = buildFakeWorker()
+    const filterLogs = createFilterLogs(worker)
+    const abortController = new AbortController()
+
+    abortController.abort(new Error('aborted'))
+
+    await expect(filterLogs(logs, [], [], abortController.signal)).rejects.toThrow('aborted')
+    expect(worker.postMessage).not.toHaveBeenCalled()
+  })
+
+  test('Should stop listening to the signal of a request once it is settled', async () => {
+    const worker = buildFakeWorker()
+    const filterLogs = createFilterLogs(worker)
+
+    const abortController = new AbortController()
+    const addEventListener = vi.spyOn(abortController.signal, 'addEventListener')
+
+    const filtering = filterLogs(logs, [], [], abortController.signal)
+    answer(worker, { matchingLogIndexes: [0] })
+    await filtering
+
+    const listenerOptions = addEventListener.mock.lastCall?.[2] as AddEventListenerOptions
+    expect(listenerOptions.signal?.aborted).toBe(true)
+  })
+
   test('Should reject every request, running, waiting and to come, once the worker has failed', async () => {
     const worker = buildFakeWorker()
     const filterLogs = createFilterLogs(worker)

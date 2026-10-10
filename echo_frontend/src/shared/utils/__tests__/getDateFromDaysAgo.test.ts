@@ -21,4 +21,22 @@ describe('getDateFromDaysAgo', () => {
   test('Should go back over the previous month', () => {
     expect(getDateFromDaysAgo(30)).toStrictEqual(new Date(2026, 2, 27))
   })
+
+  describe('Around a change of the clocks', () => {
+    /** 00:30 in Paris, the day after the clocks went forward: that day only lasted 23 hours. */
+    const AFTER_SPRING_FORWARD = new Date('2026-03-29T22:30:00.000Z')
+
+    beforeEach(() => {
+      vi.stubEnv('TZ', 'Europe/Paris')
+      vi.setSystemTime(AFTER_SPRING_FORWARD)
+    })
+
+    afterEach(() => {
+      vi.unstubAllEnvs()
+    })
+
+    test('Should count a day the clocks changed as one day', () => {
+      expect(getDateFromDaysAgo(1)).toStrictEqual(new Date('2026-03-28T23:00:00.000Z'))
+    })
+  })
 })

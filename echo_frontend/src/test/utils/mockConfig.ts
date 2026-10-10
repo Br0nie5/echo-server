@@ -1,6 +1,7 @@
 import type { FrontConfig } from '../../shared/config/frontConfig'
 
-export const testConfig: FrontConfig = {
+/** The config the tests run the app with, served as `env.<mode>.json` by `renderComponent`. */
+export const mockConfig: FrontConfig = {
   SERVER_NAME: 'Test',
   API_URL: 'http://localhost:3000/api',
   APP_URL: 'http://localhost:3000/app',

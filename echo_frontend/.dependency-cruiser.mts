@@ -3,15 +3,67 @@
  * See docs/architecture.md for the conventions these rules enforce.
  */
 
-import type { IConfiguration } from 'dependency-cruiser'
+import type { IConfiguration, IForbiddenRuleType } from 'dependency-cruiser'
 
 const MODULES = '^src/modules'
-const SHARED = '^src/shared'
+const SHARED = '^src/shared/'
+const INITIALIZERS = '^src/initializers/'
+const APP = '^src/App\\.tsx$'
+const ENTRY_POINT = '^src/main\\.tsx$'
+const SETUP_TESTS = '^src/setupTests\\.ts$'
+const LAYERS = 'domain|application|infra|presentation'
 const TEST_HELPERS = '^src/test/'
 const TESTS = '(^|/)__tests__/|\\.test\\.tsx?$'
 
 /** Folders of one layer of a module split into `domain/`, `application/`, `infra/` and `presentation/`. */
 const layer = (names: string): string => `${MODULES}/[^/]+/(${names})/`
+
+/**
+ * Files of `modules/` that are in no layer folder of their module: the layer rules know a file by
+ * its layer folder, so they would not apply to these.
+ */
+const OUTSIDE_LAYERS = `${MODULES}/(?![^/]+/(${LAYERS})/)`
+
+/**
+ * Files of `src/` that are neither `main.tsx`, `App.tsx`, `setupTests.ts` nor `vite-env.d.ts`, nor
+ * in one of the folders the rules know (`modules/`, `initializers/`, `shared/` and `test/`).
+ */
+const OUTSIDE_KNOWN_PLACES =
+  '^src/(?!(main|App)\\.tsx$|setupTests\\.ts$|vite-env\\.d\\.ts$|(modules|initializers|shared|test)/)'
+
+/** Packages the screens are drawn and navigated with, which only `presentation/` knows. */
+const UI_PACKAGES = '(^|/)node_modules/(@mui|@emotion|react-router|react-router-dom)/'
+
+/**
+ * The three rules refusing every file of `path`, the tests apart.
+ *
+ * A rule is about a dependency, so one rule cannot catch every file: the first catches a file by
+ * what it imports, `-when-imported` a file importing nothing, by what imports it, and
+ * `-when-orphan` a file that neither imports anything nor is imported.
+ */
+const refuseFiles = (name: string, path: string, comment: string): IForbiddenRuleType[] => [
+  {
+    name,
+    severity: 'error',
+    comment: `${comment} Caught by what the file imports.`,
+    from: { path, pathNot: TESTS },
+    to: {}
+  },
+  {
+    name: `${name}-when-imported`,
+    severity: 'error',
+    comment: `${comment} Caught by what imports the file, for one that imports nothing.`,
+    from: {},
+    to: { path, pathNot: TESTS }
+  },
+  {
+    name: `${name}-when-orphan`,
+    severity: 'error',
+    comment: `${comment} Caught for a file that neither imports anything nor is imported.`,
+    from: { orphan: true, path, pathNot: TESTS },
+    to: {}
+  }
+]
 
 const config: IConfiguration = {
   forbidden: [
@@ -31,14 +83,50 @@ const config: IConfiguration = {
       to: { couldNotResolve: true }
     },
 
-    // ── shared/ is a leaf: it never depends on domain modules ──────────────
+    // ── shared/ is a leaf, and the composition root is nobody's dependency ──
     {
-      name: 'frontend-shared-not-to-modules',
+      name: 'frontend-shared-is-self-contained',
       severity: 'error',
-      comment: 'src/shared must not import from modules/.',
+      comment:
+        'src/shared is what the rest builds on: of the sources of the frontend, it only imports itself.',
       from: { path: SHARED, pathNot: TESTS },
-      to: { path: MODULES }
+      to: { path: '^src/', pathNot: SHARED }
     },
+    {
+      name: 'frontend-initializers-only-from-app',
+      severity: 'error',
+      comment:
+        'src/initializers sets up the providers and the routes of the app: only App.tsx, the composition root, imports it, besides the test setup. Anything else importing it would reach every screen through it.',
+      from: { pathNot: [INITIALIZERS, APP, TESTS, TEST_HELPERS, SETUP_TESTS] },
+      to: { path: INITIALIZERS }
+    },
+    {
+      name: 'frontend-app-only-from-entry-point',
+      severity: 'error',
+      comment: 'App.tsx is the composition root: only main.tsx, the entry point, imports it.',
+      from: { pathNot: [ENTRY_POINT, TESTS, TEST_HELPERS] },
+      to: { path: APP }
+    },
+    {
+      name: 'frontend-entry-point-imported-by-nothing',
+      severity: 'error',
+      comment: 'main.tsx is the entry point, which the page loads: nothing imports it.',
+      from: {},
+      to: { path: ENTRY_POINT }
+    },
+
+    // ── every file is where the rules know it ──────────────────────────────
+    ...refuseFiles(
+      'frontend-src-files-in-known-places',
+      OUTSIDE_KNOWN_PLACES,
+      'Directly under src/, there is only main.tsx, the entry point, App.tsx, the composition root, setupTests.ts and vite-env.d.ts: anything else is in modules/, initializers/, shared/ or test/, which the other rules know.'
+    ),
+    ...refuseFiles(
+      'frontend-module-files-in-a-layer',
+      OUTSIDE_LAYERS,
+      `A file of modules/ is in one of the layer folders (${LAYERS}) of its module: any other ` +
+        'folder would escape the layer rules.'
+    ),
 
     // ── modules are isolated from each other ───────────────────────────────
     {
@@ -48,13 +136,6 @@ const config: IConfiguration = {
       from: { path: `${MODULES}/([^/]+)/`, pathNot: TESTS },
       to: { path: `${MODULES}/`, pathNot: `${MODULES}/$1/` }
     },
-    {
-      name: 'modules-not-to-app-entry',
-      severity: 'error',
-      comment: 'Modules and shared code must not import the app entry points.',
-      from: { path: [MODULES, SHARED], pathNot: TESTS },
-      to: { path: '^src/(App|main)\\.tsx$' }
-    },
 
     // ── layering: presentation → application → infra → domain ──────────────
     {
@@ -63,6 +144,22 @@ const config: IConfiguration = {
       comment: 'domain/ holds the contracts the other layers build on, it depends on none of them.',
       from: { path: layer('domain'), pathNot: TESTS },
       to: { path: layer('application|infra|presentation') }
+    },
+    {
+      name: 'frontend-domain-not-to-packages',
+      severity: 'error',
+      comment:
+        'domain/ only states contracts, on the models of @echo/utilities: it imports no package, neither React, nor the API client, nor TanStack Query.',
+      from: { path: layer('domain'), pathNot: TESTS },
+      to: { path: '(^|/)node_modules/' }
+    },
+    {
+      name: 'frontend-ui-packages-only-in-presentation',
+      severity: 'error',
+      comment:
+        'Only presentation/ draws the screens and navigates between them: domain/, application/ and infra/ import neither MUI nor React Router.',
+      from: { path: layer('domain|application|infra'), pathNot: TESTS },
+      to: { path: UI_PACKAGES }
     },
     {
       name: 'frontend-infra-only-to-domain',

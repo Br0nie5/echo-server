@@ -37,7 +37,7 @@ const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({ formMode }) =>
         fullWidth
         margin="normal"
         value={username}
-        onChange={(e) => setUsername(e.target.value)}
+        onChange={(event) => setUsername(event.target.value)}
         disabled={isSubmitting}
         autoComplete="username"
       />
@@ -48,7 +48,7 @@ const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({ formMode }) =>
         margin="normal"
         type="password"
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={(event) => setPassword(event.target.value)}
         disabled={isSubmitting}
         autoComplete={formMode === 'login' ? 'current-password' : 'new-password'}
       />

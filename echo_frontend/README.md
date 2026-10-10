@@ -10,7 +10,7 @@ npm run build --workspace=echo_frontend          # production build to dist/
 npm run test:coverage --workspace=echo_frontend
 ```
 
-In dev, Vite proxies `/api` to the backend on port 4000 (see `vite.config.ts`), so start the backend too (`npm run dev` at the repo root does both).
+In dev, Vite proxies `/api` and `/documentation` to the backend on port 4000 (see `vite.config.ts`), so start the backend too (`npm run dev` at the repo root does both).
 
 ## Runtime configuration
 
@@ -20,7 +20,7 @@ The bundle contains no configuration. On load it fetches `env.<mode>.json` (`SER
 
 ```
 src/
-  initializers/     API client, config loading, routing
+  initializers/     providers setting up the API client and the config, query client, routing
   modules/
     auth/           sign-up and login
     logs/           log list, filters, filter Web Worker
@@ -28,10 +28,10 @@ src/
       infra/          their implementations: backend endpoints, Web Worker
       application/    TanStack Query hooks (one file per hook)
       presentation/   screen component with hooks/, layouts/, components/, utils/
-  shared/           i18n (English), layouts, theme, utils
+  shared/           config and API client (contexts and hooks), navigation, i18n (English), layouts, theme, utils
   test/             render helpers for tests
 ```
 
-Both modules have these four layers, with imports only going `presentation → application → infra → domain` (see [docs/architecture.md](../docs/architecture.md#frontend-layout)).
+Both modules have these four layers, `domain/` at the center, `application/` importing `infra/` directly (see [docs/architecture.md](../docs/architecture.md#frontend-layout)).
 
 Live filtering runs in a Web Worker (`modules/logs/infra/workers/`) using the same functions as the backend, from `@echo/utilities`.

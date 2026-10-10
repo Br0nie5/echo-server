@@ -14,7 +14,7 @@
     "start:docker": "bash scripts/start_docker.sh",
     "dev": "concurrently --names \"backend,frontend\" \"npm run dev --workspace=echo_backend\" \"npm run dev --workspace=echo_frontend\"",
     "deploy:server": "bash scripts/deploy_server.sh",
-    "format": "npm run format --workspaces",
+    "format": "npm run format --workspaces && prettier --write \"*.md\" \"docs/**/*.md\"",
     "lint": "npm run lint --workspaces",
     "test:coverage": "npm run test:coverage --workspaces",
     "open:coverage": "npm run open:coverage --workspaces",
@@ -25,7 +25,8 @@
   "devDependencies": {
     "@types/node": "^24.19.1",
     "concurrently": "^10.0.5",
-    "knip": "^6.41.0"
+    "knip": "^6.41.0",
+    "prettier": "^3.9.10"
   },
   "allowScripts": {
     "bcrypt@6.0.0": true,

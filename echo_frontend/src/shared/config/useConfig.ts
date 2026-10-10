@@ -1,7 +1,6 @@
 import { useContext } from 'react'
 
-import { ConfigContext } from '../../initializers/config/ConfigContext'
-
+import { ConfigContext } from './ConfigContext'
 import type { FrontConfig } from './frontConfig'
 
 /** The runtime config of the frontend. Throws outside of `ConfigProvider`. */

@@ -1,20 +1,22 @@
 import type { RenderResult } from '@testing-library/react'
-import { MemoryRouter, Route, Routes, type Location } from 'react-router-dom'
+import { Route, Routes, type Location } from 'react-router-dom'
 
 import type { FrontConfig } from '../shared/config/frontConfig.ts'
 
-import { LocationObserver } from './LocationObserver.tsx'
 import { renderComponent } from './renderComponent.tsx'
-import { testConfig } from './utils/config.ts'
+import { AppRouterWrapper } from './utils/AppRouterWrapper.tsx'
+import { mockConfig } from './utils/mockConfig.ts'
 
 /**
- * Renders `child` as the screen of `testPath`, inside the providers and the router of the app.
+ * Renders `child` as the screen of `testPath`, inside the providers of the app and a router whose
+ * `basename` is the path of `APP_URL`, as `AppRouter` does.
  *
- * `pathParams` is the query string the screen is opened with (`'?fromDate=…'`).
+ * `pathParams` is the query string the screen is opened with (`'?fromDate=…'`). Only `testPath`
+ * renders `child`: a screen navigating elsewhere renders nothing.
  *
  * The router keeps its location in memory, so the address bar cannot be read. To check the URL a
- * screen navigates to, give `params.onLocationChange`: it is called with the location at first and
- * each time it changes.
+ * screen navigates to, give `params.onLocationChange`: it is called with the location, below
+ * `APP_URL`, at first and each time it changes.
  *
  * ```tsx
  * const onLocationChange = vi.fn<(location: Location) => void>()
@@ -30,23 +32,18 @@ export const renderApp = async (
   pathParams?: string,
   params?: { configOverride?: FrontConfig; onLocationChange?: (location: Location) => void }
 ): Promise<RenderResult> => {
-  const config = params?.configOverride ?? testConfig
+  const config = params?.configOverride ?? mockConfig
 
-  const initialPath = `${new URL(config.APP_URL).pathname}${testPath}`
-
-  const initialPathWithParams = `${initialPath}${pathParams !== undefined ? pathParams : ''}`
-
-  const screen = await renderComponent(
-    <MemoryRouter initialEntries={[initialPathWithParams]}>
-      {params?.onLocationChange !== undefined && (
-        <LocationObserver onLocationChange={params.onLocationChange} />
-      )}
+  return renderComponent(
+    <AppRouterWrapper
+      initialPath={`${testPath}${pathParams ?? ''}`}
+      config={config}
+      onLocationChange={params?.onLocationChange}
+    >
       <Routes>
-        <Route path={initialPath} element={child} />
+        <Route path={testPath} element={child} />
       </Routes>
-    </MemoryRouter>,
+    </AppRouterWrapper>,
     { configOverride: config }
   )
-
-  return screen
 }

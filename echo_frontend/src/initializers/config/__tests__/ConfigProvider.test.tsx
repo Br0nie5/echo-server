@@ -5,16 +5,16 @@ import nock from 'nock'
 
 import i18n from '../../../shared/i18n/i18n.ts'
 import type { AppTranslation } from '../../../shared/i18n/useAppTranslation.ts'
-import { testConfig } from '../../../test/utils/config.ts'
-import { testUrl } from '../../../test/utils/url.ts'
+import { mockConfig } from '../../../test/utils/mockConfig.ts'
+import { mockUrl } from '../../../test/utils/mockUrl.ts'
 import { queryClient } from '../../api/queryClient.ts'
-import { configJsonBaseUrl, configPageTestId, ConfigProvider } from '../ConfigProvider'
+import { configJsonUrl, configPageTestId, ConfigProvider } from '../ConfigProvider'
 
 const appTranslation: AppTranslation = (key) => i18n.t(key)
 
 describe('ConfigProvider', () => {
   test('Should render its children correctly if the config is loaded', async () => {
-    nock(testUrl).get(configJsonBaseUrl).reply(200, testConfig)
+    nock(mockUrl).get(configJsonUrl).reply(200, mockConfig)
 
     const component = render(
       <QueryClientProvider client={queryClient}>
@@ -30,7 +30,7 @@ describe('ConfigProvider', () => {
   })
 
   test('Should render a loader if the config failed loading', async () => {
-    nock(testUrl).get(configJsonBaseUrl).reply(400, {})
+    nock(mockUrl).get(configJsonUrl).reply(400, {})
 
     const component = render(
       <QueryClientProvider client={queryClient}>

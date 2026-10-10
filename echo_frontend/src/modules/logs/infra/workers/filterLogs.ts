@@ -22,8 +22,8 @@ interface FilterRequest {
  * never sent. The logs are only sent when they are not the ones the worker already holds, and the
  * worker answers with indexes, so the logs given back are the very objects that were passed in.
  *
- * The promise rejects when the request is aborted, and when the worker fails, after which every
- * request is rejected.
+ * The promise rejects when the request is aborted, already when it is given, and when the worker
+ * fails, after which every request is rejected.
  *
  * ```ts
  * const filterLogs = createFilterLogs(new FilterWorker())
@@ -83,20 +83,37 @@ export const createFilterLogs = (
         return
       }
 
+      if (signal?.aborted) {
+        reject(signal.reason)
+        return
+      }
+
+      const stopListeningToSignal = new AbortController()
+
       const request: FilterRequest = {
         logs,
         logCategoriesFilters,
         logSearchFilters,
-        resolve,
-        reject
+        resolve: (filteredLogs) => {
+          stopListeningToSignal.abort()
+          resolve(filteredLogs)
+        },
+        reject: (reason) => {
+          stopListeningToSignal.abort()
+          reject(reason)
+        }
       }
 
       // An aborted request that is already running stays the running one until the worker
       // answers it: its late answer settles nothing, and the next request starts then.
-      signal?.addEventListener('abort', () => {
-        waitingRequests = waitingRequests.filter((waitingRequest) => waitingRequest !== request)
-        reject(signal.reason)
-      })
+      signal?.addEventListener(
+        'abort',
+        () => {
+          waitingRequests = waitingRequests.filter((waitingRequest) => waitingRequest !== request)
+          request.reject(signal.reason)
+        },
+        { once: true, signal: stopListeningToSignal.signal }
+      )
 
       waitingRequests.push(request)
       if (runningRequest === undefined) {

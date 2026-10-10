@@ -1,8 +1,6 @@
 import { LogArraySchema, type GetLogsParams, type Log } from '@echo/utilities'
 
-import { interceptUnauthenticatedError } from '../../../shared/api/interceptors'
-import { useApiMutator } from '../../../shared/api/useApiMutator'
-import { useConfig } from '../../../shared/config/useConfig'
+import { useSendApiRequest } from '../../../shared/api/useSendApiRequest'
 import type { LogsRepository } from '../domain/logs.repository'
 
 import { filterLogs } from './workers/filterLogs'
@@ -12,9 +10,10 @@ const logsUrl = '/logs'
 /**
  * The `LogsRepository` on top of the logs endpoint of the backend and of the filter worker of the app.
  *
- * The logs are fetched from the backend: the answer is validated against `LogArraySchema`, and a
- * 401 sends the user to the auth screen, before the error is thrown. They are filtered away from
- * the main thread, with the same functions as the backend.
+ * The logs are fetched from the backend, through `useSendApiRequest` (which sends the user to the
+ * auth screen when they are not authenticated), and the answer is validated against
+ * `LogArraySchema`. They are filtered away from the main thread, with the same functions as the
+ * backend.
  *
  * ```ts
  * const logsRepository = useLogsRepository()
@@ -23,18 +22,16 @@ const logsUrl = '/logs'
  * ```
  */
 export const useLogsRepository = (): LogsRepository => {
-  const axiosMutator = useApiMutator()
-  const config = useConfig()
+  const sendApiRequest = useSendApiRequest()
 
   return {
     findLogs: async (params: GetLogsParams, signal?: AbortSignal): Promise<Log[]> => {
-      const data = await axiosMutator<Log[], GetLogsParams>({
+      const data = await sendApiRequest<Log[], GetLogsParams>({
         url: logsUrl,
         method: 'GET',
         params,
         signal,
-        withCredentials: true,
-        errorInterceptor: (error) => interceptUnauthenticatedError(error, config)
+        withCredentials: true
       })
 
       return LogArraySchema.parse(data)

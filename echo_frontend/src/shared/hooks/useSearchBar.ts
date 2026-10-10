@@ -106,7 +106,7 @@ export const useSearchBar = ({
     }
 
     if (event.key === 'Enter') {
-      if (suggestionIndex > -1) {
+      if (suggestionIndex !== SUGGESTION_DEFAULT_INDEX) {
         event.preventDefault()
         applySuggestion(filteredSuggestions[suggestionIndex])
       }

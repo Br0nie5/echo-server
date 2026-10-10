@@ -1,8 +1,8 @@
 import { Box, Typography } from '@mui/material'
 import { render } from '@testing-library/react'
 
-import { ConfigContext } from '../../../initializers/config/ConfigContext'
-import { testConfig } from '../../../test/utils/config'
+import { mockConfig } from '../../../test/utils/mockConfig'
+import { ConfigContext } from '../ConfigContext'
 import { useConfig } from '../useConfig'
 
 const TestConfigComponent: React.FC = () => {
@@ -18,12 +18,12 @@ const TestConfigComponent: React.FC = () => {
 describe('useConfig', () => {
   test('Should display the config provided by ConfigContext', () => {
     const component = render(
-      <ConfigContext.Provider value={{ config: testConfig }}>
+      <ConfigContext.Provider value={{ config: mockConfig }}>
         <TestConfigComponent />
       </ConfigContext.Provider>
     )
 
-    expect(component.getByText(testConfig.SERVER_NAME)).toBeInTheDocument()
+    expect(component.getByText(mockConfig.SERVER_NAME)).toBeInTheDocument()
   })
 
   test('Should throw an error if there is no ConfigContext when trying to access the config', () => {

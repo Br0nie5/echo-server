@@ -6,12 +6,12 @@ Live, interactive documentation is served at `/documentation` (Swagger UI) by ev
 
 Registered only when `HAS_AUTHENTICATION=true`. Responses have the shape `{ "success": boolean, "message": string }`. Successful sign-up and login set the auth cookie.
 
-| Method | Path | Body | Responses |
-| ------ | ---- | ---- | --------- |
-| POST | `/auth/signup` | `{ username, password }` | `200` created and logged in; `403` a user already exists; `429` too many attempts |
-| POST | `/auth/login` | `{ username, password }` | `200`; `401` invalid credentials; `429` too many attempts |
-| GET | `/auth/check` | none | `200` valid session; `401` invalid session, or no user exists yet (the message tells the UI to show sign-up) |
-| POST | `/auth/logout` | none | `200`, clears the cookie |
+| Method | Path           | Body                     | Responses                                                                                                    |
+| ------ | -------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| POST   | `/auth/signup` | `{ username, password }` | `200` created and logged in; `403` a user already exists; `429` too many attempts                            |
+| POST   | `/auth/login`  | `{ username, password }` | `200`; `401` invalid credentials; `429` too many attempts                                                    |
+| GET    | `/auth/check`  | none                     | `200` valid session; `401` invalid session, or no user exists yet (the message tells the UI to show sign-up) |
+| POST   | `/auth/logout` | none                     | `200`, clears the cookie                                                                                     |
 
 ## Logs
 
@@ -19,12 +19,12 @@ Registered only when `HAS_AUTHENTICATION=true`. Responses have the shape `{ "suc
 
 Requires a valid session when authentication is enabled.
 
-| Query parameter | Required | Description |
-| --------------- | :------: | ----------- |
-| `fromDate` | yes | ISO 8601 date-time. Only logs at or after it are returned. |
-| `toDate` | no | ISO 8601 date-time. Only logs before it are returned, it excluded. |
-| `logCategories` | no | One of `SUCCESS`, `INFO`, `WARNING`, `ERROR`; repeat the parameter for several. |
-| `logSearch` | no | Free-text filter. |
+| Query parameter | Required | Description                                                                     |
+| --------------- | :------: | ------------------------------------------------------------------------------- |
+| `fromDate`      |   yes    | ISO 8601 date-time. Only logs at or after it are returned.                      |
+| `toDate`        |    no    | ISO 8601 date-time. Only logs before it are returned, it excluded.              |
+| `logCategories` |    no    | One of `SUCCESS`, `INFO`, `WARNING`, `ERROR`; repeat the parameter for several. |
+| `logSearch`     |    no    | Free-text filter.                                                               |
 
 Example:
 

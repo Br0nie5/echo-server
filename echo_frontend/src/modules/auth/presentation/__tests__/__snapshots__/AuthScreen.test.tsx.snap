@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AuthScreen > AuthForm > Should render correctly 1`] = `
+exports[`AuthScreen > Should render correctly 1`] = `
 <DocumentFragment>
   <div
     class="MuiBox-root css-5aboy8"

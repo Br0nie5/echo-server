@@ -12,7 +12,8 @@ import { useLogsRepository } from '../infra/useLogsRepository'
  * filtering whose filters changed before it ended is cancelled. The previous result stays until
  * the new one is ready.
  *
- * The query key holds the ids of the logs, not the logs: it is serialised on every render.
+ * The query key holds the ids of the logs rather than the logs, which TanStack Query would hash
+ * whole each time it compares the keys.
  */
 export const useFilteredLogs = (
   logs: Log[],
@@ -30,6 +31,6 @@ export const useFilteredLogs = (
     queryKey: ['filteredLogs', logsIdsKey, debouncedCategories, debouncedSearch],
     queryFn: ({ signal }) =>
       logsRepository.filterLogs(logs, debouncedCategories, debouncedSearch, signal),
-    placeholderData: (prev) => prev // avoids flicker between filter changes
+    placeholderData: (previousFilteredLogs) => previousFilteredLogs
   })
 }

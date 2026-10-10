@@ -2,12 +2,12 @@ import nock from 'nock'
 import { describe, expect, test } from 'vitest'
 
 import { renderAppHook } from '../../../../test/renderAppHook'
-import { testConfig } from '../../../../test/utils/config'
+import { mockConfig } from '../../../../test/utils/mockConfig'
 import { InvalidCredentialsError } from '../../domain/auth.repository'
 import { useAuthRepository } from '../useAuthRepository'
 
 const buildRequestMockScope = (): nock.Scope => {
-  return nock(testConfig.API_URL)
+  return nock(mockConfig.API_URL)
 }
 
 const buildAuthCheckRequestMock = (): nock.Interceptor => {

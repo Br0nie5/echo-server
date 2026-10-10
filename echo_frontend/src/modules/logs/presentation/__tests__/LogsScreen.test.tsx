@@ -1,9 +1,9 @@
 import { LogCategory, type GetLogsParams, type Log, type LogSearchFilter } from '@echo/utilities'
-import { waitForElementToBeRemoved, type RenderResult } from '@testing-library/react'
+import { waitFor, waitForElementToBeRemoved, type RenderResult } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import nock from 'nock'
 import type { Location } from 'react-router-dom'
-import { vi, vitest, type Mock } from 'vitest'
+import { vi, vitest } from 'vitest'
 
 import i18n from '../../../../shared/i18n/i18n'
 import type { AppTranslation } from '../../../../shared/i18n/useAppTranslation'
@@ -11,10 +11,9 @@ import { AppPathNames } from '../../../../shared/navigation/pathNames'
 import { formatDate } from '../../../../shared/utils/formatDate'
 import { getDateFromDaysAgo } from '../../../../shared/utils/getDateFromDaysAgo'
 import { renderApp } from '../../../../test/renderApp'
-import { testConfig } from '../../../../test/utils/config'
 import { expectDateToBeSelected, getDateSection } from '../../../../test/utils/dateSelector'
+import { mockConfig } from '../../../../test/utils/mockConfig'
 import { resizeWindow } from '../../../../test/utils/resizeWindow'
-import { testUrl } from '../../../../test/utils/url'
 import { LogsScreen } from '../LogsScreen'
 
 import { getLogsMock } from './logs.mock'
@@ -58,23 +57,6 @@ const logsMock = getLogsMock(mockTodayDate)
 
 const appTranslation: AppTranslation = (key) => i18n.t(key)
 
-let mockSetHref: Mock
-
-beforeAll(() => {
-  mockSetHref = vi.fn()
-  const originalLocation = window.location
-
-  Object.defineProperty(window, 'location', {
-    writable: true,
-    value: { ...originalLocation, href: originalLocation.href }
-  })
-  Object.defineProperty(window.location, 'href', {
-    set: mockSetHref,
-    get: () => originalLocation.href,
-    configurable: true
-  })
-})
-
 beforeEach(() => {
   vi.clearAllMocks()
 
@@ -82,7 +64,7 @@ beforeEach(() => {
 })
 
 const buildRequestMockScope = (): nock.Scope => {
-  return nock(testConfig.API_URL)
+  return nock(mockConfig.API_URL)
 }
 
 const buildLogsRequestMock = (params: GetLogsParams): nock.Interceptor => {
@@ -113,7 +95,7 @@ const renderLogsScreen = async (
 ): Promise<RenderResult> => {
   const fromDate =
     params?.logsInitialDateOverride ??
-    getDateFromDaysAgo(testConfig.LOGS_INITIAL_DATE_DAYS_AGO).toISOString()
+    getDateFromDaysAgo(mockConfig.LOGS_INITIAL_DATE_DAYS_AGO).toISOString()
 
   let textToFind: string
 
@@ -200,7 +182,7 @@ describe('LogsScreen', () => {
       })
 
       test('Should directly filter all the logs older that fromDate if it is present as a query parameter', async () => {
-        const lastLogsSeenDate = getDateFromDaysAgo(testConfig.LOGS_INITIAL_DATE_DAYS_AGO)
+        const lastLogsSeenDate = getDateFromDaysAgo(mockConfig.LOGS_INITIAL_DATE_DAYS_AGO)
 
         const newLogsFromDate = new Date(lastLogsSeenDate.getTime() + 1 * 24 * 60 * 60 * 1000)
 
@@ -220,7 +202,7 @@ describe('LogsScreen', () => {
       })
 
       test('Should replace the wrong values of the query parameters and display the logs', async () => {
-        const defaultLogsFromDate = getDateFromDaysAgo(testConfig.LOGS_INITIAL_DATE_DAYS_AGO)
+        const defaultLogsFromDate = getDateFromDaysAgo(mockConfig.LOGS_INITIAL_DATE_DAYS_AGO)
         const wrongLogCategory = 'WRONG_CATEGORY'
         const wrongQueryParameters =
           '?fromDate=not-a-date' + `&logCategories=${wrongLogCategory}` + '&logCategories=WARNING'
@@ -319,7 +301,7 @@ describe('LogsScreen', () => {
 
         const screen = await renderLogsScreen({ status: 'success' })
 
-        const lastLogsSeenDate = getDateFromDaysAgo(testConfig.LOGS_INITIAL_DATE_DAYS_AGO)
+        const lastLogsSeenDate = getDateFromDaysAgo(mockConfig.LOGS_INITIAL_DATE_DAYS_AGO)
 
         expect(
           screen.getByText(
@@ -372,21 +354,30 @@ describe('LogsScreen', () => {
       const refetchButton = screen.getByText(appTranslation('query.refetchButton'))
 
       buildLogsSuccessRequestMock({
-        fromDate: getDateFromDaysAgo(testConfig.LOGS_INITIAL_DATE_DAYS_AGO).toISOString()
+        fromDate: getDateFromDaysAgo(mockConfig.LOGS_INITIAL_DATE_DAYS_AGO).toISOString()
       })
 
       await user.click(refetchButton)
 
-      expect(mockSetHref).not.toHaveBeenCalled()
-
       await screen.findAllByText(logsMock[0].message)
     })
 
-    test('Should reload windows when getting an error 401 (unauthorized)', async () => {
-      await renderLogsScreen({ status: 'error', statusCode: 401 })
+    test('Should go to the auth screen with the correct redirect, when getting an error 401 (unauthorized)', async () => {
+      const fromDate = getDateFromDaysAgo(mockConfig.LOGS_INITIAL_DATE_DAYS_AGO).toISOString()
+      const logsPath = `${AppPathNames.logs}?${new URLSearchParams({ fromDate })}`
+      const onLocationChange = vi.fn<(location: Location) => void>()
 
-      expect(mockSetHref).toHaveBeenCalledWith(
-        `${testConfig.APP_URL}${AppPathNames.auth}?redirect=${encodeURIComponent(testUrl).replace(/%20/g, '+')}`
+      buildLogsErrorRequestMock({ fromDate }, 401)
+
+      await renderApp(AppPathNames.logs, <LogsScreen />, `?${new URLSearchParams({ fromDate })}`, {
+        onLocationChange
+      })
+
+      await waitFor(() =>
+        expect(onLocationChange.mock.lastCall?.[0]).toMatchObject({
+          pathname: AppPathNames.auth,
+          search: `?${new URLSearchParams({ redirect: logsPath })}`
+        })
       )
     })
   })

@@ -1,10 +1,10 @@
-import { testConfig } from '../../../../test/utils/config'
+import { mockConfig } from '../../../../test/utils/mockConfig'
 import { parseFrontConfig } from '../parseFrontConfig'
 
-const BASE_URI = `${testConfig.APP_URL}/`
+const BASE_URI = `${mockConfig.APP_URL}/`
 
 const rawConfig = {
-  SERVER_NAME: testConfig.SERVER_NAME,
+  SERVER_NAME: mockConfig.SERVER_NAME,
   HAS_AUTHENTICATION: 'true',
   LOGS_INITIAL_DATE_DAYS_AGO: '2',
   LOGS_MINIMAL_DATE_DAYS_AGO: '14'
@@ -12,12 +12,12 @@ const rawConfig = {
 
 describe('parseFrontConfig', () => {
   test('Should parse a fully provided config', () => {
-    expect(parseFrontConfig(rawConfig, BASE_URI)).toStrictEqual(testConfig)
+    expect(parseFrontConfig(rawConfig, BASE_URI)).toStrictEqual(mockConfig)
   })
 
   test('Should read where the app and the API are reached from the base of the page', () => {
     expect(parseFrontConfig(rawConfig, 'https://example.com/echo/app/')).toStrictEqual({
-      ...testConfig,
+      ...mockConfig,
       APP_URL: 'https://example.com/echo/app',
       API_URL: 'https://example.com/echo/api'
     })
@@ -27,7 +27,7 @@ describe('parseFrontConfig', () => {
     expect(
       parseFrontConfig({ ...rawConfig, LOGS_INITIAL_DATE_DAYS_AGO: '14' }, BASE_URI)
     ).toStrictEqual({
-      ...testConfig,
+      ...mockConfig,
       LOGS_INITIAL_DATE_DAYS_AGO: 14
     })
   })

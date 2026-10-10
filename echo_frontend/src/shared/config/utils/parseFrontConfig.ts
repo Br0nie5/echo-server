@@ -16,13 +16,15 @@ import { parseDaysAgo } from './parseDaysAgo'
  * logs would start before the oldest date the user can pick.
  *
  * ```ts
- * const response = await fetch(configJsonBaseUrl)
+ * const response = await fetch(configJsonUrl)
  * const config = parseFrontConfig(await response.json(), document.baseURI)
  * config.LOGS_INITIAL_DATE_DAYS_AGO // 2
  * ```
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const parseFrontConfig = (rawConfig: any, baseUri: string): FrontConfig => {
+export const parseFrontConfig = (
+  rawConfig: Record<string, unknown>,
+  baseUri: string
+): FrontConfig => {
   const LOGS_INITIAL_DATE_DAYS_AGO = parseDaysAgo(
     rawConfig.LOGS_INITIAL_DATE_DAYS_AGO,
     'LOGS_INITIAL_DATE_DAYS_AGO'

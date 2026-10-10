@@ -3,11 +3,11 @@ import nock from 'nock'
 import { describe, expect, test } from 'vitest'
 
 import { renderAppHook } from '../../../../test/renderAppHook'
-import { testConfig } from '../../../../test/utils/config'
+import { mockConfig } from '../../../../test/utils/mockConfig'
 import { useLogsRepository } from '../useLogsRepository'
 
 const buildLogsRequestMock = (params: GetLogsParams): nock.Interceptor => {
-  return nock(testConfig.API_URL).get('/logs').query(params)
+  return nock(mockConfig.API_URL).get('/logs').query(params)
 }
 
 const logMock: Log = {
