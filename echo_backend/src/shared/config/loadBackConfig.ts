@@ -33,6 +33,12 @@ const LOG_FILE_EXTENSION = '.jsonl'
 /** Name of the directory scripts put their log files in, and the backend its self-report files. */
 const LOG_FILES_DIR_NAME = 'log'
 
+/** How long a session lasts: one day. */
+const SESSION_DURATION_SECONDS = 24 * 60 * 60
+
+/** Login and sign-up attempts allowed from one address: 5 a minute. */
+const CREDENTIALS_ATTEMPTS_LIMIT = { maxAttempts: 5, timeWindowMilliseconds: 60 * 1000 }
+
 /** Base URL of the Telegram bot API, which the path of a bot is appended to. */
 const TELEGRAM_BASE_URL = 'https://api.telegram.org'
 
@@ -105,9 +111,15 @@ export const loadBackConfig = async (
     },
     auth: config.HAS_AUTHENTICATION
       ? {
+          sessionDurationSeconds: SESSION_DURATION_SECONDS,
+          credentialsAttemptsLimit: CREDENTIALS_ATTEMPTS_LIMIT,
           // The brackets and the colons of an IPv6 address are not allowed in the name of a cookie.
           cookieName: `${allowedDomain.replace(/[^a-zA-Z0-9.-]/g, '_')}_access_token`,
-          cookieSerializeOptions: parseCookieSerializeOptions(allowedDomain),
+          cookieSerializeOptions: parseCookieSerializeOptions(
+            allowedDomain,
+            config.SERVER_URL,
+            SESSION_DURATION_SECONDS
+          ),
           usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')
         }
       : undefined,

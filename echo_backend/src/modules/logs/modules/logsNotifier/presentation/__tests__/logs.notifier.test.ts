@@ -6,9 +6,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('node-cron')
 vi.mock('../../application/checkProblemLogsAndNotify.js')
 
-import { getMockLogsNotifierConfig } from '../../../../../../test/mocks/configs.js'
+import { getMockLogsNotifierConfig } from '../../../../../../test/mocks/mockConfigs.js'
 import { checkProblemLogsAndNotify as actualCheckProblemLogsAndNotify } from '../../application/checkProblemLogsAndNotify.js'
-import logsNotifierPlugin, { type LogsNotifierPluginOptions } from '../logs.notifier.js'
+import { logsNotifier, type LogsNotifierPluginOptions } from '../logs.notifier.js'
 
 const checkProblemLogsAndNotify = vi.mocked(actualCheckProblemLogsAndNotify)
 const logsNotifierConfig = getMockLogsNotifierConfig()
@@ -39,7 +39,7 @@ const registerAndGetCronCallback = async (
 ): Promise<() => Promise<void>> => {
   vi.mocked(cron.schedule).mockReturnValueOnce({ stop: vi.fn() } as unknown as ScheduledTask)
 
-  await logsNotifierPlugin(fastify, pluginOptions)
+  await logsNotifier(fastify, pluginOptions)
 
   return vi.mocked(cron.schedule).mock.calls[0][1] as () => Promise<void>
 }
@@ -56,10 +56,12 @@ describe('logsNotifier plugin', () => {
     } as unknown as ScheduledTask)
 
     const fastify = mockFastify()
-    await logsNotifierPlugin(fastify, pluginOptions)
+    await logsNotifier(fastify, pluginOptions)
 
     expect(fastify.log.info).toHaveBeenCalledWith('Registering logs notifier')
-    expect(cron.schedule).toHaveBeenCalledWith(logsNotifierConfig.schedule, expect.any(Function))
+    expect(cron.schedule).toHaveBeenCalledWith(logsNotifierConfig.schedule, expect.any(Function), {
+      noOverlap: true
+    })
     expect(fastify.addHook).toHaveBeenCalledWith('onClose', expect.any(Function))
 
     // Simulate Fastify calling the onClose hook

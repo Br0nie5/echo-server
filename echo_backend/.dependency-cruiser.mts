@@ -3,11 +3,12 @@
  * See docs/architecture.md for the conventions these rules enforce.
  */
 
-import type { IConfiguration } from 'dependency-cruiser'
+import type { IConfiguration, IForbiddenRuleType } from 'dependency-cruiser'
 
 const MODULES = '^src/modules'
 const SHARED = '^src/shared/'
 const FILES_SERVICE = '^src/shared/services/files\\.service\\.ts$'
+const FILES_SERVICE_TEST = '^src/shared/services/__tests__/files\\.service\\.test\\.ts$'
 const PLUGINS = '^src/plugins/'
 const SERVER = '^src/server\\.ts$'
 const ENTRY_POINT = '^src/main\\.ts$'
@@ -29,6 +30,43 @@ const layer = (names: string): string[] => [
  * layer rules know a file by its layer folder, so they would not apply to these.
  */
 const OUTSIDE_LAYERS = `${MODULES}/(?![^/]+/(${LAYERS})/|[^/]+/modules/[^/]+/(${LAYERS})/)`
+
+/**
+ * Files of `src/` that are neither `main.ts` nor `server.ts`, nor in one of the folders the rules
+ * know (`modules/`, `plugins/`, `shared/`, `test/` and the tests of `server.ts`).
+ */
+const OUTSIDE_KNOWN_PLACES = '^src/(?!(main|server)\\.ts$|(modules|plugins|shared|test|__tests__)/)'
+
+/**
+ * The three rules refusing every file of `path`, the tests apart.
+ *
+ * A rule is about a dependency, so one rule cannot catch every file: the first catches a file by
+ * what it imports, `-when-imported` a file importing nothing, by what imports it, and
+ * `-when-orphan` a file that neither imports anything nor is imported.
+ */
+const refuseFiles = (name: string, path: string, comment: string): IForbiddenRuleType[] => [
+  {
+    name,
+    severity: 'error',
+    comment: `${comment} Caught by what the file imports.`,
+    from: { path, pathNot: TESTS },
+    to: {}
+  },
+  {
+    name: `${name}-when-imported`,
+    severity: 'error',
+    comment: `${comment} Caught by what imports the file, for one that imports nothing.`,
+    from: {},
+    to: { path, pathNot: TESTS }
+  },
+  {
+    name: `${name}-when-orphan`,
+    severity: 'error',
+    comment: `${comment} Caught for a file that neither imports anything nor is imported.`,
+    from: { orphan: true, path, pathNot: TESTS },
+    to: {}
+  }
+]
 
 const config: IConfiguration = {
   forbidden: [
@@ -62,7 +100,7 @@ const config: IConfiguration = {
       severity: 'error',
       comment:
         'The FilesService of src/shared/services/files.service.ts is the one access to the file system: anything else reads and writes files through it, never through fs.',
-      from: { pathNot: [FILES_SERVICE, TESTS, TEST_HELPERS] },
+      from: { pathNot: [FILES_SERVICE, FILES_SERVICE_TEST] },
       to: { dependencyTypes: ['core'], path: '^(node:)?fs(/promises)?$' }
     },
     {
@@ -74,6 +112,14 @@ const config: IConfiguration = {
       to: { path: PLUGINS }
     },
     {
+      name: 'backend-plugins-not-to-application',
+      severity: 'error',
+      comment:
+        'src/plugins wires the modules together: it builds their infra/ and hands it to their presentation/, which calls their application/ itself.',
+      from: { path: PLUGINS, pathNot: TESTS },
+      to: { path: layer('application') }
+    },
+    {
       name: 'backend-server-only-from-entry-point',
       severity: 'error',
       comment: 'server.ts is the composition root: only main.ts, the entry point, imports it.',
@@ -81,30 +127,18 @@ const config: IConfiguration = {
       to: { path: SERVER }
     },
 
-    // ── every file of a module is in a layer ───────────────────────────────
-    // A rule is about a dependency, so a file is caught by the ones it has, by the ones to it, or
-    // by having none at all.
-    {
-      name: 'backend-module-files-in-a-layer',
-      severity: 'error',
-      comment: `A file of modules/ is in one of the layer folders (${LAYERS}) of its module or of its submodule: any other folder would escape the layer rules.`,
-      from: { path: OUTSIDE_LAYERS, pathNot: TESTS },
-      to: {}
-    },
-    {
-      name: 'backend-module-files-in-a-layer-when-imported',
-      severity: 'error',
-      comment: `A file of modules/ is in one of the layer folders (${LAYERS}) of its module or of its submodule: any other folder would escape the layer rules.`,
-      from: {},
-      to: { path: OUTSIDE_LAYERS, pathNot: TESTS }
-    },
-    {
-      name: 'backend-module-files-in-a-layer-when-orphan',
-      severity: 'error',
-      comment: `A file of modules/ is in one of the layer folders (${LAYERS}) of its module or of its submodule: any other folder would escape the layer rules.`,
-      from: { orphan: true, path: OUTSIDE_LAYERS, pathNot: TESTS },
-      to: {}
-    },
+    // ── every file is where the rules know it ──────────────────────────────
+    ...refuseFiles(
+      'backend-src-files-in-known-places',
+      OUTSIDE_KNOWN_PLACES,
+      'Directly under src/, there is only main.ts, the entry point, and server.ts, the composition root: anything else is in modules/, plugins/, shared/ or test/, which the other rules know.'
+    ),
+    ...refuseFiles(
+      'backend-module-files-in-a-layer',
+      OUTSIDE_LAYERS,
+      `A file of modules/ is in one of the layer folders (${LAYERS}) of its module or of its ` +
+        'submodule: any other folder would escape the layer rules.'
+    ),
 
     // ── modules and submodules are isolated from each other ────────────────
     // A module or a submodule may import the domain/ and the infra/ of any other one, whether it
@@ -169,18 +203,19 @@ const config: IConfiguration = {
       to: { path: layer('application|infra|presentation') }
     },
     {
-      name: 'backend-domain-not-to-node',
+      name: 'backend-domain-and-application-not-to-node',
       severity: 'error',
       comment:
-        'domain/ states models and contracts, it does not reach the machine: no built-in module of Node.js (fs, path, crypto, ...).',
-      from: { path: layer('domain'), pathNot: TESTS },
+        'domain/ states models and contracts, and application/ the business rules on top of them: neither reaches the machine, which infra/ does, so neither imports a built-in module of Node.js (fs, path, crypto, ...).',
+      from: { path: layer('domain|application'), pathNot: TESTS },
       to: { dependencyTypes: ['core'] }
     },
     {
-      name: 'backend-domain-not-to-fastify',
+      name: 'backend-domain-and-application-not-to-fastify',
       severity: 'error',
-      comment: 'domain/ knows nothing of the web framework: neither fastify nor its plugins.',
-      from: { path: layer('domain'), pathNot: TESTS },
+      comment:
+        'domain/ and application/ know nothing of the web framework, which presentation/ handles: neither fastify nor its plugins.',
+      from: { path: layer('domain|application'), pathNot: TESTS },
       to: { path: '(^|/)node_modules/(fastify|fastify-[^/]+|@fastify)/' }
     },
     {
@@ -250,7 +285,7 @@ const config: IConfiguration = {
     // What is outside the package is in the graph, so the package boundary rules see it, without
     // being cruised itself: its own package checks it.
     doNotFollow: { path: ['node_modules', '^\\.\\./'] },
-    exclude: { path: ['^dist/', '/coverage/'] },
+    exclude: { path: '^dist/' },
     tsPreCompilationDeps: true,
     tsConfig: { fileName: 'tsconfig.json' },
     enhancedResolveOptions: {

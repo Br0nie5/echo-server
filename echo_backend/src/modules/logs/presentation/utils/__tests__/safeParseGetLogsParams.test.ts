@@ -3,21 +3,52 @@ import { describe, it, expect } from 'vitest'
 
 import { safeParseGetLogsParams } from '../safeParseGetLogsParams.js'
 
+/** The `fromDate` the client sends. */
+const FROM_DATE = '2026-01-01T00:00:00.000Z'
+
 describe('safeParseGetLogsParams', () => {
   it('should parse a valid query with no logCategories or logSearch', () => {
-    const isoDate = new Date().toISOString()
-    const result = safeParseGetLogsParams({ fromDate: isoDate })
+    const result = safeParseGetLogsParams({ fromDate: FROM_DATE })
 
     expect(result.success).toBeTruthy()
     if (result.success) {
-      expect(result.data.fromDate).toEqual(new Date(isoDate))
+      expect(result.data.fromDate).toEqual(new Date(FROM_DATE))
       expect(result.data.logCategories).toEqual([])
+    }
+  })
+
+  it('should leave toDate out when the client sends none', () => {
+    const result = safeParseGetLogsParams({ fromDate: FROM_DATE })
+
+    expect(result.success && result.data.toDate).toBeUndefined()
+  })
+
+  it('should convert toDate to a Date', () => {
+    const result = safeParseGetLogsParams({
+      fromDate: '2026-01-01T00:00:00.000Z',
+      toDate: '2026-01-02T00:00:00.000Z'
+    })
+
+    expect(result.success && result.data.toDate).toEqual(new Date('2026-01-02T00:00:00.000Z'))
+  })
+
+  it('should fail with a specific message when toDate is not an ISO date', () => {
+    const result = safeParseGetLogsParams({
+      fromDate: '2026-01-01T00:00:00.000Z',
+      toDate: 'not a date'
+    })
+
+    expect(result.success).toBeFalsy()
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe(
+        'Field toDate is not a valid date, it should be an ISO string'
+      )
     }
   })
 
   it('should normalize a single logCategories value into an array', () => {
     const result = safeParseGetLogsParams({
-      fromDate: new Date().toISOString(),
+      fromDate: FROM_DATE,
       logCategories: LogCategory.INFO
     })
 
@@ -29,7 +60,7 @@ describe('safeParseGetLogsParams', () => {
 
   it('should keep an array of logCategories values as-is', () => {
     const result = safeParseGetLogsParams({
-      fromDate: new Date().toISOString(),
+      fromDate: FROM_DATE,
       logCategories: [LogCategory.INFO, LogCategory.ERROR]
     })
 
@@ -41,7 +72,7 @@ describe('safeParseGetLogsParams', () => {
 
   it('should pass through logSearch', () => {
     const result = safeParseGetLogsParams({
-      fromDate: new Date().toISOString(),
+      fromDate: FROM_DATE,
       logSearch: 'message:boom'
     })
 
@@ -84,7 +115,7 @@ describe('safeParseGetLogsParams', () => {
 
   it('should fail with a specific message when a logCategories value is invalid', () => {
     const result = safeParseGetLogsParams({
-      fromDate: new Date().toISOString(),
+      fromDate: FROM_DATE,
       logCategories: 'Invalid_log_category'
     } as unknown as GetLogsParams)
 

@@ -4,23 +4,23 @@ import cron from 'node-cron'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('node-cron')
-vi.mock('../utils/getSelfReportRepository.js')
+vi.mock('../../modules/selfReport/infra/selfReport.repository.js')
 
 import type { LogsRepository } from '../../modules/logs/domain/logs.repository.js'
 import type { LogsNotifierPluginOptions } from '../../modules/logs/modules/logsNotifier/presentation/logs.notifier.js'
 import type { SelfReportRepository } from '../../modules/selfReport/domain/selfReport.repository.js'
+import { createSelfReportRepository as actualCreateSelfReportRepository } from '../../modules/selfReport/infra/selfReport.repository.js'
 import {
   getMockBackConfig,
   getMockLogsConfig,
   getMockLogsNotifierConfig,
   getMockNotificationConfig,
   getMockSelfReportsConfig
-} from '../../test/mocks/configs.js'
-import { getMockFilesService } from '../../test/mocks/filesService.js'
+} from '../../test/mocks/mockConfigs.js'
+import { getMockFilesService } from '../../test/mocks/mockFilesService.js'
 import { registerLogsNotifier, type LogsNotifierDependencies } from '../registerLogsNotifier.js'
-import { getSelfReportRepository as actualGetSelfReportRepository } from '../utils/getSelfReportRepository.js'
 
-const getSelfReportRepository = vi.mocked(actualGetSelfReportRepository)
+const createSelfReportRepository = vi.mocked(actualCreateSelfReportRepository)
 
 const logsRepository: LogsRepository = {
   getAllLogs: vi.fn(),
@@ -46,7 +46,7 @@ describe('registerLogsNotifier', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(cron.schedule).mockReturnValue({ stop: stopCron } as unknown as ScheduledTask)
-    getSelfReportRepository.mockResolvedValue(selfReportRepository)
+    createSelfReportRepository.mockResolvedValue(selfReportRepository)
     server = Fastify()
     vi.spyOn(server.log, 'info')
   })
@@ -66,7 +66,9 @@ describe('registerLogsNotifier', () => {
     )
     await server.close()
 
-    expect(cron.schedule).toHaveBeenCalledWith(logsNotifierConfig.schedule, expect.any(Function))
+    expect(cron.schedule).toHaveBeenCalledWith(logsNotifierConfig.schedule, expect.any(Function), {
+      noOverlap: true
+    })
     expect(stopCron).toHaveBeenCalledTimes(1)
   })
 
@@ -79,16 +81,16 @@ describe('registerLogsNotifier', () => {
 
     await registerLogsNotifier(server, config, dependencies)
 
-    expect(getSelfReportRepository).toHaveBeenCalledWith(
-      server,
+    expect(createSelfReportRepository).toHaveBeenCalledWith({
       logsRepository,
       filesService,
-      config.selfReports,
-      expect.any(Function)
-    )
-    expect(getSelfReportRepository.mock.calls[0][4](getMockSelfReportsConfig())).toBe(
-      getMockSelfReportsConfig().logsNotifierSelfReportFileName
-    )
+      selfReportsConfig: config.selfReports,
+      getSelfReportFileName: expect.any(Function),
+      logger: server.log
+    })
+    expect(
+      createSelfReportRepository.mock.calls[0][0].getSelfReportFileName(getMockSelfReportsConfig())
+    ).toBe(getMockSelfReportsConfig().logsNotifierSelfReportFileName)
     const pluginOptions = register.mock.calls[0][1] as LogsNotifierPluginOptions
     expect(pluginOptions.logsNotifierConfig).toBe(logsNotifierConfig)
     expect(pluginOptions.logsRepository).toBe(logsRepository)
@@ -111,7 +113,7 @@ describe('registerLogsNotifier', () => {
     )
 
     expect(cron.schedule).not.toHaveBeenCalled()
-    expect(getSelfReportRepository).not.toHaveBeenCalled()
+    expect(createSelfReportRepository).not.toHaveBeenCalled()
     expect(server.log.info).toHaveBeenCalledWith(
       'The logs notifier is not configured, skipping its registration'
     )
@@ -125,7 +127,7 @@ describe('registerLogsNotifier', () => {
     )
 
     expect(cron.schedule).not.toHaveBeenCalled()
-    expect(getSelfReportRepository).not.toHaveBeenCalled()
+    expect(createSelfReportRepository).not.toHaveBeenCalled()
     expect(server.log.info).toHaveBeenCalledWith(
       'The logs notifier is not configured, skipping its registration'
     )

@@ -73,6 +73,34 @@ describe('createSignUpFirstAdmin', () => {
     expect(authRepository.users.map(({ username }) => username)).toEqual(['first'])
   })
 
+  it('should refuse a second sign up even when the account check of the storage is slow', async () => {
+    const signUpFirstAdmin = createSignUpFirstAdmin(authRepository)
+    // The second check reads the storage before the first account is stored, but answers after.
+    vi.mocked(authRepository.hasAnyUser)
+      .mockImplementationOnce(async () => false)
+      .mockImplementationOnce(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20))
+        return false
+      })
+
+    const [firstSignUp, secondSignUp] = await Promise.allSettled([
+      signUpFirstAdmin('first', 'secret'),
+      signUpFirstAdmin('second', 'secret')
+    ])
+
+    expect(firstSignUp.status).toBe('fulfilled')
+    expect(secondSignUp.status).toBe('rejected')
+    expect(authRepository.users.map(({ username }) => username)).toEqual(['first'])
+  })
+
+  it('should no longer be in progress once a sign up has been refused', async () => {
+    const signUpFirstAdmin = createSignUpFirstAdmin(authRepository)
+    await signUpFirstAdmin('admin', 'secret')
+    await expect(signUpFirstAdmin('other', 'secret')).rejects.toThrow('An account already exists.')
+
+    await expect(signUpFirstAdmin('other', 'secret')).rejects.toThrow('An account already exists.')
+  })
+
   it('should throw the error of the repository, and accept the next sign up', async () => {
     const signUpFirstAdmin = createSignUpFirstAdmin(authRepository)
     vi.mocked(authRepository.createUser).mockRejectedValueOnce(new Error('SQLITE_BUSY'))

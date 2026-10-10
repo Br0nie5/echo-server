@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getMockSelfReportsConfig } from '../../../../test/mocks/configs.js'
-import { getMockFilesService } from '../../../../test/mocks/filesService.js'
+import { getMockSelfReportsConfig } from '../../../../test/mocks/mockConfigs.js'
+import { getMockFilesService } from '../../../../test/mocks/mockFilesService.js'
 import { createFileSessionJobIdApi } from '../fileSessionJobId.api.js'
 
 const selfReportsConfig = getMockSelfReportsConfig({

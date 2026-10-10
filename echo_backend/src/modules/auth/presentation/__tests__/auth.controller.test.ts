@@ -2,7 +2,7 @@ import { needsSignupMessage, type AuthToken, type LoginRequest } from '@echo/uti
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { getMockAuthConfig } from '../../../../test/mocks/configs.js'
+import { getMockAuthConfig } from '../../../../test/mocks/mockConfigs.js'
 import { SignUpRefusedError } from '../../domain/signUpRefusedError.js'
 import { createAuthController } from '../auth.controller.js'
 

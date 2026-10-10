@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import type { Mock } from 'vitest'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import { getMockAuthConfig } from '../../../../test/mocks/mockConfigs.js'
 import type { AuthController } from '../auth.controller.js'
 import { authRoutes } from '../auth.routes.js'
 import {
@@ -29,6 +30,10 @@ vi.mock('../auth.schemas.js', () => ({
   }
 }))
 
+const authConfig = getMockAuthConfig({
+  credentialsAttemptsLimit: { maxAttempts: 5, timeWindowMilliseconds: 60 * 1000 }
+})
+
 const controller = {
   signUp: vi.fn(),
   login: vi.fn(),
@@ -52,7 +57,10 @@ describe('authRoutes', () => {
   })
 
   it('should register schemas and all auth routes correctly', async () => {
-    await authRoutes(mockServer as unknown as FastifyInstance, { controller })
+    await authRoutes(mockServer as unknown as FastifyInstance, {
+      controller,
+      authConfig
+    })
 
     // Check schemas were added
     expect(mockServer.addSchema).toHaveBeenCalledWith(AuthTokenJsonSchema)
@@ -64,9 +72,30 @@ describe('authRoutes', () => {
     expect(mockServer.route).toHaveBeenCalledTimes(4)
   })
 
+  it('should limit the attempts of the routes receiving credentials only', async () => {
+    await authRoutes(mockServer as unknown as FastifyInstance, {
+      controller,
+      authConfig
+    })
+
+    const rateLimitByUrl = Object.fromEntries(
+      mockServer.route.mock.calls.map(([route]) => [route.url, route.config?.rateLimit])
+    )
+
+    expect(rateLimitByUrl).toEqual({
+      '/auth/signup': { max: 5, timeWindow: 60000 },
+      '/auth/login': { max: 5, timeWindow: 60000 },
+      '/auth/check': undefined,
+      '/auth/logout': undefined
+    })
+  })
+
   // --- /auth/signup route tests ---
   it('should register the /auth/signup route with correct schema and handler', async () => {
-    await authRoutes(mockServer as unknown as FastifyInstance, { controller })
+    await authRoutes(mockServer as unknown as FastifyInstance, {
+      controller,
+      authConfig
+    })
 
     // Find the signup route call
     const signUpRouteConfig = mockServer.route.mock.calls.find(
@@ -91,7 +120,10 @@ describe('authRoutes', () => {
 
   // --- /auth/login route tests ---
   it('should register the /auth/login route with correct schema and handler', async () => {
-    await authRoutes(mockServer as unknown as FastifyInstance, { controller })
+    await authRoutes(mockServer as unknown as FastifyInstance, {
+      controller,
+      authConfig
+    })
 
     // Find the login route call
     const loginRouteConfig = mockServer.route.mock.calls.find(
@@ -116,7 +148,10 @@ describe('authRoutes', () => {
 
   // --- /auth/check route tests ---
   it('should register the /auth/check route with correct schema and handler', async () => {
-    await authRoutes(mockServer as unknown as FastifyInstance, { controller })
+    await authRoutes(mockServer as unknown as FastifyInstance, {
+      controller,
+      authConfig
+    })
 
     // Find the check route call
     const checkRouteConfig = mockServer.route.mock.calls.find(
@@ -140,7 +175,10 @@ describe('authRoutes', () => {
 
   // --- /auth/logout route tests ---
   it('should register the /auth/logout route with correct schema and handler', async () => {
-    await authRoutes(mockServer as unknown as FastifyInstance, { controller })
+    await authRoutes(mockServer as unknown as FastifyInstance, {
+      controller,
+      authConfig
+    })
 
     // Find the logout route call
     const logoutRouteConfig = mockServer.route.mock.calls.find(

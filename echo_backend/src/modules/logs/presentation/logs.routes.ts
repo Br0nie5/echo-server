@@ -24,7 +24,7 @@ export const logsRoutes: FastifyPluginAsync<LogsRoutesOptions> = async (
   server.addSchema(LogCategoryJsonSchema)
   server.addSchema(LogJsonSchema)
 
-  server.route<{ Querystring: GetLogsParams; Reply: Log[] | undefined | EchoError }>({
+  server.route<{ Querystring: GetLogsParams; Reply: Log[] | EchoError }>({
     method: 'GET',
     url: '/logs',
     schema: {

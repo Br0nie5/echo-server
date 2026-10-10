@@ -20,13 +20,7 @@ export interface LogsNotifierPluginOptions extends FastifyPluginOptions {
   selfReportRepository: SelfReportRepository
 }
 
-/**
- * Runs `checkProblemLogsAndNotify` on the `schedule` of `logsNotifierConfig`, and stops when the server
- * closes.
- *
- * A failing run is logged, not thrown, so it does not stop the schedule.
- */
-const logsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = async (
+const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = async (
   fastify,
   {
     logsNotifierConfig,
@@ -39,26 +33,42 @@ const logsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = async (
 ) => {
   fastify.log.info('Registering logs notifier')
 
-  const task = cron.schedule(logsNotifierConfig.schedule, async () => {
-    try {
-      await checkProblemLogsAndNotify({
-        watchedLogsCategories: logsNotifierConfig.watchedLogsCategories,
-        serverName: logsNotifierConfig.serverName,
-        timezone: logsNotifierConfig.notifierTimezone,
-        logsRepository,
-        logsSelfReportRepository,
-        notifierService,
-        checkDateRepository,
-        selfReportRepository
-      })
-    } catch (error) {
-      fastify.log.error({ err: error }, 'Cron job failed')
-    }
-  })
+  const task = cron.schedule(
+    logsNotifierConfig.schedule,
+    async () => {
+      try {
+        await checkProblemLogsAndNotify({
+          watchedLogsCategories: logsNotifierConfig.watchedLogsCategories,
+          serverName: logsNotifierConfig.serverName,
+          timezone: logsNotifierConfig.notifierTimezone,
+          logsRepository,
+          logsSelfReportRepository,
+          notifierService,
+          checkDateRepository,
+          selfReportRepository
+        })
+      } catch (error) {
+        fastify.log.error({ err: error }, 'Cron job failed')
+      }
+    },
+    { noOverlap: true }
+  )
 
   fastify.addHook('onClose', async () => {
     await task.stop()
   })
 }
 
-export default fastifyPlugin(logsNotifier)
+/**
+ * Fastify plugin running `checkProblemLogsAndNotify` on the `schedule` of `logsNotifierConfig`, and
+ * stopping when the server closes.
+ *
+ * A failing run is logged, not thrown, so it does not stop the schedule. A run that is due while
+ * the previous one is still going is skipped: two runs at once would read the same last check date
+ * and notify the same logs twice, while the next run notifies what the skipped one would have.
+ *
+ * ```ts
+ * await server.register(logsNotifier, { logsNotifierConfig, logsRepository, ... })
+ * ```
+ */
+export const logsNotifier = fastifyPlugin(scheduleLogsNotifier)

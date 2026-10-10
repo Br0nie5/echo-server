@@ -6,7 +6,7 @@ import {
   getMockAuthConfig,
   getMockBackConfig,
   getMockServerConfig
-} from '../../test/mocks/configs.js'
+} from '../../test/mocks/mockConfigs.js'
 import { registerSecurity } from '../registerSecurity.js'
 
 const COOKIE_NAME = 'session-cookie'
@@ -50,6 +50,17 @@ describe('registerSecurity', () => {
 
       expect(response.statusCode).toBe(200)
       expect(response.json()).toMatchObject({ username: 'admin' })
+    })
+
+    it('should sign JWTs that expire with the session', async () => {
+      await buildSecuredServer(getConfig({ hasAuthentication: true }))
+      await server.ready()
+
+      const { iat, exp } = server.jwt.decode<{ iat: number; exp: number }>(
+        server.jwt.sign({ username: 'admin' })
+      )!
+
+      expect(exp - iat).toBe(getMockAuthConfig().sessionDurationSeconds)
     })
 
     it('should reject a request without session cookie', async () => {

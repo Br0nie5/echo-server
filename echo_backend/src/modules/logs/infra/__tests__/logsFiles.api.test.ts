@@ -3,8 +3,8 @@ import path from 'path'
 import { beforeEach, describe, it, expect, vi } from 'vitest'
 
 import { FileDoesNotExistError } from '../../../../shared/services/fileDoesNotExistError.js'
-import { getMockLogsConfig } from '../../../../test/mocks/configs.js'
-import { getMockFilesService } from '../../../../test/mocks/filesService.js'
+import { getMockLogsConfig } from '../../../../test/mocks/mockConfigs.js'
+import { getMockFilesService } from '../../../../test/mocks/mockFilesService.js'
 import type { LogFileDto } from '../dto/logFile.dto.js'
 import { createLogsFilesApi } from '../logsFiles.api.js'
 

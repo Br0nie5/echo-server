@@ -1,14 +1,14 @@
 import type { LogsRepository } from '../modules/logs/domain/logs.repository.js'
 import { createFileCheckDateApi } from '../modules/logs/modules/logsNotifier/infra/fileCheckDate.api.js'
 import { createFileCheckDateRepository } from '../modules/logs/modules/logsNotifier/infra/fileCheckDate.repository.js'
-import logsNotifier from '../modules/logs/modules/logsNotifier/presentation/logs.notifier.js'
+import { logsNotifier } from '../modules/logs/modules/logsNotifier/presentation/logs.notifier.js'
 import type { SelfReportRepository } from '../modules/selfReport/domain/selfReport.repository.js'
+import { createSelfReportRepository } from '../modules/selfReport/infra/selfReport.repository.js'
 import type { BackConfig } from '../shared/config/backConfig.js'
 import type { FilesService } from '../shared/services/files.service.js'
 import { createNotifierService } from '../shared/services/notifier.service.js'
 
 import type { EchoServer } from './types/echoServer.js'
-import { getSelfReportRepository } from './utils/getSelfReportRepository.js'
 
 /** What `buildServer` already built that the cron notifying the problem logs is built with. */
 export interface LogsNotifierDependencies {
@@ -50,12 +50,12 @@ export const registerLogsNotifier = async (
     checkDateRepository: createFileCheckDateRepository(
       createFileCheckDateApi(logsNotifierConfig, filesService)
     ),
-    selfReportRepository: await getSelfReportRepository(
-      server,
+    selfReportRepository: await createSelfReportRepository({
       logsRepository,
       filesService,
       selfReportsConfig,
-      ({ logsNotifierSelfReportFileName }) => logsNotifierSelfReportFileName
-    )
+      getSelfReportFileName: ({ logsNotifierSelfReportFileName }) => logsNotifierSelfReportFileName,
+      logger: server.log
+    })
   })
 }

@@ -1,7 +1,7 @@
 import type { Log } from '@echo/utilities'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getMockSelfReportsConfig } from '../../../../test/mocks/configs.js'
+import { getMockSelfReportsConfig } from '../../../../test/mocks/mockConfigs.js'
 import type { SelfReport } from '../../domain/selfReport.js'
 import { createSelfLogReportRepository } from '../selfLogReport.repository.js'
 
@@ -41,8 +41,11 @@ const selfReport = (overrides: Partial<SelfReport> = {}): SelfReport => ({
   ...overrides
 })
 
+/** When the repository is created: the retention is counted back from it. */
+const NOW = new Date('2026-10-01T00:00:00.000Z')
+
 const daysAgo = (days: number): string =>
-  new Date(Date.now() - days * MILLISECONDS_PER_DAY).toISOString()
+  new Date(NOW.getTime() - days * MILLISECONDS_PER_DAY).toISOString()
 
 /** A log stored at the location, a day ago unless `overrides` says otherwise. */
 const storedLog = (overrides: Partial<Log> = {}): Log => ({
@@ -67,11 +70,17 @@ const lastSavedLogs = (): Log[] => logsRepository.saveLogs.mock.lastCall?.[0] as
 
 beforeEach(() => {
   vi.resetAllMocks()
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(NOW)
   sessionJobIdApi.getLastSessionJobId.mockResolvedValue(4)
   sessionJobIdApi.saveLastSessionJobId.mockResolvedValue(undefined)
   logsRepository.getLogs.mockResolvedValue({ logs: [], selfReports: [] })
   logsRepository.saveLogs.mockResolvedValue(undefined)
   logsRepository.deleteLogs.mockResolvedValue(undefined)
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('createSelfLogReportRepository', () => {
@@ -101,6 +110,15 @@ describe('createSelfLogReportRepository', () => {
     expect(logsRepository.getLogs).toHaveBeenCalledWith(SELF_REPORTS_LOCATION)
     expect(logsRepository.saveLogs).toHaveBeenCalledExactlyOnceWith([recentLog])
     expect(logsRepository.deleteLogs).not.toHaveBeenCalled()
+  })
+
+  it('should keep a log exactly retentionDays old, and leave out one a millisecond older', async () => {
+    const retentionLimitLog = storedLog({ date: '2026-09-21T00:00:00.000Z' })
+    mockStoredLogs([storedLog({ date: '2026-09-20T23:59:59.999Z' }), retentionLimitLog])
+
+    await createSelfLogReportRepository(options)
+
+    expect(logsRepository.saveLogs).toHaveBeenCalledExactlyOnceWith([retentionLimitLog])
   })
 
   it('should delete the logs of its location when they are all older than retentionDays', async () => {

@@ -130,7 +130,7 @@ Container parameters are given as `<external>:<internal>` for ports and volumes.
 | `SERVER_LOGS_DIR_PATH`                | `/server_logs`             | Directory the backend writes its own logs under: the self reports, in its `self_reports` subdirectory. Scanned for `.jsonl` files next to `LOGS_DIR_PATH` when `SAVE_SELF_REPORTS_TO_FILE=true`, and unused otherwise. Normally left as is and controlled via the volume. Keep it outside `LOGS_DIR_PATH`, otherwise its files are scanned twice. |
 | `SELF_REPORTS_RETENTION_DAYS`         | `10`                       | Self-report lines older than this many days are pruned once at each server start. |
 
-The Telegram job only starts when `LOGS_NOTIFIER_SCHEDULE_REGEX`, `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES`, `TELEGRAM_CHAT_ID` and `TELEGRAM_BOT_TOKEN` are all set and valid. Otherwise it is silently disabled.
+The Telegram job only starts when `LOGS_NOTIFIER_SCHEDULE_REGEX`, `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES`, `TELEGRAM_CHAT_ID` and `TELEGRAM_BOT_TOKEN` are all set. Otherwise it is disabled. Once they are, an invalid `LOGS_NOTIFIER_SCHEDULE_REGEX` or `LOGS_NOTIFIER_TIMEZONE` stops the server at startup.
 
 ### Volumes
 
@@ -180,8 +180,9 @@ With `HAS_AUTHENTICATION=true`:
 
 - Until a user exists, the UI offers a sign-up form. **Only the very first user can sign up, and becomes the admin.** Further sign-ups are refused.
 - Passwords are hashed with bcrypt and stored in `/app/data/users.db`.
-- Sessions use a JWT in an `httpOnly` cookie valid for 24 hours. The signing secret is regenerated at every start, so **restarting the container logs everyone out**.
-- The cookie is only marked `secure` when `SERVER_URL` is not `localhost`, so use HTTPS for any public deployment.
+- Sessions use a JWT in an `httpOnly` cookie, both valid for 24 hours. The signing secret is regenerated at every start, so **restarting the container logs everyone out**.
+- Login and sign-up are limited to 5 attempts a minute per client address. Behind a reverse proxy, every client has the address of the proxy, so the limit is shared by all of them.
+- The cookie is only marked `secure` when `SERVER_URL` uses `https://`, so use HTTPS for any public deployment.
 
 With `HAS_AUTHENTICATION=false`, no auth routes exist and anyone with network access can read your logs. Only use this behind something that already authenticates (VPN, reverse proxy with SSO, etc.).
 
@@ -200,7 +201,7 @@ environment:
   - LOGS_NOTIFIER_TIMEZONE=UTC+2 # optional, UTC by default
 ```
 
-On each run, Echo sends the matching logs written since the previous run. The first run only records a checkpoint (in `/app/data/last_logs_check.json`) and sends nothing. Messages are capped at Telegram's 4096 characters; overflow is summarized as "N other logs to see inside the console". Times in messages are shown in `LOGS_NOTIFIER_TIMEZONE` (UTC by default), labeled with their offset (e.g. `2026-01-01 12:00:00 UTC+2`).
+On each run, Echo sends the matching logs written since the previous run, each one once. The first run only records a checkpoint (in `/app/data/last_logs_check.json`) and sends nothing. With `SAVE_SELF_REPORTS_TO_FILE=true`, the lines Echo cannot read are reported as `WARNING` logs, dated from the last time they were read: when `WARNING` is watched, they are sent on every run until the file holding them is fixed. Messages are capped at Telegram's 4096 characters; overflow is summarized as "N other logs to see inside the console". Times in messages are shown in `LOGS_NOTIFIER_TIMEZONE` (UTC by default), labeled with their offset (e.g. `2026-01-01 12:00:00 UTC+2`).
 
 ## HTTPS
 

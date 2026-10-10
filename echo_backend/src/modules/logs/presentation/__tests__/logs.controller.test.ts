@@ -13,6 +13,9 @@ import { createLogsController } from '../logs.controller.js'
 
 vi.mock('../../application/getFilteredLogs.js')
 
+/** The `fromDate` the client sends, and the date of the logs. */
+const FROM_DATE = '2026-01-01T00:00:00.000Z'
+
 describe('LogsController.getLogs', () => {
   const mockReply = (): FastifyReply<{ Reply: Log[] | EchoError }> => {
     const status = vi.fn().mockReturnThis()
@@ -33,7 +36,7 @@ describe('LogsController.getLogs', () => {
   const mockLogs: Log[] = [
     {
       id: '1',
-      date: new Date().toISOString(),
+      date: FROM_DATE,
       location: '/logs/f.jsonl',
       locationName: 'f',
       groupName: 'grp',
@@ -87,7 +90,7 @@ describe('LogsController.getLogs', () => {
 
   it('should return 400 if an invalid log category is given', async () => {
     const request = mockRequest({
-      fromDate: new Date().toISOString(),
+      fromDate: FROM_DATE,
       logCategories: 'Invalid_log_category' as LogCategory
     })
     const reply = mockReply()
@@ -102,7 +105,7 @@ describe('LogsController.getLogs', () => {
   })
 
   it('should return 200 with logs when request is valid', async () => {
-    const request = mockRequest({ fromDate: new Date().toISOString() })
+    const request = mockRequest({ fromDate: FROM_DATE })
     const reply = mockReply()
 
     mockGetFilteredLogs.mockResolvedValue(mockLogs)
@@ -118,8 +121,26 @@ describe('LogsController.getLogs', () => {
     expect(reply.send).toHaveBeenCalledWith(mockLogs)
   })
 
+  it('should look the logs up between fromDate and toDate', async () => {
+    const request = mockRequest({
+      fromDate: '2026-01-01T00:00:00.000Z',
+      toDate: '2026-01-02T00:00:00.000Z',
+      logCategories: LogCategoryConst.ERROR
+    })
+    mockGetFilteredLogs.mockResolvedValue([])
+
+    await LogsController.getLogs(request, mockReply())
+
+    expect(mockGetFilteredLogs).toHaveBeenCalledWith(logsRepository, selfReportRepository, {
+      fromDate: new Date('2026-01-01T00:00:00.000Z'),
+      toDate: new Date('2026-01-02T00:00:00.000Z'),
+      categories: [LogCategoryConst.ERROR],
+      searchFilters: []
+    })
+  })
+
   it('should return 200 with an empty array when no logs found', async () => {
-    const request = mockRequest({ fromDate: new Date().toISOString() })
+    const request = mockRequest({ fromDate: FROM_DATE })
     const reply = mockReply()
 
     mockGetFilteredLogs.mockResolvedValue([])

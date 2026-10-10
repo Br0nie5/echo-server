@@ -8,8 +8,8 @@ Registered only when `HAS_AUTHENTICATION=true`. Responses have the shape `{ "suc
 
 | Method | Path | Body | Responses |
 | ------ | ---- | ---- | --------- |
-| POST | `/auth/signup` | `{ username, password }` | `200` created and logged in; `403` a user already exists |
-| POST | `/auth/login` | `{ username, password }` | `200`; `401` invalid credentials |
+| POST | `/auth/signup` | `{ username, password }` | `200` created and logged in; `403` a user already exists; `429` too many attempts |
+| POST | `/auth/login` | `{ username, password }` | `200`; `401` invalid credentials; `429` too many attempts |
 | GET | `/auth/check` | none | `200` valid session; `401` invalid session, or no user exists yet (the message tells the UI to show sign-up) |
 | POST | `/auth/logout` | none | `200`, clears the cookie |
 
@@ -22,6 +22,7 @@ Requires a valid session when authentication is enabled.
 | Query parameter | Required | Description |
 | --------------- | :------: | ----------- |
 | `fromDate` | yes | ISO 8601 date-time. Only logs at or after it are returned. |
+| `toDate` | no | ISO 8601 date-time. Only logs before it are returned, it excluded. |
 | `logCategories` | no | One of `SUCCESS`, `INFO`, `WARNING`, `ERROR`; repeat the parameter for several. |
 | `logSearch` | no | Free-text filter. |
 
@@ -51,7 +52,7 @@ Each returned log:
 
 `location` is where the log is stored (the path of its file on the server) and `locationName` its short name, the one the app shows: the name of the file without its extension. A search can target `locationName`, `groupName`, `jobId` or `message` with `key:` (`locationName:prune`).
 
-Errors use the `EchoError` schema: `400` invalid params, `401` unauthenticated, `500` server error.
+Errors use the `EchoError` schema: `400` invalid params, `401` unauthenticated, `429` too many login or sign-up attempts from one address (5 a minute), `500` server error.
 
 ## Changing the API
 

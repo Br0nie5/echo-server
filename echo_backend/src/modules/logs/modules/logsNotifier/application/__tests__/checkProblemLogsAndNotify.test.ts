@@ -1,5 +1,5 @@
 import type { Log, LogCategory } from '@echo/utilities'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../../../application/getFilteredLogs.js')
 
@@ -31,6 +31,8 @@ const checkDateRepository = { getLastCheckDate: vi.fn(), saveLastCheckDate: vi.f
 const selfReportRepository = { saveSelfReports: vi.fn() }
 const WATCHED = ['ERROR', 'WARNING'] as LogCategory[]
 const PREVIOUS_CHECK = { lastCheckDate: new Date('2026-01-01T00:00:00.000Z') }
+/** When the check being tested runs: it looks at the logs from `PREVIOUS_CHECK` up to it. */
+const CHECK_DATE = new Date('2026-01-01T00:30:00.000Z')
 
 const check = (): Promise<void> =>
   checkProblemLogsAndNotify({
@@ -46,7 +48,13 @@ const check = (): Promise<void> =>
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(CHECK_DATE)
   notifierService.getMessageSizeLimit.mockReturnValue(4096)
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('checkProblemLogsAndNotify', () => {
@@ -57,9 +65,8 @@ describe('checkProblemLogsAndNotify', () => {
 
     expect(getFilteredLogs).not.toHaveBeenCalled()
     expect(notifierService.notify).not.toHaveBeenCalled()
-    expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledTimes(1)
-    expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledWith({
-      lastCheckDate: expect.any(Date)
+    expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledExactlyOnceWith({
+      lastCheckDate: CHECK_DATE
     })
   })
 
@@ -71,6 +78,7 @@ describe('checkProblemLogsAndNotify', () => {
 
     expect(getFilteredLogs).toHaveBeenCalledWith(logsRepository, logsSelfReportRepository, {
       fromDate: PREVIOUS_CHECK.lastCheckDate,
+      toDate: CHECK_DATE,
       categories: WATCHED,
       searchFilters: []
     })
@@ -78,7 +86,9 @@ describe('checkProblemLogsAndNotify', () => {
       'Logs from device test-device:\n\n\n[1] [2026-01-01 12:00:00 UTC+2] [ERROR] - worker > Something broke'
     )
     expect(selfReportRepository.saveSelfReports).not.toHaveBeenCalled()
-    expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledTimes(1)
+    expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledExactlyOnceWith({
+      lastCheckDate: CHECK_DATE
+    })
   })
 
   it('should notify a message within the size limit of the notifier', async () => {
@@ -104,14 +114,16 @@ describe('checkProblemLogsAndNotify', () => {
     expect(notifierService.notify).not.toHaveBeenCalled()
     expect(selfReportRepository.saveSelfReports).toHaveBeenCalledWith([
       {
-        date: expect.any(Date),
+        date: CHECK_DATE,
         message:
           'The problem logs were not notified: the notifier takes messages of 10 characters at most, which is not enough for any message',
         level: 'warning',
         reportedFile: 'checkProblemLogsAndNotify'
       }
     ])
-    expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledTimes(1)
+    expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledExactlyOnceWith({
+      lastCheckDate: CHECK_DATE
+    })
   })
 
   it('should not notify when no problem logs are found, and still save the date', async () => {
@@ -121,7 +133,9 @@ describe('checkProblemLogsAndNotify', () => {
     await check()
 
     expect(notifierService.notify).not.toHaveBeenCalled()
-    expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledTimes(1)
+    expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledExactlyOnceWith({
+      lastCheckDate: CHECK_DATE
+    })
   })
 
   it('should not save the date when notifying fails', async () => {

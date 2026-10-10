@@ -38,12 +38,13 @@ export const createLogsController = (
       return reply.status(error.statusCode).send(error)
     }
 
-    const { fromDate, logCategories, logSearch } = parsedParams.data
+    const { fromDate, toDate, logCategories, logSearch } = parsedParams.data
 
     const logSearchFilters = parseLogSearchInput(logSearch ?? '')
 
     const logs = await getFilteredLogs(logsRepository, selfReportRepository, {
       fromDate,
+      toDate,
       categories: logCategories,
       searchFilters: logSearchFilters
     })

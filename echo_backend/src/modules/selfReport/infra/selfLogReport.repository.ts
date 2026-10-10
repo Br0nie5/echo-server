@@ -34,7 +34,7 @@ export interface CreateSelfLogReportRepositoryOptions {
  * ```ts
  * const selfReportRepository = await createSelfLogReportRepository({
  *   logsRepository,
- *   sessionJobIdApi: createFileSessionJobIdApi(selfReportsConfig),
+ *   sessionJobIdApi: createFileSessionJobIdApi(selfReportsConfig, filesService),
  *   selfReportsConfig,
  *   selfReportsLocation: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
  *   selfReportsLocationName: 'parseLogFile',

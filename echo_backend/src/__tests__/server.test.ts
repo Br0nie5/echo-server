@@ -1,8 +1,6 @@
-import net from 'net'
-
 import type * as FastifyModule from 'fastify'
 import Fastify, { type FastifyInstance } from 'fastify'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 
 vi.mock('../plugins/registerAuthRoutes.js')
 vi.mock('../plugins/registerDocumentation.js')
@@ -10,7 +8,7 @@ vi.mock('../plugins/registerFrontend.js')
 vi.mock('../plugins/registerLogsNotifier.js')
 vi.mock('../plugins/registerLogsRoutes.js')
 vi.mock('../plugins/registerSecurity.js')
-vi.mock('../plugins/utils/getSelfReportRepository.js')
+vi.mock('../modules/selfReport/infra/selfReport.repository.js')
 vi.mock('../shared/config/loadBackConfig.js')
 // The server is created without the options `buildServer` asks for: its logger would write to the
 // output of the tests, and the TLS certificate of the tests is not a real one, which the HTTPS
@@ -23,13 +21,13 @@ vi.mock('fastify', async (importOriginal) => {
 })
 
 import type { SelfReportRepository } from '../modules/selfReport/domain/selfReport.repository.js'
+import { createSelfReportRepository as actualCreateSelfReportRepository } from '../modules/selfReport/infra/selfReport.repository.js'
 import { registerAuthRoutes } from '../plugins/registerAuthRoutes.js'
 import { registerDocumentation } from '../plugins/registerDocumentation.js'
 import { registerFrontend } from '../plugins/registerFrontend.js'
 import { registerLogsNotifier } from '../plugins/registerLogsNotifier.js'
 import { registerLogsRoutes } from '../plugins/registerLogsRoutes.js'
 import { registerSecurity } from '../plugins/registerSecurity.js'
-import { getSelfReportRepository as actualGetSelfReportRepository } from '../plugins/utils/getSelfReportRepository.js'
 import { buildServer, startServer } from '../server.js'
 import type { BackConfig } from '../shared/config/backConfig.js'
 import { loadBackConfig as actualLoadBackConfig } from '../shared/config/loadBackConfig.js'
@@ -40,11 +38,11 @@ import {
   getMockNotificationConfig,
   getMockSelfReportsConfig,
   getMockServerConfig
-} from '../test/mocks/configs.js'
-import { getMockFilesService } from '../test/mocks/filesService.js'
+} from '../test/mocks/mockConfigs.js'
+import { getMockFilesService } from '../test/mocks/mockFilesService.js'
 
 const loadBackConfig = vi.mocked(actualLoadBackConfig)
-const getSelfReportRepository = vi.mocked(actualGetSelfReportRepository)
+const createSelfReportRepository = vi.mocked(actualCreateSelfReportRepository)
 
 const selfReportRepository: SelfReportRepository = { saveSelfReports: vi.fn() }
 const filesService = getMockFilesService()
@@ -73,7 +71,7 @@ describe('server', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    getSelfReportRepository.mockResolvedValue(selfReportRepository)
+    createSelfReportRepository.mockResolvedValue(selfReportRepository)
     servers = []
   })
 
@@ -92,16 +90,18 @@ describe('server', () => {
       expect(Fastify).toHaveBeenCalledWith({ logger: true, https: config.server.tls })
       expect(registerSecurity).toHaveBeenCalledExactlyOnceWith(server, config)
       expect(registerDocumentation).toHaveBeenCalledExactlyOnceWith(server, config.server)
-      expect(getSelfReportRepository).toHaveBeenCalledExactlyOnceWith(
-        server,
-        expect.anything(),
+      expect(createSelfReportRepository).toHaveBeenCalledExactlyOnceWith({
+        logsRepository: expect.anything(),
         filesService,
-        config.selfReports,
-        expect.any(Function)
-      )
-      expect(getSelfReportRepository.mock.calls[0][4](getMockSelfReportsConfig())).toBe(
-        getMockSelfReportsConfig().parseLogFileSelfReportFileName
-      )
+        selfReportsConfig: config.selfReports,
+        getSelfReportFileName: expect.any(Function),
+        logger: server.log
+      })
+      expect(
+        createSelfReportRepository.mock.calls[0][0].getSelfReportFileName(
+          getMockSelfReportsConfig()
+        )
+      ).toBe(getMockSelfReportsConfig().parseLogFileSelfReportFileName)
       expect(registerAuthRoutes).toHaveBeenCalledExactlyOnceWith(server, config, filesService)
       expect(registerLogsRoutes).toHaveBeenCalledExactlyOnceWith(
         server,
@@ -146,39 +146,76 @@ describe('server', () => {
   })
 
   describe('startServer', () => {
+    /**
+     * Makes the next server built record what it logs, and answer `listen` with `listen` instead of
+     * opening a port.
+     */
+    const stubNextServer = async (
+      listen: () => Promise<string>
+    ): Promise<{ listen: Mock; logInfo: Mock; logError: Mock }> => {
+      const { default: actualFastify } = await vi.importActual<typeof FastifyModule>('fastify')
+      const stubs = { listen: vi.fn(listen), logInfo: vi.fn(), logError: vi.fn() }
+
+      vi.mocked(Fastify).mockImplementationOnce((() => {
+        const server = actualFastify()
+        vi.spyOn(server, 'listen').mockImplementation(stubs.listen as FastifyInstance['listen'])
+        vi.spyOn(server.log, 'info').mockImplementation(stubs.logInfo)
+        vi.spyOn(server.log, 'error').mockImplementation(stubs.logError)
+        return server
+      }) as unknown as typeof Fastify)
+
+      return stubs
+    }
+
     it('should listen on the host and port of the config and say where it is reached', async () => {
       const config = getMockBackConfig({
-        server: getMockServerConfig({ host: '127.0.0.1', port: 0 })
+        server: getMockServerConfig({ host: '127.0.0.1', port: 4000 })
       })
       loadBackConfig.mockResolvedValue(config)
-      const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => {})
+      const { listen, logInfo } = await stubNextServer(async () => 'http://127.0.0.1:4000')
 
       await startServer()
-      const server = getBuiltServer()
+      getBuiltServer()
 
-      expect(server.server.listening).toBe(true)
-      expect(server.server.address()).toMatchObject({ address: '127.0.0.1' })
-      expect(consoleLog).toHaveBeenCalledWith(`Api is accessible though ${config.server.apiUrl}`)
-      expect(consoleLog).toHaveBeenCalledWith(`App is accessible though ${config.server.appUrl}`)
+      expect(listen).toHaveBeenCalledExactlyOnceWith({ port: 4000, host: '127.0.0.1' })
+      expect(logInfo).toHaveBeenCalledWith(`Api is accessible through ${config.server.apiUrl}`)
+      expect(logInfo).toHaveBeenCalledWith(`App is accessible through ${config.server.appUrl}`)
     })
 
-    it('should exit the process when the server cannot listen', async () => {
-      const portHolder = net.createServer()
-      await new Promise<void>((resolve) => portHolder.listen(0, '127.0.0.1', resolve))
-      loadBackConfig.mockResolvedValue(
-        getMockBackConfig({
-          server: getMockServerConfig({
-            host: '127.0.0.1',
-            port: (portHolder.address() as net.AddressInfo).port
-          })
-        })
-      )
+    it('should exit the process when the config cannot be loaded', async () => {
+      const error = new Error('Missing required environment variable: HTTP_PORT')
+      loadBackConfig.mockRejectedValue(error)
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+      const exit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
+
+      await startServer()
+
+      expect(consoleError).toHaveBeenCalledWith('The server could not be built:', error)
+      expect(exit).toHaveBeenCalledWith(1)
+    })
+
+    it('should exit the process when the server cannot be built', async () => {
+      loadBackConfig.mockResolvedValue(getFullConfig())
+      vi.mocked(registerSecurity).mockRejectedValueOnce(new Error('plugin failure'))
+      vi.spyOn(console, 'error').mockImplementation(() => {})
       const exit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
 
       await startServer()
       getBuiltServer()
-      await new Promise((resolve) => portHolder.close(resolve))
 
+      expect(exit).toHaveBeenCalledWith(1)
+    })
+
+    it('should log the error and exit the process when the server cannot listen', async () => {
+      const error = Object.assign(new Error('listen EADDRINUSE'), { code: 'EADDRINUSE' })
+      loadBackConfig.mockResolvedValue(getMockBackConfig())
+      const { logError } = await stubNextServer(() => Promise.reject(error))
+      const exit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
+
+      await startServer()
+      getBuiltServer()
+
+      expect(logError).toHaveBeenCalledWith(error)
       expect(exit).toHaveBeenCalledWith(1)
     })
   })

@@ -32,8 +32,18 @@ export type ServerConfig = {
   frontendDistDirPath: string
 }
 
-/** What the authentication needs: its session cookie and where the users are stored. */
+/** What the authentication needs: its session, its cookie, its limits and where the users are stored. */
 export type AuthConfig = {
+  /** How long a session lasts, both its cookie and its JWT. */
+  sessionDurationSeconds: number
+  /**
+   * Limit of the login and sign-up attempts, so passwords cannot be guessed at speed: how many
+   * times credentials may be sent from one address within a time window.
+   */
+  credentialsAttemptsLimit: {
+    maxAttempts: number
+    timeWindowMilliseconds: number
+  }
   /** Name of the cookie holding the JWT of the session. */
   cookieName: string
   cookieSerializeOptions: CookieSerializeOptions
@@ -112,9 +122,9 @@ export type NotificationConfig = {
  * name from it:
  *
  * ```ts
- * const config = loadBackConfig()
- * const logsFilesApi = createLogsFilesApi(config.logs)
- * const usersDb = await createUsersDb(config.auth)
+ * const config = await loadBackConfig(filesService)
+ * const logsFilesApi = createLogsFilesApi(config.logs, filesService)
+ * const notifierService = createNotifierService(config.notification)
  * ```
  *
  * `auth`, `selfReports` and `notification` are missing when what they configure is disabled: whoever takes

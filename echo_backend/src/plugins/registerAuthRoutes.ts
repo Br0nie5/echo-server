@@ -1,3 +1,5 @@
+import rateLimit from '@fastify/rate-limit'
+
 import { createAuthUsersDbRepository } from '../modules/auth/infra/authUsersDb.repository.js'
 import { createUsersDb } from '../modules/auth/infra/users.db.js'
 import { createAuthController } from '../modules/auth/presentation/auth.controller.js'
@@ -11,7 +13,9 @@ import type { EchoServer } from './types/echoServer.js'
  * Registers the routes of the authentication under `apiRoutePrefix`, on top of the users
  * database, only when authentication is enabled.
  *
- * The file of the database is prepared through `filesService`.
+ * The file of the database is prepared through `filesService`. `@fastify/rate-limit` is registered
+ * for the routes that ask for it only: those receiving credentials, limited to the
+ * `credentialsAttemptsLimit` of the auth config.
  */
 export const registerAuthRoutes = async (
   server: EchoServer,
@@ -24,8 +28,10 @@ export const registerAuthRoutes = async (
   }
 
   const authRepository = createAuthUsersDbRepository(await createUsersDb(authConfig, filesService))
+  await server.register(rateLimit, { global: false })
   await server.register(authRoutes, {
     prefix: apiRoutePrefix,
-    controller: createAuthController(authRepository, authConfig)
+    controller: createAuthController(authRepository, authConfig),
+    authConfig
   })
 }

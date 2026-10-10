@@ -15,7 +15,9 @@ import type { CheckDateApi } from './fileCheckDate.api.js'
  * same as when the logs were never checked.
  *
  * ```ts
- * const checkDateRepository = createFileCheckDateRepository(createFileCheckDateApi(logsNotifierConfig))
+ * const checkDateRepository = createFileCheckDateRepository(
+ *   createFileCheckDateApi(logsNotifierConfig, filesService)
+ * )
  * ```
  */
 export const createFileCheckDateRepository = (checkDateApi: CheckDateApi): CheckDateRepository => ({

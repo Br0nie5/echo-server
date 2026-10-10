@@ -32,10 +32,19 @@ describe('parseLogsNotifierConfig', () => {
     }
   )
 
-  it('should not define the logs notifier config if the schedule is not a cron expression', () => {
-    expect(
+  it('should throw if the schedule is not a cron expression', () => {
+    expect(() =>
       parseLogsNotifierConfig(
         { ...CRON_ENV, LOGS_NOTIFIER_SCHEDULE_REGEX: 'invalid-cron-expression' },
+        CRON_CONSTANTS
+      )
+    ).toThrow('LOGS_NOTIFIER_SCHEDULE_REGEX: Invalid cron expression: invalid-cron-expression')
+  })
+
+  it('should not read the schedule if no category is watched', () => {
+    expect(
+      parseLogsNotifierConfig(
+        { LOGS_NOTIFIER_SCHEDULE_REGEX: 'invalid-cron-expression' },
         CRON_CONSTANTS
       )
     ).toBeUndefined()

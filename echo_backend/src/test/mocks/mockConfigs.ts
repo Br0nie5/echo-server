@@ -25,6 +25,8 @@ export const getMockServerConfig = (overrides: Partial<ServerConfig> = {}): Serv
 
 /** An `AuthConfig` for the tests, with `overrides` on top of its defaults. */
 export const getMockAuthConfig = (overrides: Partial<AuthConfig> = {}): AuthConfig => ({
+  sessionDurationSeconds: 24 * 60 * 60,
+  credentialsAttemptsLimit: { maxAttempts: 5, timeWindowMilliseconds: 60 * 1000 },
   cookieName: 'test-cookie',
   cookieSerializeOptions: { httpOnly: true, path: '/' },
   usersDbFilePath: '/fake/data/users.db',

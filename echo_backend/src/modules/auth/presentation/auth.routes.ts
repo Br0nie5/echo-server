@@ -1,6 +1,8 @@
 import type { AuthToken, LoginRequest, SignUpRequest } from '@echo/utilities'
 import type { FastifyInstance, FastifyPluginAsync, FastifyPluginOptions } from 'fastify'
 
+import type { AuthConfig } from '../../../shared/config/backConfig.js'
+
 import type { AuthController } from './auth.controller.js'
 import {
   AuthTokenJsonSchema,
@@ -11,13 +13,27 @@ import {
 /** Options of the `authRoutes` plugin. */
 export interface AuthRoutesOptions extends FastifyPluginOptions {
   controller: AuthController
+  /** Gives how many times the routes receiving credentials may be called from one address. */
+  authConfig: AuthConfig
 }
 
-/** Registers the `/auth/*` routes, and the schemas of `auth.schemas.ts` they refer to. */
+/**
+ * Registers the `/auth/*` routes, and the schemas of `auth.schemas.ts` they refer to.
+ *
+ * The routes receiving credentials, the sign up and the login, answer a 429 once the
+ * `credentialsAttemptsLimit` of `authConfig` is reached, when `@fastify/rate-limit` is registered on the server.
+ */
 export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (
   server: FastifyInstance,
-  { controller }
+  {
+    controller,
+    authConfig: {
+      credentialsAttemptsLimit: { maxAttempts, timeWindowMilliseconds }
+    }
+  }
 ): Promise<void> => {
+  const credentialsRateLimit = { max: maxAttempts, timeWindow: timeWindowMilliseconds }
+
   server.addSchema(AuthTokenJsonSchema)
   server.addSchema(LoginRequestJsonSchema)
   server.addSchema(SignUpRequestJsonSchema)
@@ -30,11 +46,13 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (
       body: { $ref: 'SignUpRequest#' },
       response: {
         200: { $ref: 'AuthToken#' },
-        403: { $ref: 'AuthToken#' }
+        403: { $ref: 'AuthToken#' },
+        429: { description: 'Too many attempts from this address.', $ref: 'EchoError#' }
       },
       tags: ['Authentication'],
       summary: 'Sign up and set session cookie.'
     },
+    config: { rateLimit: credentialsRateLimit },
     handler: controller.signUp
   })
 
@@ -46,11 +64,13 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (
       body: { $ref: 'LoginRequest#' },
       response: {
         200: { $ref: 'AuthToken#' },
-        401: { $ref: 'AuthToken#' }
+        401: { $ref: 'AuthToken#' },
+        429: { description: 'Too many attempts from this address.', $ref: 'EchoError#' }
       },
       tags: ['Authentication'],
       summary: 'Authenticate and set session cookie.'
     },
+    config: { rateLimit: credentialsRateLimit },
     handler: controller.login
   })
 

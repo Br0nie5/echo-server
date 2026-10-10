@@ -1,4 +1,3 @@
-import { constants as fsConstants } from 'fs'
 import nodeFs from 'fs/promises'
 import path from 'path'
 
@@ -7,8 +6,10 @@ import { FileDoesNotExistError } from './fileDoesNotExistError.js'
 /**
  * Service reading and writing the files of the machine, as text or as lines of text.
  *
- * It is the one part of the backend that reaches the file system (`arch:check` refuses `fs`
- * anywhere else), shared by whatever stores in files. It knows nothing of what the files hold nor
+ * It is the one part of the backend's own code that reaches the file system (`arch:check` refuses
+ * `fs` anywhere else), shared by whatever stores in files. Some libraries reach it on their own,
+ * from a path the config gives them: `better-sqlite3` (the users database), `dotenv` (the
+ * `.env.<mode>` file) and `@fastify/static` (the built frontend). It knows nothing of what the files hold nor
  * of how they are named: which files to look for is said by whoever asks.
  */
 export interface FilesService {
@@ -53,15 +54,17 @@ export interface FilesService {
    * Makes `content` the whole content of the file at `filePath`.
    *
    * The file changes in one step: whoever reads it meanwhile gets either its previous content or
-   * the new one, never a part of it. Throws when the file cannot be written, the file then being
-   * left as it was.
+   * the new one, never a part of it. The writes of one file are done one after the other, in the
+   * order they are asked for: a write waits for the previous one to end, and throws, writing
+   * nothing, when it waits for longer than the timeout the service is built with. Throws when the
+   * file cannot be written, the file then being left as it was.
    */
   replaceFileContent: (filePath: string, content: string) => Promise<void>
   /**
    * Makes `lines` the whole content of the file at `filePath`, one line each.
    *
-   * The file changes in one step, as with `replaceFileContent`. Throws when the file cannot be
-   * written, the file then being left as it was.
+   * The file changes in one step, after the previous write of the file, as with
+   * `replaceFileContent`, and throws in the same cases.
    */
   replaceFileLines: (filePath: string, lines: string[]) => Promise<void>
   /**
@@ -75,21 +78,35 @@ export interface FilesService {
 /** The subset of `fs/promises` used, so it can be replaced in tests. */
 export type FileSystem = Pick<
   typeof nodeFs,
-  'readdir' | 'access' | 'readFile' | 'mkdir' | 'writeFile' | 'rename' | 'rm' | 'chmod'
+  'readdir' | 'readFile' | 'mkdir' | 'writeFile' | 'rename' | 'rm' | 'chmod'
 >
+
+/** How long a write waits for the previous write of the same file by default, in milliseconds. */
+const DEFAULT_WRITE_WAIT_TIMEOUT_MILLISECONDS = 10_000
 
 /**
  * Builds the files service, on top of `fileSystem` (the real file system by default).
  *
- * It is meant to be built once, when the server starts, and handed to whatever reads or writes
- * files:
+ * A write of a file waits for the previous write of that file to end for
+ * `writeWaitTimeoutMilliseconds` at most (10 seconds by default). The writes are only queued within
+ * this service: it is meant to be built once, when the server starts, and handed to whatever reads
+ * or writes files, so that no two writes of a file overlap:
  *
  * ```ts
  * const filesService = createFilesService()
  * const lines = await filesService.getFileLines('/logs/backup/nightly.jsonl')
  * ```
  */
-export const createFilesService = (fileSystem: FileSystem = nodeFs): FilesService => {
+export const createFilesService = (
+  fileSystem: FileSystem = nodeFs,
+  writeWaitTimeoutMilliseconds: number = DEFAULT_WRITE_WAIT_TIMEOUT_MILLISECONDS
+): FilesService => {
+  /**
+   * The promise of the last write asked for each file being written, which resolves when that write
+   * and the ones before it end, failed or not: it never rejects.
+   */
+  const lastWritePromiseByFilePath = new Map<string, Promise<void>>()
+
   const getAllFilesPaths = async (directoryPath: string): Promise<string[]> => {
     const entries = await fileSystem.readdir(directoryPath, { withFileTypes: true })
 
@@ -111,16 +128,35 @@ export const createFilesService = (fileSystem: FileSystem = nodeFs): FilesServic
   const joinLines = (lines: string[]): string => lines.map((line) => `${line}\n`).join('')
 
   const getFileContent = async (filePath: string): Promise<string> => {
-    await fileSystem.access(filePath, fsConstants.F_OK).catch((error: NodeJS.ErrnoException) => {
-      throw error.code === 'ENOENT' ? new FileDoesNotExistError(filePath) : error
-    })
-
-    await fileSystem.access(filePath, fsConstants.R_OK)
-
-    return fileSystem.readFile(filePath, 'utf-8')
+    try {
+      return await fileSystem.readFile(filePath, 'utf-8')
+    } catch (error) {
+      throw (error as NodeJS.ErrnoException).code === 'ENOENT'
+        ? new FileDoesNotExistError(filePath)
+        : error
+    }
   }
 
-  const replaceFileContent = async (filePath: string, content: string): Promise<void> => {
+  const waitForPreviousWrite = (
+    previousWritePromise: Promise<void>,
+    filePath: string
+  ): Promise<void> =>
+    new Promise((resolve, reject) => {
+      const timeoutMessage =
+        `The previous write of ${filePath} ` +
+        `did not end within ${writeWaitTimeoutMilliseconds} ms`
+      const timeout = setTimeout(
+        () => reject(new Error(timeoutMessage)),
+        writeWaitTimeoutMilliseconds
+      )
+
+      void previousWritePromise.then(() => {
+        clearTimeout(timeout)
+        resolve()
+      })
+    })
+
+  const writeThroughTemporaryFile = async (filePath: string, content: string): Promise<void> => {
     // The files are read at any time: writing into the file itself would let a reader see it
     // half written, and take its cut line for a line of its own.
     const temporaryFilePath = `${filePath}.tmp`
@@ -134,6 +170,34 @@ export const createFilesService = (fileSystem: FileSystem = nodeFs): FilesServic
       await fileSystem.rm(temporaryFilePath, { force: true }).catch(() => undefined)
       throw error
     }
+  }
+
+  const replaceFileContent = (filePath: string, content: string): Promise<void> => {
+    const previousWritePromise = lastWritePromiseByFilePath.get(filePath)
+
+    const newWritePromise = (
+      previousWritePromise
+        ? waitForPreviousWrite(previousWritePromise, filePath)
+        : Promise.resolve()
+    ).then(() => writeThroughTemporaryFile(filePath, content))
+
+    // `newWritePromise` stops waiting for the previous write at the timeout, while that write may
+    // still be going on: the next write waits for both, so it never shares the temporary file with
+    // a write that is still going on.
+    const writePromises = Promise.all([
+      previousWritePromise,
+      newWritePromise.catch(() => undefined)
+    ]).then(() => undefined)
+
+    lastWritePromiseByFilePath.set(filePath, writePromises)
+
+    void writePromises.then(() => {
+      if (lastWritePromiseByFilePath.get(filePath) === writePromises) {
+        lastWritePromiseByFilePath.delete(filePath)
+      }
+    })
+
+    return newWritePromise
   }
 
   return {

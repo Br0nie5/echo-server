@@ -36,12 +36,8 @@ export const createSignUpFirstAdmin = (authRepository: AuthRepository): SignUpFi
   let isSignUpInProgress = false
 
   return async (username, password) => {
-    if (!(await canSignUp(authRepository))) {
-      throw new SignUpRefusedError('An account already exists.')
-    }
-
-    // No `await` between this check and the flag being set: it is what keeps two sign ups that
-    // both found no account from both going on.
+    // The flag is checked and set before any `await`: another sign up cannot slip in between, so
+    // the account check below never runs for two sign ups at once, however long it takes.
     if (isSignUpInProgress) {
       throw new SignUpRefusedError('Another sign up is in progress.')
     }
@@ -49,6 +45,10 @@ export const createSignUpFirstAdmin = (authRepository: AuthRepository): SignUpFi
     isSignUpInProgress = true
 
     try {
+      if (!(await canSignUp(authRepository))) {
+        throw new SignUpRefusedError('An account already exists.')
+      }
+
       await authRepository.createUser({ username, password, isAdmin: true })
     } finally {
       isSignUpInProgress = false

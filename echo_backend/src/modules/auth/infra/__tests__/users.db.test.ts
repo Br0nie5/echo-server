@@ -10,8 +10,8 @@ vi.mock('better-sqlite3', async (importOriginal) => {
   }
 })
 
-import { getMockAuthConfig } from '../../../../test/mocks/configs.js'
-import { getMockFilesService } from '../../../../test/mocks/filesService.js'
+import { getMockAuthConfig } from '../../../../test/mocks/mockConfigs.js'
+import { getMockFilesService } from '../../../../test/mocks/mockFilesService.js'
 import { createUsersDb } from '../users.db.js'
 
 const { default: InMemoryDatabase } = await vi.importActual<{ default: typeof Database }>(

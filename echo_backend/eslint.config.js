@@ -11,13 +11,13 @@ import tseslint from 'typescript-eslint'
 import prettierConfig from './prettier.config.js'
 
 export default tseslint.config([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'coverage']),
   {
-    files: ['**/*.{js,ts}'],
+    files: ['**/*.{js,ts,mts}'],
     extends: [js.configs.recommended, tseslint.configs.recommended],
     settings: {
       node: {
-        version: '>=22.16.0'
+        version: '>=24.0.0'
       },
       'import/resolver': {
         typescript: {
@@ -26,13 +26,16 @@ export default tseslint.config([
         }
       }
     },
-    ignores: ['coverage/*', '*.config.js', '*.config.ts'],
     languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
+      ecmaVersion: 2022,
+      globals: globals.node,
       parserOptions: {
         tsconfigRootDir: import.meta.dirname,
-        project: './tsconfig.json'
+        // The config files are out of the sources tsconfig.json compiles, so they are typed on
+        // their own.
+        projectService: {
+          allowDefaultProject: ['*.config.js', '*.config.ts', '.dependency-cruiser.mts']
+        }
       }
     },
     plugins: {
@@ -84,7 +87,7 @@ export default tseslint.config([
     }
   },
   {
-    files: ['eslint.config.js', 'vitest.config.ts', '**/__tests__/**/*'],
+    files: ['*.config.js', '*.config.ts', '.dependency-cruiser.mts', '**/__tests__/**/*'],
     rules: {
       'n/no-unpublished-import': 'off',
       'n/no-extraneous-import': 'off'

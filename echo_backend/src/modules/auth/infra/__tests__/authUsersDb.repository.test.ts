@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt'
 import type { Database } from 'better-sqlite3'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { createAuthUsersDbRepository } from '../authUsersDb.repository.js'
 import type { UserDto } from '../dto/user.dto.js'
@@ -13,6 +13,10 @@ const AuthRepository = createAuthUsersDbRepository(usersDb as unknown as Databas
 describe('createAuthUsersDbRepository', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
   describe('hasAnyUser', () => {
@@ -83,10 +87,26 @@ describe('createAuthUsersDbRepository', () => {
       expect(await AuthRepository.areCredentialsValid('admin', 'nope')).toBe(false)
     })
 
-    it('should be false for an unknown user', async () => {
+    it('should be false for an unknown user, after comparing the password to a hash of the same cost', async () => {
+      const compare = vi.spyOn(bcrypt, 'compare')
       get.mockReturnValueOnce(undefined)
 
       expect(await AuthRepository.areCredentialsValid('ghost', 'secret')).toBe(false)
+      expect(compare).toHaveBeenCalledExactlyOnceWith(
+        'secret',
+        expect.stringMatching(/^\$2b\$12\$/)
+      )
+    })
+
+    it('should make the hash an unknown user is compared to once', async () => {
+      const hash = vi.spyOn(bcrypt, 'hash')
+      const authRepository = createAuthUsersDbRepository(usersDb as unknown as Database)
+      get.mockReturnValueOnce(undefined).mockReturnValueOnce(undefined)
+
+      await authRepository.areCredentialsValid('ghost', 'secret')
+      await authRepository.areCredentialsValid('other ghost', 'secret')
+
+      expect(hash).toHaveBeenCalledOnce()
     })
   })
 })

@@ -1,8 +1,7 @@
-import { constants as fsConstants } from 'fs'
 import nodeFs from 'fs/promises'
 import path from 'path'
 
-import { describe, it, expect, vi } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 
 vi.mock('fs/promises', () => ({ default: { mkdir: vi.fn() } }))
 
@@ -37,18 +36,18 @@ const buildFileSystem = ({
 }): FileSystem =>
   ({
     readdir: vi.fn(async (directory: string) => directories[directory]),
-    access: vi.fn(async (filePath: string, mode: number) => {
+    readFile: vi.fn(async (filePath: string) => {
       if (missing.includes(filePath)) {
         throw fileSystemError('ENOENT')
       }
       if (unreachable.includes(filePath)) {
         throw fileSystemError('ENOTDIR')
       }
-      if (unreadable.includes(filePath) && mode === fsConstants.R_OK) {
+      if (unreadable.includes(filePath)) {
         throw fileSystemError('EACCES')
       }
+      return files[filePath]
     }),
-    readFile: vi.fn(async (filePath: string) => files[filePath]),
     mkdir: vi.fn(),
     writeFile: vi.fn(),
     rename: vi.fn(),
@@ -116,7 +115,6 @@ describe('FilesService', () => {
       await expect(createFilesService(fileSystem).getFileContent(FILE_PATH)).rejects.toThrow(
         new FileDoesNotExistError(FILE_PATH)
       )
-      expect(fileSystem.readFile).not.toHaveBeenCalled()
     })
 
     it('should throw the error of the file system when the file cannot be reached for another reason', async () => {
@@ -125,7 +123,6 @@ describe('FilesService', () => {
       await expect(createFilesService(fileSystem).getFileContent(FILE_PATH)).rejects.toThrow(
         'ENOTDIR'
       )
-      expect(fileSystem.readFile).not.toHaveBeenCalled()
     })
 
     it('should throw the error of the file system when the file exists but is not readable', async () => {
@@ -134,7 +131,6 @@ describe('FilesService', () => {
       await expect(createFilesService(fileSystem).getFileContent(FILE_PATH)).rejects.toThrow(
         'EACCES'
       )
-      expect(fileSystem.readFile).not.toHaveBeenCalled()
     })
   })
 
@@ -257,6 +253,123 @@ describe('FilesService', () => {
       await expect(
         createFilesService(fileSystem).replaceFileContent(FILE_PATH, 'content')
       ).rejects.toThrow('EXDEV')
+    })
+  })
+
+  describe('the writes of a file', () => {
+    /** A promise to resolve by hand, to hold a write of the file system until the test lets it go. */
+    const createDeferred = (): { promise: Promise<void>; resolve: () => void } => {
+      let resolve: () => void = () => undefined
+      const promise = new Promise<void>((resolvePromise) => {
+        resolve = resolvePromise
+      })
+      return { promise, resolve }
+    }
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('should wait for the previous write of the same file to end before writing', async () => {
+      const firstWriteFile = createDeferred()
+      const { fileSystem, steps } = buildRecordingFileSystem({
+        writeFile: vi.fn(async (_filePath, content) => {
+          if (content === 'first') {
+            await firstWriteFile.promise
+          }
+          steps.push(`writeFile ${content}`)
+        })
+      })
+      const filesService = createFilesService(fileSystem)
+
+      const firstWrite = filesService.replaceFileContent(FILE_PATH, 'first')
+      const secondWrite = filesService.replaceFileLines(FILE_PATH, ['second'])
+      await vi.waitFor(() => expect(fileSystem.writeFile).toHaveBeenCalledTimes(1))
+      firstWriteFile.resolve()
+      await Promise.all([firstWrite, secondWrite])
+
+      expect(steps).toEqual(['writeFile first', 'rename', 'writeFile second\n', 'rename'])
+    })
+
+    it('should not make the writes of other files wait', async () => {
+      const firstWriteFile = createDeferred()
+      const { fileSystem } = buildRecordingFileSystem({
+        writeFile: vi.fn(async (filePath) => {
+          if (filePath === TEMPORARY_FILE_PATH) {
+            await firstWriteFile.promise
+          }
+        })
+      })
+      const filesService = createFilesService(fileSystem)
+
+      const firstWrite = filesService.replaceFileContent(FILE_PATH, 'first')
+      await filesService.replaceFileContent('/data/other.json', 'other')
+
+      expect(fileSystem.rename).toHaveBeenCalledWith('/data/other.json.tmp', '/data/other.json')
+      firstWriteFile.resolve()
+      await firstWrite
+    })
+
+    it('should write after a previous write that failed', async () => {
+      const { fileSystem } = buildRecordingFileSystem({
+        writeFile: vi.fn().mockRejectedValueOnce(new Error('ENOSPC')).mockResolvedValue(undefined)
+      })
+      const filesService = createFilesService(fileSystem)
+
+      const firstWrite = filesService.replaceFileContent(FILE_PATH, 'first')
+      const secondWrite = filesService.replaceFileContent(FILE_PATH, 'second')
+
+      await expect(firstWrite).rejects.toThrow('ENOSPC')
+      await secondWrite
+      expect(fileSystem.rename).toHaveBeenCalledOnce()
+    })
+
+    it('should throw without writing when the previous write does not end within the timeout', async () => {
+      vi.useFakeTimers()
+      const stuckWriteFile = createDeferred()
+      const { fileSystem } = buildRecordingFileSystem({
+        writeFile: vi.fn(() => stuckWriteFile.promise)
+      })
+      const filesService = createFilesService(fileSystem, 1000)
+
+      const stuckWrite = filesService.replaceFileContent(FILE_PATH, 'stuck')
+      const waitingWrite = filesService.replaceFileContent(FILE_PATH, 'waiting')
+      const waitingWriteResult = expect(waitingWrite).rejects.toThrow(
+        `The previous write of ${FILE_PATH} did not end within 1000 ms`
+      )
+      await vi.advanceTimersByTimeAsync(1000)
+
+      await waitingWriteResult
+      expect(fileSystem.writeFile).toHaveBeenCalledOnce()
+      stuckWriteFile.resolve()
+      await stuckWrite
+    })
+
+    it('should make a write wait for the one still going on, even after a write that gave up waiting', async () => {
+      vi.useFakeTimers()
+      const stuckWriteFile = createDeferred()
+      const { fileSystem, steps } = buildRecordingFileSystem({
+        writeFile: vi.fn(async (_filePath, content) => {
+          if (content === 'stuck') {
+            await stuckWriteFile.promise
+          }
+          steps.push(`writeFile ${content}`)
+        })
+      })
+      const filesService = createFilesService(fileSystem, 1000)
+
+      const stuckWrite = filesService.replaceFileContent(FILE_PATH, 'stuck')
+      const gaveUpWrite = filesService
+        .replaceFileContent(FILE_PATH, 'gave up')
+        .catch(() => undefined)
+      await vi.advanceTimersByTimeAsync(1000)
+      await gaveUpWrite
+      const nextWrite = filesService.replaceFileContent(FILE_PATH, 'next')
+      await vi.advanceTimersByTimeAsync(500)
+      stuckWriteFile.resolve()
+      await Promise.all([stuckWrite, nextWrite])
+
+      expect(steps).toEqual(['writeFile stuck', 'rename', 'writeFile next', 'rename'])
     })
   })
 

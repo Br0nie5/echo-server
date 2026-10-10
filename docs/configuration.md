@@ -36,7 +36,7 @@ Parsed by [loadBackConfig.ts](../echo_backend/src/shared/config/loadBackConfig.t
 | `HTTP_PORT`     | yes | Integer between 1 and 65535. |
 | `LOGS_DIR_PATH` | yes | Directory scanned for `.jsonl` files. Relative paths resolve from the backend's working directory. |
 | `TLS_CERT_PATH`, `TLS_KEY_PATH` | no | Enable HTTPS. Both or neither; `SERVER_URL` must be `https://`. |
-| `LOGS_NOTIFIER_SCHEDULE_REGEX` | no* | Cron expression ([node-cron](https://github.com/node-cron/node-cron) syntax). |
+| `LOGS_NOTIFIER_SCHEDULE_REGEX` | no* | Cron expression ([node-cron](https://github.com/node-cron/node-cron) syntax). Throws at startup if invalid while `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` names a category. |
 | `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` | no* | Comma-separated subset of `SUCCESS,INFO,WARNING,ERROR`. Invalid entries are dropped. |
 | `TELEGRAM_CHAT_ID` | no* | Telegram chat id. |
 | `TELEGRAM_BOT_TOKEN` | no* | Token of the Telegram bot, as given by BotFather (`123456:ABC-DEF…`), without the `https://api.telegram.org/bot` prefix. Treat as a secret. |
@@ -53,12 +53,17 @@ The server always binds to `0.0.0.0`.
 
 The auth cookie is named `<hostname>_access_token`. Its domain and flags come from `SERVER_URL`:
 
-| `SERVER_URL` host | Cookie domain | `secure` |
-| ----------------- | ------------- | :------: |
-| `localhost` or an IP address | not set | no |
-| a hostname, e.g. `echo.example.com` | that hostname | yes |
+| `SERVER_URL` host | Cookie domain |
+| ----------------- | ------------- |
+| `localhost` or an IP address | not set |
+| a hostname, e.g. `echo.example.com` | its registrable domain, `example.com`, subdomains included |
 
-Other flags are fixed: `httpOnly`, `sameSite=lax`, `path=/`, max age 24 hours. Because `secure` is set for real hostname, browsers will only send the cookie over HTTPS.
+| `SERVER_URL` scheme | `secure` |
+| ------------------- | :------: |
+| `https://` | yes: browsers only send the cookie over HTTPS |
+| `http://` | no: a browser refuses a secure cookie set over HTTP, so login over HTTP (in development, for instance) keeps working |
+
+Other flags are fixed: `httpOnly`, `sameSite=lax`, `path=/`, max age 24 hours. Use `https://` in `SERVER_URL` for any public deployment, behind a reverse proxy terminating TLS included, since it is the address the browser reaches.
 
 ## Derived CORS settings
 

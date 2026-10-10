@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url'
 import Fastify, { type FastifyInstance } from 'fastify'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { getMockServerConfig } from '../../test/mocks/configs.js'
+import { getMockServerConfig } from '../../test/mocks/mockConfigs.js'
 import { registerFrontend } from '../registerFrontend.js'
 
 const FRONTEND_DIST_DIR_PATH = path.join(

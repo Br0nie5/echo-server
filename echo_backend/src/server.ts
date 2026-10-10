@@ -5,6 +5,7 @@ import Fastify from 'fastify'
 
 import { createLogsFilesApi } from './modules/logs/infra/logsFiles.api.js'
 import { createLogsFilesRepository } from './modules/logs/infra/logsFiles.repository.js'
+import { createSelfReportRepository } from './modules/selfReport/infra/selfReport.repository.js'
 import { registerAuthRoutes } from './plugins/registerAuthRoutes.js'
 import { registerDocumentation } from './plugins/registerDocumentation.js'
 import { registerFrontend } from './plugins/registerFrontend.js'
@@ -12,7 +13,6 @@ import { registerLogsNotifier } from './plugins/registerLogsNotifier.js'
 import { registerLogsRoutes } from './plugins/registerLogsRoutes.js'
 import { registerSecurity } from './plugins/registerSecurity.js'
 import type { EchoServer } from './plugins/types/echoServer.js'
-import { getSelfReportRepository } from './plugins/utils/getSelfReportRepository.js'
 import { normalizeToEchoError } from './plugins/utils/normalizeToEchoError.js'
 import type { BackConfig } from './shared/config/backConfig.js'
 import { loadBackConfig } from './shared/config/loadBackConfig.js'
@@ -52,13 +52,13 @@ export const buildServer = async (
   server.addSchema(EchoErrorJsonSchema)
 
   const logsRepository = createLogsFilesRepository(createLogsFilesApi(config.logs, filesService))
-  const selfReportRepository = await getSelfReportRepository(
-    server,
+  const selfReportRepository = await createSelfReportRepository({
     logsRepository,
     filesService,
-    config.selfReports,
-    ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName
-  )
+    selfReportsConfig: config.selfReports,
+    getSelfReportFileName: ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName,
+    logger: server.log
+  })
 
   await registerAuthRoutes(server, config, filesService)
   await registerLogsRoutes(server, config, logsRepository, selfReportRepository)
@@ -78,20 +78,27 @@ export const buildServer = async (
  * Loads the config, builds the server with it and starts listening, exiting the process on
  * failure.
  *
- * The files service both are given is built here, once.
+ * The files service both are given is built here, once. A failure is logged before exiting: by the
+ * logger of the server once it is built, to the error output of the process before.
  */
 export const startServer = async (): Promise<void> => {
   const filesService = createFilesService()
-  const config = await loadBackConfig(filesService)
-  const server = await buildServer(config, filesService)
+  let server: EchoServer | undefined
 
   try {
+    const config = await loadBackConfig(filesService)
+    server = await buildServer(config, filesService)
+
     await server.listen({ port: config.server.port, host: config.server.host })
 
-    console.log(`Api is accessible though ${config.server.apiUrl}`)
-    console.log(`App is accessible though ${config.server.appUrl}`)
+    server.log.info(`Api is accessible through ${config.server.apiUrl}`)
+    server.log.info(`App is accessible through ${config.server.appUrl}`)
   } catch (error) {
-    server.log.error(error)
+    if (server) {
+      server.log.error(error)
+    } else {
+      console.error('The server could not be built:', error)
+    }
     process.exit(1)
   }
 }

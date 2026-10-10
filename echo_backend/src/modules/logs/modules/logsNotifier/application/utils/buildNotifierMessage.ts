@@ -2,7 +2,7 @@ import type { Log } from '@echo/utilities'
 import { DateTime } from 'luxon'
 
 /** One line of the message: `[jobId] [date UTC±offset] [category] - locationName > message`, the date shown in `timezone`. */
-export function formatLogLine(log: Log, timezone: string): string {
+export const formatLogLine = (log: Log, timezone: string): string => {
   const date = DateTime.fromISO(log.date).setZone(timezone)
   const offsetLabel = date.offset === 0 ? 'UTC' : `UTC${date.toFormat('Z')}`
 
@@ -42,12 +42,12 @@ export interface NotifierMessageContent {
  * })
  * ```
  */
-export function buildNotifierMessage({
+export const buildNotifierMessage = ({
   messageSizeLimit,
   problemLogs,
   serverName,
   timezone
-}: NotifierMessageContent): string | undefined {
+}: NotifierMessageContent): string | undefined => {
   if (problemLogs.length === 0) {
     return undefined
   }

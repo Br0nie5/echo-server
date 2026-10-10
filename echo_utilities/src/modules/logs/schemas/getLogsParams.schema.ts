@@ -2,7 +2,16 @@ import { z } from 'zod'
 
 import { LogCategory, LogCategorySchema } from './logCategory.schema.js'
 
-const INVALID_FROM_DATE_MESSAGE = 'Field fromDate is not a valid date, it should be an ISO string'
+/**
+ * Gives the message returned to the client when the date field `fieldName` of the query is not an
+ * ISO date.
+ *
+ * ```ts
+ * getInvalidDateFieldMessage('fromDate') // 'Field fromDate is not a valid date, it should be an ISO string'
+ * ```
+ */
+export const getInvalidDateFieldMessage = (fieldName: string): string =>
+  `Field ${fieldName} is not a valid date, it should be an ISO string`
 
 /** Explains which value of `logCategories` is not a log category, and which ones can be used. */
 const describeInvalidLogCategory = (logCategories: unknown): string => {
@@ -25,9 +34,16 @@ export const GetLogsParamsSchema = z.object({
   fromDate: z
     .string({
       error: (issue) =>
-        issue.input === undefined ? 'Missing required field: fromDate' : INVALID_FROM_DATE_MESSAGE
+        issue.input === undefined
+          ? 'Missing required field: fromDate'
+          : getInvalidDateFieldMessage('fromDate')
     })
     .meta({ format: 'date-time' }),
+  /** The logs emitted at this ISO 8601 date or after are left out: none of them when left out. */
+  toDate: z
+    .string({ error: getInvalidDateFieldMessage('toDate') })
+    .meta({ format: 'date-time' })
+    .optional(),
   /** The severities to keep: all of them when left out. */
   logCategories: z
     .union([LogCategorySchema, z.array(LogCategorySchema)], {

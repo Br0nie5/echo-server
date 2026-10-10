@@ -2,7 +2,7 @@ import type { FastifyDynamicSwaggerOptions } from '@fastify/swagger'
 import Fastify, { type FastifyInstance } from 'fastify'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getMockServerConfig } from '../../test/mocks/configs.js'
+import { getMockServerConfig } from '../../test/mocks/mockConfigs.js'
 import { registerDocumentation } from '../registerDocumentation.js'
 
 describe('registerDocumentation', () => {
@@ -69,6 +69,6 @@ describe('registerDocumentation', () => {
       position: number
     ) => string
 
-    expect(buildLocalReference({}, {}, '', 3)).toBe('my-fragment-3')
+    expect(buildLocalReference({}, {}, '', 3)).toBe('def-3')
   })
 })

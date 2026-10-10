@@ -12,7 +12,7 @@ import { isOriginAllowed } from './utils/isOriginAllowed.js'
 /** Random secret regenerated at each start, so the sessions do not survive a restart. */
 const DYNAMIC_JWT_SECRET = crypto.randomBytes(256).toString('hex')
 
-/** Registers cookie/JWT support when authentication is enabled, and CORS restricted to the origins `isOriginAllowed` accepts: the allowed domain, its subdomains and the address the request itself is sent to. */
+/** Registers cookie/JWT support when authentication is enabled, the JWT expiring with the session, and CORS restricted to the origins `isOriginAllowed` accepts: the allowed domain, its subdomains and the address the request itself is sent to. */
 export const registerSecurity = async (server: EchoServer, config: BackConfig): Promise<void> => {
   const { allowedDomain } = config.server
 
@@ -21,6 +21,9 @@ export const registerSecurity = async (server: EchoServer, config: BackConfig): 
 
     await server.register(fastifyJwt, {
       secret: DYNAMIC_JWT_SECRET,
+      // A token outlives neither its cookie nor the server: copied out of the cookie, it is no
+      // longer accepted once the session is over.
+      sign: { expiresIn: `${config.auth.sessionDurationSeconds}s` },
       cookie: {
         cookieName: config.auth.cookieName,
         signed: false // We verify via JWT signature, so the cookie itself doesn't need a secondary signature

@@ -1,23 +1,31 @@
 import type { GetLogsParams } from '@echo/utilities'
-import { GetLogsParamsSchema } from '@echo/utilities'
+import { GetLogsParamsSchema, getInvalidDateFieldMessage } from '@echo/utilities'
 import { z } from 'zod'
 
 import { convertToDateFromISO } from '../../../../shared/utils/convertToDate.js'
 
+/** Converts `value`, the date field `fieldName` of the query, to a `Date`, adding an issue to `context` when it is not an ISO date. */
+const parseQueryDate = (value: string, fieldName: string, context: z.RefinementCtx): Date => {
+  const date = convertToDateFromISO(value)
+
+  if (!date) {
+    context.addIssue({
+      code: 'custom',
+      message: getInvalidDateFieldMessage(fieldName)
+    })
+    return z.NEVER
+  }
+
+  return date
+}
+
 const ParsedGetLogsParamsSchema = GetLogsParamsSchema.extend({
-  fromDate: GetLogsParamsSchema.shape.fromDate.transform((value, context) => {
-    const date = convertToDateFromISO(value)
-
-    if (!date) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Field fromDate is not a valid date, it should be an ISO string'
-      })
-      return z.NEVER
-    }
-
-    return date
-  }),
+  fromDate: GetLogsParamsSchema.shape.fromDate.transform((value, context) =>
+    parseQueryDate(value, 'fromDate', context)
+  ),
+  toDate: GetLogsParamsSchema.shape.toDate.transform((value, context) =>
+    value === undefined ? undefined : parseQueryDate(value, 'toDate', context)
+  ),
   logCategories: GetLogsParamsSchema.shape.logCategories.transform((value) =>
     value ? [value].flat() : []
   )
@@ -27,8 +35,9 @@ const ParsedGetLogsParamsSchema = GetLogsParamsSchema.extend({
  * Validates the query of `GET /logs` and turns it into what `getFilteredLogs` needs.
  *
  * The validation is the one of `GetLogsParamsSchema`, shared with the frontend; on top of it,
- * `fromDate` has to be a real ISO date. On success, `data` holds the query with `fromDate` as a
- * `Date` and `logCategories` as an array, empty when the client sent none. On failure, the
+ * `fromDate`, and `toDate` when it is given, have to be real ISO dates. On success, `data` holds
+ * the query with `fromDate` and `toDate` as `Date`s and `logCategories` as an array, empty when the
+ * client sent none. On failure, the
  * messages of `error.issues` are meant to be returned to the client as they are.
  *
  * ```ts
@@ -36,7 +45,7 @@ const ParsedGetLogsParamsSchema = GetLogsParamsSchema.extend({
  * if (!parsedParams.success) {
  *   return reply.status(400).send({ statusCode: 400, message: parsedParams.error.issues[0].message })
  * }
- * const { fromDate, logCategories, logSearch } = parsedParams.data
+ * const { fromDate, toDate, logCategories, logSearch } = parsedParams.data
  * ```
  */
 export const safeParseGetLogsParams = (

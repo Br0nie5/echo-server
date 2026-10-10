@@ -1,6 +1,6 @@
 import { beforeEach, describe, it, expect, vi } from 'vitest'
 
-import { getMockFilesService } from '../../../../test/mocks/filesService.js'
+import { getMockFilesService } from '../../../../test/mocks/mockFilesService.js'
 import { parseTlsConfig } from '../parseTlsConfig.js'
 
 const CERT_PATH = '/certs/cert.pem'

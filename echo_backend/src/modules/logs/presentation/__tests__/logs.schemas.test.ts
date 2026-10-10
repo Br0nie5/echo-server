@@ -5,6 +5,9 @@ import { describe, it, expect, beforeAll } from 'vitest'
 
 import { GetLogsParamsJsonSchema, LogJsonSchema, LogCategoryJsonSchema } from '../logs.schemas.js'
 
+/** The date of the logs validated against the schema. */
+const LOG_DATE = '2026-01-01T00:00:00.000Z'
+
 describe('LogCategoryJsonSchema', () => {
   let validateCategory: ValidateFunction
 
@@ -40,7 +43,7 @@ describe('LogJsonSchema', () => {
   it('should accept a valid log object', () => {
     const log = {
       id: '0 [myGroup] [file1] [123] Something happened',
-      date: new Date().toISOString(),
+      date: LOG_DATE,
       groupName: 'myGroup',
       location: '/logs/file1.jsonl',
       locationName: 'file1',
@@ -56,7 +59,7 @@ describe('LogJsonSchema', () => {
   it('should reject log object with missing required fields', () => {
     const log = {
       id: '1',
-      date: new Date().toISOString(),
+      date: LOG_DATE,
       location: '/logs/file1.jsonl',
       locationName: 'file1',
       jobId: 1,
@@ -72,7 +75,7 @@ describe('LogJsonSchema', () => {
   it('should reject log object with invalid category', () => {
     const log = {
       id: '1',
-      date: new Date().toISOString(),
+      date: LOG_DATE,
       groupName: 'grp',
       location: '/logs/file1.jsonl',
       locationName: 'file1',
@@ -89,7 +92,7 @@ describe('LogJsonSchema', () => {
   it('should reject log object with additional properties', () => {
     const log = {
       id: '1',
-      date: new Date().toISOString(),
+      date: LOG_DATE,
       groupName: 'grp',
       location: '/logs/file1.jsonl',
       locationName: 'file1',

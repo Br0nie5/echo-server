@@ -10,7 +10,7 @@ import {
   getMockAuthConfig,
   getMockBackConfig,
   getMockServerConfig
-} from '../../test/mocks/configs.js'
+} from '../../test/mocks/mockConfigs.js'
 import { registerLogsRoutes } from '../registerLogsRoutes.js'
 
 const LOGS_URL = '/custom-api/logs?fromDate=2026-01-01T00:00:00.000Z'

@@ -40,7 +40,7 @@ export const createAuthController = (
   return {
     signUp: async (
       request: FastifyRequest<{ Body: SignUpRequest }>,
-      reply: FastifyReply<{ Reply: AuthToken }>
+      reply: AuthReply
     ): Promise<void> => {
       const { username, password } = request.body
 
@@ -62,7 +62,7 @@ export const createAuthController = (
 
     login: async (
       request: FastifyRequest<{ Body: LoginRequest }>,
-      reply: FastifyReply<{ Reply: AuthToken }>
+      reply: AuthReply
     ): Promise<void> => {
       const { username, password } = request.body
 
@@ -76,10 +76,7 @@ export const createAuthController = (
     },
 
     /** Answers 401 with `needsSignupMessage` while no account exists, so the frontend can show the sign up form. */
-    check: async (
-      request: FastifyRequest,
-      reply: FastifyReply<{ Reply: AuthToken }>
-    ): Promise<void> => {
+    check: async (request: FastifyRequest, reply: AuthReply): Promise<void> => {
       if (await canSignUp(authRepository)) {
         return reply.status(401).send({ success: false, message: needsSignupMessage })
       }
@@ -92,7 +89,7 @@ export const createAuthController = (
       }
     },
 
-    logout: async (_: FastifyRequest, reply: FastifyReply<{ Reply: AuthToken }>): Promise<void> => {
+    logout: async (_: FastifyRequest, reply: AuthReply): Promise<void> => {
       reply.clearCookie(cookieName, cookieSerializeOptions)
 
       return reply.status(200).send({ success: true, message: 'Logged out successfully.' })

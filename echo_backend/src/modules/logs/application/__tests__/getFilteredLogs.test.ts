@@ -18,54 +18,72 @@ describe('getFilteredLogs', () => {
     vi.resetAllMocks()
   })
 
-  it('should return only the logs logged since fromDate', async () => {
-    const now = new Date()
-    const oldDate = new Date(now.getTime() - 1000 * 60 * 60) // 1 hour ago
-    const recentDate = new Date(now.getTime() - 1000 * 60) // 1 min ago
-
-    const log1: Log = {
-      date: oldDate.toISOString(),
+  it('should return only the logs logged since fromDate, fromDate included', async () => {
+    const createLog = (id: string, date: string): Log => ({
+      date,
       jobId: 1,
       category: 'INFO',
       location: '/logs/f.jsonl',
       locationName: 'f',
-      id: '1',
-      message: 'old log',
+      id,
+      message: id,
       groupName: 'grp',
       callFile: 'f.sh',
       callLine: 1
-    }
-    const log2: Log = {
-      date: recentDate.toISOString(),
-      jobId: 2,
-      category: 'ERROR',
-      location: '/logs/f.jsonl',
-      locationName: 'f',
-      id: '2',
-      message: 'recent log',
-      groupName: 'grp',
-      callFile: 'f.sh',
-      callLine: 2
-    }
+    })
+    const fromDateLog = createLog('at fromDate', '2026-01-01T10:00:00.000Z')
+    const afterFromDateLog = createLog('after fromDate', '2026-01-01T10:30:00.000Z')
+    mockFindAllLogs.mockResolvedValue({
+      logs: [
+        createLog('before fromDate', '2026-01-01T09:59:59.999Z'),
+        fromDateLog,
+        afterFromDateLog
+      ],
+      selfReports: []
+    })
 
-    mockFindAllLogs.mockResolvedValue({ logs: [log1, log2], selfReports: [] })
-
-    const fromDate = new Date(now.getTime() - 30 * 60 * 1000) // only logs newer than 30 minutes
     const result = await getFilteredLogs(repository, selfReportRepository, {
-      fromDate,
-      categories: ['INFO', 'ERROR'],
+      fromDate: new Date('2026-01-01T10:00:00.000Z'),
+      categories: [],
       searchFilters: []
     })
 
-    expect(result).toHaveLength(1)
-    expect(result[0]).toBe(log2)
+    expect(result).toEqual([afterFromDateLog, fromDateLog])
+  })
+
+  it('should return only the logs logged before toDate, toDate left out', async () => {
+    const createLog = (id: string, date: string): Log => ({
+      date,
+      jobId: 1,
+      category: 'ERROR',
+      location: '/logs/f.jsonl',
+      locationName: 'f',
+      id,
+      message: id,
+      callFile: 'f.sh',
+      callLine: 1
+    })
+    const fromDateLog = createLog('fromDate', '2026-01-01T10:00:00.000Z')
+    const beforeToDateLog = createLog('before toDate', '2026-01-01T10:29:59.999Z')
+    mockFindAllLogs.mockResolvedValue({
+      logs: [fromDateLog, beforeToDateLog, createLog('toDate', '2026-01-01T10:30:00.000Z')],
+      selfReports: []
+    })
+
+    const result = await getFilteredLogs(repository, selfReportRepository, {
+      fromDate: new Date('2026-01-01T10:00:00.000Z'),
+      toDate: new Date('2026-01-01T10:30:00.000Z'),
+      categories: [],
+      searchFilters: []
+    })
+
+    expect(result).toEqual([beforeToDateLog, fromDateLog])
   })
 
   it('should return the logs from the newest to the oldest, whatever the order of the repository', async () => {
-    const now = new Date()
-    const logAt = (jobId: number, millisecondsAgo: number): Log =>
+    const logAt = (jobId: number, date: string): Log =>
       ({
-        date: new Date(now.getTime() - millisecondsAgo).toISOString(),
+        date,
         jobId,
         category: 'INFO',
         location: '/logs/f.jsonl',
@@ -76,13 +94,16 @@ describe('getFilteredLogs', () => {
       }) as Log
 
     mockFindAllLogs.mockResolvedValue({
-      logs: [logAt(2, 2000), logAt(1, 3000), logAt(3, 1000)],
+      logs: [
+        logAt(2, '2026-01-01T10:00:02.000Z'),
+        logAt(1, '2026-01-01T10:00:01.000Z'),
+        logAt(3, '2026-01-01T10:00:03.000Z')
+      ],
       selfReports: []
     })
 
-    const fromDate = new Date(now.getTime() - 10000) // all logs
     const result = await getFilteredLogs(repository, selfReportRepository, {
-      fromDate,
+      fromDate: new Date('2026-01-01T10:00:00.000Z'),
       categories: ['INFO'],
       searchFilters: []
     })
@@ -91,9 +112,8 @@ describe('getFilteredLogs', () => {
   })
 
   it('should return an empty array if no logs after fromDate', async () => {
-    const oldDate = new Date(Date.now() - 1000 * 60 * 60) // 1h ago
     const log = {
-      date: oldDate.toISOString(),
+      date: '2026-01-01T09:00:00.000Z',
       jobId: 1,
       category: 'INFO',
       location: '/logs/f.jsonl',
@@ -105,21 +125,20 @@ describe('getFilteredLogs', () => {
 
     mockFindAllLogs.mockResolvedValue({ logs: [log] as Log[], selfReports: [] })
 
-    const fromDate = new Date() // now
     const result = await getFilteredLogs(repository, selfReportRepository, {
-      fromDate,
+      fromDate: new Date('2026-01-01T10:00:00.000Z'),
       categories: ['INFO'],
       searchFilters: [{ mode: 'find', search: 'old' }]
     })
 
     expect(result).toEqual([])
   })
+
   it('should return an empty array if no logs', async () => {
     mockFindAllLogs.mockResolvedValue({ logs: [], selfReports: [] })
 
-    const fromDate = new Date() // now
     const result = await getFilteredLogs(repository, selfReportRepository, {
-      fromDate,
+      fromDate: new Date('2026-01-01T10:00:00.000Z'),
       categories: Object.values(LogCategoryConst),
       searchFilters: [{ mode: 'find', search: 'file1' }]
     })
@@ -147,7 +166,7 @@ describe('getFilteredLogs', () => {
     mockFindAllLogs.mockResolvedValue({ logs: [], selfReports })
 
     await getFilteredLogs(repository, selfReportRepository, {
-      fromDate: new Date(),
+      fromDate: new Date('2026-01-01T10:00:00.000Z'),
       categories: [],
       searchFilters: []
     })

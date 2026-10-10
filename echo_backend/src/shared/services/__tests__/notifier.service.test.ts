@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getMockNotificationConfig } from '../../../test/mocks/configs.js'
+import { getMockNotificationConfig } from '../../../test/mocks/mockConfigs.js'
 import { createNotifierService } from '../notifier.service.js'
 
 const notificationConfig = getMockNotificationConfig({

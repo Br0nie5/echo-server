@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url'
 import dotenv, { type DotenvConfigOptions } from 'dotenv'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-import { getMockFilesService } from '../../../test/mocks/filesService.js'
+import { getMockFilesService } from '../../../test/mocks/mockFilesService.js'
 import { loadBackConfig } from '../loadBackConfig.js'
 
 vi.mock('dotenv', () => ({ default: { config: vi.fn() } }))
@@ -170,6 +170,8 @@ describe('loadBackConfig', () => {
         frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
       },
       auth: {
+        sessionDurationSeconds: 86400,
+        credentialsAttemptsLimit: { maxAttempts: 5, timeWindowMilliseconds: 60 * 1000 },
         cookieName: 'allowed-domain.com_access_token',
         cookieSerializeOptions: {
           domain: 'allowed-domain.com',
