@@ -2,12 +2,12 @@ import type * as FastifyModule from 'fastify'
 import Fastify, { type FastifyInstance } from 'fastify'
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest'
 
-vi.mock('../plugins/registerAuthRoutes.js')
-vi.mock('../plugins/registerDocumentation.js')
-vi.mock('../plugins/registerFrontend.js')
-vi.mock('../plugins/registerLogsNotifier.js')
-vi.mock('../plugins/registerLogsRoutes.js')
-vi.mock('../plugins/registerSecurity.js')
+vi.mock('../initializers/registerAuthRoutes.js')
+vi.mock('../initializers/registerDocumentation.js')
+vi.mock('../initializers/registerFrontend.js')
+vi.mock('../initializers/registerLogsNotifier.js')
+vi.mock('../initializers/registerLogsRoutes.js')
+vi.mock('../initializers/registerSecurity.js')
 vi.mock('../modules/selfReport/infra/selfReport.repository.js')
 vi.mock('../shared/config/loadBackConfig.js')
 // The server is created without the options `buildServer` asks for: its logger would write to the
@@ -20,14 +20,14 @@ vi.mock('fastify', async (importOriginal) => {
   return { ...actual, default: vi.fn(() => actual.default()) }
 })
 
+import { registerAuthRoutes } from '../initializers/registerAuthRoutes.js'
+import { registerDocumentation } from '../initializers/registerDocumentation.js'
+import { registerFrontend } from '../initializers/registerFrontend.js'
+import { registerLogsNotifier } from '../initializers/registerLogsNotifier.js'
+import { registerLogsRoutes } from '../initializers/registerLogsRoutes.js'
+import { registerSecurity } from '../initializers/registerSecurity.js'
 import type { SelfReportRepository } from '../modules/selfReport/domain/selfReport.repository.js'
 import { createSelfReportRepository as actualCreateSelfReportRepository } from '../modules/selfReport/infra/selfReport.repository.js'
-import { registerAuthRoutes } from '../plugins/registerAuthRoutes.js'
-import { registerDocumentation } from '../plugins/registerDocumentation.js'
-import { registerFrontend } from '../plugins/registerFrontend.js'
-import { registerLogsNotifier } from '../plugins/registerLogsNotifier.js'
-import { registerLogsRoutes } from '../plugins/registerLogsRoutes.js'
-import { registerSecurity } from '../plugins/registerSecurity.js'
 import { buildServer, startServer } from '../server.js'
 import type { BackConfig } from '../shared/config/backConfig.js'
 import { loadBackConfig as actualLoadBackConfig } from '../shared/config/loadBackConfig.js'

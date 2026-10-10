@@ -21,7 +21,7 @@ Environment variables, validated at startup by `loadBackConfig` (`src/shared/con
 src/
   main.ts                entry point: calls startServer
   server.ts              buildServer, the app wiring, and startServer, which builds it and starts listening
-  plugins/               what buildServer registers: Swagger, cookie/JWT and CORS, the routes of the API, static serving and 404 handling, the logs notifier
+  initializers/               what buildServer registers: Swagger, cookie/JWT and CORS, the routes of the API, static serving and 404 handling, the logs notifier
   modules/
     auth/                signup / login / check / logout, SQLite users, JWT hooks
     logs/                logs API, parsing, cron notifying the problem logs

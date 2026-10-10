@@ -9,7 +9,7 @@ const MODULES = '^src/modules'
 const SHARED = '^src/shared/'
 const FILES_SERVICE = '^src/shared/services/files\\.service\\.ts$'
 const FILES_SERVICE_TEST = '^src/shared/services/__tests__/files\\.service\\.test\\.ts$'
-const PLUGINS = '^src/plugins/'
+const INITIALIZERS = '^src/initializers/'
 const SERVER = '^src/server\\.ts$'
 const ENTRY_POINT = '^src/main\\.ts$'
 const LAYERS = 'domain|application|infra|presentation'
@@ -33,9 +33,10 @@ const OUTSIDE_LAYERS = `${MODULES}/(?![^/]+/(${LAYERS})/|[^/]+/modules/[^/]+/(${
 
 /**
  * Files of `src/` that are neither `main.ts` nor `server.ts`, nor in one of the folders the rules
- * know (`modules/`, `plugins/`, `shared/`, `test/` and the tests of `server.ts`).
+ * know (`modules/`, `initializers/`, `shared/`, `test/` and the tests of `server.ts`).
  */
-const OUTSIDE_KNOWN_PLACES = '^src/(?!(main|server)\\.ts$|(modules|plugins|shared|test|__tests__)/)'
+const OUTSIDE_KNOWN_PLACES =
+  '^src/(?!(main|server)\\.ts$|(modules|initializers|shared|test|__tests__)/)'
 
 /**
  * The three rules refusing every file of `path`, the tests apart.
@@ -104,19 +105,19 @@ const config: IConfiguration = {
       to: { dependencyTypes: ['core'], path: '^(node:)?fs(/promises)?$' }
     },
     {
-      name: 'backend-plugins-only-from-server',
+      name: 'backend-initializers-only-from-server',
       severity: 'error',
       comment:
-        'src/plugins wires the infra/ and the presentation/ of the modules: only server.ts, the composition root, imports it. Anything else importing it would reach every layer through it.',
-      from: { pathNot: [PLUGINS, SERVER, TESTS] },
-      to: { path: PLUGINS }
+        'src/initializers wires the infra/ and the presentation/ of the modules: only server.ts, the composition root, imports it. Anything else importing it would reach every layer through it.',
+      from: { pathNot: [INITIALIZERS, SERVER, TESTS] },
+      to: { path: INITIALIZERS }
     },
     {
-      name: 'backend-plugins-not-to-application',
+      name: 'backend-initializers-not-to-application',
       severity: 'error',
       comment:
-        'src/plugins wires the modules together: it builds their infra/ and hands it to their presentation/, which calls their application/ itself.',
-      from: { path: PLUGINS, pathNot: TESTS },
+        'src/initializers wires the modules together: it builds their infra/ and hands it to their presentation/, which calls their application/ itself.',
+      from: { path: INITIALIZERS, pathNot: TESTS },
       to: { path: layer('application') }
     },
     {
@@ -131,7 +132,7 @@ const config: IConfiguration = {
     ...refuseFiles(
       'backend-src-files-in-known-places',
       OUTSIDE_KNOWN_PLACES,
-      'Directly under src/, there is only main.ts, the entry point, and server.ts, the composition root: anything else is in modules/, plugins/, shared/ or test/, which the other rules know.'
+      'Directly under src/, there is only main.ts, the entry point, and server.ts, the composition root: anything else is in modules/, initializers/, shared/ or test/, which the other rules know.'
     ),
     ...refuseFiles(
       'backend-module-files-in-a-layer',
