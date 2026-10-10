@@ -3,7 +3,7 @@ import fastifyPlugin from 'fastify-plugin'
 import cron from 'node-cron'
 
 import type { LogsNotifierConfig } from '../../../../../shared/config/backConfig.js'
-import type { Notifier } from '../../../../notification/domain/notifier.js'
+import type { NotifierService } from '../../../../../shared/services/notifier.service.js'
 import type { SelfReportRepository } from '../../../../selfReport/domain/selfReport.repository.js'
 import type { LogsRepository } from '../../../domain/logs.repository.js'
 import { checkProblemLogsAndNotify } from '../application/checkProblemLogsAndNotify.js'
@@ -15,7 +15,7 @@ export interface LogsNotifierPluginOptions extends FastifyPluginOptions {
   logsRepository: LogsRepository
   /** Where the stored entries that hold no valid log are reported. */
   logsSelfReportRepository: SelfReportRepository
-  notifier: Notifier
+  notifierService: NotifierService
   checkDateRepository: CheckDateRepository
   selfReportRepository: SelfReportRepository
 }
@@ -32,7 +32,7 @@ const logsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = async (
     logsNotifierConfig,
     logsRepository,
     logsSelfReportRepository,
-    notifier,
+    notifierService,
     checkDateRepository,
     selfReportRepository
   }
@@ -47,7 +47,7 @@ const logsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = async (
         timezone: logsNotifierConfig.notifierTimezone,
         logsRepository,
         logsSelfReportRepository,
-        notifier,
+        notifierService,
         checkDateRepository,
         selfReportRepository
       })

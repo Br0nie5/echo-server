@@ -17,7 +17,7 @@ const pluginOptions: LogsNotifierPluginOptions = {
   logsNotifierConfig,
   logsRepository: { getAllLogs: vi.fn(), getLogs: vi.fn(), saveLogs: vi.fn(), deleteLogs: vi.fn() },
   logsSelfReportRepository: { saveSelfReports: vi.fn() },
-  notifier: { getMessageSizeLimit: vi.fn(), notify: vi.fn() },
+  notifierService: { getMessageSizeLimit: vi.fn(), notify: vi.fn() },
   checkDateRepository: { getLastCheckDate: vi.fn(), saveLastCheckDate: vi.fn() },
   selfReportRepository: { saveSelfReports: vi.fn() }
 }
@@ -80,7 +80,7 @@ describe('logsNotifier plugin', () => {
       timezone: logsNotifierConfig.notifierTimezone,
       logsRepository: pluginOptions.logsRepository,
       logsSelfReportRepository: pluginOptions.logsSelfReportRepository,
-      notifier: pluginOptions.notifier,
+      notifierService: pluginOptions.notifierService,
       checkDateRepository: pluginOptions.checkDateRepository,
       selfReportRepository: pluginOptions.selfReportRepository
     })

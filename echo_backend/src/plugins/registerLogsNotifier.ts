@@ -2,11 +2,10 @@ import type { LogsRepository } from '../modules/logs/domain/logs.repository.js'
 import { createFileCheckDateApi } from '../modules/logs/modules/logsNotifier/infra/fileCheckDate.api.js'
 import { createFileCheckDateRepository } from '../modules/logs/modules/logsNotifier/infra/fileCheckDate.repository.js'
 import logsNotifier from '../modules/logs/modules/logsNotifier/presentation/logs.notifier.js'
-import { createTelegramNotifierApi } from '../modules/notification/infra/telegramNotifier.api.js'
-import { createTelegramNotifier } from '../modules/notification/infra/telegramNotifier.js'
 import type { SelfReportRepository } from '../modules/selfReport/domain/selfReport.repository.js'
 import type { BackConfig } from '../shared/config/backConfig.js'
 import type { FilesService } from '../shared/services/files.service.js'
+import { createNotifierService } from '../shared/services/notifier.service.js'
 
 import type { EchoServer } from './types/echoServer.js'
 import { getSelfReportRepository } from './utils/getSelfReportRepository.js'
@@ -26,7 +25,8 @@ export interface LogsNotifierDependencies {
  *
  * The cron reads the logs like the routes do, from `logsRepository` and reporting to
  * `selfReportRepository`, and is given a self-report repository of its own, storing as logs of
- * `logsRepository` too, for the problem logs it could not notify.
+ * `logsRepository` too, for the problem logs it could not notify. It notifies through a
+ * `NotifierService` built from the `notification` config.
  */
 export const registerLogsNotifier = async (
   server: EchoServer,
@@ -46,10 +46,7 @@ export const registerLogsNotifier = async (
     logsNotifierConfig,
     logsRepository,
     logsSelfReportRepository: selfReportRepository,
-    notifier: createTelegramNotifier(
-      createTelegramNotifierApi(notificationConfig),
-      notificationConfig
-    ),
+    notifierService: createNotifierService(notificationConfig),
     checkDateRepository: createFileCheckDateRepository(
       createFileCheckDateApi(logsNotifierConfig, filesService)
     ),

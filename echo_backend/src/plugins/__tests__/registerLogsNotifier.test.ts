@@ -94,7 +94,7 @@ describe('registerLogsNotifier', () => {
     expect(pluginOptions.logsRepository).toBe(logsRepository)
     expect(pluginOptions.logsSelfReportRepository).toBe(logsSelfReportRepository)
     expect(pluginOptions.selfReportRepository).toBe(selfReportRepository)
-    expect(pluginOptions.notifier.getMessageSizeLimit()).toBe(
+    expect(pluginOptions.notifierService.getMessageSizeLimit()).toBe(
       notificationConfig.telegramMessageSizeLimit
     )
     await pluginOptions.checkDateRepository.getLastCheckDate()

@@ -25,9 +25,8 @@ src/
   modules/
     auth/                signup / login / check / logout, SQLite users, JWT hooks
     logs/                logs API, parsing, cron notifying the problem logs
-    notification/        sending a message to the outside (Telegram)
     selfReport/          diagnostics the backend reports about itself
-  shared/                config (BackConfig, loadBackConfig, utils), services (FilesService), error schemas, the Logger type, helpers
+  shared/                config (BackConfig, loadBackConfig, utils), services (FilesService, NotifierService), error schemas, the Logger type, helpers
 ```
 
 Each module is split into the layer folders it needs, and holds nothing outside them: `domain/`, `application/`, `infra/` and `presentation/`. See [docs/architecture.md](../docs/architecture.md).

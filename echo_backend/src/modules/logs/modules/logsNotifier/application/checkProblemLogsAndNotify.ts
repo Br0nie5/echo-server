@@ -1,6 +1,6 @@
 import type { LogCategory } from '@echo/utilities'
 
-import type { Notifier } from '../../../../notification/domain/notifier.js'
+import type { NotifierService } from '../../../../../shared/services/notifier.service.js'
 import type { SelfReportRepository } from '../../../../selfReport/domain/selfReport.repository.js'
 import { getFilteredLogs } from '../../../application/getFilteredLogs.js'
 import type { LogsRepository } from '../../../domain/logs.repository.js'
@@ -19,7 +19,7 @@ export interface ProblemLogsCheck {
   logsRepository: LogsRepository
   /** Where the stored entries that hold no valid log are reported. */
   logsSelfReportRepository: SelfReportRepository
-  notifier: Notifier
+  notifierService: NotifierService
   checkDateRepository: CheckDateRepository
   /** Where the check reports the problem logs it could not notify. */
   selfReportRepository: SelfReportRepository
@@ -32,7 +32,7 @@ export interface ProblemLogsCheck {
  * valid log to `logsSelfReportRepository`.
  *
  * The notification is one message telling about the logs (see {@link buildNotifierMessage}), built
- * for the size limit of `notifier`. Nothing is sent when there is no problem log.
+ * for the size limit of `notifierService`. Nothing is sent when there is no problem log.
  * Nothing is sent either when the size limit is too small for any message: a warning is then saved
  * to `selfReportRepository`, and the date of the check is saved all the same, since notifying the
  * same logs again would fail the same way.
@@ -47,7 +47,7 @@ export interface ProblemLogsCheck {
  *   timezone: logsNotifierConfig.notifierTimezone,
  *   logsRepository,
  *   logsSelfReportRepository,
- *   notifier,
+ *   notifierService,
  *   checkDateRepository,
  *   selfReportRepository
  * })
@@ -59,7 +59,7 @@ export async function checkProblemLogsAndNotify({
   timezone,
   logsRepository,
   logsSelfReportRepository,
-  notifier,
+  notifierService,
   checkDateRepository,
   selfReportRepository
 }: ProblemLogsCheck): Promise<void> {
@@ -79,7 +79,7 @@ export async function checkProblemLogsAndNotify({
   })
 
   if (problemLogs.length > 0) {
-    const messageSizeLimit = notifier.getMessageSizeLimit()
+    const messageSizeLimit = notifierService.getMessageSizeLimit()
     const message = buildNotifierMessage({ messageSizeLimit, problemLogs, serverName, timezone })
 
     if (message === undefined) {
@@ -94,7 +94,7 @@ export async function checkProblemLogsAndNotify({
         }
       ])
     } else {
-      await notifier.notify(message)
+      await notifierService.notify(message)
     }
   }
 
