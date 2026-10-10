@@ -6,6 +6,7 @@ import { createTelegramNotifierApi } from '../modules/notification/infra/telegra
 import { createTelegramNotifier } from '../modules/notification/infra/telegramNotifier.js'
 import type { SelfReportRepository } from '../modules/selfReport/domain/selfReport.repository.js'
 import type { BackConfig } from '../shared/config/backConfig.js'
+import type { FilesService } from '../shared/services/files.service.js'
 
 import type { EchoServer } from './types/echoServer.js'
 import { getSelfReportRepository } from './utils/getSelfReportRepository.js'
@@ -15,6 +16,8 @@ export interface LogsNotifierDependencies {
   logsRepository: LogsRepository
   /** Where the stored entries that hold no valid log are reported. */
   selfReportRepository: SelfReportRepository
+  /** What the last-check file and the session file of its self reports are read and written with. */
+  filesService: FilesService
 }
 
 /**
@@ -32,7 +35,7 @@ export const registerLogsNotifier = async (
     selfReports: selfReportsConfig,
     notification: notificationConfig
   }: BackConfig,
-  { logsRepository, selfReportRepository }: LogsNotifierDependencies
+  { logsRepository, selfReportRepository, filesService }: LogsNotifierDependencies
 ): Promise<void> => {
   if (logsNotifierConfig === undefined || notificationConfig === undefined) {
     server.log.info('The logs notifier is not configured, skipping its registration')
@@ -47,10 +50,13 @@ export const registerLogsNotifier = async (
       createTelegramNotifierApi(notificationConfig),
       notificationConfig
     ),
-    checkDateRepository: createFileCheckDateRepository(createFileCheckDateApi(logsNotifierConfig)),
+    checkDateRepository: createFileCheckDateRepository(
+      createFileCheckDateApi(logsNotifierConfig, filesService)
+    ),
     selfReportRepository: await getSelfReportRepository(
       server,
       logsRepository,
+      filesService,
       selfReportsConfig,
       ({ logsNotifierSelfReportFileName }) => logsNotifierSelfReportFileName
     )

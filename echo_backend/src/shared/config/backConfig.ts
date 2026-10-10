@@ -1,10 +1,10 @@
 import type { LogCategory } from '@echo/utilities'
 import type { CookieSerializeOptions } from '@fastify/cookie'
 
-/** Certificate and private key that make the server use HTTPS. */
+/** Certificate and private key that make the server use HTTPS, as the text of their PEM files. */
 export type TlsConfig = {
-  cert: Buffer
-  key: Buffer
+  cert: string
+  key: string
 }
 
 /** What the HTTP server needs to listen, to say where it is reached and to serve the frontend. */

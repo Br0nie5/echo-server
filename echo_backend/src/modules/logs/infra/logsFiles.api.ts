@@ -1,6 +1,7 @@
 import path from 'path'
 
 import type { LogsConfig } from '../../../shared/config/backConfig.js'
+import { FileDoesNotExistError } from '../../../shared/services/fileDoesNotExistError.js'
 import type { FilesService } from '../../../shared/services/files.service.js'
 
 import type { LogFileDto } from './dto/logFile.dto.js'
@@ -99,12 +100,17 @@ export const createLogsFilesApi = (
         })
       ),
 
-    getRawLogLines: async (logFile): Promise<RawLogLineDto[]> =>
-      (await filesService.getFileLines(logFile.path)).map((content, index) => ({
-        logFile,
-        index,
-        content
-      })),
+    getRawLogLines: async (logFile): Promise<RawLogLineDto[]> => {
+      try {
+        const lines = await filesService.getFileLines(logFile.path)
+        return lines.map((content, index) => ({ logFile, index, content }))
+      } catch (error) {
+        if (error instanceof FileDoesNotExistError) {
+          return []
+        }
+        throw error
+      }
+    },
 
     saveRawLogLines: async (logFile, rawLogLines): Promise<void> => {
       await filesService.createDirectory(path.dirname(logFile.path))

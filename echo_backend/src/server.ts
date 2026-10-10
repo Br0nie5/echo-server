@@ -17,13 +17,17 @@ import { normalizeToEchoError } from './plugins/utils/normalizeToEchoError.js'
 import type { BackConfig } from './shared/config/backConfig.js'
 import { loadBackConfig } from './shared/config/loadBackConfig.js'
 import { EchoErrorJsonSchema } from './shared/schemas/errors.schemas.js'
-import { createFilesService } from './shared/services/files.service.js'
+import { createFilesService, type FilesService } from './shared/services/files.service.js'
 
 /**
- * Composition root: builds the dependency graph from `config` (the one `loadBackConfig` gives by
- * default) and wires it into the Fastify app.
+ * Composition root: builds the dependency graph from `config` and wires it into the Fastify app.
+ *
+ * Whatever reads or writes files is given `filesService`, the one access to the file system.
  */
-export const buildServer = async (config: BackConfig = loadBackConfig()): Promise<EchoServer> => {
+export const buildServer = async (
+  config: BackConfig,
+  filesService: FilesService
+): Promise<EchoServer> => {
   // Fastify's https/http overloads produce distinct FastifyInstance generics, which would
   // make `server` a union type unusable for the .register() calls below. The raw server type
   // is never introspected past this point, so the options are built once and typed as the
@@ -47,33 +51,39 @@ export const buildServer = async (config: BackConfig = loadBackConfig()): Promis
 
   server.addSchema(EchoErrorJsonSchema)
 
-  const logsRepository = createLogsFilesRepository(
-    createLogsFilesApi(config.logs, createFilesService())
-  )
+  const logsRepository = createLogsFilesRepository(createLogsFilesApi(config.logs, filesService))
   const selfReportRepository = await getSelfReportRepository(
     server,
     logsRepository,
+    filesService,
     config.selfReports,
     ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName
   )
 
-  await registerAuthRoutes(server, config)
+  await registerAuthRoutes(server, config, filesService)
   await registerLogsRoutes(server, config, logsRepository, selfReportRepository)
 
   await registerFrontend(server, config.server)
 
   await registerLogsNotifier(server, config, {
     logsRepository,
-    selfReportRepository
+    selfReportRepository,
+    filesService
   })
 
   return server
 }
 
-/** Loads the config, builds the server with it and starts listening, exiting the process on failure. */
+/**
+ * Loads the config, builds the server with it and starts listening, exiting the process on
+ * failure.
+ *
+ * The files service both are given is built here, once.
+ */
 export const startServer = async (): Promise<void> => {
-  const config = loadBackConfig()
-  const server = await buildServer(config)
+  const filesService = createFilesService()
+  const config = await loadBackConfig(filesService)
+  const server = await buildServer(config, filesService)
 
   try {
     await server.listen({ port: config.server.port, host: config.server.host })

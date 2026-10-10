@@ -1,7 +1,7 @@
-import nodeFs from 'fs/promises'
 import path from 'path'
 
 import type { SelfReportsConfig } from '../../../shared/config/backConfig.js'
+import type { FilesService } from '../../../shared/services/files.service.js'
 
 import { SessionJobIdDtoSchema, type SessionJobIdDto } from './dto/sessionJobId.dto.js'
 
@@ -21,25 +21,22 @@ export interface SessionJobIdApi {
   saveLastSessionJobId: (lastSessionJobId: number) => Promise<void>
 }
 
-/** The subset of `fs/promises` used, so it can be replaced in tests. */
-export type SessionJobIdFileSystem = Pick<typeof nodeFs, 'mkdir' | 'readFile' | 'writeFile'>
-
 /**
- * Builds the access to the session file, found at `sessionFilePath`, on top of `fileSystem` (the
- * real file system by default).
+ * Builds the access to the session file, found at `sessionFilePath`, read and written through
+ * `filesService`.
  *
  * ```ts
- * const sessionJobIdApi = createFileSessionJobIdApi(selfReportsConfig)
+ * const sessionJobIdApi = createFileSessionJobIdApi(selfReportsConfig, filesService)
  * const sessionJobId = (await sessionJobIdApi.getLastSessionJobId()) + 1
  * await sessionJobIdApi.saveLastSessionJobId(sessionJobId)
  * ```
  */
 export const createFileSessionJobIdApi = (
   { sessionFilePath }: SelfReportsConfig,
-  fileSystem: SessionJobIdFileSystem = nodeFs
+  filesService: FilesService
 ): SessionJobIdApi => ({
   getLastSessionJobId: async (): Promise<number> => {
-    const content = await fileSystem.readFile(sessionFilePath, 'utf-8')
+    const content = await filesService.getFileContent(sessionFilePath)
 
     return SessionJobIdDtoSchema.parse(JSON.parse(content)).lastJobId
   },
@@ -47,7 +44,7 @@ export const createFileSessionJobIdApi = (
   saveLastSessionJobId: async (lastSessionJobId): Promise<void> => {
     const sessionJobIdDto: SessionJobIdDto = { lastJobId: lastSessionJobId }
 
-    await fileSystem.mkdir(path.dirname(sessionFilePath), { recursive: true })
-    await fileSystem.writeFile(sessionFilePath, JSON.stringify(sessionJobIdDto, null, 2), 'utf-8')
+    await filesService.createDirectory(path.dirname(sessionFilePath))
+    await filesService.replaceFileContent(sessionFilePath, JSON.stringify(sessionJobIdDto, null, 2))
   }
 })

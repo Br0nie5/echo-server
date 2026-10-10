@@ -1,46 +1,40 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { getMockSelfReportsConfig } from '../../../../test/mocks/configs.js'
-import { createFileSessionJobIdApi, type SessionJobIdFileSystem } from '../fileSessionJobId.api.js'
+import { getMockFilesService } from '../../../../test/mocks/filesService.js'
+import { createFileSessionJobIdApi } from '../fileSessionJobId.api.js'
 
 const selfReportsConfig = getMockSelfReportsConfig({
   sessionFilePath: '/fake/data/nested/self_reports_session.json'
 })
 
-const buildFileSystem = (overrides: Partial<SessionJobIdFileSystem> = {}): SessionJobIdFileSystem =>
-  ({
-    mkdir: vi.fn(),
-    readFile: vi.fn(),
-    writeFile: vi.fn(),
-    ...overrides
-  }) as unknown as SessionJobIdFileSystem
+const filesService = getMockFilesService()
+
+beforeEach(() => {
+  vi.resetAllMocks()
+})
 
 describe('SessionJobIdApi', () => {
   describe('getLastSessionJobId', () => {
     it('should return the session job id the session file holds', async () => {
-      const fileSystem = buildFileSystem({
-        readFile: vi.fn().mockResolvedValue('{"lastJobId":7}')
-      })
+      filesService.getFileContent.mockResolvedValue('{"lastJobId":7}')
 
       const lastSessionJobId = await createFileSessionJobIdApi(
         selfReportsConfig,
-        fileSystem
+        filesService
       ).getLastSessionJobId()
 
       expect(lastSessionJobId).toBe(7)
-      expect(fileSystem.readFile).toHaveBeenCalledWith(
-        '/fake/data/nested/self_reports_session.json',
-        'utf-8'
+      expect(filesService.getFileContent).toHaveBeenCalledWith(
+        '/fake/data/nested/self_reports_session.json'
       )
     })
 
     it('should throw when the file cannot be read', async () => {
-      const fileSystem = buildFileSystem({
-        readFile: vi.fn().mockRejectedValue(new Error('ENOENT'))
-      })
+      filesService.getFileContent.mockRejectedValue(new Error('ENOENT'))
 
       await expect(
-        createFileSessionJobIdApi(selfReportsConfig, fileSystem).getLastSessionJobId()
+        createFileSessionJobIdApi(selfReportsConfig, filesService).getLastSessionJobId()
       ).rejects.toThrow('ENOENT')
     })
 
@@ -50,26 +44,32 @@ describe('SessionJobIdApi', () => {
       ['has a lastJobId that is not a number', '{"lastJobId":"not-a-number"}'],
       ['has a lastJobId that is not an integer', '{"lastJobId":1.5}']
     ])('should throw when the content %s', async (_, content) => {
-      const fileSystem = buildFileSystem({ readFile: vi.fn().mockResolvedValue(content) })
+      filesService.getFileContent.mockResolvedValue(content)
 
       await expect(
-        createFileSessionJobIdApi(selfReportsConfig, fileSystem).getLastSessionJobId()
+        createFileSessionJobIdApi(selfReportsConfig, filesService).getLastSessionJobId()
       ).rejects.toThrow()
     })
   })
 
   describe('saveLastSessionJobId', () => {
-    it('should create the directory of the file and write the session job id in it', async () => {
-      const fileSystem = buildFileSystem()
+    it('should create the directory of the file, then replace its content with the session job id', async () => {
+      const steps: string[] = []
+      filesService.createDirectory.mockImplementation(async () => {
+        steps.push('createDirectory')
+      })
+      filesService.replaceFileContent.mockImplementation(async () => {
+        steps.push('replaceFileContent')
+      })
 
-      await createFileSessionJobIdApi(selfReportsConfig, fileSystem).saveLastSessionJobId(8)
+      await createFileSessionJobIdApi(selfReportsConfig, filesService).saveLastSessionJobId(8)
 
-      expect(fileSystem.mkdir).toHaveBeenCalledWith('/fake/data/nested', { recursive: true })
-      expect(fileSystem.writeFile).toHaveBeenCalledWith(
+      expect(filesService.createDirectory).toHaveBeenCalledWith('/fake/data/nested')
+      expect(filesService.replaceFileContent).toHaveBeenCalledWith(
         '/fake/data/nested/self_reports_session.json',
-        JSON.stringify({ lastJobId: 8 }, null, 2),
-        'utf-8'
+        JSON.stringify({ lastJobId: 8 }, null, 2)
       )
+      expect(steps).toEqual(['createDirectory', 'replaceFileContent'])
     })
   })
 })

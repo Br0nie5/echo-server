@@ -41,11 +41,13 @@ import {
   getMockSelfReportsConfig,
   getMockServerConfig
 } from '../test/mocks/configs.js'
+import { getMockFilesService } from '../test/mocks/filesService.js'
 
 const loadBackConfig = vi.mocked(actualLoadBackConfig)
 const getSelfReportRepository = vi.mocked(actualGetSelfReportRepository)
 
 const selfReportRepository: SelfReportRepository = { saveSelfReports: vi.fn() }
+const filesService = getMockFilesService()
 
 /** A config with every optional part set: TLS, authentication, logs notifier and notifications. */
 const getFullConfig = (): BackConfig =>
@@ -53,7 +55,7 @@ const getFullConfig = (): BackConfig =>
     server: getMockServerConfig({
       host: '127.0.0.1',
       port: 0,
-      tls: { cert: Buffer.from('certificate'), key: Buffer.from('key') }
+      tls: { cert: 'certificate', key: 'key' }
     }),
     logs: getMockLogsConfig({ logsNotifier: getMockLogsNotifierConfig() }),
     notification: getMockNotificationConfig()
@@ -84,7 +86,7 @@ describe('server', () => {
     it('should register every part of the server once, the routes after what they rely on', async () => {
       const config = getFullConfig()
 
-      const server = await buildServer(config)
+      const server = await buildServer(config, filesService)
       servers.push(server)
 
       expect(Fastify).toHaveBeenCalledWith({ logger: true, https: config.server.tls })
@@ -93,13 +95,14 @@ describe('server', () => {
       expect(getSelfReportRepository).toHaveBeenCalledExactlyOnceWith(
         server,
         expect.anything(),
+        filesService,
         config.selfReports,
         expect.any(Function)
       )
-      expect(getSelfReportRepository.mock.calls[0][3](getMockSelfReportsConfig())).toBe(
+      expect(getSelfReportRepository.mock.calls[0][4](getMockSelfReportsConfig())).toBe(
         getMockSelfReportsConfig().parseLogFileSelfReportFileName
       )
-      expect(registerAuthRoutes).toHaveBeenCalledExactlyOnceWith(server, config)
+      expect(registerAuthRoutes).toHaveBeenCalledExactlyOnceWith(server, config, filesService)
       expect(registerLogsRoutes).toHaveBeenCalledExactlyOnceWith(
         server,
         config,
@@ -109,7 +112,8 @@ describe('server', () => {
       expect(registerFrontend).toHaveBeenCalledExactlyOnceWith(server, config.server)
       expect(registerLogsNotifier).toHaveBeenCalledExactlyOnceWith(server, config, {
         logsRepository: expect.anything(),
-        selfReportRepository
+        selfReportRepository,
+        filesService
       })
       expect(server.getSchema('EchoError')).toBeDefined()
 
@@ -125,7 +129,7 @@ describe('server', () => {
     })
 
     it('should answer a generic 500 when a route handler throws', async () => {
-      const server = await buildServer(getFullConfig())
+      const server = await buildServer(getFullConfig(), filesService)
       servers.push(server)
       server.get('/failing', async () => {
         throw new Error('internal detail')
@@ -146,7 +150,7 @@ describe('server', () => {
       const config = getMockBackConfig({
         server: getMockServerConfig({ host: '127.0.0.1', port: 0 })
       })
-      loadBackConfig.mockReturnValue(config)
+      loadBackConfig.mockResolvedValue(config)
       const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => {})
 
       await startServer()
@@ -161,7 +165,7 @@ describe('server', () => {
     it('should exit the process when the server cannot listen', async () => {
       const portHolder = net.createServer()
       await new Promise<void>((resolve) => portHolder.listen(0, '127.0.0.1', resolve))
-      loadBackConfig.mockReturnValue(
+      loadBackConfig.mockResolvedValue(
         getMockBackConfig({
           server: getMockServerConfig({
             host: '127.0.0.1',

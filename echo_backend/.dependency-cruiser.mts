@@ -7,6 +7,7 @@ import type { IConfiguration } from 'dependency-cruiser'
 
 const MODULES = '^src/modules'
 const SHARED = '^src/shared/'
+const FILES_SERVICE = '^src/shared/services/files\\.service\\.ts$'
 const PLUGINS = '^src/plugins/'
 const SERVER = '^src/server\\.ts$'
 const ENTRY_POINT = '^src/main\\.ts$'
@@ -55,6 +56,14 @@ const config: IConfiguration = {
         'src/shared is what the rest builds on: of the sources of the backend, it only imports itself.',
       from: { path: SHARED, pathNot: TESTS },
       to: { path: '^src/', pathNot: SHARED }
+    },
+    {
+      name: 'backend-fs-only-through-files-service',
+      severity: 'error',
+      comment:
+        'The FilesService of src/shared/services/files.service.ts is the one access to the file system: anything else reads and writes files through it, never through fs.',
+      from: { pathNot: [FILES_SERVICE, TESTS, TEST_HELPERS] },
+      to: { dependencyTypes: ['core'], path: '^(node:)?fs(/promises)?$' }
     },
     {
       name: 'backend-plugins-only-from-server',

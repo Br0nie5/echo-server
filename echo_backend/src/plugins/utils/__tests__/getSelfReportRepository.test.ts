@@ -14,6 +14,7 @@ import {
 import { createNoopSelfReportRepository as actualCreateNoopSelfReportRepository } from '../../../modules/selfReport/infra/noopSelfReport.repository.js'
 import { createSelfLogReportRepository as actualCreateSelfLogReportRepository } from '../../../modules/selfReport/infra/selfLogReport.repository.js'
 import { getMockSelfReportsConfig } from '../../../test/mocks/configs.js'
+import { getMockFilesService } from '../../../test/mocks/filesService.js'
 import { getSelfReportRepository } from '../getSelfReportRepository.js'
 
 const createFileSessionJobIdApi = vi.mocked(actualCreateFileSessionJobIdApi)
@@ -27,6 +28,7 @@ const logsRepository: LogsRepository = {
   saveLogs: vi.fn(),
   deleteLogs: vi.fn()
 }
+const filesService = getMockFilesService()
 const sessionJobIdApi = {} as SessionJobIdApi
 const selfLogReportRepository: SelfReportRepository = { saveSelfReports: vi.fn() }
 const noopSelfReportRepository: SelfReportRepository = { saveSelfReports: vi.fn() }
@@ -48,12 +50,13 @@ describe('getSelfReportRepository', () => {
     const selfReportRepository = await getSelfReportRepository(
       server,
       logsRepository,
+      filesService,
       selfReportsConfig,
       ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName
     )
 
     expect(selfReportRepository).toBe(selfLogReportRepository)
-    expect(createFileSessionJobIdApi).toHaveBeenCalledWith(selfReportsConfig)
+    expect(createFileSessionJobIdApi).toHaveBeenCalledWith(selfReportsConfig, filesService)
     expect(createSelfLogReportRepository).toHaveBeenCalledWith({
       logsRepository,
       sessionJobIdApi,
@@ -68,6 +71,7 @@ describe('getSelfReportRepository', () => {
     const selfReportRepository = await getSelfReportRepository(
       server,
       logsRepository,
+      filesService,
       undefined,
       ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName
     )

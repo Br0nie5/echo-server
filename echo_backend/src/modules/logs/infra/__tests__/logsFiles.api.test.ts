@@ -2,18 +2,15 @@ import path from 'path'
 
 import { beforeEach, describe, it, expect, vi } from 'vitest'
 
+import { FileDoesNotExistError } from '../../../../shared/services/fileDoesNotExistError.js'
 import { getMockLogsConfig } from '../../../../test/mocks/configs.js'
+import { getMockFilesService } from '../../../../test/mocks/filesService.js'
 import type { LogFileDto } from '../dto/logFile.dto.js'
 import { createLogsFilesApi } from '../logsFiles.api.js'
 
 const logsConfig = getMockLogsConfig({ logsDirsPaths: ['/logs'], logFileExtension: '.jsonl' })
 
-const filesService = {
-  getFilesPaths: vi.fn(),
-  getFileLines: vi.fn(),
-  createDirectory: vi.fn(),
-  replaceFileLines: vi.fn()
-}
+const filesService = getMockFilesService()
 
 /** Makes `filesService` find, among `filesPathsByDirectory`, the files its caller asks for. */
 const mockFoundFiles = (filesPathsByDirectory: Record<string, string[]>): void => {
@@ -145,6 +142,16 @@ describe('LogsFilesApi', () => {
         { logFile: file, index: 1, content: 'bar' }
       ])
       expect(filesService.getFileLines).toHaveBeenCalledWith('/logs/file.jsonl')
+    })
+
+    it('should return no line when the file does not exist', async () => {
+      filesService.getFileLines.mockRejectedValue(new FileDoesNotExistError('/logs/missing.jsonl'))
+
+      expect(
+        await createLogsFilesApi(logsConfig, filesService).getRawLogLines(
+          logFile('/logs/missing.jsonl')
+        )
+      ).toEqual([])
     })
 
     it('should throw the error of the files service when the file cannot be read', async () => {

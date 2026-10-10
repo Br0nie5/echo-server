@@ -1,7 +1,7 @@
-import nodeFs from 'fs/promises'
 import path from 'path'
 
 import type { LogsNotifierConfig } from '../../../../../shared/config/backConfig.js'
+import type { FilesService } from '../../../../../shared/services/files.service.js'
 
 /** Access to the last-check file, the data source the last check date is stored in. */
 export interface CheckDateApi {
@@ -18,21 +18,23 @@ export interface CheckDateApi {
   saveRawLastCheckDate: (rawLastCheckDate: string) => Promise<void>
 }
 
-/** The subset of `fs/promises` used, so it can be replaced in tests. */
-export type CheckDateFileSystem = Pick<typeof nodeFs, 'mkdir' | 'readFile' | 'writeFile'>
-
 /**
- * Builds the access to the last-check file, found at `lastLogsCheckFilePath`, on top of
- * `fileSystem` (the real file system by default).
+ * Builds the access to the last-check file, found at `lastLogsCheckFilePath`, read and written
+ * through `filesService`.
+ *
+ * ```ts
+ * const checkDateApi = createFileCheckDateApi(logsNotifierConfig, filesService)
+ * const rawLastCheckDate = await checkDateApi.getRawLastCheckDate()
+ * ```
  */
 export const createFileCheckDateApi = (
   { lastLogsCheckFilePath }: LogsNotifierConfig,
-  fileSystem: CheckDateFileSystem = nodeFs
+  filesService: FilesService
 ): CheckDateApi => ({
-  getRawLastCheckDate: (): Promise<string> => fileSystem.readFile(lastLogsCheckFilePath, 'utf-8'),
+  getRawLastCheckDate: (): Promise<string> => filesService.getFileContent(lastLogsCheckFilePath),
 
   saveRawLastCheckDate: async (rawLastCheckDate): Promise<void> => {
-    await fileSystem.mkdir(path.dirname(lastLogsCheckFilePath), { recursive: true })
-    await fileSystem.writeFile(lastLogsCheckFilePath, rawLastCheckDate, 'utf-8')
+    await filesService.createDirectory(path.dirname(lastLogsCheckFilePath))
+    await filesService.replaceFileContent(lastLogsCheckFilePath, rawLastCheckDate)
   }
 })

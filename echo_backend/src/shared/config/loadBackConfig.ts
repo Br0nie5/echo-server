@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url'
 import { parseConfig } from '@echo/utilities'
 import dotenv from 'dotenv'
 
+import type { FilesService } from '../services/files.service.js'
+
 import type { BackConfig } from './backConfig.js'
 import { addEnvNameToError } from './utils/addEnvNameToError.js'
 import { createSelfReportsDirPath } from './utils/createSelfReportsDirPath.js'
@@ -36,7 +38,8 @@ const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
 
 /**
  * Builds the configuration of the backend from `processEnv` (the environment of the process by
- * default) and from the constants of the backend (paths, file names, cookie settings).
+ * default), from the constants of the backend (paths, file names, cookie settings) and from the
+ * files some variables point to, read through `filesService` (the TLS certificate and key).
  *
  * `.env.<mode>` is loaded into `processEnv` first, without overriding the variables already set;
  * `<mode>` is `production` when `NODE_ENV` is, `development` otherwise. Each variable is then read
@@ -52,12 +55,16 @@ const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
  * It is meant to be called once, when the server starts, the config then being handed down:
  *
  * ```ts
- * const config = loadBackConfig()
- * const server = await buildServer(config)
+ * const filesService = createFilesService()
+ * const config = await loadBackConfig(filesService)
+ * const server = await buildServer(config, filesService)
  * await server.listen({ port: config.server.port, host: config.server.host })
  * ```
  */
-export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): BackConfig => {
+export const loadBackConfig = async (
+  filesService: FilesService,
+  processEnv: NodeJS.ProcessEnv = process.env
+): Promise<BackConfig> => {
   const mode = processEnv.NODE_ENV === 'production' ? processEnv.NODE_ENV : 'development'
   dotenv.config({ path: `.env.${mode}`, processEnv, override: false, quiet: true })
 
@@ -89,7 +96,7 @@ export const loadBackConfig = (processEnv: NodeJS.ProcessEnv = process.env): Bac
       host: '0.0.0.0',
       port: parseHttpPort(requireEnv(processEnv, 'HTTP_PORT')),
       allowedDomain,
-      tls: parseTlsConfig(processEnv, { serverUrl: config.SERVER_URL }),
+      tls: await parseTlsConfig(processEnv, { serverUrl: config.SERVER_URL }, filesService),
       frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
     },
     auth: config.HAS_AUTHENTICATION

@@ -58,7 +58,7 @@ The `logs` module itself has two parts: the core log retrieval in the four layer
 
 ### The files service
 
-`shared/services/files.service.ts` holds the `FilesService`, which reads and writes the files of the machine as lines of text: `getFilesPaths` (the files of a directory, at any depth), `getFileLines` (the non-blank lines of a file, none when it does not exist), `createDirectory` and `replaceFileLines` (in one step, so a reader never sees the file half written).
+`shared/services/files.service.ts` holds the `FilesService`, the one access of the backend to the file system: `arch:check` refuses an import of `fs` anywhere else (`backend-fs-only-through-files-service`). It reads and writes the files of the machine as text: `createDirectory`, `getFileContent` (the whole content of a file) and `getFileLines` (its non-blank lines), both throwing a `FileDoesNotExistError` when the file is missing, `getFilesPaths` (the files of a directory, at any depth), `replaceFileContent` and `replaceFileLines` (through a temporary file, so a reader never sees the file half written, removed when the write fails) and `restrictFileAccessToOwner` (the users database). `startServer` builds it once, and hands it to `loadBackConfig`, which reads the TLS certificate and key through it, and to `buildServer`, which gives it to whatever reads or writes files.
 
 It knows nothing of what the files hold nor of how they are named: `getFilesPaths` is given the function saying which files to include, so the extension of the log files stays in the config (`logFileExtension`), like the name of the directory they are put in, which is left out of their group (`logFilesDirName`). `logs/infra` reads and writes the log files through it.
 
@@ -179,6 +179,7 @@ The script runs `arch:check` in every workspace. Each one has its own rules, wit
 | `no-circular` | Any circular dependency |
 | `not-to-unresolvable` | An import that resolves to no file or package: a typo or a missing dependency, which no other rule could check |
 | `backend-shared-is-self-contained`, `frontend-shared-not-to-modules` | `shared/` importing from `modules/` and, in the backend, from anything else of `src/` |
+| `backend-fs-only-through-files-service` | Anything but the `FilesService` importing `fs`: the files are read and written through it |
 | `backend-plugins-only-from-server`, `backend-server-only-from-entry-point` | Anything but `server.ts` importing `plugins/`, and anything but `main.ts` importing `server.ts`: the composition root reaches every layer, so a module importing it would too |
 | `backend-module-files-in-a-layer` (and its `-when-imported` and `-when-orphan` forms, which catch the files the first cannot) | A file of `modules/` outside the `domain/`, `application/`, `infra/` and `presentation/` folders of a module or of a submodule: the rules about the layers know a file by its folder |
 | `backend-modules-isolated`, `backend-parent-not-to-submodule-internals`, `backend-submodules-isolated` | A module or a submodule importing anything but the `domain/` and the `infra/` of another one, whether it is another module, one of its submodules or a submodule next to it |

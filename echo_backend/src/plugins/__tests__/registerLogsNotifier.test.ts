@@ -16,6 +16,7 @@ import {
   getMockNotificationConfig,
   getMockSelfReportsConfig
 } from '../../test/mocks/configs.js'
+import { getMockFilesService } from '../../test/mocks/filesService.js'
 import { registerLogsNotifier, type LogsNotifierDependencies } from '../registerLogsNotifier.js'
 import { getSelfReportRepository as actualGetSelfReportRepository } from '../utils/getSelfReportRepository.js'
 
@@ -29,9 +30,11 @@ const logsRepository: LogsRepository = {
 }
 const logsSelfReportRepository: SelfReportRepository = { saveSelfReports: vi.fn() }
 const selfReportRepository: SelfReportRepository = { saveSelfReports: vi.fn() }
+const filesService = getMockFilesService()
 const dependencies: LogsNotifierDependencies = {
   logsRepository,
-  selfReportRepository: logsSelfReportRepository
+  selfReportRepository: logsSelfReportRepository,
+  filesService
 }
 const logsNotifierConfig = getMockLogsNotifierConfig()
 const notificationConfig = getMockNotificationConfig()
@@ -79,10 +82,11 @@ describe('registerLogsNotifier', () => {
     expect(getSelfReportRepository).toHaveBeenCalledWith(
       server,
       logsRepository,
+      filesService,
       config.selfReports,
       expect.any(Function)
     )
-    expect(getSelfReportRepository.mock.calls[0][3](getMockSelfReportsConfig())).toBe(
+    expect(getSelfReportRepository.mock.calls[0][4](getMockSelfReportsConfig())).toBe(
       getMockSelfReportsConfig().logsNotifierSelfReportFileName
     )
     const pluginOptions = register.mock.calls[0][1] as LogsNotifierPluginOptions
@@ -92,6 +96,10 @@ describe('registerLogsNotifier', () => {
     expect(pluginOptions.selfReportRepository).toBe(selfReportRepository)
     expect(pluginOptions.notifier.getMessageSizeLimit()).toBe(
       notificationConfig.telegramMessageSizeLimit
+    )
+    await pluginOptions.checkDateRepository.getLastCheckDate()
+    expect(filesService.getFileContent).toHaveBeenCalledWith(
+      logsNotifierConfig.lastLogsCheckFilePath
     )
   })
 

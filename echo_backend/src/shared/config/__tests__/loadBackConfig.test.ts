@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url'
 import dotenv, { type DotenvConfigOptions } from 'dotenv'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
+import { createFilesService } from '../../services/files.service.js'
 import { loadBackConfig } from '../loadBackConfig.js'
 
 vi.mock('dotenv', () => ({ default: { config: vi.fn() } }))
@@ -16,6 +17,8 @@ const TEST_KEY_PATH = path.join(FIXTURES_DIR, 'test-key.pem')
 
 const REPOSITORY_ROOT_PATH = path.join(__dirname, '../../../../..')
 const DATA_DIR_PATH = path.join(REPOSITORY_ROOT_PATH, 'data')
+
+const filesService = createFilesService()
 
 const REQUIRED_ENV: NodeJS.ProcessEnv = {
   SERVER_NAME: 'Echo',
@@ -46,35 +49,35 @@ describe('loadBackConfig', () => {
   })
 
   describe('environment', () => {
-    it('should load .env.development when NODE_ENV is not production', () => {
+    it('should load .env.development when NODE_ENV is not production', async () => {
       stubEnvFile('.env.development', { ...REQUIRED_ENV, SERVER_NAME: 'Development Echo' })
 
-      const config = loadBackConfig({ NODE_ENV: 'test' })
+      const config = await loadBackConfig(filesService, { NODE_ENV: 'test' })
 
       expect(config.server.serverName).toBe('Development Echo')
     })
 
-    it('should load .env.production when NODE_ENV is production', () => {
+    it('should load .env.production when NODE_ENV is production', async () => {
       stubEnvFile('.env.production', { ...REQUIRED_ENV, SERVER_NAME: 'Production Echo' })
 
-      const config = loadBackConfig({ NODE_ENV: 'production' })
+      const config = await loadBackConfig(filesService, { NODE_ENV: 'production' })
 
       expect(config.server.serverName).toBe('Production Echo')
     })
 
-    it('should keep the variables already set over the ones of the env file', () => {
+    it('should keep the variables already set over the ones of the env file', async () => {
       stubEnvFile('.env.development', { ...REQUIRED_ENV, SERVER_NAME: 'Development Echo' })
 
-      const config = loadBackConfig({ SERVER_NAME: 'Already Set Echo' })
+      const config = await loadBackConfig(filesService, { SERVER_NAME: 'Already Set Echo' })
 
       expect(config.server.serverName).toBe('Already Set Echo')
     })
 
-    it('should read the environment of the process by default', () => {
+    it('should read the environment of the process by default', async () => {
       Object.entries(REQUIRED_ENV).forEach(([key, value]) => vi.stubEnv(key, value))
       vi.stubEnv('SERVER_NAME', 'Process Echo')
 
-      const config = loadBackConfig()
+      const config = await loadBackConfig(filesService)
 
       expect(config.server.serverName).toBe('Process Echo')
     })
@@ -89,18 +92,21 @@ describe('loadBackConfig', () => {
     { variable: 'SERVER_LOGS_DIR_PATH', value: '' },
     { variable: 'SELF_REPORTS_ENABLED', value: 'maybe' },
     { variable: 'SELF_REPORTS_RETENTION_DAYS', value: '0' }
-  ])('should throw when the parser of $variable throws on "$value"', ({ variable, value }) => {
-    expect(() =>
-      loadBackConfig({
-        ...REQUIRED_ENV,
-        SELF_REPORTS_ENABLED: 'true',
-        [variable]: value
-      })
-    ).toThrow()
-  })
+  ])(
+    'should throw when the parser of $variable throws on "$value"',
+    async ({ variable, value }) => {
+      await expect(
+        loadBackConfig(filesService, {
+          ...REQUIRED_ENV,
+          SELF_REPORTS_ENABLED: 'true',
+          [variable]: value
+        })
+      ).rejects.toThrow()
+    }
+  )
 
-  it('should build the whole config, with its defaults, from the required variables alone', () => {
-    expect(loadBackConfig({ ...REQUIRED_ENV })).toStrictEqual({
+  it('should build the whole config, with its defaults, from the required variables alone', async () => {
+    expect(await loadBackConfig(filesService, { ...REQUIRED_ENV })).toStrictEqual({
       server: {
         serverName: 'Echo',
         serverUrl: 'http://localhost:5173',
@@ -126,8 +132,8 @@ describe('loadBackConfig', () => {
     })
   })
 
-  it('should build the whole config from every possible variables', () => {
-    const config = loadBackConfig({
+  it('should build the whole config from every possible variables', async () => {
+    const config = await loadBackConfig(filesService, {
       NODE_ENV: 'production',
       SERVER_NAME: 'Docker Prod',
       SERVER_URL: 'https://allowed-domain.com:3700',
@@ -158,8 +164,8 @@ describe('loadBackConfig', () => {
         port: 3700,
         allowedDomain: 'allowed-domain.com',
         tls: {
-          cert: readFileSync(TEST_CERT_PATH),
-          key: readFileSync(TEST_KEY_PATH)
+          cert: readFileSync(TEST_CERT_PATH, 'utf-8'),
+          key: readFileSync(TEST_KEY_PATH, 'utf-8')
         },
         frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
       },
@@ -203,8 +209,8 @@ describe('loadBackConfig', () => {
     })
   })
 
-  it('should leave the self reports out when they are disabled, whatever their other variables', () => {
-    const config = loadBackConfig({
+  it('should leave the self reports out when they are disabled, whatever their other variables', async () => {
+    const config = await loadBackConfig(filesService, {
       ...REQUIRED_ENV,
       SELF_REPORTS_ENABLED: 'false',
       SELF_REPORTS_RETENTION_DAYS: '0'
@@ -214,8 +220,8 @@ describe('loadBackConfig', () => {
     expect(config.logs.logsDirsPaths).toEqual(['/some/path'])
   })
 
-  it('should leave the logs notifier out when there is no notification config', () => {
-    const config = loadBackConfig({
+  it('should leave the logs notifier out when there is no notification config', async () => {
+    const config = await loadBackConfig(filesService, {
       ...REQUIRED_ENV,
       LOGS_NOTIFIER_SCHEDULE_REGEX: '*/30 * * * *',
       LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: 'WARNING,ERROR',
