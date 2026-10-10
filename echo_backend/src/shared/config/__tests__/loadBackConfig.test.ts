@@ -1,24 +1,26 @@
-import { readFileSync } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 import dotenv, { type DotenvConfigOptions } from 'dotenv'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-import { createFilesService } from '../../services/files.service.js'
+import { getMockFilesService } from '../../../test/mocks/filesService.js'
 import { loadBackConfig } from '../loadBackConfig.js'
 
 vi.mock('dotenv', () => ({ default: { config: vi.fn() } }))
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const FIXTURES_DIR = path.join(__dirname, 'fixtures')
-const TEST_CERT_PATH = path.join(FIXTURES_DIR, 'test-cert.pem')
-const TEST_KEY_PATH = path.join(FIXTURES_DIR, 'test-key.pem')
+const TLS_CERT_PATH = '/certificates/echo.crt'
+const TLS_KEY_PATH = '/certificates/echo.key'
+const TLS_FILES_CONTENTS: Record<string, string> = {
+  [TLS_CERT_PATH]: 'certificate content',
+  [TLS_KEY_PATH]: 'private key content'
+}
 
 const REPOSITORY_ROOT_PATH = path.join(__dirname, '../../../../..')
 const DATA_DIR_PATH = path.join(REPOSITORY_ROOT_PATH, 'data')
 
-const filesService = createFilesService()
+const filesService = getMockFilesService()
 
 const REQUIRED_ENV: NodeJS.ProcessEnv = {
   SERVER_NAME: 'Echo',
@@ -42,6 +44,7 @@ const stubEnvFile = (envFilePath: string, variables: NodeJS.ProcessEnv): void =>
 describe('loadBackConfig', () => {
   beforeEach(() => {
     vi.mocked(dotenv.config).mockReset()
+    filesService.getFileContent.mockImplementation(async (filePath) => TLS_FILES_CONTENTS[filePath])
   })
 
   afterEach(() => {
@@ -140,8 +143,8 @@ describe('loadBackConfig', () => {
       HAS_AUTHENTICATION: 'true',
       HTTP_PORT: '3700',
       LOGS_DIR_PATH: '/watched_logs',
-      TLS_CERT_PATH: TEST_CERT_PATH,
-      TLS_KEY_PATH: TEST_KEY_PATH,
+      TLS_CERT_PATH,
+      TLS_KEY_PATH,
       SELF_REPORTS_ENABLED: 'true',
       SERVER_LOGS_DIR_PATH: '/server_logs',
       SELF_REPORTS_RETENTION_DAYS: '30',
@@ -163,10 +166,7 @@ describe('loadBackConfig', () => {
         host: '0.0.0.0',
         port: 3700,
         allowedDomain: 'allowed-domain.com',
-        tls: {
-          cert: readFileSync(TEST_CERT_PATH, 'utf-8'),
-          key: readFileSync(TEST_KEY_PATH, 'utf-8')
-        },
+        tls: { cert: 'certificate content', key: 'private key content' },
         frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
       },
       auth: {

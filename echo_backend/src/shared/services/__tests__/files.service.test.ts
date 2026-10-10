@@ -1,7 +1,10 @@
 import { constants as fsConstants } from 'fs'
+import nodeFs from 'fs/promises'
 import path from 'path'
 
 import { describe, it, expect, vi } from 'vitest'
+
+vi.mock('fs/promises', () => ({ default: { mkdir: vi.fn() } }))
 
 import { FileDoesNotExistError } from '../fileDoesNotExistError.js'
 import { createFilesService, type FileSystem } from '../files.service.js'
@@ -81,6 +84,12 @@ const FILE_PATH = '/server_logs/self_reports/Echo/log/parseLogFile.jsonl'
 const TEMPORARY_FILE_PATH = `${FILE_PATH}.tmp`
 
 describe('FilesService', () => {
+  it('should use the file system of Node.js by default', async () => {
+    await createFilesService().createDirectory('/server_logs')
+
+    expect(nodeFs.mkdir).toHaveBeenCalledWith('/server_logs', { recursive: true })
+  })
+
   describe('createDirectory', () => {
     it('should create the directory and its parents', async () => {
       const fileSystem = buildFileSystem({})
@@ -126,12 +135,6 @@ describe('FilesService', () => {
         'EACCES'
       )
       expect(fileSystem.readFile).not.toHaveBeenCalled()
-    })
-
-    it('should use the real file system by default', async () => {
-      await expect(
-        createFilesService().getFileContent('/does/not/exist/file.jsonl')
-      ).rejects.toBeInstanceOf(FileDoesNotExistError)
     })
   })
 

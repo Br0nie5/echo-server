@@ -1,43 +1,47 @@
-import fs from 'fs'
-import os from 'os'
-import path from 'path'
+import Database from 'better-sqlite3'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-import type { Database } from 'better-sqlite3'
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+vi.mock('better-sqlite3', async (importOriginal) => {
+  const { default: ActualDatabase } = await importOriginal<{ default: typeof Database }>()
+  return {
+    default: vi.fn(function () {
+      return new ActualDatabase(':memory:')
+    })
+  }
+})
 
-import { createFilesService } from '../../../../shared/services/files.service.js'
 import { getMockAuthConfig } from '../../../../test/mocks/configs.js'
+import { getMockFilesService } from '../../../../test/mocks/filesService.js'
 import { createUsersDb } from '../users.db.js'
 
-const filesService = createFilesService()
+const { default: InMemoryDatabase } = await vi.importActual<{ default: typeof Database }>(
+  'better-sqlite3'
+)
+const filesService = getMockFilesService()
+const usersDbFilePath = '/data/nested/users.db'
 
 describe('createUsersDb', () => {
-  let temporaryDirPath: string
-  let usersDb: Database | undefined
+  let usersDb: Database.Database | undefined
 
   beforeEach(() => {
-    temporaryDirPath = fs.mkdtempSync(path.join(os.tmpdir(), 'echo-users-db-'))
+    vi.clearAllMocks()
   })
 
   afterEach(() => {
     usersDb?.close()
     usersDb = undefined
-    fs.rmSync(temporaryDirPath, { recursive: true, force: true })
   })
 
-  it('should create missing parent directories and an owner-only database file', async () => {
-    const usersDbFilePath = path.join(temporaryDirPath, 'nested', 'users.db')
-
+  it('should create the parent directory, open the file and restrict it to its owner', async () => {
     usersDb = await createUsersDb(getMockAuthConfig({ usersDbFilePath }), filesService)
 
-    expect(fs.statSync(usersDbFilePath).mode & 0o777).toBe(0o600)
+    expect(filesService.createDirectory).toHaveBeenCalledExactlyOnceWith('/data/nested')
+    expect(Database).toHaveBeenCalledExactlyOnceWith(usersDbFilePath)
+    expect(filesService.restrictFileAccessToOwner).toHaveBeenCalledExactlyOnceWith(usersDbFilePath)
   })
 
   it('should create the users table with a unique username', async () => {
-    usersDb = await createUsersDb(
-      getMockAuthConfig({ usersDbFilePath: path.join(temporaryDirPath, 'users.db') }),
-      filesService
-    )
+    usersDb = await createUsersDb(getMockAuthConfig({ usersDbFilePath }), filesService)
     const insert = usersDb.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)')
 
     insert.run('admin', 'hash')
@@ -46,15 +50,17 @@ describe('createUsersDb', () => {
     expect(usersDb.prepare('SELECT is_admin FROM users').get()).toEqual({ is_admin: 0 })
   })
 
-  it('should reopen an existing database without losing data', async () => {
-    const authConfig = getMockAuthConfig({
-      usersDbFilePath: path.join(temporaryDirPath, 'users.db')
+  it('should keep the users of an existing database', async () => {
+    const existingDb = new InMemoryDatabase(':memory:')
+    existingDb.exec(
+      'CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, is_admin INTEGER NOT NULL DEFAULT 0)'
+    )
+    existingDb.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run('a', 'h')
+    vi.mocked(Database).mockImplementationOnce(function () {
+      return existingDb
     })
-    const firstDb = await createUsersDb(authConfig, filesService)
-    firstDb.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run('a', 'h')
-    firstDb.close()
 
-    usersDb = await createUsersDb(authConfig, filesService)
+    usersDb = await createUsersDb(getMockAuthConfig({ usersDbFilePath }), filesService)
 
     expect(usersDb.prepare('SELECT username FROM users').get()).toEqual({ username: 'a' })
   })
