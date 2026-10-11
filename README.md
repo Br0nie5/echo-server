@@ -145,21 +145,20 @@ The container runs as the unprivileged `node` user (uid `1000`, gid `1000`), not
 
 ## Log file format
 
-Echo reads every `.jsonl` file under the logs directory. Each line must be one JSON object with exactly these fields:
+Echo reads every `.jsonl` file under the logs directory. Each line must be one JSON object with these fields, `origin` being the only optional one:
 
 <!-- prettier-ignore -->
 ```jsonl
-{"job_id":1,"timestamp":"2026-09-19T14:41:09.669Z","status":"INFO","message":"Log file has been successfully set up.","call_file":"rotate_logs.sh","call_line":12}
+{"job_id":1,"timestamp":"2026-09-19T14:41:09.669Z","status":"INFO","message":"Log file has been successfully set up.","origin":"rotate_logs.sh:12"}
 ```
 
-| Field       | Type    | Notes                                                                                                                                                                                                                |
-| ----------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `job_id`    | number  | Identifier of the run/job that produced the line.                                                                                                                                                                    |
-| `timestamp` | string  | ISO 8601, e.g. `2026-09-19T14:41:09.669Z` (`date -u +'%Y-%m-%dT%H:%M:%S.%3NZ'`). Read as UTC when it carries no offset. Any other format (including the former `yyyy-MM-dd HH:mm:ss.SSS`) makes the line unparsable. |
-| `status`    | string  | One of `SUCCESS`, `INFO`, `WARNING`, `ERROR`.                                                                                                                                                                        |
-| `message`   | string  | Free text.                                                                                                                                                                                                           |
-| `call_file` | string  | Name of the file that emitted the line, e.g. `rotate_logs.sh`.                                                                                                                                                       |
-| `call_line` | integer | Line number in `call_file` that emitted the line.                                                                                                                                                                    |
+| Field       | Type   | Notes                                                                                                                                                                                                                |
+| ----------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `job_id`    | number | Identifier of the run/job that produced the line.                                                                                                                                                                    |
+| `timestamp` | string | ISO 8601, e.g. `2026-09-19T14:41:09.669Z` (`date -u +'%Y-%m-%dT%H:%M:%S.%3NZ'`). Read as UTC when it carries no offset. Any other format (including the former `yyyy-MM-dd HH:mm:ss.SSS`) makes the line unparsable. |
+| `status`    | string | One of `SUCCESS`, `INFO`, `WARNING`, `ERROR`.                                                                                                                                                                        |
+| `message`   | string | Free text.                                                                                                                                                                                                           |
+| `origin`    | string | Optional. Where the line was emitted from, in any form but an empty string, e.g. `rotate_logs.sh:12`.                                                                                                                |
 
 Lines that are not valid JSON, do not match this shape, have an unknown `status`, or have an unparsable timestamp are skipped without error (unless `SAVE_SELF_REPORTS_TO_FILE=true`, see below).
 
@@ -176,7 +175,7 @@ The file name, without its last extension, is shown as the log source: `nightly.
 
 Set `SAVE_SELF_REPORTS_TO_FILE=true` to have the backend report the `.jsonl` lines it fails to parse as regular log entries, so they show up in the UI instead of only in the container's own logs. Each failing line becomes a `WARNING` entry in group `<SERVER_NAME>`, source `parseLogFile`, at `/server_logs/self_reports/<SERVER_NAME>/log/parseLogFile.jsonl` (scanned along with `/watched_logs`). This needs a writable volume of its own (see Volumes above), so `/watched_logs` can stay read-only. All entries written to one self-report file during one server run share the same `job_id`, and each self-report file takes its own, so a server start uses as many `job_id`s as it has self-report files; entries older than `SELF_REPORTS_RETENTION_DAYS` (default `10`) are pruned once at each start.
 
-Since every request re-scans and re-parses all `.jsonl` files, a line that still fails to parse is reported again on every request. It is not written a second time: each entry's `call_file` is the name of the log file the failing line comes from, and its `call_line` is that line's position (1-based, among the non-blank lines of that file), and reporting a failure that already has an entry with the same `call_file`, `call_line` and message only brings the `timestamp` of that entry up to now. So the entry of a problem that is still there always has a recent date, and the entry of a problem you fixed keeps the date it was last seen at, until `SELF_REPORTS_RETENTION_DAYS` prunes it at a later start. A line of a self-report file that fails to parse is reported the same way, with `call_file` set to `parseLogFile`, and is then removed from that file the next time it is written or at the next start.
+Since every request re-scans and re-parses all `.jsonl` files, a line that still fails to parse is reported again on every request. It is not written a second time: each entry's `origin` is the path of the log file the failing line comes from, followed by that line's position (1-based, among the non-blank lines of that file), as in `/watched_logs/backup/log/nightly.log.jsonl:3`, and reporting a failure that already has an entry with the same `status`, `origin` and message only brings the `timestamp` of that entry up to now. So the entry of a problem that is still there always has a recent date, and the entry of a problem you fixed keeps the date it was last seen at, until `SELF_REPORTS_RETENTION_DAYS` prunes it at a later start. A line of a self-report file that fails to parse is reported the same way, with the path of that self-report file in its `origin`, and is then removed from that file the next time it is written or at the next start.
 
 ## Authentication
 

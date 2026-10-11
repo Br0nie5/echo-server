@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** `call_file` and `call_line` of a log line are replaced by `origin`, an optional string saying where the line was emitted from, in any form but an empty one (`rotate_logs.sh:12`). A line that still carries `call_file` and `call_line` is read, without them. In the `Log` returned by `GET /api/logs`, `callFile` and `callLine` are replaced by the optional `origin`, and the `id` is now made of the position of the line, the path of its file and its content. The `origin` of a self report is the path of the log file followed by the position of the failing line (`/watched_logs/backup/log/nightly.log.jsonl:3`).
+
 - **Breaking:** the environment variables of the Telegram notifications are renamed. Update the environment of your container:
 
   | Before                              | After                                   |

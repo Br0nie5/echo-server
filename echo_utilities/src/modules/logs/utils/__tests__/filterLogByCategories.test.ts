@@ -14,8 +14,7 @@ describe('filterLogByCategories', () => {
     jobId: 123,
     category: LogCategory.INFO,
     message: 'some log message',
-    callFile: 'log_file_name.sh',
-    callLine: 1
+    origin: 'log_file_name.sh:1'
   }
 
   it('Should match log with the correct category', () => {

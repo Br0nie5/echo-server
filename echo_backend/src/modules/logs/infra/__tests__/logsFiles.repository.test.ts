@@ -1,26 +1,40 @@
 import type { Log } from '@echo/utilities'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import type { SelfReport } from '../../../selfReport/domain/selfReport.js'
 import type { LogFileDto } from '../dto/logFile.dto.js'
 import type { RawLogLineDto } from '../dto/rawLogLine.dto.js'
 import { createLogsFilesRepository } from '../logsFiles.repository.js'
 
 const lineContents = [
-  '{"job_id":1,"timestamp":"2024-05-12T14:30:00.001Z","status":"INFO","message":"First log","call_file":"file.sh","call_line":1}',
-  '{"job_id":2,"timestamp":"2024-05-12T15:00:00.145Z","status":"ERROR","message":"Second [Test] log","call_file":"file.sh","call_line":2}',
-  '{"job_id":3,"timestamp":"2024-05-12 14:30:00.000","status":"INFO","message":"Old timestamp format","call_file":"file.sh","call_line":3}',
-  '{"job_id":3,"timestamp":"2024-05-12T14:33:00.334Z","status":"INFO","message":"Log with a\\nline breaker","call_file":"file.sh","call_line":4}',
+  '{"job_id":1,"timestamp":"2024-05-12T14:30:00.001Z","status":"INFO","message":"First log","origin":"file.sh:1"}',
+  '{"job_id":2,"timestamp":"2024-05-12T15:00:00.145Z","status":"ERROR","message":"Second [Test] log","origin":"file.sh:2"}',
+  '{"job_id":3,"timestamp":"2024-05-12 14:30:00.000","status":"INFO","message":"Old timestamp format","origin":"file.sh:3"}',
+  '{"job_id":3,"timestamp":"2024-05-12T14:33:00.334Z","status":"INFO","message":"Log with a\\nline breaker","origin":"file.sh:4"}',
   'invalid line'
 ]
 
 const READ_DATE = new Date('2026-09-19T14:41:09.669Z')
 
 const logFile = (overrides: Partial<LogFileDto> = {}): LogFileDto => ({
+  id: overrides.path ?? '/logs/docker/utils/file.jsonl',
   path: '/logs/docker/utils/file.jsonl',
   fileName: 'myFile',
   groupName: 'utils',
   ...overrides
 })
+
+/** The self report of a line read at `READ_DATE` that holds no log. */
+const unreadableLineSelfReport = (message: string, origin: string): SelfReport => {
+  const noIdSelfReport: Omit<SelfReport, 'id'> = {
+    date: READ_DATE,
+    message,
+    level: 'WARNING',
+    origin
+  }
+
+  return { id: JSON.stringify(noIdSelfReport), ...noIdSelfReport }
+}
 
 const rawLogLinesOf = (file: LogFileDto, contents: string[]): RawLogLineDto[] =>
   contents.map((content, index) => ({ logFile: file, index, content }))
@@ -61,39 +75,24 @@ describe('LogsFilesRepository', () => {
         location: '/logs/docker/utils/file.jsonl',
         locationName: 'myFile',
         groupName: 'utils',
-        callFile: 'file.sh',
-        callLine: 1
+        origin: 'file.sh:1'
       })
       expect(logs[1]).toMatchObject({
         jobId: 2,
         category: 'ERROR',
         message: 'Second [Test] log',
-        callFile: 'file.sh',
-        callLine: 2
+        origin: 'file.sh:2'
       })
       expect(logs[2]).toMatchObject({
         jobId: 3,
         category: 'INFO',
         message: 'Log with a\nline breaker',
-        callFile: 'file.sh',
-        callLine: 4
+        origin: 'file.sh:4'
       })
 
       expect(selfReports).toEqual([
-        {
-          date: READ_DATE,
-          message: lineContents[2],
-          level: 'warning',
-          reportedFile: 'myFile',
-          reportedLine: 3
-        },
-        {
-          date: READ_DATE,
-          message: 'invalid line',
-          level: 'warning',
-          reportedFile: 'myFile',
-          reportedLine: 5
-        }
+        unreadableLineSelfReport(lineContents[2], '/logs/docker/utils/file.jsonl:3'),
+        unreadableLineSelfReport('invalid line', '/logs/docker/utils/file.jsonl:5')
       ])
     })
 
@@ -143,20 +142,11 @@ describe('LogsFilesRepository', () => {
       const { selfReports } = await logsFilesRepository.getAllLogs()
 
       expect(selfReports).toEqual([
-        {
-          date: READ_DATE,
-          message: 'invalid line',
-          level: 'warning',
-          reportedFile: 'a',
-          reportedLine: 2
-        },
-        {
-          date: READ_DATE,
-          message: 'cut line',
-          level: 'warning',
-          reportedFile: 'parseLogFile',
-          reportedLine: 1
-        }
+        unreadableLineSelfReport('invalid line', '/logs/docker/utils/file.jsonl:2'),
+        unreadableLineSelfReport(
+          'cut line',
+          '/server_logs/self_reports/Echo/log/parseLogFile.jsonl:1'
+        )
       ])
     })
   })
@@ -184,13 +174,7 @@ describe('LogsFilesRepository', () => {
         groupName: 'utils'
       })
       expect(selfReports).toEqual([
-        {
-          date: READ_DATE,
-          message: 'invalid line',
-          level: 'warning',
-          reportedFile: 'myFile',
-          reportedLine: 2
-        }
+        unreadableLineSelfReport('invalid line', '/logs/docker/utils/file.jsonl:2')
       ])
     })
   })
@@ -211,8 +195,7 @@ describe('LogsFilesRepository', () => {
       jobId: 1,
       category: 'INFO',
       message: 'First log',
-      callFile: 'file.sh',
-      callLine: 1,
+      origin: 'file.sh:1',
       ...overrides
     })
 
@@ -221,7 +204,7 @@ describe('LogsFilesRepository', () => {
       jobId: 2,
       category: 'ERROR',
       message: 'Second [Test] log',
-      callLine: 2
+      origin: 'file.sh:2'
     }
 
     it('Should make the logs the lines of the file at their location, in order', async () => {

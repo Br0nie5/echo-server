@@ -20,8 +20,7 @@ function mockLog(overrides: Partial<Log> = {}): Log {
     location: '/logs/worker.jsonl',
     locationName: 'worker',
     message: 'Something broke',
-    callFile: 'worker.sh',
-    callLine: 1,
+    origin: 'worker.sh:1',
     ...overrides
   }
 }

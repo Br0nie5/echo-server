@@ -1,14 +1,18 @@
 import type { Log } from '@echo/utilities'
 import { z } from 'zod'
 
-/** Validates the shape of a `.jsonl` log line. Its `status` and `timestamp` are checked further when converting it to a `Log`. `call_file`/`call_line` identify where the log was emitted from (file and line). */
+/**
+ * Validates the shape of a `.jsonl` log line.
+ *
+ * Its `status` and `timestamp` are checked further when converting it to a `Log`. `origin` says
+ * where the log was emitted from, in any form but an empty one, and may be left out.
+ */
 export const RawJsonLogLineSchema = z.object({
   job_id: z.number(),
   timestamp: z.string(),
   status: z.string(),
   message: z.string(),
-  call_file: z.string(),
-  call_line: z.number().int()
+  origin: z.string().min(1).optional()
 })
 
 /** The JSON a line of a `.jsonl` log file holds. */
@@ -29,13 +33,11 @@ export const convertLogToRawJsonLogLine = ({
   jobId,
   category,
   message,
-  callFile,
-  callLine
+  origin
 }: Log): RawJsonLogLine => ({
   job_id: jobId,
   timestamp: date,
   status: category,
   message,
-  call_file: callFile,
-  call_line: callLine
+  origin
 })

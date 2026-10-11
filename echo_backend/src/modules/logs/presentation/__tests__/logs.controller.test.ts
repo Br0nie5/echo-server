@@ -43,8 +43,7 @@ describe('LogsController.getLogs', () => {
       jobId: 1,
       category: 'INFO',
       message: 'test',
-      callFile: 'f.sh',
-      callLine: 1
+      origin: 'f.sh:1'
     }
   ]
 

@@ -37,7 +37,7 @@ Each returned log:
 
 ```json
 {
-  "id": "0 [docker_utils] [prune.log] {\"job_id\":1,...}",
+  "id": "0 /watched_logs/scripts/docker/utils/log/prune.log.jsonl {\"job_id\":1,...}",
   "date": "2026-09-19T14:41:09.669Z",
   "groupName": "docker_utils",
   "location": "/watched_logs/scripts/docker/utils/log/prune.log.jsonl",
@@ -45,12 +45,11 @@ Each returned log:
   "jobId": 1,
   "category": "INFO",
   "message": "Pruning the unused Docker images.",
-  "callFile": "prune.sh",
-  "callLine": 12
+  "origin": "prune.sh:12"
 }
 ```
 
-`location` is where the log is stored (the path of its file on the server) and `locationName` its short name, the one the app shows: the name of the file without its last extension. A search can target `locationName`, `groupName`, `jobId` or `message` with `key:` (`locationName:prune`).
+`location` is where the log is stored (the path of its file on the server) and `locationName` its short name, the one the app shows: the name of the file without its last extension. `origin`, where the log was emitted from, is whatever the script wrote, never empty, and is left out when it wrote none. A search can target `locationName`, `groupName`, `jobId` or `message` with `key:` (`locationName:prune`).
 
 Errors use the `EchoError` schema: `400` invalid params, `401` unauthenticated, `429` too many login or sign-up attempts from one address (5 a minute), `500` server error.
 

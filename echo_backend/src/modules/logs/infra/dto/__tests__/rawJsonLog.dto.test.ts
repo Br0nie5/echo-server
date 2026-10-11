@@ -11,11 +11,33 @@ describe('RawJsonLogLineSchema', () => {
       timestamp: '2024-05-12T14:30:00.386Z',
       status: 'WARNING',
       message: 'Ok',
-      call_file: 'check_logs.sh',
-      call_line: 4
+      origin: 'check_logs.sh:4'
     }
 
     expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeTruthy()
+  })
+
+  it('Should accept a raw JSON log line without the optional origin', () => {
+    const rawLine = {
+      job_id: 1,
+      timestamp: '2024-05-12T14:30:00.386Z',
+      status: 'WARNING',
+      message: 'Ok'
+    }
+
+    expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeTruthy()
+  })
+
+  it('Should reject a raw JSON log line with an empty origin', () => {
+    const rawLine = {
+      job_id: 1,
+      timestamp: '2024-05-12T14:30:00.386Z',
+      status: 'WARNING',
+      message: 'Ok',
+      origin: ''
+    }
+
+    expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeFalsy()
   })
 
   it('Should reject a raw log line missing a required field', () => {
@@ -30,8 +52,7 @@ describe('RawJsonLogLineSchema', () => {
       timestamp: '2024-05-12T14:30:00.386Z',
       status: 'INFO',
       message: 'Ok',
-      call_file: 'check_logs.sh',
-      call_line: 4
+      origin: 'check_logs.sh:4'
     }
 
     expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeFalsy()
@@ -52,8 +73,7 @@ describe('convertLogToRawJsonLogLine', () => {
     jobId: 123,
     category: 'INFO',
     message: 'Something happened',
-    callFile: 'check_logs.sh',
-    callLine: 4
+    origin: 'check_logs.sh:4'
   }
 
   it('Should give the JSON of the line of the log, without what says where it is stored', () => {
@@ -62,8 +82,7 @@ describe('convertLogToRawJsonLogLine', () => {
       timestamp: '2024-05-12T14:30:00.386Z',
       status: 'INFO',
       message: 'Something happened',
-      call_file: 'check_logs.sh',
-      call_line: 4
+      origin: 'check_logs.sh:4'
     })
   })
 
@@ -72,10 +91,23 @@ describe('convertLogToRawJsonLogLine', () => {
 
     expect(
       convertRawLogLineToLog({
-        logFile: { path: '/logs/myGroup/file1.jsonl', fileName: 'file1', groupName: 'myGroup' },
+        logFile: {
+          id: '/logs/myGroup/file1.jsonl',
+          path: '/logs/myGroup/file1.jsonl',
+          fileName: 'file1',
+          groupName: 'myGroup'
+        },
         index: 0,
         content
       })
-    ).toEqual({ ...log, id: `0 [myGroup] [file1] ${content}` })
+    ).toEqual({ ...log, id: `0 /logs/myGroup/file1.jsonl ${content}` })
+  })
+
+  it('Should give a line without origin for a log that has none', () => {
+    const logWithoutOrigin: Log = { ...log, origin: undefined }
+
+    expect(JSON.stringify(convertLogToRawJsonLogLine(logWithoutOrigin))).toBe(
+      '{"job_id":123,"timestamp":"2024-05-12T14:30:00.386Z","status":"INFO","message":"Something happened"}'
+    )
   })
 })

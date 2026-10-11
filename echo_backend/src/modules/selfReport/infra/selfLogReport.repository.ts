@@ -60,7 +60,7 @@ export interface CreateSelfLogReportRepositoryOptions {
  * an optional feature that is misconfigured never blocks the start of the server.
  *
  * Saving self reports stores them with that jobId, the same for the whole life of the repository.
- * The stored logs with the `callFile`, `callLine` and `message` of one of them are filtered out:
+ * The stored logs with the `category`, `message` and `origin` of one of them are filtered out:
  * a self report saved again replaces the one stored before, so each is stored once, with its
  * latest date. A failure to save goes to `logger` too, and is not thrown.
  */
@@ -124,10 +124,10 @@ export const createSelfLogReportRepository = async ({
         await storeFilteredLogs(
           (storedLog) =>
             newLogs.some(
-              ({ callFile, callLine, message }) =>
-                callFile === storedLog.callFile &&
-                callLine === storedLog.callLine &&
-                message === storedLog.message
+              ({ category, message, origin }) =>
+                category === storedLog.category &&
+                message === storedLog.message &&
+                origin === storedLog.origin
             ),
           newLogs
         )

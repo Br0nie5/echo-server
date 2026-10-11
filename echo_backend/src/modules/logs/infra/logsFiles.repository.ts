@@ -19,9 +19,9 @@ import type { LogsFilesApi } from './logsFiles.api.js'
  * keep the order they are given in. A location with nothing stored at is an empty file.
  *
  * The lines that hold no valid log are left out of the logs, and given as warning self reports:
- * the message is the line itself, `reportedFile` the name of its file and `reportedLine` its
- * position among the non-blank lines of that file, starting at 1. Each is dated from when its line
- * was found to hold no log.
+ * the message is the line itself, and the `origin` the path of its file followed by its position
+ * among the non-blank lines of that file, starting at 1 (`/watched_logs/backup.jsonl:3`). Each is
+ * dated from when its line was found to hold no log, and its `id` is made of all the rest.
  */
 export const createLogsFilesRepository = (logsFilesApi: LogsFilesApi): LogsRepository => {
   const parseLogFile = async (logFile: LogFileDto): Promise<FoundLogs> => {
@@ -34,12 +34,19 @@ export const createLogsFilesRepository = (logsFilesApi: LogsFilesApi): LogsRepos
       const log = convertRawLogLineToLog(rawLogLine)
 
       if (log === undefined) {
-        selfReports.push({
+        const noIdSelfReport: Omit<SelfReport, 'id'> = {
           date: new Date(),
           message: rawLogLine.content,
-          level: 'warning',
-          reportedFile: logFile.fileName,
-          reportedLine: rawLogLine.index + 1
+          level: 'WARNING',
+          origin: `${logFile.path}:${rawLogLine.index + 1}`
+        }
+
+        selfReports.push({
+          id: JSON.stringify(noIdSelfReport),
+          date: noIdSelfReport.date,
+          message: noIdSelfReport.message,
+          level: noIdSelfReport.level,
+          origin: noIdSelfReport.origin
         })
       } else {
         logs.push(log)

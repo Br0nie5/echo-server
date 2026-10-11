@@ -12,8 +12,7 @@ const buildLog = (id: string): Log => ({
   location: '/logs/file.jsonl',
   locationName: 'file',
   message: 'message',
-  callFile: 'file.sh',
-  callLine: 1
+  origin: 'file.sh:1'
 })
 
 const logs = [buildLog('a'), buildLog('b'), buildLog('c')]

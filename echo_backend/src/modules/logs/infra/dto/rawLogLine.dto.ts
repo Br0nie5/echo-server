@@ -19,6 +19,7 @@ export interface RawLogLineDto {
  *
  * Returns `undefined` when the line does not hold a log: its content is not JSON, does not have
  * the shape `RawJsonLogLineSchema` describes, has an unknown status or a timestamp that is not a date.
+ * The `id` of the log is made of the position of the line, the id of its file and its content.
  *
  * ```ts
  * const logs = rawLogLines.map(convertRawLogLineToLog).filter((log) => log !== undefined)
@@ -43,7 +44,7 @@ export const convertRawLogLineToLog = ({
     return
   }
 
-  const { job_id, timestamp, status, message, call_file, call_line } = rawJsonLogLine.data
+  const { job_id, timestamp, status, message, origin } = rawJsonLogLine.data
   const date = convertToDateFromISO(timestamp)?.toISOString()
 
   if (!isLogCategory(status) || !date) {
@@ -51,7 +52,7 @@ export const convertRawLogLineToLog = ({
   }
 
   return {
-    id: `${index} [${logFile.groupName}] [${logFile.fileName}] ${content}`,
+    id: `${index} ${logFile.id} ${content}`,
     date,
     groupName: logFile.groupName,
     location: logFile.path,
@@ -59,7 +60,6 @@ export const convertRawLogLineToLog = ({
     jobId: job_id,
     category: status,
     message,
-    callFile: call_file,
-    callLine: call_line
+    origin
   }
 }

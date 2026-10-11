@@ -33,11 +33,11 @@ const options = {
 }
 
 const selfReport = (overrides: Partial<SelfReport> = {}): SelfReport => ({
+  id: '2026-09-19T14:41:09.669Z bad line WARNING someFile:3',
   date: new Date('2026-09-19T14:41:09.669Z'),
   message: 'bad line',
-  level: 'warning',
-  reportedFile: 'someFile',
-  reportedLine: 3,
+  level: 'WARNING',
+  origin: 'someFile:3',
   ...overrides
 })
 
@@ -57,8 +57,7 @@ const storedLog = (overrides: Partial<Log> = {}): Log => ({
   jobId: 1,
   category: 'WARNING',
   message: 'bad line',
-  callFile: 'someFile',
-  callLine: 3,
+  origin: 'someFile:3',
   ...overrides
 })
 
@@ -215,12 +214,12 @@ describe('createSelfLogReportRepository', () => {
       mockStoredLogs([alreadyStoredLog])
 
       await selfReportRepository.saveSelfReports([
-        selfReport({ message: 'bad line 1', reportedLine: 1 }),
+        selfReport({ message: 'bad line 1', origin: 'someFile:1' }),
         selfReport({
           date: new Date('2026-09-20T08:00:00.000Z'),
           message: 'bad line 2',
-          level: 'error',
-          reportedLine: undefined
+          level: 'ERROR',
+          origin: 'someFile'
         })
       ])
 
@@ -238,8 +237,7 @@ describe('createSelfLogReportRepository', () => {
           jobId: 5,
           category: 'WARNING',
           message: 'bad line 1',
-          callFile: 'someFile',
-          callLine: 1
+          origin: 'someFile:1'
         },
         {
           ...whereItIsStored,
@@ -247,35 +245,44 @@ describe('createSelfLogReportRepository', () => {
           jobId: 5,
           category: 'ERROR',
           message: 'bad line 2',
-          callFile: 'someFile',
-          callLine: 0
+          origin: 'someFile'
         }
       ])
     })
 
-    it('Should leave out the stored logs with the same file, line and message as a self report', async () => {
+    it('Should leave out the stored logs with the same category, message and origin as a self report', async () => {
       const selfReportRepository = await createSelfLogReportRepository(options)
       const otherMessageLog = storedLog({ message: 'other' })
-      const otherLineLog = storedLog({ callLine: 9 })
-      const otherFileLog = storedLog({ callFile: 'otherFile' })
+      const otherCategoryLog = storedLog({ category: 'ERROR' })
+      const otherLineLog = storedLog({ origin: 'someFile:9' })
+      const otherFileLog = storedLog({ origin: 'otherFile:3' })
+      const withoutOriginLog = storedLog({ origin: undefined })
       mockStoredLogs([
         storedLog(),
         otherMessageLog,
-        storedLog({ jobId: 2, category: 'ERROR', date: daysAgo(30) }),
+        storedLog({ jobId: 2, date: daysAgo(30) }),
+        otherCategoryLog,
         otherLineLog,
         otherFileLog,
-        storedLog({ message: 'second', callLine: 7 }),
-        storedLog({ message: 'without line', callLine: 0 })
+        withoutOriginLog,
+        storedLog({ message: 'second', origin: 'someFile:7' }),
+        storedLog({ message: 'without line', origin: 'someFile' })
       ])
 
       await selfReportRepository.saveSelfReports([
         selfReport(),
-        selfReport({ message: 'second', reportedLine: 7 }),
-        selfReport({ message: 'without line', reportedLine: undefined })
+        selfReport({ message: 'second', origin: 'someFile:7' }),
+        selfReport({ message: 'without line', origin: 'someFile' })
       ])
 
-      expect(lastSavedLogs().slice(0, 3)).toEqual([otherMessageLog, otherLineLog, otherFileLog])
-      expect(lastSavedLogs()).toHaveLength(6)
+      expect(lastSavedLogs().slice(0, 5)).toEqual([
+        otherMessageLog,
+        otherCategoryLog,
+        otherLineLog,
+        otherFileLog,
+        withoutOriginLog
+      ])
+      expect(lastSavedLogs()).toHaveLength(8)
     })
 
     it.each([

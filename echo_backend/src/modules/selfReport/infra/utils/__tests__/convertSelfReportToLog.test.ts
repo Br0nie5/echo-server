@@ -4,11 +4,11 @@ import type { SelfReport } from '../../../domain/selfReport.js'
 import { convertSelfReportToLog, type SelfReportLogContext } from '../convertSelfReportToLog.js'
 
 const selfReport = (overrides: Partial<SelfReport> = {}): SelfReport => ({
+  id: 'someSelfReportId',
   date: new Date('2026-09-19T14:41:09.669Z'),
   message: 'bad line',
-  level: 'warning',
-  reportedFile: 'someFile',
-  reportedLine: 4,
+  level: 'WARNING',
+  origin: 'someFile:4',
   ...overrides
 })
 
@@ -22,7 +22,7 @@ const context: SelfReportLogContext = {
 describe('convertSelfReportToLog', () => {
   it('Should build the log a self report is stored as, from the self report and its context', () => {
     expect(convertSelfReportToLog(selfReport(), context)).toEqual({
-      id: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl Echo parseLogFile 5 2026-09-19T14:41:09.669Z WARNING someFile 4 bad line',
+      id: 'someSelfReportId',
       location: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
       locationName: 'parseLogFile',
       groupName: 'Echo',
@@ -30,24 +30,11 @@ describe('convertSelfReportToLog', () => {
       jobId: 5,
       category: 'WARNING',
       message: 'bad line',
-      callFile: 'someFile',
-      callLine: 4
+      origin: 'someFile:4'
     })
   })
 
   it('Should store an error with the ERROR category', () => {
-    expect(convertSelfReportToLog(selfReport({ level: 'error' }), context).category).toBe('ERROR')
-  })
-
-  it('Should store 0 as the line of a self report that has no reported line', () => {
-    expect(convertSelfReportToLog(selfReport({ reportedLine: undefined }), context).callLine).toBe(
-      0
-    )
-  })
-
-  it('Should give different ids to self reports that differ', () => {
-    expect(convertSelfReportToLog(selfReport(), context).id).not.toBe(
-      convertSelfReportToLog(selfReport({ message: 'other line' }), context).id
-    )
+    expect(convertSelfReportToLog(selfReport({ level: 'ERROR' }), context).category).toBe('ERROR')
   })
 })

@@ -50,8 +50,7 @@ describe('LogJsonSchema', () => {
       jobId: 123,
       category: 'INFO',
       message: 'Something happened',
-      callFile: 'file1.sh',
-      callLine: 4
+      origin: 'file1.sh:4'
     }
     expect(validateLog(log)).toBe(true)
   })
@@ -64,8 +63,7 @@ describe('LogJsonSchema', () => {
       locationName: 'file1',
       jobId: 1,
       category: 'INFO',
-      callFile: 'file1.sh',
-      callLine: 4
+      origin: 'file1.sh:4'
       // missing 'message'
     }
     expect(validateLog(log)).toBe(false)
@@ -82,8 +80,7 @@ describe('LogJsonSchema', () => {
       jobId: 1,
       category: 'INVALID',
       message: 'oops',
-      callFile: 'file1.sh',
-      callLine: 4
+      origin: 'file1.sh:4'
     }
     expect(validateLog(log)).toBe(false)
     expect(validateLog.errors?.[0].message).toContain('must be equal to one of the allowed values')
@@ -99,8 +96,7 @@ describe('LogJsonSchema', () => {
       jobId: 1,
       category: 'INFO',
       message: 'test',
-      callFile: 'file1.sh',
-      callLine: 4,
+      origin: 'file1.sh:4',
       extra: 'not allowed'
     }
     expect(validateLog(log)).toBe(false)

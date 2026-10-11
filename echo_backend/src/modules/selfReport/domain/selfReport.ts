@@ -1,14 +1,15 @@
 /**
  * A diagnostic the backend reports about itself.
  *
- * `date` is when the problem was noticed and `level` how serious it is. `reportedFile` names what
- * the diagnostic is about, such as the log file a line could not be read from, and `reportedLine`,
- * an integer, the position it points to inside, left out when it points to none.
+ * `id` identifies it among all the self reports, `date` is when the problem was noticed and `level`
+ * how serious it is. `origin`, never empty, says what the diagnostic is about, such as the line of
+ * a log file that could not be read, written `path:line:column`, `path:line` when it points to no
+ * column and `path` when it points to no line either.
  */
 export type SelfReport = {
+  id: string
   date: Date
   message: string
-  level: 'warning' | 'error'
-  reportedFile: string
-  reportedLine?: number
+  level: 'WARNING' | 'ERROR'
+  origin: string
 }

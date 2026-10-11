@@ -1,6 +1,7 @@
 import type { LogCategory } from '@echo/utilities'
 
 import type { NotifierService } from '../../../../../shared/services/notifier.service.js'
+import type { SelfReport } from '../../../../selfReport/domain/selfReport.js'
 import type { SelfReportRepository } from '../../../../selfReport/domain/selfReport.repository.js'
 import { getFilteredLogs } from '../../../application/getFilteredLogs.js'
 import type { LogsRepository } from '../../../domain/logs.repository.js'
@@ -92,14 +93,22 @@ export const checkProblemLogsAndNotify = async ({
     const message = buildNotifierMessage({ messageSizeLimit, problemLogs, serverName, timezone })
 
     if (message === undefined) {
+      const noIdSelfReport: Omit<SelfReport, 'id'> = {
+        date: newCheckDate,
+        message:
+          `The problem logs were not notified: the notifier takes messages of ` +
+          `${messageSizeLimit} characters at most, which is not enough for any message`,
+        level: 'WARNING',
+        origin: 'checkProblemLogsAndNotify'
+      }
+
       await selfReportRepository.saveSelfReports([
         {
-          date: newCheckDate,
-          message:
-            `The problem logs were not notified: the notifier takes messages of ` +
-            `${messageSizeLimit} characters at most, which is not enough for any message`,
-          level: 'warning',
-          reportedFile: 'checkProblemLogsAndNotify'
+          id: JSON.stringify(noIdSelfReport),
+          date: noIdSelfReport.date,
+          message: noIdSelfReport.message,
+          level: noIdSelfReport.level,
+          origin: noIdSelfReport.origin
         }
       ])
     } else {

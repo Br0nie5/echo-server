@@ -25,10 +25,8 @@ export const LogSchema = z.strictObject({
   category: LogCategorySchema,
   /** What the script reported, as it wrote it. */
   message: z.string(),
-  /** File the log was emitted from. */
-  callFile: z.string(),
-  /** Line of `callFile` the log was emitted from. */
-  callLine: z.int()
+  /** Where the log was emitted from, in any form but an empty one, when the script said it: `backup.sh:12`. */
+  origin: z.string().min(1).optional()
 })
 
 /** One entry emitted by a watched script. */

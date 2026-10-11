@@ -13,45 +13,37 @@ const validLog: Log = {
   jobId: 66,
   category: LogCategory.INFO,
   message: 'Finished update_docker_container script.',
-  callFile: 'update_docker_container.sh',
-  callLine: 12
+  origin: 'update_docker_container.sh:12'
 }
+
+const validLogWithout = (field: keyof Log): Partial<Log> =>
+  Object.fromEntries(Object.entries(validLog).filter(([key]) => key !== field))
 
 describe('LogSchema', () => {
   it('Should accept a valid Log', () => {
     expect(LogSchema.safeParse(validLog).success).toBeTruthy()
   })
 
-  it('Should accept a valid Log without the optional groupName', () => {
-    const logWithoutGroupName: Omit<Log, 'groupName'> = {
-      id: validLog.id,
-      date: validLog.date,
-      location: validLog.location,
-      locationName: validLog.locationName,
-      jobId: validLog.jobId,
-      category: validLog.category,
-      message: validLog.message,
-      callFile: validLog.callFile,
-      callLine: validLog.callLine
+  it.each<keyof Log>(['groupName', 'origin'])(
+    'Should accept a valid Log without the optional %s',
+    (optionalField) => {
+      expect(LogSchema.safeParse(validLogWithout(optionalField)).success).toBeTruthy()
     }
+  )
 
-    expect(LogSchema.safeParse(logWithoutGroupName).success).toBeTruthy()
+  it.each<keyof Log>(['id', 'date', 'location', 'locationName', 'jobId', 'category', 'message'])(
+    'Should reject a Log missing the required %s',
+    (requiredField) => {
+      expect(LogSchema.safeParse(validLogWithout(requiredField)).success).toBeFalsy()
+    }
+  )
+
+  it('Should accept a Log with an origin in any form', () => {
+    expect(LogSchema.safeParse({ ...validLog, origin: 'the nightly backup' }).success).toBeTruthy()
   })
 
-  it('Should reject a Log missing a required field', () => {
-    const invalidLog: Omit<Log, 'message'> = {
-      id: validLog.id,
-      date: validLog.date,
-      groupName: validLog.groupName,
-      location: validLog.location,
-      locationName: validLog.locationName,
-      jobId: validLog.jobId,
-      category: validLog.category,
-      callFile: validLog.callFile,
-      callLine: validLog.callLine
-    }
-
-    expect(LogSchema.safeParse(invalidLog).success).toBeFalsy()
+  it('Should reject a Log with an empty origin', () => {
+    expect(LogSchema.safeParse({ ...validLog, origin: '' }).success).toBeFalsy()
   })
 
   it('Should reject a Log with an invalid category', () => {

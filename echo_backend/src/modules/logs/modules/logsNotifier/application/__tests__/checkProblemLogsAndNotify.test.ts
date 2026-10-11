@@ -14,8 +14,7 @@ const log: Log = {
   location: '/logs/worker.jsonl',
   locationName: 'worker',
   message: 'Something broke',
-  callFile: 'worker.sh',
-  callLine: 1
+  origin: 'worker.sh:1'
 }
 
 const getFilteredLogs = vi.mocked(actualGetFilteredLogs)
@@ -112,14 +111,15 @@ describe('checkProblemLogsAndNotify', () => {
     await check()
 
     expect(notifierService.notify).not.toHaveBeenCalled()
+    const noIdSelfReport = {
+      date: CHECK_DATE,
+      message:
+        'The problem logs were not notified: the notifier takes messages of 10 characters at most, which is not enough for any message',
+      level: 'WARNING',
+      origin: 'checkProblemLogsAndNotify'
+    }
     expect(selfReportRepository.saveSelfReports).toHaveBeenCalledWith([
-      {
-        date: CHECK_DATE,
-        message:
-          'The problem logs were not notified: the notifier takes messages of 10 characters at most, which is not enough for any message',
-        level: 'warning',
-        reportedFile: 'checkProblemLogsAndNotify'
-      }
+      { id: JSON.stringify(noIdSelfReport), ...noIdSelfReport }
     ])
     expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledExactlyOnceWith({
       lastCheckDate: CHECK_DATE

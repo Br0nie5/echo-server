@@ -21,6 +21,8 @@ const mockFoundFiles = (filesPathsByDirectory: Record<string, string[]>): void =
 }
 
 const logFile = (filePath: string): LogFileDto => ({
+  id: filePath,
+  id: filePath,
   path: filePath,
   fileName: 'file',
   groupName: undefined
@@ -32,7 +34,7 @@ beforeEach(() => {
 
 describe('LogsFilesApi', () => {
   describe('getAllLogFiles', () => {
-    it('Should list the files with the log file extension, with their name and group', async () => {
+    it('Should list the files with the log file extension, with their id, name and group', async () => {
       mockFoundFiles({
         '/logs': [
           '/logs/root.jsonl',
@@ -44,10 +46,26 @@ describe('LogsFilesApi', () => {
       })
 
       expect(await createLogsFilesApi(logsConfig, filesService).getAllLogFiles()).toEqual([
-        { path: '/logs/root.jsonl', fileName: 'root', groupName: undefined },
-        { path: '/logs/docker/compose.jsonl', fileName: 'compose', groupName: undefined },
-        { path: '/logs/docker/utils/log/backup.jsonl', fileName: 'backup', groupName: 'utils' },
         {
+          id: '/logs/root.jsonl',
+          path: '/logs/root.jsonl',
+          fileName: 'root',
+          groupName: undefined
+        },
+        {
+          id: '/logs/docker/compose.jsonl',
+          path: '/logs/docker/compose.jsonl',
+          fileName: 'compose',
+          groupName: undefined
+        },
+        {
+          id: '/logs/docker/utils/log/backup.jsonl',
+          path: '/logs/docker/utils/log/backup.jsonl',
+          fileName: 'backup',
+          groupName: 'utils'
+        },
+        {
+          id: '/logs/docker/utils/backups/daily.jsonl',
           path: '/logs/docker/utils/backups/daily.jsonl',
           fileName: 'daily',
           groupName: 'utils_backups'
@@ -64,7 +82,7 @@ describe('LogsFilesApi', () => {
       )
 
       expect(await logsFilesApi.getAllLogFiles()).toEqual([
-        { path: '/logs/notes.txt', fileName: 'notes', groupName: undefined }
+        { id: '/logs/notes.txt', path: '/logs/notes.txt', fileName: 'notes', groupName: undefined }
       ])
     })
 
@@ -78,6 +96,7 @@ describe('LogsFilesApi', () => {
 
       expect(await logsFilesApi.getAllLogFiles()).toEqual([
         {
+          id: '/logs/docker/utils/output/log/backup.jsonl',
           path: '/logs/docker/utils/output/log/backup.jsonl',
           fileName: 'backup',
           groupName: 'utils_log'
@@ -97,8 +116,14 @@ describe('LogsFilesApi', () => {
       )
 
       expect(await logsFilesApi.getAllLogFiles()).toEqual([
-        { path: '/logs/docker/utils/backup.jsonl', fileName: 'backup', groupName: 'utils' },
         {
+          id: '/logs/docker/utils/backup.jsonl',
+          path: '/logs/docker/utils/backup.jsonl',
+          fileName: 'backup',
+          groupName: 'utils'
+        },
+        {
+          id: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
           path: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
           fileName: 'parseLogFile',
           groupName: 'Echo'
@@ -118,7 +143,7 @@ describe('LogsFilesApi', () => {
         )
 
         expect(await logsFilesApi.getAllLogFiles()).toEqual([
-          { path: filePath, fileName: 'backup', groupName: 'utils' }
+          { id: filePath, path: filePath, fileName: 'backup', groupName: 'utils' }
         ])
       }
     )
@@ -164,7 +189,7 @@ describe('LogsFilesApi', () => {
   })
 
   describe('getLogFile', () => {
-    it('Should give the name and the group of a file of a logs directory', () => {
+    it('Should give the id, the name and the group of a file of a logs directory', () => {
       const logsFilesApi = createLogsFilesApi(
         getMockLogsConfig({ logsDirsPaths: ['/logs', '/server_logs'] }),
         filesService
@@ -173,6 +198,7 @@ describe('LogsFilesApi', () => {
       expect(
         logsFilesApi.getLogFile('/server_logs/self_reports/Echo/log/parseLogFile.jsonl')
       ).toEqual({
+        id: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
         path: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
         fileName: 'parseLogFile',
         groupName: 'Echo'
@@ -183,6 +209,7 @@ describe('LogsFilesApi', () => {
       'Should give no group to %s, which is in none of the logs directories',
       (filePath) => {
         expect(createLogsFilesApi(logsConfig, filesService).getLogFile(filePath)).toEqual({
+          id: filePath,
           path: filePath,
           fileName: 'backup',
           groupName: undefined

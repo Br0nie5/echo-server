@@ -10,11 +10,11 @@ import type { SelfReport } from './selfReport.js'
  * ```ts
  * await selfReportRepository.saveSelfReports([
  *   {
- *     date: new Date(),
+ *     id: 'backup.jsonl:3 at 2026-09-19T14:41:09.669Z',
+ *     date: new Date('2026-09-19T14:41:09.669Z'),
  *     message: 'not a log',
- *     level: 'warning',
- *     reportedFile: 'backup',
- *     reportedLine: 3
+ *     level: 'WARNING',
+ *     origin: '/watched_logs/backup.jsonl:3'
  *   }
  * ])
  * ```
@@ -23,8 +23,7 @@ export interface SelfReportRepository {
   /**
    * Stores `selfReports`.
    *
-   * A self report replaces the one already stored with the same `reportedFile`, `reportedLine` and
-   * `message`: reporting a problem again does not store it twice, it brings its date up to the one
+   * A self report replaces the one already stored with the same `level`, `message` and `origin`: reporting a problem again does not store it twice, it brings its date up to the one
    * of the new report. A problem that is still there therefore stays recent, and one that is no
    * longer reported keeps the date it was last seen at. Never throws: a diagnostic that cannot be
    * stored must not break what was being diagnosed.

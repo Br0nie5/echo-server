@@ -9,11 +9,11 @@ describe('createNoopSelfReportRepository', () => {
     await expect(
       selfReportRepository.saveSelfReports([
         {
+          id: '2026-09-19T14:41:09.669Z bad line WARNING someFile:3',
           date: new Date('2026-09-19T14:41:09.669Z'),
           message: 'bad line',
-          level: 'warning',
-          reportedFile: 'someFile',
-          reportedLine: 3
+          level: 'WARNING',
+          origin: 'someFile:3'
         }
       ])
     ).resolves.toBeUndefined()

@@ -11,8 +11,7 @@ const buildLog = (overrides: Partial<Log>): Log => ({
   location: '/logs/file.jsonl',
   locationName: 'file',
   message: 'message',
-  callFile: 'file.sh',
-  callLine: 1,
+  origin: 'file.sh:1',
   ...overrides
 })
 

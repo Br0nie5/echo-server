@@ -19,8 +19,7 @@ const logMock: Log = {
   category: LogCategory.INFO,
   message: 'some message',
   groupName: 'group',
-  callFile: 'file.sh',
-  callLine: 1
+  origin: 'file.sh:1'
 }
 
 describe('useLogsRepository', () => {

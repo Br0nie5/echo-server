@@ -20,8 +20,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
-    callFile: 'update_docker_container.sh',
-    callLine: 1,
+    origin: 'update_docker_container.sh:1',
     category: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
@@ -32,8 +31,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
-    callFile: 'update_docker_container.sh',
-    callLine: 2,
+    origin: 'update_docker_container.sh:2',
     category: 'INFO',
     message: 'Updates for group echo has been applied.',
     groupName: 'docker_utils'
@@ -44,8 +42,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
-    callFile: 'update_docker_container.sh',
-    callLine: 3,
+    origin: 'update_docker_container.sh:3',
     category: 'SUCCESS',
     message: "Action 'Apply echo update for active services: (echo)' succeeded on attempt 1.",
     groupName: 'docker_utils'
@@ -56,8 +53,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
-    callFile: 'update_docker_container.sh',
-    callLine: 4,
+    origin: 'update_docker_container.sh:4',
     category: 'INFO',
     message: 'Starting updated services: echo.',
     groupName: 'docker_utils'
@@ -68,8 +64,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
-    callFile: 'update_docker_container.sh',
-    callLine: 5,
+    origin: 'update_docker_container.sh:5',
     category: 'INFO',
     message: 'Applying the updates for group echo...',
     groupName: 'docker_utils'
@@ -80,8 +75,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
-    callFile: 'update_docker_container.sh',
-    callLine: 6,
+    origin: 'update_docker_container.sh:6',
     category: 'WARNING',
     message: "Unused docker images couldn't be removed.",
     groupName: 'docker_utils'
@@ -92,8 +86,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
-    callFile: 'update_docker_container.sh',
-    callLine: 7,
+    origin: 'update_docker_container.sh:7',
     category: 'INFO',
     message: 'Removing unused docker images...',
     groupName: 'docker_utils'
@@ -104,8 +97,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
-    callFile: 'update_docker_container.sh',
-    callLine: 8,
+    origin: 'update_docker_container.sh:8',
     category: 'INFO',
     message: 'Group echo latest updates has been pulled.',
     groupName: 'docker_utils'
@@ -116,8 +108,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
-    callFile: 'update_docker_container.sh',
-    callLine: 9,
+    origin: 'update_docker_container.sh:9',
     category: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
@@ -128,8 +119,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
-    callFile: 'update_docker_container.sh',
-    callLine: 10,
+    origin: 'update_docker_container.sh:10',
     category: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
@@ -140,8 +130,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
-    callFile: 'update_docker_container.sh',
-    callLine: 11,
+    origin: 'update_docker_container.sh:11',
     category: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
@@ -152,8 +141,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
-    callFile: 'update_docker_container.sh',
-    callLine: 12,
+    origin: 'update_docker_container.sh:12',
     category: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
@@ -164,8 +152,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
-    callFile: 'update_docker_container.sh',
-    callLine: 13,
+    origin: 'update_docker_container.sh:13',
     category: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'
@@ -176,8 +163,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
-    callFile: 'check_logs.sh',
-    callLine: 14,
+    origin: 'check_logs.sh:14',
     category: 'INFO',
     message: 'Finished check_logs script.',
     groupName: 'utils'
@@ -188,8 +174,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
-    callFile: 'check_logs.sh',
-    callLine: 15,
+    origin: 'check_logs.sh:15',
     category: 'INFO',
     message:
       'Last logs check time updated to ${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01Z.',
@@ -201,8 +186,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
-    callFile: 'check_logs.sh',
-    callLine: 16,
+    origin: 'check_logs.sh:16',
     category: 'INFO',
     message: 'Updating last logs check time...',
     groupName: 'utils'
@@ -213,8 +197,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
-    callFile: 'check_logs.sh',
-    callLine: 17,
+    origin: 'check_logs.sh:17',
     category: 'INFO',
     message: 'No logs to send to Telegram.',
     groupName: 'utils'
@@ -225,8 +208,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
-    callFile: 'check_logs.sh',
-    callLine: 18,
+    origin: 'check_logs.sh:18',
     category: 'INFO',
     message: 'Preparing Telegram logs message...',
     groupName: 'utils'
@@ -237,8 +219,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
-    callFile: 'check_logs.sh',
-    callLine: 19,
+    origin: 'check_logs.sh:19',
     category: 'INFO',
     message: 'Logs have been received and formatted.',
     groupName: 'utils'
@@ -249,8 +230,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
-    callFile: 'check_logs.sh',
-    callLine: 20,
+    origin: 'check_logs.sh:20',
     category: 'INFO',
     message: 'Fetching logs from API...',
     groupName: 'utils'
@@ -261,8 +241,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
-    callFile: 'check_logs.sh',
-    callLine: 21,
+    origin: 'check_logs.sh:21',
     category: 'INFO',
     message:
       'Last logs check time is ${formatDateToMock(date, { daysToRemove: 0 })}T13:53:01Z and current time is ${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01Z.',
@@ -274,8 +253,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
-    callFile: 'check_logs.sh',
-    callLine: 22,
+    origin: 'check_logs.sh:22',
     category: 'INFO',
     message: 'Getting logs check times...',
     groupName: 'utils'
@@ -286,8 +264,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
-    callFile: 'check_logs.sh',
-    callLine: 23,
+    origin: 'check_logs.sh:23',
     category: 'INFO',
     message: 'Starting check_logs script.',
     groupName: 'utils'
@@ -298,8 +275,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
-    callFile: 'check_logs.sh',
-    callLine: 24,
+    origin: 'check_logs.sh:24',
     category: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'utils'
@@ -310,8 +286,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/not_an_undefined_filename_though.jsonl',
     locationName: 'not_an_undefined_filename_though',
     jobId: 1,
-    callFile: 'not_an_undefined_filename_though.sh',
-    callLine: 25,
+    origin: 'not_an_undefined_filename_though.sh:25',
     category: 'INFO',
     message: 'The only log of an undefined group name...',
     groupName: undefined
@@ -322,8 +297,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
-    callFile: 'update_docker_container.sh',
-    callLine: 26,
+    origin: 'update_docker_container.sh:26',
     category: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
@@ -334,8 +308,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
-    callFile: 'update_docker_container.sh',
-    callLine: 27,
+    origin: 'update_docker_container.sh:27',
     category: 'INFO',
     message: 'Updates for group echo has been applied.',
     groupName: 'docker_utils'
@@ -346,8 +319,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
-    callFile: 'update_docker_container.sh',
-    callLine: 28,
+    origin: 'update_docker_container.sh:28',
     category: 'SUCCESS',
     message: "Action 'Apply echo update for active services: (echo)' succeeded on attempt 1.",
     groupName: 'docker_utils'
@@ -358,8 +330,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
-    callFile: 'update_docker_container.sh',
-    callLine: 29,
+    origin: 'update_docker_container.sh:29',
     category: 'INFO',
     message: 'Starting updated services: echo.',
     groupName: 'docker_utils'
@@ -370,8 +341,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
-    callFile: 'update_docker_container.sh',
-    callLine: 30,
+    origin: 'update_docker_container.sh:30',
     category: 'INFO',
     message: 'Applying the updates for group echo...',
     groupName: 'docker_utils'
@@ -382,8 +352,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
-    callFile: 'update_docker_container.sh',
-    callLine: 31,
+    origin: 'update_docker_container.sh:31',
     category: 'INFO',
     message: 'Unused docker images are now removed.',
     groupName: 'docker_utils'
@@ -394,8 +363,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
-    callFile: 'update_docker_container.sh',
-    callLine: 32,
+    origin: 'update_docker_container.sh:32',
     category: 'INFO',
     message: 'Removing unused docker images...',
     groupName: 'docker_utils'
@@ -406,8 +374,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
-    callFile: 'update_docker_container.sh',
-    callLine: 33,
+    origin: 'update_docker_container.sh:33',
     category: 'INFO',
     message: 'Group echo latest updates has been pulled.',
     groupName: 'docker_utils'
@@ -418,8 +385,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
-    callFile: 'update_docker_container.sh',
-    callLine: 34,
+    origin: 'update_docker_container.sh:34',
     category: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
@@ -430,8 +396,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
-    callFile: 'update_docker_container.sh',
-    callLine: 35,
+    origin: 'update_docker_container.sh:35',
     category: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
@@ -442,8 +407,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
-    callFile: 'update_docker_container.sh',
-    callLine: 36,
+    origin: 'update_docker_container.sh:36',
     category: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
@@ -454,8 +418,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
-    callFile: 'update_docker_container.sh',
-    callLine: 37,
+    origin: 'update_docker_container.sh:37',
     category: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
@@ -466,8 +429,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
-    callFile: 'update_docker_container.sh',
-    callLine: 38,
+    origin: 'update_docker_container.sh:38',
     category: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'
@@ -478,8 +440,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 48,
-    callFile: 'update_docker_container.sh',
-    callLine: 39,
+    origin: 'update_docker_container.sh:39',
     category: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
@@ -490,8 +451,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 48,
-    callFile: 'update_docker_container.sh',
-    callLine: 40,
+    origin: 'update_docker_container.sh:40',
     category: 'ERROR',
     message:
       'Unexpected error in \'update_docker_container\'\n  Command   : "${dockerCompose[@]}" pull\n  Exit code : 1\n  Line      : 120\n  Call stack:\n      ↳  main()  @ /scripts/docker/utils/update_docker_container.sh:120',
@@ -503,8 +463,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 48,
-    callFile: 'update_docker_container.sh',
-    callLine: 41,
+    origin: 'update_docker_container.sh:41',
     category: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
@@ -515,8 +474,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 48,
-    callFile: 'update_docker_container.sh',
-    callLine: 42,
+    origin: 'update_docker_container.sh:42',
     category: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
@@ -527,8 +485,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 48,
-    callFile: 'update_docker_container.sh',
-    callLine: 43,
+    origin: 'update_docker_container.sh:43',
     category: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
@@ -539,8 +496,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 48,
-    callFile: 'update_docker_container.sh',
-    callLine: 44,
+    origin: 'update_docker_container.sh:44',
     category: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
@@ -551,8 +507,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 48,
-    callFile: 'update_docker_container.sh',
-    callLine: 45,
+    origin: 'update_docker_container.sh:45',
     category: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'
@@ -563,8 +518,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
-    callFile: 'update_docker_container.sh',
-    callLine: 46,
+    origin: 'update_docker_container.sh:46',
     category: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
@@ -575,8 +529,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
-    callFile: 'update_docker_container.sh',
-    callLine: 47,
+    origin: 'update_docker_container.sh:47',
     category: 'INFO',
     message: 'Updates for group echo has been applied.',
     groupName: 'docker_utils'
@@ -587,8 +540,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
-    callFile: 'update_docker_container.sh',
-    callLine: 48,
+    origin: 'update_docker_container.sh:48',
     category: 'SUCCESS',
     message: "Action 'Apply echo update for active services: (echo)' succeeded on attempt 1.",
     groupName: 'docker_utils'
@@ -599,8 +551,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
-    callFile: 'update_docker_container.sh',
-    callLine: 49,
+    origin: 'update_docker_container.sh:49',
     category: 'INFO',
     message: 'Starting updated services: echo.',
     groupName: 'docker_utils'
@@ -611,8 +562,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
-    callFile: 'update_docker_container.sh',
-    callLine: 50,
+    origin: 'update_docker_container.sh:50',
     category: 'INFO',
     message: 'Applying the updates for group echo...',
     groupName: 'docker_utils'
@@ -623,8 +573,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
-    callFile: 'update_docker_container.sh',
-    callLine: 51,
+    origin: 'update_docker_container.sh:51',
     category: 'INFO',
     message: 'Unused docker images are now removed.',
     groupName: 'docker_utils'
@@ -635,8 +584,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
-    callFile: 'update_docker_container.sh',
-    callLine: 52,
+    origin: 'update_docker_container.sh:52',
     category: 'INFO',
     message: 'Removing unused docker images...',
     groupName: 'docker_utils'
@@ -647,8 +595,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
-    callFile: 'update_docker_container.sh',
-    callLine: 53,
+    origin: 'update_docker_container.sh:53',
     category: 'INFO',
     message: 'Group echo latest updates has been pulled.',
     groupName: 'docker_utils'
@@ -659,8 +606,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
-    callFile: 'update_docker_container.sh',
-    callLine: 54,
+    origin: 'update_docker_container.sh:54',
     category: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
@@ -671,8 +617,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
-    callFile: 'update_docker_container.sh',
-    callLine: 55,
+    origin: 'update_docker_container.sh:55',
     category: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
@@ -683,8 +628,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
-    callFile: 'update_docker_container.sh',
-    callLine: 56,
+    origin: 'update_docker_container.sh:56',
     category: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
@@ -695,8 +639,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
-    callFile: 'update_docker_container.sh',
-    callLine: 57,
+    origin: 'update_docker_container.sh:57',
     category: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
@@ -707,8 +650,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
-    callFile: 'update_docker_container.sh',
-    callLine: 58,
+    origin: 'update_docker_container.sh:58',
     category: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'
@@ -719,8 +661,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
-    callFile: 'update_docker_container.sh',
-    callLine: 59,
+    origin: 'update_docker_container.sh:59',
     category: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
@@ -731,8 +672,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
-    callFile: 'update_docker_container.sh',
-    callLine: 60,
+    origin: 'update_docker_container.sh:60',
     category: 'INFO',
     message: 'Updates for group echo has been applied.',
     groupName: 'docker_utils'
@@ -743,8 +683,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
-    callFile: 'update_docker_container.sh',
-    callLine: 61,
+    origin: 'update_docker_container.sh:61',
     category: 'SUCCESS',
     message: "Action 'Create stopped services for echo: (echo)' succeeded on attempt 1.",
     groupName: 'docker_utils'
@@ -755,8 +694,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
-    callFile: 'update_docker_container.sh',
-    callLine: 62,
+    origin: 'update_docker_container.sh:62',
     category: 'INFO',
     message: 'Recreating previously stopped services (without starting): echo.',
     groupName: 'docker_utils'
@@ -767,8 +705,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
-    callFile: 'update_docker_container.sh',
-    callLine: 63,
+    origin: 'update_docker_container.sh:63',
     category: 'INFO',
     message: 'Applying the updates for group echo...',
     groupName: 'docker_utils'
@@ -779,8 +716,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
-    callFile: 'update_docker_container.sh',
-    callLine: 64,
+    origin: 'update_docker_container.sh:64',
     category: 'INFO',
     message: 'Unused docker images are now removed.',
     groupName: 'docker_utils'
@@ -791,8 +727,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
-    callFile: 'update_docker_container.sh',
-    callLine: 65,
+    origin: 'update_docker_container.sh:65',
     category: 'INFO',
     message: 'Removing unused docker images...',
     groupName: 'docker_utils'
@@ -803,8 +738,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
-    callFile: 'update_docker_container.sh',
-    callLine: 66,
+    origin: 'update_docker_container.sh:66',
     category: 'INFO',
     message: 'Group echo latest updates has been pulled.',
     groupName: 'docker_utils'
@@ -815,8 +749,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
-    callFile: 'update_docker_container.sh',
-    callLine: 67,
+    origin: 'update_docker_container.sh:67',
     category: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
@@ -827,8 +760,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
-    callFile: 'update_docker_container.sh',
-    callLine: 68,
+    origin: 'update_docker_container.sh:68',
     category: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
@@ -839,8 +771,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
-    callFile: 'update_docker_container.sh',
-    callLine: 69,
+    origin: 'update_docker_container.sh:69',
     category: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
@@ -851,8 +782,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
-    callFile: 'update_docker_container.sh',
-    callLine: 70,
+    origin: 'update_docker_container.sh:70',
     category: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
@@ -863,8 +793,7 @@ export const getLogsMock = (date: Date): Log[] => [
     location: '/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
-    callFile: 'update_docker_container.sh',
-    callLine: 71,
+    origin: 'update_docker_container.sh:71',
     category: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'

@@ -28,8 +28,7 @@ describe('getFilteredLogs', () => {
       id,
       message: id,
       groupName: 'grp',
-      callFile: 'f.sh',
-      callLine: 1
+      origin: 'f.sh:1'
     })
     const fromDateLog = createLog('at fromDate', '2026-01-01T10:00:00.000Z')
     const afterFromDateLog = createLog('after fromDate', '2026-01-01T10:30:00.000Z')
@@ -60,8 +59,7 @@ describe('getFilteredLogs', () => {
       locationName: 'f',
       id,
       message: id,
-      callFile: 'f.sh',
-      callLine: 1
+      origin: 'f.sh:1'
     })
     const fromDateLog = createLog('fromDate', '2026-01-01T10:00:00.000Z')
     const beforeToDateLog = createLog('before toDate', '2026-01-01T10:29:59.999Z')
@@ -149,18 +147,18 @@ describe('getFilteredLogs', () => {
   it('Should save the self reports of the repository in a single save', async () => {
     const selfReports: SelfReport[] = [
       {
+        id: '2026-09-19T14:41:09.669Z invalid line WARNING /logs/a.jsonl:2',
         date: new Date('2026-09-19T14:41:09.669Z'),
         message: 'invalid line',
-        level: 'warning',
-        reportedFile: 'a',
-        reportedLine: 2
+        level: 'WARNING',
+        origin: '/logs/a.jsonl:2'
       },
       {
+        id: '2026-09-19T14:41:09.669Z cut line WARNING /logs/b.jsonl:1',
         date: new Date('2026-09-19T14:41:09.669Z'),
         message: 'cut line',
-        level: 'warning',
-        reportedFile: 'b',
-        reportedLine: 1
+        level: 'WARNING',
+        origin: '/logs/b.jsonl:1'
       }
     ]
     mockFindAllLogs.mockResolvedValue({ logs: [], selfReports })
