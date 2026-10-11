@@ -10,7 +10,7 @@ describe('filterLogByLevels', () => {
     {
       date: '2026-04-25T22:00:00.000Z',
       groupName: 'log_group_name',
-      location: '/server/log_group_name/log/log_file_name.jsonl',
+      location: '/server/log_group_name/logs/log_file_name.jsonl',
       locationName: 'log_file_name',
       jobId: 123,
       level: LogLevel.INFO,
