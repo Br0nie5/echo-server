@@ -45,7 +45,7 @@ export const convertRawLogLineToLog = ({
     return
   }
 
-  const { job_id, timestamp, level, message, origin } = rawJsonLogLine.data
+  const { jobId, timestamp, level, message, origin } = rawJsonLogLine.data
   const date = convertToDateFromISO(timestamp)?.toISOString()
 
   if (!isLogLevel(level) || !date) {
@@ -57,7 +57,7 @@ export const convertRawLogLineToLog = ({
     groupName: logFile.groupName,
     location: logFile.path,
     locationName: logFile.fileName,
-    jobId: job_id,
+    jobId,
     level,
     message,
     origin

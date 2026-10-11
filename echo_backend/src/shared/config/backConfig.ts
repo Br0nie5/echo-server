@@ -73,7 +73,7 @@ export type SelfReportsConfig = {
   parseLogFileSelfReportFileName: string
   /** Name of the self-report file the problem logs that could not be notified are reported to, with its extension. */
   logsNotifierSelfReportFileName: string
-  /** File remembering the last `job_id` the self reports were written with. */
+  /** File remembering the last `jobId` the self reports were written with. */
   sessionFilePath: string
 }
 

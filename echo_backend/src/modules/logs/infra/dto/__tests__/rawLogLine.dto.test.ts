@@ -28,7 +28,7 @@ const noIdsLog: Omit<Log, 'id' | 'contentId'> = {
 describe('convertRawLogLineToLog', () => {
   it('Should convert a valid line to a log', () => {
     const content =
-      '{"job_id":123,"timestamp":"2024-05-12T14:30:00.386Z","level":"INFO","message":"Something happened","origin":"/server/docker_utils/check_logs.sh:4"}'
+      '{"jobId":123,"timestamp":"2024-05-12T14:30:00.386Z","level":"INFO","message":"Something happened","origin":"/server/docker_utils/check_logs.sh:4"}'
 
     expect(convertRawLogLineToLog(rawLogLine(content))).toEqual(
       createLogWithIds(noIdsLog, rawLogLine(content).index)
@@ -37,7 +37,7 @@ describe('convertRawLogLineToLog', () => {
 
   it('Should convert a valid line without origin to a log without origin', () => {
     const content =
-      '{"job_id":123,"timestamp":"2024-05-12T14:30:00.386Z","level":"INFO","message":"Something happened"}'
+      '{"jobId":123,"timestamp":"2024-05-12T14:30:00.386Z","level":"INFO","message":"Something happened"}'
 
     expect(convertRawLogLineToLog(rawLogLine(content))).toEqual(
       createLogWithIds({ ...noIdsLog, origin: undefined }, rawLogLine(content).index)
@@ -46,7 +46,7 @@ describe('convertRawLogLineToLog', () => {
 
   it('Should return undefined for an empty origin', () => {
     const content =
-      '{"job_id":1,"timestamp":"2024-05-12T14:30:00.012Z","level":"INFO","message":"No origin","origin":""}'
+      '{"jobId":1,"timestamp":"2024-05-12T14:30:00.012Z","level":"INFO","message":"No origin","origin":""}'
 
     expect(convertRawLogLineToLog(rawLogLine(content))).toBeUndefined()
   })
@@ -57,21 +57,21 @@ describe('convertRawLogLineToLog', () => {
 
   it('Should return undefined for an invalid level', () => {
     const content =
-      '{"job_id":1,"timestamp":"2024-05-12T14:30:00.012Z","level":"INVALID","message":"Bad level","origin":"/server/docker_utils/check_logs.sh:1"}'
+      '{"jobId":1,"timestamp":"2024-05-12T14:30:00.012Z","level":"INVALID","message":"Bad level","origin":"/server/docker_utils/check_logs.sh:1"}'
 
     expect(convertRawLogLineToLog(rawLogLine(content))).toBeUndefined()
   })
 
   it('Should return undefined for an invalid date', () => {
     const content =
-      '{"job_id":1,"timestamp":"9999-99-99T25:61:61.999Z","level":"INFO","message":"Impossible date","origin":"/server/docker_utils/check_logs.sh:1"}'
+      '{"jobId":1,"timestamp":"9999-99-99T25:61:61.999Z","level":"INFO","message":"Impossible date","origin":"/server/docker_utils/check_logs.sh:1"}'
 
     expect(convertRawLogLineToLog(rawLogLine(content))).toBeUndefined()
   })
 
   it('Should return undefined for a JSON object with an unexpected shape', () => {
     const content =
-      '{"job_id":1,"timestamp":"2024-05-12T14:30:00.012Z","level":"INFO","invalid_message_key":"No message"}'
+      '{"jobId":1,"timestamp":"2024-05-12T14:30:00.012Z","level":"INFO","invalid_message_key":"No message"}'
 
     expect(convertRawLogLineToLog(rawLogLine(content))).toBeUndefined()
   })

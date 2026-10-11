@@ -8,7 +8,7 @@ import { z } from 'zod'
  * where the log was emitted from, in any form but an empty one, and may be left out.
  */
 export const RawJsonLogLineSchema = z.object({
-  job_id: z.number(),
+  jobId: z.number(),
   timestamp: z.string(),
   level: z.string(),
   message: z.string(),
@@ -36,7 +36,7 @@ export const convertLogToRawJsonLogLine = ({
   message,
   origin
 }: Log): RawJsonLogLine => ({
-  job_id: jobId,
+  jobId,
   timestamp: date,
   level,
   message,

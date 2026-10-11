@@ -7,7 +7,7 @@ import { convertRawLogLineToLog } from '../rawLogLine.dto.js'
 describe('RawJsonLogLineSchema', () => {
   it('Should accept a valid raw JSON log line', () => {
     const rawLine = {
-      job_id: 1,
+      jobId: 1,
       timestamp: '2024-05-12T14:30:00.386Z',
       level: 'WARNING',
       message: 'Ok',
@@ -19,7 +19,7 @@ describe('RawJsonLogLineSchema', () => {
 
   it('Should accept a raw JSON log line without the optional origin', () => {
     const rawLine = {
-      job_id: 1,
+      jobId: 1,
       timestamp: '2024-05-12T14:30:00.386Z',
       level: 'WARNING',
       message: 'Ok'
@@ -30,7 +30,7 @@ describe('RawJsonLogLineSchema', () => {
 
   it('Should reject a raw JSON log line with an empty origin', () => {
     const rawLine = {
-      job_id: 1,
+      jobId: 1,
       timestamp: '2024-05-12T14:30:00.386Z',
       level: 'WARNING',
       message: 'Ok',
@@ -41,14 +41,14 @@ describe('RawJsonLogLineSchema', () => {
   })
 
   it('Should reject a raw log line missing a required field', () => {
-    const rawLine = { job_id: 1, timestamp: '2024-05-12T14:30:00.386Z', level: 'INFO' }
+    const rawLine = { jobId: 1, timestamp: '2024-05-12T14:30:00.386Z', level: 'INFO' }
 
     expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeFalsy()
   })
 
-  it('Should reject a raw log line with a non-number job_id', () => {
+  it('Should reject a raw log line with a non-number jobId', () => {
     const rawLine = {
-      job_id: '1',
+      jobId: '1',
       timestamp: '2024-05-12T14:30:00.386Z',
       level: 'INFO',
       message: 'Ok',
@@ -80,7 +80,7 @@ describe('convertLogToRawJsonLogLine', () => {
 
   it('Should give the JSON of the line of the log, without its ids nor what says where it is stored', () => {
     expect(convertLogToRawJsonLogLine(log)).toEqual({
-      job_id: 123,
+      jobId: 123,
       timestamp: '2024-05-12T14:30:00.386Z',
       level: 'INFO',
       message: 'Something happened',
@@ -108,7 +108,7 @@ describe('convertLogToRawJsonLogLine', () => {
     const logWithoutOrigin: Log = { ...log, origin: undefined }
 
     expect(JSON.stringify(convertLogToRawJsonLogLine(logWithoutOrigin))).toBe(
-      '{"job_id":123,"timestamp":"2024-05-12T14:30:00.386Z","level":"INFO","message":"Something happened"}'
+      '{"jobId":123,"timestamp":"2024-05-12T14:30:00.386Z","level":"INFO","message":"Something happened"}'
     )
   })
 })
