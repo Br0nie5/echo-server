@@ -79,7 +79,7 @@ const buildRecordingFileSystem = (
   return { fileSystem, steps }
 }
 
-const FILE_PATH = '/server_logs/self_reports/Echo/log/parseLogFile.jsonl'
+const FILE_PATH = '/server_logs/self_reports/Echo/logs/parseLogFile.jsonl'
 const TEMPORARY_FILE_PATH = `${FILE_PATH}.tmp`
 
 describe('FilesService', () => {
@@ -93,9 +93,9 @@ describe('FilesService', () => {
     it('Should create the directory and its parents', async () => {
       const fileSystem = buildFileSystem({})
 
-      await createFilesService(fileSystem).createDirectory('/server_logs/self_reports/Echo/log')
+      await createFilesService(fileSystem).createDirectory('/server_logs/self_reports/Echo/logs')
 
-      expect(fileSystem.mkdir).toHaveBeenCalledWith('/server_logs/self_reports/Echo/log', {
+      expect(fileSystem.mkdir).toHaveBeenCalledWith('/server_logs/self_reports/Echo/logs', {
         recursive: true
       })
     })

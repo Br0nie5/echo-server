@@ -41,7 +41,7 @@ export const getMockSelfReportsConfig = (
 ): SelfReportsConfig => ({
   retentionDays: 10,
   selfReportsGroupName: 'Echo',
-  selfReportsDirPath: '/server_logs/self_reports/Echo/log',
+  selfReportsDirPath: '/server_logs/self_reports/Echo/logs',
   parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
   logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
   sessionFilePath: '/fake/data/self_reports_session.json',
@@ -75,7 +75,7 @@ export const getMockNotificationConfig = (
 export const getMockLogsConfig = (overrides: Partial<LogsConfig> = {}): LogsConfig => ({
   logsDirsPaths: ['/logs'],
   logFileExtension: '.jsonl',
-  logFilesDirName: 'log',
+  logFilesDirName: 'logs',
   ...overrides
 })
 

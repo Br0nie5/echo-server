@@ -38,10 +38,10 @@ Each returned log:
 ```json
 {
   "id": "{\"idNumber\":0,\"date\":\"2026-09-19T14:41:09.669Z\",\"jobId\":1,\"location\":...}",
-  "contentId": "{\"location\":\"/watched_logs/scripts/docker/utils/log/prune.log.jsonl\",\"level\":\"INFO\",\"message\":\"Pruning the unused Docker images.\",\"origin\":\"prune.sh:12\"}",
+  "contentId": "{\"location\":\"/watched_logs/scripts/docker/utils/logs/prune.log.jsonl\",\"level\":\"INFO\",\"message\":\"Pruning the unused Docker images.\",\"origin\":\"prune.sh:12\"}",
   "date": "2026-09-19T14:41:09.669Z",
   "groupName": "docker_utils",
-  "location": "/watched_logs/scripts/docker/utils/log/prune.log.jsonl",
+  "location": "/watched_logs/scripts/docker/utils/logs/prune.log.jsonl",
   "locationName": "prune.log",
   "jobId": 1,
   "level": "INFO",

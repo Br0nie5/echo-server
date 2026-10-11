@@ -141,7 +141,7 @@ describe('loadBackConfig', () => {
       logs: {
         logsDirsPaths: ['/some/path'],
         logFileExtension: '.jsonl',
-        logFilesDirName: 'log',
+        logFilesDirName: 'logs',
         logsNotifier: undefined
       },
       selfReports: undefined,
@@ -202,7 +202,7 @@ describe('loadBackConfig', () => {
       logs: {
         logsDirsPaths: ['/watched_logs', '/server_logs'],
         logFileExtension: '.jsonl',
-        logFilesDirName: 'log',
+        logFilesDirName: 'logs',
         logsNotifier: {
           schedule: '*/30 * * * *',
           watchedLogsLevels: ['WARNING', 'ERROR'],
@@ -214,7 +214,7 @@ describe('loadBackConfig', () => {
       selfReports: {
         retentionDays: 30,
         selfReportsGroupName: 'Docker Prod',
-        selfReportsDirPath: '/server_logs/self_reports/Docker Prod/log',
+        selfReportsDirPath: '/server_logs/self_reports/Docker Prod/logs',
         parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
         logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
         sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')

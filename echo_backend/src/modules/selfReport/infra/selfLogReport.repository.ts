@@ -36,7 +36,7 @@ export interface CreateSelfLogReportRepositoryOptions {
  *   logsRepository,
  *   sessionJobIdApi: createFileSessionJobIdApi(selfReportsConfig, filesService),
  *   selfReportsConfig,
- *   selfReportsLocation: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
+ *   selfReportsLocation: '/server_logs/self_reports/Echo/logs/parseLogFile.jsonl',
  *   selfReportsLocationName: 'parseLogFile',
  *   logger: server.log
  * })

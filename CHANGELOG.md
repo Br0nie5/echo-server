@@ -14,9 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** the directory scripts put their log files in, which is left out of the group names, is now named `logs` instead of `log`. Rename the `log` directories of your watched logs, otherwise `log` becomes part of the group names (`docker_utils_log`). The self reports are now stored in `/server_logs/self_reports/<SERVER_NAME>/logs`: move the files of the former `log` directory there to keep them in the group of the server.
+
 - **Breaking:** the category of a log is now called its level. In the log files, `status` is replaced by `level`, with the same values (`SUCCESS`, `INFO`, `WARNING`, `ERROR`), and `job_id` by `jobId`. A line that still carries `status` or `job_id` is no longer read, so update the scripts writing your logs and the lines they already wrote. In the `Log` returned by `GET /api/logs`, `category` is replaced by `level`, and the `logCategories` query parameter by `logLevels`.
 
-- **Breaking:** `call_file` and `call_line` of a log line are replaced by `origin`, an optional string saying where the line was emitted from, in any form but an empty one (`rotate_logs.sh:12`). A line that still carries `call_file` and `call_line` is read, without them. In the `Log` returned by `GET /api/logs`, `callFile` and `callLine` are replaced by the optional `origin`, a required `contentId` is added, which two logs share when they have the same `location`, `level`, `message` and `origin`, and the `id` is now made of the position of the line, its date, its job and those same four. The `origin` of a self report is the path of the log file followed by the position of the failing line (`/watched_logs/backup/log/nightly.log.jsonl:3`).
+- **Breaking:** `call_file` and `call_line` of a log line are replaced by `origin`, an optional string saying where the line was emitted from, in any form but an empty one (`rotate_logs.sh:12`). A line that still carries `call_file` and `call_line` is read, without them. In the `Log` returned by `GET /api/logs`, `callFile` and `callLine` are replaced by the optional `origin`, a required `contentId` is added, which two logs share when they have the same `location`, `level`, `message` and `origin`, and the `id` is now made of the position of the line, its date, its job and those same four. The `origin` of a self report is the path of the log file followed by the position of the failing line (`/watched_logs/backup/logs/nightly.log.jsonl:3`).
 
 - **Breaking:** the environment variables of the Telegram notifications are renamed. Update the environment of your container:
 
@@ -36,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `SELF_LOGS_ENABLED`        | `SAVE_SELF_REPORTS_TO_FILE`   |
   | `SELF_LOGS_RETENTION_DAYS` | `SELF_REPORTS_RETENTION_DAYS` |
 
-- **Breaking:** the self reports are no longer stored inside the watched logs, in `/watched_logs/server/<SERVER_NAME>/log`, but in a directory of their own, `/server_logs/self_reports/<SERVER_NAME>/log`, which is scanned along with `/watched_logs` when `SAVE_SELF_REPORTS_TO_FILE=true`. Replace the `/watched_logs/server` sub-mount with a writable `/server_logs` volume (to keep the existing self reports, move the content of the former host directory into a `self_reports` directory of the new one); the `server` directory created in your logs for that sub-mount is no longer needed.
+- **Breaking:** the self reports are no longer stored inside the watched logs, in `/watched_logs/server/<SERVER_NAME>/log`, but in a directory of their own, `/server_logs/self_reports/<SERVER_NAME>/logs`, which is scanned along with `/watched_logs` when `SAVE_SELF_REPORTS_TO_FILE=true`. Replace the `/watched_logs/server` sub-mount with a writable `/server_logs` volume (to keep the existing self reports, move the content of the former host directory into a `self_reports` directory of the new one); the `server` directory created in your logs for that sub-mount is no longer needed.
 
 - **Breaking:** an unknown path outside `/app` and `/api` now gets the same error body as the API, `{ "statusCode": 404, "message": "Not found." }`, instead of `{ "error": "Not found" }`.
 

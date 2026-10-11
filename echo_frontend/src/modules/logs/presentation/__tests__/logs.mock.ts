@@ -15,7 +15,7 @@ const formatDateToMock = (date: Date, { daysToRemove = 0 }: { daysToRemove?: num
 const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>> => [
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:42:09.465Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:1',
@@ -25,7 +25,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:42:09.453Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:2',
@@ -35,7 +35,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:42:09.443Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:3',
@@ -45,7 +45,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:42:09.127Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:4',
@@ -55,7 +55,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:58.520Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:5',
@@ -65,7 +65,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:58.516Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:6',
@@ -75,7 +75,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:58.495Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:7',
@@ -85,7 +85,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:58.490Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:8',
@@ -95,7 +95,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:53.701Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:9',
@@ -105,7 +105,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:53.694Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:10',
@@ -115,7 +115,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:53.531Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:11',
@@ -125,7 +125,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:53.461Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:12',
@@ -135,7 +135,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T09:41:53.457Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:13',
@@ -145,7 +145,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:03.076Z`,
-    location: '/server/utils/log/check_logs.jsonl',
+    location: '/server/utils/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:14',
@@ -155,7 +155,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:03.071Z`,
-    location: '/server/utils/log/check_logs.jsonl',
+    location: '/server/utils/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:15',
@@ -166,7 +166,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:03.066Z`,
-    location: '/server/utils/log/check_logs.jsonl',
+    location: '/server/utils/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:16',
@@ -176,7 +176,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:03.062Z`,
-    location: '/server/utils/log/check_logs.jsonl',
+    location: '/server/utils/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:17',
@@ -186,7 +186,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:03.058Z`,
-    location: '/server/utils/log/check_logs.jsonl',
+    location: '/server/utils/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:18',
@@ -196,7 +196,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:03.054Z`,
-    location: '/server/utils/log/check_logs.jsonl',
+    location: '/server/utils/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:19',
@@ -206,7 +206,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01.478Z`,
-    location: '/server/utils/log/check_logs.jsonl',
+    location: '/server/utils/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:20',
@@ -216,7 +216,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01.449Z`,
-    location: '/server/utils/log/check_logs.jsonl',
+    location: '/server/utils/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:21',
@@ -227,7 +227,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01.438Z`,
-    location: '/server/utils/log/check_logs.jsonl',
+    location: '/server/utils/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:22',
@@ -237,7 +237,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01.421Z`,
-    location: '/server/utils/log/check_logs.jsonl',
+    location: '/server/utils/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:23',
@@ -247,7 +247,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01.416Z`,
-    location: '/server/utils/log/check_logs.jsonl',
+    location: '/server/utils/logs/check_logs.jsonl',
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:24',
@@ -257,7 +257,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T14:13:00.153Z`,
-    location: '/server/log/not_an_undefined_filename_though.jsonl',
+    location: '/server/logs/not_an_undefined_filename_though.jsonl',
     locationName: 'not_an_undefined_filename_though',
     jobId: 1,
     origin: '/server/not_an_undefined_filename_though.sh:25',
@@ -267,7 +267,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:13:00.153Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:26',
@@ -277,7 +277,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:13:00.146Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:27',
@@ -287,7 +287,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:13:00.142Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:28',
@@ -297,7 +297,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:59.855Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:29',
@@ -307,7 +307,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:49.124Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:30',
@@ -317,7 +317,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:49.116Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:31',
@@ -327,7 +327,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:49.078Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:32',
@@ -337,7 +337,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:49.071Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:33',
@@ -347,7 +347,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:44.074Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:34',
@@ -357,7 +357,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:44.069Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:35',
@@ -367,7 +367,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:43.915Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:36',
@@ -377,7 +377,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:43.531Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:37',
@@ -387,7 +387,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 0 })}T13:12:43.526Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:38',
@@ -397,7 +397,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 1 })}T13:53:59.756Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 48,
     origin: '/server/docker_utils/update_docker_container.sh:39',
@@ -407,7 +407,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 1 })}T13:53:59.744Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 48,
     origin: '/server/docker_utils/update_docker_container.sh:40',
@@ -418,7 +418,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 1 })}T13:53:58.311Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 48,
     origin: '/server/docker_utils/update_docker_container.sh:41',
@@ -428,7 +428,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 1 })}T13:53:58.306Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 48,
     origin: '/server/docker_utils/update_docker_container.sh:42',
@@ -438,7 +438,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 1 })}T13:53:58.152Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 48,
     origin: '/server/docker_utils/update_docker_container.sh:43',
@@ -448,7 +448,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 1 })}T13:53:57.981Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 48,
     origin: '/server/docker_utils/update_docker_container.sh:44',
@@ -458,7 +458,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 1 })}T13:53:57.978Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 48,
     origin: '/server/docker_utils/update_docker_container.sh:45',
@@ -468,7 +468,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:12.649Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:46',
@@ -478,7 +478,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:12.642Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:47',
@@ -488,7 +488,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:12.637Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:48',
@@ -498,7 +498,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:12.385Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:49',
@@ -508,7 +508,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:01.910Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:50',
@@ -518,7 +518,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:01.903Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:51',
@@ -528,7 +528,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:01.875Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:52',
@@ -538,7 +538,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:01.868Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:53',
@@ -548,7 +548,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:01.136Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:54',
@@ -558,7 +558,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:01.131Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:55',
@@ -568,7 +568,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:00.980Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:56',
@@ -578,7 +578,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:00.911Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:57',
@@ -588,7 +588,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:45:00.906Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:58',
@@ -598,7 +598,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.489Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:59',
@@ -608,7 +608,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.478Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:60',
@@ -618,7 +618,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.471Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:61',
@@ -628,7 +628,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.314Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:62',
@@ -638,7 +638,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.146Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:63',
@@ -648,7 +648,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.141Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:64',
@@ -658,7 +658,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.115Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:65',
@@ -668,7 +668,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:41.107Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:66',
@@ -678,7 +678,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:37.345Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:67',
@@ -688,7 +688,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:37.339Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:68',
@@ -698,7 +698,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:37.168Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:69',
@@ -708,7 +708,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:37.096Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:70',
@@ -718,7 +718,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
   },
   {
     date: `${formatDateToMock(date, { daysToRemove: 2 })}T07:44:37.091Z`,
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:71',

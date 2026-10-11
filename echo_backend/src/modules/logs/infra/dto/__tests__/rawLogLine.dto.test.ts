@@ -5,7 +5,7 @@ import { convertRawLogLineToLog, type RawLogLineDto } from '../rawLogLine.dto.js
 
 const rawLogLine = (content: string): RawLogLineDto => ({
   logFile: {
-    path: '/server/docker_utils/log/check_logs.jsonl',
+    path: '/server/docker_utils/logs/check_logs.jsonl',
     fileName: 'check_logs',
     groupName: 'docker_utils'
   },
@@ -17,7 +17,7 @@ const rawLogLine = (content: string): RawLogLineDto => ({
 const noIdsLog: Omit<Log, 'id' | 'contentId'> = {
   date: '2024-05-12T14:30:00.386Z',
   groupName: 'docker_utils',
-  location: '/server/docker_utils/log/check_logs.jsonl',
+  location: '/server/docker_utils/logs/check_logs.jsonl',
   locationName: 'check_logs',
   jobId: 123,
   level: LogLevel.INFO,

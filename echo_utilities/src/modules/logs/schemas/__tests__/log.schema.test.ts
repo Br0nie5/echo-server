@@ -9,7 +9,7 @@ const validLog: Log = createLogWithIds(
   {
     date: '2026-04-28T10:00:00.000Z',
     groupName: 'docker_utils',
-    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    location: '/server/docker_utils/logs/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
     level: LogLevel.INFO,

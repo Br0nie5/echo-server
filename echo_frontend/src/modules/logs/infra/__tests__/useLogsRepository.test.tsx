@@ -13,7 +13,7 @@ const buildLogsRequestMock = (params: GetLogsParams): nock.Interceptor => {
 const logMock: Log = createLogWithIds(
   {
     date: '2026-04-27T10:00:00.000Z',
-    location: '/server/docker_utils/log/prune_images.jsonl',
+    location: '/server/docker_utils/logs/prune_images.jsonl',
     locationName: 'prune_images',
     jobId: 1,
     level: LogLevel.INFO,

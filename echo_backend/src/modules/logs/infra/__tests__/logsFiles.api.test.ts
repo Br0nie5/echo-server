@@ -38,7 +38,7 @@ describe('LogsFilesApi', () => {
           '/logs/root.jsonl',
           '/logs/notes.txt',
           '/logs/docker/compose.jsonl',
-          '/logs/docker/utils/log/backup.jsonl',
+          '/logs/docker/utils/logs/backup.jsonl',
           '/logs/docker/utils/backups/daily.jsonl'
         ]
       })
@@ -55,7 +55,7 @@ describe('LogsFilesApi', () => {
           groupName: undefined
         },
         {
-          path: '/logs/docker/utils/log/backup.jsonl',
+          path: '/logs/docker/utils/logs/backup.jsonl',
           fileName: 'backup',
           groupName: 'utils'
         },
@@ -81,7 +81,7 @@ describe('LogsFilesApi', () => {
     })
 
     it('Should leave the directories named like the log files directory of the config out of the group', async () => {
-      mockFoundFiles({ '/logs': ['/logs/docker/utils/output/log/backup.jsonl'] })
+      mockFoundFiles({ '/logs': ['/logs/docker/utils/output/logs/backup.jsonl'] })
 
       const logsFilesApi = createLogsFilesApi(
         getMockLogsConfig({ logsDirsPaths: ['/logs'], logFilesDirName: 'output' }),
@@ -90,9 +90,9 @@ describe('LogsFilesApi', () => {
 
       expect(await logsFilesApi.getAllLogFiles()).toEqual([
         {
-          path: '/logs/docker/utils/output/log/backup.jsonl',
+          path: '/logs/docker/utils/output/logs/backup.jsonl',
           fileName: 'backup',
-          groupName: 'utils_log'
+          groupName: 'utils_logs'
         }
       ])
     })
@@ -100,7 +100,7 @@ describe('LogsFilesApi', () => {
     it('Should list the files of every logs directory, each grouped from its own directory', async () => {
       mockFoundFiles({
         '/logs': ['/logs/docker/utils/backup.jsonl'],
-        '/server_logs': ['/server_logs/self_reports/Echo/log/parseLogFile.jsonl']
+        '/server_logs': ['/server_logs/self_reports/Echo/logs/parseLogFile.jsonl']
       })
 
       const logsFilesApi = createLogsFilesApi(
@@ -115,7 +115,7 @@ describe('LogsFilesApi', () => {
           groupName: 'utils'
         },
         {
-          path: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
+          path: '/server_logs/self_reports/Echo/logs/parseLogFile.jsonl',
           fileName: 'parseLogFile',
           groupName: 'Echo'
         }
@@ -187,9 +187,9 @@ describe('LogsFilesApi', () => {
       )
 
       expect(
-        logsFilesApi.getLogFile('/server_logs/self_reports/Echo/log/parseLogFile.jsonl')
+        logsFilesApi.getLogFile('/server_logs/self_reports/Echo/logs/parseLogFile.jsonl')
       ).toEqual({
-        path: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
+        path: '/server_logs/self_reports/Echo/logs/parseLogFile.jsonl',
         fileName: 'parseLogFile',
         groupName: 'Echo'
       })
@@ -217,7 +217,7 @@ describe('LogsFilesApi', () => {
         steps.push('replaceFileLines')
       })
 
-      const file = logFile('/server_logs/self_reports/Echo/log/parseLogFile.jsonl')
+      const file = logFile('/server_logs/self_reports/Echo/logs/parseLogFile.jsonl')
 
       await createLogsFilesApi(logsConfig, filesService).saveRawLogLines(file, [
         { logFile: file, index: 0, content: 'foo' },
@@ -225,10 +225,10 @@ describe('LogsFilesApi', () => {
       ])
 
       expect(filesService.createDirectory).toHaveBeenCalledWith(
-        '/server_logs/self_reports/Echo/log'
+        '/server_logs/self_reports/Echo/logs'
       )
       expect(filesService.replaceFileLines).toHaveBeenCalledWith(
-        '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
+        '/server_logs/self_reports/Echo/logs/parseLogFile.jsonl',
         ['foo', 'bar']
       )
       expect(steps).toEqual(['createDirectory', 'replaceFileLines'])

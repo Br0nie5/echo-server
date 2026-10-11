@@ -9,7 +9,7 @@ const buildLog = (overrides: Partial<Omit<Log, 'id' | 'contentId'>>): Log =>
       date: '2026-01-02T10:00:00.000Z',
       jobId: 1,
       level: 'INFO',
-      location: '/server/log/prune_images.jsonl',
+      location: '/server/logs/prune_images.jsonl',
       locationName: 'prune_images',
       message: 'message',
       origin: '/server/prune_images.sh:12',

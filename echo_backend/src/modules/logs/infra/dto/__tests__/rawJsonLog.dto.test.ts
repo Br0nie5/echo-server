@@ -66,7 +66,7 @@ describe('RawJsonLogLineSchema', () => {
 describe('convertLogToRawJsonLogLine', () => {
   const log: Log = createLogWithIds(
     {
-      location: '/server/docker_utils/log/check_logs.jsonl',
+      location: '/server/docker_utils/logs/check_logs.jsonl',
       locationName: 'check_logs',
       groupName: 'docker_utils',
       date: '2024-05-12T14:30:00.386Z',
@@ -94,7 +94,7 @@ describe('convertLogToRawJsonLogLine', () => {
     expect(
       convertRawLogLineToLog({
         logFile: {
-          path: '/server/docker_utils/log/check_logs.jsonl',
+          path: '/server/docker_utils/logs/check_logs.jsonl',
           fileName: 'check_logs',
           groupName: 'docker_utils'
         },

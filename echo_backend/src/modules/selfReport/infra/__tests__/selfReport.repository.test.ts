@@ -43,7 +43,7 @@ describe('createSelfReportRepository', () => {
 
   it('Should create the repository storing at the picked file of the self-reports directory when there is a self reports config', async () => {
     const selfReportsConfig = getMockSelfReportsConfig({
-      selfReportsDirPath: '/server_logs/self_reports/Echo/log',
+      selfReportsDirPath: '/server_logs/self_reports/Echo/logs',
       parseLogFileSelfReportFileName: 'parseLogFile.jsonl'
     })
 
@@ -61,7 +61,7 @@ describe('createSelfReportRepository', () => {
       logsRepository,
       sessionJobIdApi,
       selfReportsConfig,
-      selfReportsLocation: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
+      selfReportsLocation: '/server_logs/self_reports/Echo/logs/parseLogFile.jsonl',
       selfReportsLocationName: 'parseLogFile',
       logger
     })

@@ -25,7 +25,7 @@ describe('getFilteredLogs', () => {
           date,
           jobId: 1,
           level: 'INFO',
-          location: '/server/docker_utils/log/prune_images.jsonl',
+          location: '/server/docker_utils/logs/prune_images.jsonl',
           locationName: 'prune_images',
           message,
           groupName: 'docker_utils',
@@ -60,7 +60,7 @@ describe('getFilteredLogs', () => {
           date,
           jobId: 1,
           level: 'ERROR',
-          location: '/server/log/prune_images.jsonl',
+          location: '/server/logs/prune_images.jsonl',
           locationName: 'prune_images',
           message,
           origin: '/server/prune_images.sh:12'
@@ -91,7 +91,7 @@ describe('getFilteredLogs', () => {
           date,
           jobId,
           level: 'INFO',
-          location: '/server/docker_utils/log/prune_images.jsonl',
+          location: '/server/docker_utils/logs/prune_images.jsonl',
           locationName: 'prune_images',
           message: `log${jobId}`,
           groupName: 'docker_utils',
@@ -124,7 +124,7 @@ describe('getFilteredLogs', () => {
         date: '2026-01-01T09:00:00.000Z',
         jobId: 1,
         level: 'INFO',
-        location: '/server/docker_utils/log/prune_images.jsonl',
+        location: '/server/docker_utils/logs/prune_images.jsonl',
         locationName: 'prune_images',
         message: 'old',
         groupName: 'docker_utils',
@@ -159,18 +159,18 @@ describe('getFilteredLogs', () => {
   it('Should save the self reports of the repository in a single save', async () => {
     const selfReports: SelfReport[] = [
       {
-        id: '2026-09-19T14:41:09.669Z invalid line WARNING /server/docker_utils/log/prune_images.jsonl:2',
+        id: '2026-09-19T14:41:09.669Z invalid line WARNING /server/docker_utils/logs/prune_images.jsonl:2',
         date: new Date('2026-09-19T14:41:09.669Z'),
         message: 'invalid line',
         level: 'WARNING',
-        origin: '/server/docker_utils/log/prune_images.jsonl:2'
+        origin: '/server/docker_utils/logs/prune_images.jsonl:2'
       },
       {
-        id: '2026-09-19T14:41:09.669Z cut line WARNING /server/log/rotate_logs.jsonl:1',
+        id: '2026-09-19T14:41:09.669Z cut line WARNING /server/logs/rotate_logs.jsonl:1',
         date: new Date('2026-09-19T14:41:09.669Z'),
         message: 'cut line',
         level: 'WARNING',
-        origin: '/server/log/rotate_logs.jsonl:1'
+        origin: '/server/logs/rotate_logs.jsonl:1'
       }
     ]
     mockFindAllLogs.mockResolvedValue({ logs: [], selfReports })

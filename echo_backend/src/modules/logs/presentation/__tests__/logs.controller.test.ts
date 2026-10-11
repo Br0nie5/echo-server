@@ -38,7 +38,7 @@ describe('LogsController.getLogs', () => {
     createLogWithIds(
       {
         date: FROM_DATE,
-        location: '/server/docker_utils/log/prune_images.jsonl',
+        location: '/server/docker_utils/logs/prune_images.jsonl',
         locationName: 'prune_images',
         groupName: 'docker_utils',
         jobId: 1,

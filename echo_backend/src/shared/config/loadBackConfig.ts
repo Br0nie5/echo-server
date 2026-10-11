@@ -33,7 +33,7 @@ const DATA_DIR_PATH = path.join(REPOSITORY_ROOT_PATH, 'data')
 const LOG_FILE_EXTENSION = '.jsonl'
 
 /** Name of the directory scripts put their log files in, and the backend its self-report files. */
-const LOG_FILES_DIR_NAME = 'log'
+const LOG_FILES_DIR_NAME = 'logs'
 
 /** Path the documentation of the API is served under, below the path of `SERVER_URL`. */
 const DOCUMENTATION_ROUTE_PREFIX = '/documentation'

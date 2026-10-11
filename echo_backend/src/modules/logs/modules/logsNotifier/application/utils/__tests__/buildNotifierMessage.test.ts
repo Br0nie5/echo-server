@@ -17,7 +17,7 @@ function mockLog(overrides: Partial<Omit<Log, 'id' | 'contentId'>> = {}): Log {
       jobId: 1,
       date: '2026-01-01T10:00:00.000Z',
       level: 'ERROR',
-      location: '/server/log/worker.jsonl',
+      location: '/server/logs/worker.jsonl',
       locationName: 'worker',
       message: 'Something broke',
       origin: '/server/worker.sh:12',

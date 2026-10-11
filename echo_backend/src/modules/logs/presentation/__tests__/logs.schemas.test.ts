@@ -45,7 +45,7 @@ describe('LogJsonSchema', () => {
     {
       date: LOG_DATE,
       groupName: 'docker_utils',
-      location: '/server/docker_utils/log/prune_images.jsonl',
+      location: '/server/docker_utils/logs/prune_images.jsonl',
       locationName: 'prune_images',
       jobId: 123,
       level: 'INFO',

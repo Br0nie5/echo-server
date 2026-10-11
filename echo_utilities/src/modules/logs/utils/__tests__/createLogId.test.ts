@@ -7,7 +7,7 @@ import { createLogId } from '../createLogId.js'
 const log: Omit<Log, 'id' | 'contentId'> = {
   date: '2026-04-28T10:00:00.000Z',
   groupName: 'docker_utils',
-  location: '/server/docker_utils/log/backup.jsonl',
+  location: '/server/docker_utils/logs/backup.jsonl',
   locationName: 'backup',
   jobId: 66,
   level: LogLevel.WARNING,
@@ -18,13 +18,13 @@ const log: Omit<Log, 'id' | 'contentId'> = {
 describe('createLogId', () => {
   it('Should be made of the id number, the date, the job, the location, the level, the message and the origin', () => {
     expect(createLogId(log, 3)).toBe(
-      '{"idNumber":3,"date":"2026-04-28T10:00:00.000Z","jobId":66,"location":"/server/docker_utils/log/backup.jsonl","level":"WARNING","message":"Disk almost full","origin":"/server/docker_utils/backup.sh:12"}'
+      '{"idNumber":3,"date":"2026-04-28T10:00:00.000Z","jobId":66,"location":"/server/docker_utils/logs/backup.jsonl","level":"WARNING","message":"Disk almost full","origin":"/server/docker_utils/backup.sh:12"}'
     )
   })
 
   it('Should leave the origin out when the log has none', () => {
     expect(createLogId({ ...log, origin: undefined }, 3)).toBe(
-      '{"idNumber":3,"date":"2026-04-28T10:00:00.000Z","jobId":66,"location":"/server/docker_utils/log/backup.jsonl","level":"WARNING","message":"Disk almost full"}'
+      '{"idNumber":3,"date":"2026-04-28T10:00:00.000Z","jobId":66,"location":"/server/docker_utils/logs/backup.jsonl","level":"WARNING","message":"Disk almost full"}'
     )
   })
 

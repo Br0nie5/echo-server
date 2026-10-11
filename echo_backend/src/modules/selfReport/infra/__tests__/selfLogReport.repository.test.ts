@@ -5,7 +5,7 @@ import { getMockSelfReportsConfig } from '../../../../test/mocks/mockConfigs.js'
 import type { SelfReport } from '../../domain/selfReport.js'
 import { createSelfLogReportRepository } from '../selfLogReport.repository.js'
 
-const SELF_REPORTS_LOCATION = '/server_logs/self_reports/Echo/log/parseLogFile.jsonl'
+const SELF_REPORTS_LOCATION = '/server_logs/self_reports/Echo/logs/parseLogFile.jsonl'
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
 
@@ -33,11 +33,11 @@ const options = {
 }
 
 const selfReport = (overrides: Partial<SelfReport> = {}): SelfReport => ({
-  id: '2026-09-19T14:41:09.669Z bad line WARNING /server/docker_utils/log/prune_images.jsonl:3',
+  id: '2026-09-19T14:41:09.669Z bad line WARNING /server/docker_utils/logs/prune_images.jsonl:3',
   date: new Date('2026-09-19T14:41:09.669Z'),
   message: 'bad line',
   level: 'WARNING',
-  origin: '/server/docker_utils/log/prune_images.jsonl:3',
+  origin: '/server/docker_utils/logs/prune_images.jsonl:3',
   ...overrides
 })
 
@@ -60,7 +60,7 @@ const storedLog = (overrides: Partial<Omit<Log, 'id' | 'contentId'>> = {}): Log 
     jobId: 1,
     level: 'WARNING',
     message: 'bad line',
-    origin: '/server/docker_utils/log/prune_images.jsonl:3',
+    origin: '/server/docker_utils/logs/prune_images.jsonl:3',
     ...overrides
   }
 
@@ -222,13 +222,13 @@ describe('createSelfLogReportRepository', () => {
       await selfReportRepository.saveSelfReports([
         selfReport({
           message: 'bad line 1',
-          origin: '/server/docker_utils/log/prune_images.jsonl:1'
+          origin: '/server/docker_utils/logs/prune_images.jsonl:1'
         }),
         selfReport({
           date: new Date('2026-09-20T08:00:00.000Z'),
           message: 'bad line 2',
           level: 'ERROR',
-          origin: '/server/docker_utils/log/prune_images.jsonl'
+          origin: '/server/docker_utils/logs/prune_images.jsonl'
         })
       ])
 
@@ -246,7 +246,7 @@ describe('createSelfLogReportRepository', () => {
             date: '2026-09-19T14:41:09.669Z',
             level: 'WARNING',
             message: 'bad line 1',
-            origin: '/server/docker_utils/log/prune_images.jsonl:1'
+            origin: '/server/docker_utils/logs/prune_images.jsonl:1'
           },
           0
         ),
@@ -256,7 +256,7 @@ describe('createSelfLogReportRepository', () => {
             date: '2026-09-20T08:00:00.000Z',
             level: 'ERROR',
             message: 'bad line 2',
-            origin: '/server/docker_utils/log/prune_images.jsonl'
+            origin: '/server/docker_utils/logs/prune_images.jsonl'
           },
           1
         )
@@ -267,8 +267,8 @@ describe('createSelfLogReportRepository', () => {
       const selfReportRepository = await createSelfLogReportRepository(options)
       const otherMessageLog = storedLog({ message: 'other' })
       const otherLevelLog = storedLog({ level: 'ERROR' })
-      const otherLineLog = storedLog({ origin: '/server/docker_utils/log/prune_images.jsonl:9' })
-      const otherFileLog = storedLog({ origin: '/server/log/backup.jsonl:3' })
+      const otherLineLog = storedLog({ origin: '/server/docker_utils/logs/prune_images.jsonl:9' })
+      const otherFileLog = storedLog({ origin: '/server/logs/backup.jsonl:3' })
       const withoutOriginLog = storedLog({ origin: undefined })
       mockStoredLogs([
         storedLog(),
@@ -278,19 +278,19 @@ describe('createSelfLogReportRepository', () => {
         otherLineLog,
         otherFileLog,
         withoutOriginLog,
-        storedLog({ message: 'second', origin: '/server/docker_utils/log/prune_images.jsonl:7' }),
+        storedLog({ message: 'second', origin: '/server/docker_utils/logs/prune_images.jsonl:7' }),
         storedLog({
           message: 'without line',
-          origin: '/server/docker_utils/log/prune_images.jsonl'
+          origin: '/server/docker_utils/logs/prune_images.jsonl'
         })
       ])
 
       await selfReportRepository.saveSelfReports([
         selfReport(),
-        selfReport({ message: 'second', origin: '/server/docker_utils/log/prune_images.jsonl:7' }),
+        selfReport({ message: 'second', origin: '/server/docker_utils/logs/prune_images.jsonl:7' }),
         selfReport({
           message: 'without line',
-          origin: '/server/docker_utils/log/prune_images.jsonl'
+          origin: '/server/docker_utils/logs/prune_images.jsonl'
         })
       ])
 

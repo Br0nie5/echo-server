@@ -17,7 +17,7 @@ const lineContents = [
 const READ_DATE = new Date('2026-09-19T14:41:09.669Z')
 
 const logFile = (overrides: Partial<LogFileDto> = {}): LogFileDto => ({
-  path: '/server/docker_utils/log/prune_images.jsonl',
+  path: '/server/docker_utils/logs/prune_images.jsonl',
   fileName: 'prune_images',
   groupName: 'docker_utils',
   ...overrides
@@ -71,7 +71,7 @@ describe('LogsFilesRepository', () => {
         jobId: 1,
         level: 'INFO',
         message: 'First log',
-        location: '/server/docker_utils/log/prune_images.jsonl',
+        location: '/server/docker_utils/logs/prune_images.jsonl',
         locationName: 'prune_images',
         groupName: 'docker_utils',
         origin: '/server/docker_utils/prune_images.sh:1'
@@ -90,8 +90,8 @@ describe('LogsFilesRepository', () => {
       })
 
       expect(selfReports).toEqual([
-        unreadableLineSelfReport(lineContents[2], '/server/docker_utils/log/prune_images.jsonl:3'),
-        unreadableLineSelfReport('invalid line', '/server/docker_utils/log/prune_images.jsonl:5')
+        unreadableLineSelfReport(lineContents[2], '/server/docker_utils/logs/prune_images.jsonl:3'),
+        unreadableLineSelfReport('invalid line', '/server/docker_utils/logs/prune_images.jsonl:5')
       ])
     })
 
@@ -130,7 +130,7 @@ describe('LogsFilesRepository', () => {
     it('Should give the self reports of every file, self-report files included', async () => {
       const fileA = logFile({ fileName: 'backup' })
       const selfReportFile = logFile({
-        path: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
+        path: '/server_logs/self_reports/Echo/logs/parseLogFile.jsonl',
         fileName: 'parseLogFile'
       })
       logsFilesApi.getAllLogFiles.mockResolvedValue([fileA, selfReportFile])
@@ -141,10 +141,10 @@ describe('LogsFilesRepository', () => {
       const { selfReports } = await logsFilesRepository.getAllLogs()
 
       expect(selfReports).toEqual([
-        unreadableLineSelfReport('invalid line', '/server/docker_utils/log/prune_images.jsonl:2'),
+        unreadableLineSelfReport('invalid line', '/server/docker_utils/logs/prune_images.jsonl:2'),
         unreadableLineSelfReport(
           'cut line',
-          '/server_logs/self_reports/Echo/log/parseLogFile.jsonl:1'
+          '/server_logs/self_reports/Echo/logs/parseLogFile.jsonl:1'
         )
       ])
     })
@@ -152,30 +152,30 @@ describe('LogsFilesRepository', () => {
 
   describe('getLogs', () => {
     it('Should give the logs of the file at the location, and a self report for its other lines', async () => {
-      const file = logFile({ path: '/server/docker_utils/log/prune_images.jsonl' })
+      const file = logFile({ path: '/server/docker_utils/logs/prune_images.jsonl' })
       logsFilesApi.getLogFile.mockReturnValue(file)
       logsFilesApi.getRawLogLines.mockResolvedValue(
         rawLogLinesOf(file, [lineContents[0], 'invalid line'])
       )
 
       const { logs, selfReports } = await logsFilesRepository.getLogs(
-        '/server/docker_utils/log/prune_images.jsonl'
+        '/server/docker_utils/logs/prune_images.jsonl'
       )
 
       expect(logsFilesApi.getLogFile).toHaveBeenCalledWith(
-        '/server/docker_utils/log/prune_images.jsonl'
+        '/server/docker_utils/logs/prune_images.jsonl'
       )
       expect(logsFilesApi.getRawLogLines).toHaveBeenCalledWith(file)
       expect(logs).toHaveLength(1)
       expect(logs[0]).toMatchObject({
         jobId: 1,
         message: 'First log',
-        location: '/server/docker_utils/log/prune_images.jsonl',
+        location: '/server/docker_utils/logs/prune_images.jsonl',
         locationName: 'prune_images',
         groupName: 'docker_utils'
       })
       expect(selfReports).toEqual([
-        unreadableLineSelfReport('invalid line', '/server/docker_utils/log/prune_images.jsonl:2')
+        unreadableLineSelfReport('invalid line', '/server/docker_utils/logs/prune_images.jsonl:2')
       ])
     })
   })
@@ -213,13 +213,13 @@ describe('LogsFilesRepository', () => {
 
     it('Should make the logs the lines of the file at their location, in order', async () => {
       await logsFilesRepository.saveLogs([
-        logAt('/server/docker_utils/log/prune_images.jsonl'),
-        logAt('/server/docker_utils/log/prune_images.jsonl', secondLogOverrides)
+        logAt('/server/docker_utils/logs/prune_images.jsonl'),
+        logAt('/server/docker_utils/logs/prune_images.jsonl', secondLogOverrides)
       ])
 
-      const file = logFile({ path: '/server/docker_utils/log/prune_images.jsonl' })
+      const file = logFile({ path: '/server/docker_utils/logs/prune_images.jsonl' })
       expect(logsFilesApi.getLogFile).toHaveBeenCalledWith(
-        '/server/docker_utils/log/prune_images.jsonl'
+        '/server/docker_utils/logs/prune_images.jsonl'
       )
       expect(logsFilesApi.saveRawLogLines).toHaveBeenCalledExactlyOnceWith(
         file,
@@ -229,15 +229,15 @@ describe('LogsFilesRepository', () => {
 
     it('Should write the logs from the oldest to the newest, whatever the order they are given in', async () => {
       await logsFilesRepository.saveLogs([
-        logAt('/server/log/rotate_logs.jsonl', secondLogOverrides),
-        logAt('/server/log/rotate_logs.jsonl'),
-        logAt('/server/log/rotate_logs.jsonl', {
+        logAt('/server/logs/rotate_logs.jsonl', secondLogOverrides),
+        logAt('/server/logs/rotate_logs.jsonl'),
+        logAt('/server/logs/rotate_logs.jsonl', {
           ...secondLogOverrides,
           message: 'Same date, given later'
         })
       ])
 
-      const file = logFile({ path: '/server/log/rotate_logs.jsonl' })
+      const file = logFile({ path: '/server/logs/rotate_logs.jsonl' })
       expect(logsFilesApi.saveRawLogLines).toHaveBeenCalledExactlyOnceWith(
         file,
         rawLogLinesOf(file, [
@@ -250,14 +250,14 @@ describe('LogsFilesRepository', () => {
 
     it('Should save the logs of each location in its own file, all at once', async () => {
       await logsFilesRepository.saveLogs([
-        logAt('/server/log/backup.jsonl'),
-        logAt('/server/log/cleanup.jsonl', secondLogOverrides),
-        logAt('/server/log/backup.jsonl', secondLogOverrides)
+        logAt('/server/logs/backup.jsonl'),
+        logAt('/server/logs/cleanup.jsonl', secondLogOverrides),
+        logAt('/server/logs/backup.jsonl', secondLogOverrides)
       ])
 
       expect(logsFilesApi.saveRawLogLines).toHaveBeenCalledTimes(2)
-      const fileA = logFile({ path: '/server/log/backup.jsonl' })
-      const fileB = logFile({ path: '/server/log/cleanup.jsonl' })
+      const fileA = logFile({ path: '/server/logs/backup.jsonl' })
+      const fileB = logFile({ path: '/server/logs/cleanup.jsonl' })
       expect(logsFilesApi.saveRawLogLines).toHaveBeenCalledWith(
         fileA,
         rawLogLinesOf(fileA, lineContents.slice(0, 2))
@@ -278,7 +278,7 @@ describe('LogsFilesRepository', () => {
       logsFilesApi.saveRawLogLines.mockRejectedValue(new Error('EACCES'))
 
       await expect(
-        logsFilesRepository.saveLogs([logAt('/server/log/rotate_logs.jsonl')])
+        logsFilesRepository.saveLogs([logAt('/server/logs/rotate_logs.jsonl')])
       ).rejects.toThrow('EACCES')
     })
   })
@@ -287,10 +287,10 @@ describe('LogsFilesRepository', () => {
     beforeEach(mockLogFiles)
 
     it('Should leave the file at the location without any line', async () => {
-      await logsFilesRepository.deleteLogs('/server/docker_utils/log/prune_images.jsonl')
+      await logsFilesRepository.deleteLogs('/server/docker_utils/logs/prune_images.jsonl')
 
       expect(logsFilesApi.saveRawLogLines).toHaveBeenCalledExactlyOnceWith(
-        logFile({ path: '/server/docker_utils/log/prune_images.jsonl' }),
+        logFile({ path: '/server/docker_utils/logs/prune_images.jsonl' }),
         []
       )
     })
