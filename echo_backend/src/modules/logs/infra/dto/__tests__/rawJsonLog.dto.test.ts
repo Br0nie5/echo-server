@@ -9,7 +9,7 @@ describe('RawJsonLogLineSchema', () => {
     const rawLine = {
       job_id: 1,
       timestamp: '2024-05-12T14:30:00.386Z',
-      status: 'WARNING',
+      level: 'WARNING',
       message: 'Ok',
       origin: '/server/docker_utils/check_logs.sh:4'
     }
@@ -21,7 +21,7 @@ describe('RawJsonLogLineSchema', () => {
     const rawLine = {
       job_id: 1,
       timestamp: '2024-05-12T14:30:00.386Z',
-      status: 'WARNING',
+      level: 'WARNING',
       message: 'Ok'
     }
 
@@ -32,7 +32,7 @@ describe('RawJsonLogLineSchema', () => {
     const rawLine = {
       job_id: 1,
       timestamp: '2024-05-12T14:30:00.386Z',
-      status: 'WARNING',
+      level: 'WARNING',
       message: 'Ok',
       origin: ''
     }
@@ -41,7 +41,7 @@ describe('RawJsonLogLineSchema', () => {
   })
 
   it('Should reject a raw log line missing a required field', () => {
-    const rawLine = { job_id: 1, timestamp: '2024-05-12T14:30:00.386Z', status: 'INFO' }
+    const rawLine = { job_id: 1, timestamp: '2024-05-12T14:30:00.386Z', level: 'INFO' }
 
     expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeFalsy()
   })
@@ -50,7 +50,7 @@ describe('RawJsonLogLineSchema', () => {
     const rawLine = {
       job_id: '1',
       timestamp: '2024-05-12T14:30:00.386Z',
-      status: 'INFO',
+      level: 'INFO',
       message: 'Ok',
       origin: '/server/docker_utils/check_logs.sh:4'
     }
@@ -71,7 +71,7 @@ describe('convertLogToRawJsonLogLine', () => {
       groupName: 'docker_utils',
       date: '2024-05-12T14:30:00.386Z',
       jobId: 123,
-      category: 'INFO',
+      level: 'INFO',
       message: 'Something happened',
       origin: '/server/docker_utils/check_logs.sh:4'
     },
@@ -82,7 +82,7 @@ describe('convertLogToRawJsonLogLine', () => {
     expect(convertLogToRawJsonLogLine(log)).toEqual({
       job_id: 123,
       timestamp: '2024-05-12T14:30:00.386Z',
-      status: 'INFO',
+      level: 'INFO',
       message: 'Something happened',
       origin: '/server/docker_utils/check_logs.sh:4'
     })
@@ -108,7 +108,7 @@ describe('convertLogToRawJsonLogLine', () => {
     const logWithoutOrigin: Log = { ...log, origin: undefined }
 
     expect(JSON.stringify(convertLogToRawJsonLogLine(logWithoutOrigin))).toBe(
-      '{"job_id":123,"timestamp":"2024-05-12T14:30:00.386Z","status":"INFO","message":"Something happened"}'
+      '{"job_id":123,"timestamp":"2024-05-12T14:30:00.386Z","level":"INFO","message":"Something happened"}'
     )
   })
 })

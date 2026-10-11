@@ -26,7 +26,7 @@ export interface TranslationKeys {
   logs: {
     viewer: string
     from: string
-    filterByCategory: string
+    filterByLevel: string
     searchPlaceholder: string
     noGroupLabel: string
   }

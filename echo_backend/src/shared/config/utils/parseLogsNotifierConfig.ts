@@ -1,4 +1,4 @@
-import { isLogCategory } from '@echo/utilities'
+import { isLogLevel } from '@echo/utilities'
 import cron from 'node-cron'
 
 import type { LogsNotifierConfig } from '../backConfig.js'
@@ -11,8 +11,8 @@ import { parseTimezone } from './parseTimezone.js'
  * problem logs, completed with `serverName` and `lastLogsCheckFilePath`.
  *
  * It is `undefined`, which disables the cron, unless `LOGS_NOTIFIER_SCHEDULE` is set and
- * `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` names at least one log category (it is a comma-separated
- * list, whose unknown categories are ignored). When the cron is enabled, throws when
+ * `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` names at least one log level (it is a comma-separated
+ * list, whose unknown levels are ignored). When the cron is enabled, throws when
  * `LOGS_NOTIFIER_SCHEDULE` is not a cron expression or `LOGS_NOTIFIER_TIMEZONE` is not a
  * known zone.
  */
@@ -25,11 +25,11 @@ export const parseLogsNotifierConfig = (
 ): LogsNotifierConfig | undefined => {
   const schedule = processEnv.LOGS_NOTIFIER_SCHEDULE
 
-  const watchedLogsCategories = processEnv.LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES?.split(',')
-    .map((category) => category.trim())
-    .filter((category) => isLogCategory(category))
+  const watchedLogsLevels = processEnv.LOGS_NOTIFIER_WATCHED_LOGS_LEVELS?.split(',')
+    .map((level) => level.trim())
+    .filter((level) => isLogLevel(level))
 
-  if (!schedule || !watchedLogsCategories || watchedLogsCategories.length === 0) {
+  if (!schedule || !watchedLogsLevels || watchedLogsLevels.length === 0) {
     return undefined
   }
 
@@ -39,7 +39,7 @@ export const parseLogsNotifierConfig = (
 
   return {
     schedule,
-    watchedLogsCategories,
+    watchedLogsLevels,
     notifierTimezone: addEnvNameToError('LOGS_NOTIFIER_TIMEZONE', () =>
       parseTimezone(processEnv.LOGS_NOTIFIER_TIMEZONE)
     ),

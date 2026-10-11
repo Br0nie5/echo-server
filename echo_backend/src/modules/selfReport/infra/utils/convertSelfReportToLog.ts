@@ -8,14 +8,14 @@ import type { SelfReport } from '../../domain/selfReport.js'
  */
 export type SelfReportLogContext = Omit<
   Log,
-  'id' | 'contentId' | 'date' | 'category' | 'message' | 'origin'
+  'id' | 'contentId' | 'date' | 'level' | 'message' | 'origin'
 >
 
 /**
  * Converts a self report to the log it is stored as.
  *
- * The `message` and the `origin` are kept, and the level is the category, as both are named the
- * same. `context` gives the rest: the job the self report was reported during, and where it is
+ * The `message`, the `level` and the `origin` are kept, a self report having two of the levels
+ * of a log. `context` gives the rest: the job the self report was reported during, and where it is
  * stored. The ids of the log are those `createLogWithIds` gives it, with `idNumber`, an integer
  * telling it apart from the logs converted with it: its `contentId` is therefore the one it has
  * when it is read back from its storage.
@@ -31,7 +31,4 @@ export const convertSelfReportToLog = (
   context: SelfReportLogContext,
   idNumber: number
 ): Log =>
-  createLogWithIds(
-    { ...context, date: date.toISOString(), category: level, message, origin },
-    idNumber
-  )
+  createLogWithIds({ ...context, date: date.toISOString(), level, message, origin }, idNumber)

@@ -1,4 +1,4 @@
-import { createLogWithIds, LogCategory as LogCategoryConst, type Log } from '@echo/utilities'
+import { createLogWithIds, LogLevel as LogLevelConst, type Log } from '@echo/utilities'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import type { SelfReport } from '../../../selfReport/domain/selfReport.js'
@@ -24,7 +24,7 @@ describe('getFilteredLogs', () => {
         {
           date,
           jobId: 1,
-          category: 'INFO',
+          level: 'INFO',
           location: '/server/docker_utils/log/prune_images.jsonl',
           locationName: 'prune_images',
           message,
@@ -46,7 +46,7 @@ describe('getFilteredLogs', () => {
 
     const result = await getFilteredLogs(repository, selfReportRepository, {
       fromDate: new Date('2026-01-01T10:00:00.000Z'),
-      categories: [],
+      levels: [],
       searchFilters: []
     })
 
@@ -59,7 +59,7 @@ describe('getFilteredLogs', () => {
         {
           date,
           jobId: 1,
-          category: 'ERROR',
+          level: 'ERROR',
           location: '/server/log/prune_images.jsonl',
           locationName: 'prune_images',
           message,
@@ -77,7 +77,7 @@ describe('getFilteredLogs', () => {
     const result = await getFilteredLogs(repository, selfReportRepository, {
       fromDate: new Date('2026-01-01T10:00:00.000Z'),
       toDate: new Date('2026-01-01T10:30:00.000Z'),
-      categories: [],
+      levels: [],
       searchFilters: []
     })
 
@@ -90,7 +90,7 @@ describe('getFilteredLogs', () => {
         {
           date,
           jobId,
-          category: 'INFO',
+          level: 'INFO',
           location: '/server/docker_utils/log/prune_images.jsonl',
           locationName: 'prune_images',
           message: `log${jobId}`,
@@ -111,7 +111,7 @@ describe('getFilteredLogs', () => {
 
     const result = await getFilteredLogs(repository, selfReportRepository, {
       fromDate: new Date('2026-01-01T10:00:00.000Z'),
-      categories: ['INFO'],
+      levels: ['INFO'],
       searchFilters: []
     })
 
@@ -123,7 +123,7 @@ describe('getFilteredLogs', () => {
       {
         date: '2026-01-01T09:00:00.000Z',
         jobId: 1,
-        category: 'INFO',
+        level: 'INFO',
         location: '/server/docker_utils/log/prune_images.jsonl',
         locationName: 'prune_images',
         message: 'old',
@@ -137,7 +137,7 @@ describe('getFilteredLogs', () => {
 
     const result = await getFilteredLogs(repository, selfReportRepository, {
       fromDate: new Date('2026-01-01T10:00:00.000Z'),
-      categories: ['INFO'],
+      levels: ['INFO'],
       searchFilters: [{ mode: 'find', search: 'old' }]
     })
 
@@ -149,7 +149,7 @@ describe('getFilteredLogs', () => {
 
     const result = await getFilteredLogs(repository, selfReportRepository, {
       fromDate: new Date('2026-01-01T10:00:00.000Z'),
-      categories: Object.values(LogCategoryConst),
+      levels: Object.values(LogLevelConst),
       searchFilters: [{ mode: 'find', search: 'prune_images' }]
     })
 
@@ -177,7 +177,7 @@ describe('getFilteredLogs', () => {
 
     await getFilteredLogs(repository, selfReportRepository, {
       fromDate: new Date('2026-01-01T10:00:00.000Z'),
-      categories: [],
+      levels: [],
       searchFilters: []
     })
 

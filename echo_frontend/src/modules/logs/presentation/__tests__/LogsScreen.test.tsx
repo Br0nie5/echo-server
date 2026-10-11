@@ -1,4 +1,4 @@
-import { LogCategory, type GetLogsParams, type Log, type LogSearchFilter } from '@echo/utilities'
+import { LogLevel, type GetLogsParams, type Log, type LogSearchFilter } from '@echo/utilities'
 import { waitFor, waitForElementToBeRemoved, type RenderResult } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import nock from 'nock'
@@ -19,20 +19,20 @@ import { LogsScreen } from '../LogsScreen'
 import { getLogsMock } from './logs.mock'
 
 vi.mock('../../infra/workers/filterLogs.ts', async () => {
-  const { filterLogByCategories, filterLogBySearch } = await vi.importActual<{
-    filterLogByCategories: (log: Log, categories: LogCategory[]) => boolean
+  const { filterLogByLevels, filterLogBySearch } = await vi.importActual<{
+    filterLogByLevels: (log: Log, levels: LogLevel[]) => boolean
     filterLogBySearch: (log: Log, searchFilters: LogSearchFilter[]) => boolean
   }>('@echo/utilities')
 
   return {
     filterLogs: vi.fn(
-      (logs: Log[], logCategoriesFilters: LogCategory[], logSearchFilters: LogSearchFilter[]) => {
+      (logs: Log[], logLevelsFilters: LogLevel[], logSearchFilters: LogSearchFilter[]) => {
         return new Promise((resolve) =>
           setTimeout(
             () =>
               resolve(
                 logs
-                  .filter((log) => filterLogByCategories(log, logCategoriesFilters))
+                  .filter((log) => filterLogByLevels(log, logLevelsFilters))
                   .filter((log) => filterLogBySearch(log, logSearchFilters))
               ),
             100
@@ -138,15 +138,15 @@ describe('LogsScreen', () => {
 
   describe('Filters', () => {
     describe('From query parameters', () => {
-      test('Should directly filter all logs unrelated to the wanted category if it is present as a query parameter', async () => {
+      test('Should directly filter all logs unrelated to the wanted level if it is present as a query parameter', async () => {
         const screen = await renderLogsScreen(
           { status: 'success' },
-          { pathname: '?logCategories=WARNING' }
+          { pathname: '?logLevels=WARNING' }
         )
 
         await waitForElementToBeRemoved(screen.getAllByText(logsMock[0].message))
 
-        const warningLog = logsMock.find((log) => log.category === LogCategory.WARNING)
+        const warningLog = logsMock.find((log) => log.level === LogLevel.WARNING)
         expect(warningLog).not.toBeUndefined()
 
         screen.getByText(warningLog!.message)
@@ -203,13 +203,13 @@ describe('LogsScreen', () => {
 
       test('Should replace the wrong values of the query parameters and display the logs', async () => {
         const defaultLogsFromDate = getDateFromDaysAgo(mockConfig.LOGS_INITIAL_DATE_DAYS_AGO)
-        const wrongLogCategory = 'WRONG_CATEGORY'
+        const wrongLogLevel = 'WRONG_LEVEL'
         const wrongQueryParameters =
-          '?fromDate=not-a-date' + `&logCategories=${wrongLogCategory}` + '&logCategories=WARNING'
+          '?fromDate=not-a-date' + `&logLevels=${wrongLogLevel}` + '&logLevels=WARNING'
 
         const fixedQueryParameters = new URLSearchParams({
           fromDate: defaultLogsFromDate.toISOString(),
-          logCategories: 'WARNING'
+          logLevels: 'WARNING'
         })
         const onLocationChange = vi.fn<(location: Location) => void>()
 
@@ -224,9 +224,9 @@ describe('LogsScreen', () => {
 
         expectDateToBeSelected(screen, defaultLogsFromDate)
 
-        expect(screen.queryByText(wrongLogCategory)).not.toBeInTheDocument()
+        expect(screen.queryByText(wrongLogLevel)).not.toBeInTheDocument()
 
-        const warningLog = logsMock.find((log) => log.category === LogCategory.WARNING)
+        const warningLog = logsMock.find((log) => log.level === LogLevel.WARNING)
         expect(warningLog).not.toBeUndefined()
 
         expect(screen.getByText(warningLog!.message)).toBeInTheDocument()
@@ -234,7 +234,7 @@ describe('LogsScreen', () => {
     })
 
     describe('From user interaction', () => {
-      test('Should filter all logs unrelated to the wanted category', async () => {
+      test('Should filter all logs unrelated to the wanted level', async () => {
         const user = userEvent.setup()
 
         const screen = await renderLogsScreen({ status: 'success' })
@@ -245,7 +245,7 @@ describe('LogsScreen', () => {
 
         await waitForElementToBeRemoved(screen.getAllByText(logsMock[0].message))
 
-        const warningLog = logsMock.find((log) => log.category === LogCategory.WARNING)
+        const warningLog = logsMock.find((log) => log.level === LogLevel.WARNING)
         expect(warningLog).not.toBeNull()
         expect(screen.getByText(warningLog!.message)).toBeInTheDocument()
       })

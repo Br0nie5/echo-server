@@ -163,7 +163,7 @@ describe('loadBackConfig', () => {
       SERVER_LOGS_DIR_PATH: '/server_logs',
       SELF_REPORTS_RETENTION_DAYS: '30',
       LOGS_NOTIFIER_SCHEDULE: '*/30 * * * *',
-      LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: 'WARNING,ERROR',
+      LOGS_NOTIFIER_WATCHED_LOGS_LEVELS: 'WARNING,ERROR',
       TELEGRAM_CHAT_ID: '123456789',
       TELEGRAM_BOT_TOKEN: '123456:ABC-DEF',
       LOGS_NOTIFIER_TIMEZONE: 'Europe/Paris'
@@ -205,7 +205,7 @@ describe('loadBackConfig', () => {
         logFilesDirName: 'log',
         logsNotifier: {
           schedule: '*/30 * * * *',
-          watchedLogsCategories: ['WARNING', 'ERROR'],
+          watchedLogsLevels: ['WARNING', 'ERROR'],
           notifierTimezone: 'Europe/Paris',
           serverName: 'Docker Prod',
           lastLogsCheckFilePath: path.join(DATA_DIR_PATH, 'last_logs_check.json')
@@ -243,7 +243,7 @@ describe('loadBackConfig', () => {
     const config = await loadBackConfig(filesService, {
       ...REQUIRED_ENV,
       LOGS_NOTIFIER_SCHEDULE: '*/30 * * * *',
-      LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: 'WARNING,ERROR',
+      LOGS_NOTIFIER_WATCHED_LOGS_LEVELS: 'WARNING,ERROR',
       LOGS_NOTIFIER_TIMEZONE: 'Mars/Olympus'
     })
 

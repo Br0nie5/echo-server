@@ -1,4 +1,4 @@
-import type { Log, LogCategory, LogSearchFilter } from '@echo/utilities'
+import type { Log, LogLevel, LogSearchFilter } from '@echo/utilities'
 import { Box, LinearProgress } from '@mui/material'
 import { memo } from 'react'
 
@@ -8,18 +8,18 @@ import { LogsByDaysLayout } from './LogsByDaysLayout'
 
 type FilteredLogsLayoutProps = {
   logs: Log[]
-  logCategoriesFilters: LogCategory[]
+  logLevelsFilters: LogLevel[]
   logSearchFilters: LogSearchFilter[]
 }
 
 const FilteredLogsLayoutComponent: React.FC<FilteredLogsLayoutProps> = ({
   logs,
-  logCategoriesFilters,
+  logLevelsFilters,
   logSearchFilters
 }) => {
   const { data, isFetching: isFilteringLogs } = useFilteredLogs(
     logs,
-    logCategoriesFilters,
+    logLevelsFilters,
     logSearchFilters
   )
 
@@ -43,5 +43,5 @@ const FilteredLogsLayoutComponent: React.FC<FilteredLogsLayoutProps> = ({
   )
 }
 
-/** Logs filtered by categories and search, with a progress bar while filtering. Shows every log until the first result is ready. */
+/** Logs filtered by levels and search, with a progress bar while filtering. Shows every log until the first result is ready. */
 export const FilteredLogsLayout = memo(FilteredLogsLayoutComponent)

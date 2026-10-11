@@ -4,30 +4,30 @@ import { Ajv } from 'ajv'
 import addFormats from 'ajv-formats'
 import { describe, it, expect, beforeAll } from 'vitest'
 
-import { GetLogsParamsJsonSchema, LogJsonSchema, LogCategoryJsonSchema } from '../logs.schemas.js'
+import { GetLogsParamsJsonSchema, LogJsonSchema, LogLevelJsonSchema } from '../logs.schemas.js'
 
 /** The date of the logs validated against the schema. */
 const LOG_DATE = '2026-01-01T00:00:00.000Z'
 
-describe('LogCategoryJsonSchema', () => {
-  let validateCategory: ValidateFunction
+describe('LogLevelJsonSchema', () => {
+  let validateLevel: ValidateFunction
 
   beforeAll(() => {
     const ajv = new Ajv()
-    validateCategory = ajv.compile(LogCategoryJsonSchema)
+    validateLevel = ajv.compile(LogLevelJsonSchema)
   })
 
-  it('Should accept valid categories', () => {
-    const validCategories = ['SUCCESS', 'INFO', 'WARNING', 'ERROR']
-    validCategories.forEach((cat) => {
-      expect(validateCategory(cat)).toBe(true)
+  it('Should accept valid levels', () => {
+    const validLevels = ['SUCCESS', 'INFO', 'WARNING', 'ERROR']
+    validLevels.forEach((cat) => {
+      expect(validateLevel(cat)).toBe(true)
     })
   })
 
-  it('Should reject invalid categories', () => {
-    expect(validateCategory('INVALID')).toBe(false)
-    expect(validateCategory('success')).toBe(false) // case-sensitive
-    expect(validateCategory('')).toBe(false)
+  it('Should reject invalid levels', () => {
+    expect(validateLevel('INVALID')).toBe(false)
+    expect(validateLevel('success')).toBe(false) // case-sensitive
+    expect(validateLevel('')).toBe(false)
   })
 })
 
@@ -37,7 +37,7 @@ describe('LogJsonSchema', () => {
   beforeAll(() => {
     const ajv = new Ajv()
     addFormats.default(ajv)
-    ajv.addSchema(LogCategoryJsonSchema)
+    ajv.addSchema(LogLevelJsonSchema)
     validateLog = ajv.compile(LogJsonSchema)
   })
 
@@ -48,7 +48,7 @@ describe('LogJsonSchema', () => {
       location: '/server/docker_utils/log/prune_images.jsonl',
       locationName: 'prune_images',
       jobId: 123,
-      category: 'INFO',
+      level: 'INFO',
       message: 'Something happened',
       origin: '/server/docker_utils/prune_images.sh:12'
     },
@@ -64,8 +64,8 @@ describe('LogJsonSchema', () => {
     expect(validateLog.errors?.[0].message).toContain('required')
   })
 
-  it('Should reject log object with invalid category', () => {
-    expect(validateLog({ ...validLog, category: 'INVALID' })).toBe(false)
+  it('Should reject log object with invalid level', () => {
+    expect(validateLog({ ...validLog, level: 'INVALID' })).toBe(false)
     expect(validateLog.errors?.[0].message).toContain('must be equal to one of the allowed values')
   })
 
@@ -82,7 +82,7 @@ describe('GetLogsParamsJsonSchema', () => {
   beforeAll(() => {
     const ajv = new Ajv()
     addFormats.default(ajv)
-    ajv.addSchema(LogCategoryJsonSchema)
+    ajv.addSchema(LogLevelJsonSchema)
     validateQuery = ajv.compile(GetLogsParamsJsonSchema)
   })
 
@@ -90,9 +90,9 @@ describe('GetLogsParamsJsonSchema', () => {
     expect(validateQuery({ fromDate })).toBe(true)
   })
 
-  it('Should accept one log category or several ones', () => {
-    expect(validateQuery({ fromDate, logCategories: 'INFO' })).toBe(true)
-    expect(validateQuery({ fromDate, logCategories: ['INFO', 'ERROR'] })).toBe(true)
+  it('Should accept one log level or several ones', () => {
+    expect(validateQuery({ fromDate, logLevels: 'INFO' })).toBe(true)
+    expect(validateQuery({ fromDate, logLevels: ['INFO', 'ERROR'] })).toBe(true)
   })
 
   it('Should accept a logSearch and leave unknown properties alone', () => {
@@ -109,8 +109,8 @@ describe('GetLogsParamsJsonSchema', () => {
     expect(validateQuery.errors?.[0].message).toContain('must match format "date-time"')
   })
 
-  it('Should reject an invalid log category', () => {
-    expect(validateQuery({ fromDate, logCategories: 'INVALID' })).toBe(false)
-    expect(validateQuery({ fromDate, logCategories: ['INFO', 'INVALID'] })).toBe(false)
+  it('Should reject an invalid log level', () => {
+    expect(validateQuery({ fromDate, logLevels: 'INVALID' })).toBe(false)
+    expect(validateQuery({ fromDate, logLevels: ['INFO', 'INVALID'] })).toBe(false)
   })
 })

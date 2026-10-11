@@ -1,4 +1,4 @@
-import { isLogCategory, type LogCategory } from '@echo/utilities'
+import { isLogLevel, type LogLevel } from '@echo/utilities'
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
@@ -9,7 +9,7 @@ import { parseDateQueryParam } from '../utils/parseDateQueryParam'
 
 interface UseLogsFiltersReturnType {
   logsFromDateState: ControlledState<Date>
-  logCategoriesFiltersState: ControlledState<LogCategory[]>
+  logLevelsFiltersState: ControlledState<LogLevel[]>
   logSearchState: ControlledState<string>
 }
 
@@ -28,12 +28,12 @@ export const useLogsFilters = (): UseLogsFiltersReturnType => {
     [logsFromDate]
   )
 
-  const [logCategoriesFilters, setLogCategoriesFilters] = useState<LogCategory[]>(
-    searchParams.getAll('logCategories').filter(isLogCategory)
+  const [logLevelsFilters, setLogLevelsFilters] = useState<LogLevel[]>(
+    searchParams.getAll('logLevels').filter(isLogLevel)
   )
-  const logCategoriesFiltersState = useMemo<ControlledState<LogCategory[]>>(
-    () => ({ value: logCategoriesFilters, setValue: setLogCategoriesFilters }),
-    [logCategoriesFilters]
+  const logLevelsFiltersState = useMemo<ControlledState<LogLevel[]>>(
+    () => ({ value: logLevelsFilters, setValue: setLogLevelsFilters }),
+    [logLevelsFilters]
   )
 
   const [logSearch, setLogSearch] = useState<string>(searchParams.get('logSearch') ?? '')
@@ -50,12 +50,10 @@ export const useLogsFilters = (): UseLogsFiltersReturnType => {
     if (logSearch) {
       params.set('logSearch', logSearch)
     }
-    logCategoriesFilters.forEach((logCategoryFilter) =>
-      params.append('logCategories', logCategoryFilter)
-    )
+    logLevelsFilters.forEach((logLevelFilter) => params.append('logLevels', logLevelFilter))
 
     setSearchParams(params, { replace: true })
-  }, [logsFromDate, logSearch, logCategoriesFilters, setSearchParams])
+  }, [logsFromDate, logSearch, logLevelsFilters, setSearchParams])
 
-  return { logsFromDateState, logCategoriesFiltersState, logSearchState }
+  return { logsFromDateState, logLevelsFiltersState, logSearchState }
 }

@@ -187,7 +187,7 @@ exports[`LogsScreen > Should render all the logs on a big screen 1`] = `
           class="MuiTypography-root MuiTypography-h5 MuiTypography-alignCenter css-m08qag-MuiTypography-root"
           style="--Typography-textAlign: center;"
         >
-          Filter Logs by Category:
+          Filter Logs by Level:
         </h5>
         <div
           class="MuiBox-root css-3e2rqj"
@@ -1961,7 +1961,7 @@ exports[`LogsScreen > Should render all the logs on a small screen 1`] = `
           class="MuiTypography-root MuiTypography-h5 MuiTypography-alignCenter css-m08qag-MuiTypography-root"
           style="--Typography-textAlign: center;"
         >
-          Filter Logs by Category:
+          Filter Logs by Level:
         </h5>
         <div
           class="MuiBox-root css-3e2rqj"

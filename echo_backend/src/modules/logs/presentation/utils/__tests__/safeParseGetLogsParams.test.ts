@@ -1,4 +1,4 @@
-import { LogCategory, type GetLogsParams } from '@echo/utilities'
+import { LogLevel, type GetLogsParams } from '@echo/utilities'
 import { describe, it, expect } from 'vitest'
 
 import { safeParseGetLogsParams } from '../safeParseGetLogsParams.js'
@@ -7,13 +7,13 @@ import { safeParseGetLogsParams } from '../safeParseGetLogsParams.js'
 const FROM_DATE = '2026-01-01T00:00:00.000Z'
 
 describe('safeParseGetLogsParams', () => {
-  it('Should parse a valid query with no logCategories or logSearch', () => {
+  it('Should parse a valid query with no logLevels or logSearch', () => {
     const result = safeParseGetLogsParams({ fromDate: FROM_DATE })
 
     expect(result.success).toBeTruthy()
     if (result.success) {
       expect(result.data.fromDate).toEqual(new Date(FROM_DATE))
-      expect(result.data.logCategories).toEqual([])
+      expect(result.data.logLevels).toEqual([])
     }
   })
 
@@ -46,27 +46,27 @@ describe('safeParseGetLogsParams', () => {
     }
   })
 
-  it('Should normalize a single logCategories value into an array', () => {
+  it('Should normalize a single logLevels value into an array', () => {
     const result = safeParseGetLogsParams({
       fromDate: FROM_DATE,
-      logCategories: LogCategory.INFO
+      logLevels: LogLevel.INFO
     })
 
     expect(result.success).toBeTruthy()
     if (result.success) {
-      expect(result.data.logCategories).toEqual([LogCategory.INFO])
+      expect(result.data.logLevels).toEqual([LogLevel.INFO])
     }
   })
 
-  it('Should keep an array of logCategories values as-is', () => {
+  it('Should keep an array of logLevels values as-is', () => {
     const result = safeParseGetLogsParams({
       fromDate: FROM_DATE,
-      logCategories: [LogCategory.INFO, LogCategory.ERROR]
+      logLevels: [LogLevel.INFO, LogLevel.ERROR]
     })
 
     expect(result.success).toBeTruthy()
     if (result.success) {
-      expect(result.data.logCategories).toEqual([LogCategory.INFO, LogCategory.ERROR])
+      expect(result.data.logLevels).toEqual([LogLevel.INFO, LogLevel.ERROR])
     }
   })
 
@@ -113,23 +113,23 @@ describe('safeParseGetLogsParams', () => {
     }
   })
 
-  it('Should fail with a specific message when a logCategories value is invalid', () => {
+  it('Should fail with a specific message when a logLevels value is invalid', () => {
     const result = safeParseGetLogsParams({
       fromDate: FROM_DATE,
-      logCategories: 'Invalid_log_category'
+      logLevels: 'Invalid_log_level'
     } as unknown as GetLogsParams)
 
     expect(result.success).toBeFalsy()
     if (!result.success) {
       expect(result.error.issues[0]?.message).toBe(
-        `Invalid_log_category is not a valid log category, use ${Object.values(LogCategory).join('|')}`
+        `Invalid_log_level is not a valid log level, use ${Object.values(LogLevel).join('|')}`
       )
     }
   })
 
-  it('Should report the fromDate issue before a logCategories issue when both are invalid', () => {
+  it('Should report the fromDate issue before a logLevels issue when both are invalid', () => {
     const result = safeParseGetLogsParams({
-      logCategories: 'Invalid_log_category'
+      logLevels: 'Invalid_log_level'
     } as unknown as GetLogsParams)
 
     expect(result.success).toBeFalsy()

@@ -38,7 +38,7 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
     async () => {
       try {
         await checkProblemLogsAndNotify({
-          watchedLogsCategories: logsNotifierConfig.watchedLogsCategories,
+          watchedLogsLevels: logsNotifierConfig.watchedLogsLevels,
           serverName: logsNotifierConfig.serverName,
           timezone: logsNotifierConfig.notifierTimezone,
           logsRepository,

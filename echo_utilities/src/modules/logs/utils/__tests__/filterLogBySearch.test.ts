@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 
 import type { LogSearchableKey } from '../../consts/logSearchFilter.js'
 import type { Log } from '../../schemas/log.schema.js'
-import { LogCategory } from '../../schemas/logCategory.schema.js'
+import { LogLevel } from '../../schemas/logLevel.schema.js'
 import { createLogWithIds } from '../createLogWithIds.js'
 import { filterLogBySearch } from '../filterLogBySearch.js'
 
@@ -14,7 +14,7 @@ describe('filterLogBySearch', () => {
       location: '/server/log_group_name/log/log_file_name.jsonl',
       locationName: 'log_file_name',
       jobId: 123,
-      category: LogCategory.INFO,
+      level: LogLevel.INFO,
       message: 'some log message',
       origin: '/server/log_group_name/log_file_name.sh:4'
     },

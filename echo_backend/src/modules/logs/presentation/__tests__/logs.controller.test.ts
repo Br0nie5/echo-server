@@ -1,10 +1,10 @@
 import {
   createLogWithIds,
-  LogCategory as LogCategoryConst,
+  LogLevel as LogLevelConst,
   type EchoError,
   type GetLogsParams,
   type Log,
-  type LogCategory
+  type LogLevel
 } from '@echo/utilities'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -42,7 +42,7 @@ describe('LogsController.getLogs', () => {
         locationName: 'prune_images',
         groupName: 'docker_utils',
         jobId: 1,
-        category: 'INFO',
+        level: 'INFO',
         message: 'test',
         origin: '/server/docker_utils/prune_images.sh:12'
       },
@@ -90,10 +90,10 @@ describe('LogsController.getLogs', () => {
     })
   })
 
-  it('Should return 400 if an invalid log category is given', async () => {
+  it('Should return 400 if an invalid log level is given', async () => {
     const request = mockRequest({
       fromDate: FROM_DATE,
-      logCategories: 'Invalid_log_category' as LogCategory
+      logLevels: 'Invalid_log_level' as LogLevel
     })
     const reply = mockReply()
 
@@ -102,7 +102,7 @@ describe('LogsController.getLogs', () => {
     expect(reply.status).toHaveBeenCalledWith(400)
     expect(reply.send).toHaveBeenCalledWith({
       statusCode: 400,
-      message: `Invalid_log_category is not a valid log category, use ${Object.values(LogCategoryConst).join('|')}`
+      message: `Invalid_log_level is not a valid log level, use ${Object.values(LogLevelConst).join('|')}`
     })
   })
 
@@ -127,7 +127,7 @@ describe('LogsController.getLogs', () => {
     const request = mockRequest({
       fromDate: '2026-01-01T00:00:00.000Z',
       toDate: '2026-01-02T00:00:00.000Z',
-      logCategories: LogCategoryConst.ERROR
+      logLevels: LogLevelConst.ERROR
     })
     mockGetFilteredLogs.mockResolvedValue([])
 
@@ -136,7 +136,7 @@ describe('LogsController.getLogs', () => {
     expect(mockGetFilteredLogs).toHaveBeenCalledWith(logsRepository, selfReportRepository, {
       fromDate: new Date('2026-01-01T00:00:00.000Z'),
       toDate: new Date('2026-01-02T00:00:00.000Z'),
-      categories: [LogCategoryConst.ERROR],
+      levels: [LogLevelConst.ERROR],
       searchFilters: []
     })
   })

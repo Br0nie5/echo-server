@@ -1,12 +1,12 @@
-import type { Log, LogCategory } from '@echo/utilities'
+import type { Log, LogLevel } from '@echo/utilities'
 import { Card, CardContent, Typography, useTheme, type Theme } from '@mui/material'
 import React, { memo } from 'react'
 
 import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
 import { formatDate } from '../../../../shared/utils/formatDate'
 
-const getLogCategoryBackgroundColor = (logCategory: LogCategory, theme: Theme): string => {
-  switch (logCategory) {
+const getLogLevelBackgroundColor = (logLevel: LogLevel, theme: Theme): string => {
+  switch (logLevel) {
     case 'SUCCESS':
       return theme.palette.success.main
     case 'INFO':
@@ -31,13 +31,13 @@ const LogCardComponent: React.FC<LogCardProps> = ({ log }) => {
     'year/month/day - hour:minutes:seconds',
     translation
   )
-  const entryLogTitle = `${formattedDate} - ${log.category}`
+  const entryLogTitle = `${formattedDate} - ${log.level}`
 
   return (
     <Card sx={{ marginBottom: 2 }}>
       <CardContent
         sx={{
-          backgroundColor: getLogCategoryBackgroundColor(log.category, theme),
+          backgroundColor: getLogLevelBackgroundColor(log.level, theme),
           color: theme.palette.text.primary,
           borderRadius: 2,
           padding: 2
@@ -59,5 +59,5 @@ const LogCardComponent: React.FC<LogCardProps> = ({ log }) => {
   )
 }
 
-/** One log: its date and category, colored by category, and its message. */
+/** One log: its date and level, colored by level, and its message. */
 export const LogCard = memo(LogCardComponent)

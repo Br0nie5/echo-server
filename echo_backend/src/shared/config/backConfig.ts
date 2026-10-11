@@ -1,4 +1,4 @@
-import type { LogCategory } from '@echo/utilities'
+import type { LogLevel } from '@echo/utilities'
 import type { CookieSerializeOptions } from '@fastify/cookie'
 
 /** Certificate and private key that make the server use HTTPS, as the text of their PEM files. */
@@ -81,8 +81,8 @@ export type SelfReportsConfig = {
 export type LogsNotifierConfig = {
   /** Cron expression saying when the logs are checked (`LOGS_NOTIFIER_SCHEDULE`). */
   schedule: string
-  /** Categories that make a log a problem log (`LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES`). */
-  watchedLogsCategories: LogCategory[]
+  /** Levels that make a log a problem log (`LOGS_NOTIFIER_WATCHED_LOGS_LEVELS`). */
+  watchedLogsLevels: LogLevel[]
   /** Luxon zone the dates of the messages are shown in (`LOGS_NOTIFIER_TIMEZONE`). */
   notifierTimezone: string
   /** Name the messages say the logs come from (`SERVER_NAME`). */

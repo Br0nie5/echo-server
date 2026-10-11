@@ -27,7 +27,7 @@ export const english: TranslationKeys = {
   logs: {
     viewer: 'Logs Viewer',
     from: 'From',
-    filterByCategory: 'Filter Logs by Category:',
+    filterByLevel: 'Filter Logs by Level:',
     searchPlaceholder: 'Search... (ex: jobId:123 message:"My wanted message")',
     noGroupLabel: 'No group'
   },

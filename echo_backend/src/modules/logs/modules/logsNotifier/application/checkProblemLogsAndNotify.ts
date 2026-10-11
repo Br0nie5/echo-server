@@ -1,4 +1,4 @@
-import type { LogCategory } from '@echo/utilities'
+import type { LogLevel } from '@echo/utilities'
 
 import type { NotifierService } from '../../../../../shared/services/notifier.service.js'
 import type { SelfReport } from '../../../../selfReport/domain/selfReport.js'
@@ -11,8 +11,8 @@ import { buildNotifierMessage } from './utils/buildNotifierMessage.js'
 
 /** Everything one run of the problem logs check needs. */
 export interface ProblemLogsCheck {
-  /** Categories that make a log a problem log. */
-  watchedLogsCategories: LogCategory[]
+  /** Levels that make a log a problem log. */
+  watchedLogsLevels: LogLevel[]
   /** Name the notification says the logs come from. */
   serverName: string
   /** Luxon zone the dates of the logs are shown in. */
@@ -34,7 +34,7 @@ export interface ProblemLogsCheck {
  * while the logs are being read. The logs are looked up with `getFilteredLogs`, which reports the
  * stored entries that hold no valid log to `logsSelfReportRepository`.
  *
- * The self reports are logs too, so they are notified when their category is watched. A stored
+ * The self reports are logs too, so they are notified when their level is watched. A stored
  * entry that holds no valid log is reported again each time the logs are read, with the date it is
  * read at: as long as it stays in its file, it is therefore notified at every check. That is on
  * purpose, as dating it from when it was first seen would hide a new problem found on the same
@@ -51,7 +51,7 @@ export interface ProblemLogsCheck {
  *
  * ```ts
  * await checkProblemLogsAndNotify({
- *   watchedLogsCategories: logsNotifierConfig.watchedLogsCategories,
+ *   watchedLogsLevels: logsNotifierConfig.watchedLogsLevels,
  *   serverName: logsNotifierConfig.serverName,
  *   timezone: logsNotifierConfig.notifierTimezone,
  *   logsRepository,
@@ -63,7 +63,7 @@ export interface ProblemLogsCheck {
  * ```
  */
 export const checkProblemLogsAndNotify = async ({
-  watchedLogsCategories,
+  watchedLogsLevels,
   serverName,
   timezone,
   logsRepository,
@@ -84,7 +84,7 @@ export const checkProblemLogsAndNotify = async ({
   const problemLogs = await getFilteredLogs(logsRepository, logsSelfReportRepository, {
     fromDate: previousCheck.lastCheckDate,
     toDate: newCheckDate,
-    categories: watchedLogsCategories,
+    levels: watchedLogsLevels,
     searchFilters: []
   })
 

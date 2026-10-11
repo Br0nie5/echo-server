@@ -58,7 +58,7 @@ const storedLog = (overrides: Partial<Omit<Log, 'id' | 'contentId'>> = {}): Log 
     groupName: 'Echo',
     date: daysAgo(1),
     jobId: 1,
-    category: 'WARNING',
+    level: 'WARNING',
     message: 'bad line',
     origin: '/server/docker_utils/log/prune_images.jsonl:3',
     ...overrides
@@ -244,7 +244,7 @@ describe('createSelfLogReportRepository', () => {
           {
             ...whereItIsStored,
             date: '2026-09-19T14:41:09.669Z',
-            category: 'WARNING',
+            level: 'WARNING',
             message: 'bad line 1',
             origin: '/server/docker_utils/log/prune_images.jsonl:1'
           },
@@ -254,7 +254,7 @@ describe('createSelfLogReportRepository', () => {
           {
             ...whereItIsStored,
             date: '2026-09-20T08:00:00.000Z',
-            category: 'ERROR',
+            level: 'ERROR',
             message: 'bad line 2',
             origin: '/server/docker_utils/log/prune_images.jsonl'
           },
@@ -266,7 +266,7 @@ describe('createSelfLogReportRepository', () => {
     it('Should leave out the stored logs with the same contentId as a self report', async () => {
       const selfReportRepository = await createSelfLogReportRepository(options)
       const otherMessageLog = storedLog({ message: 'other' })
-      const otherCategoryLog = storedLog({ category: 'ERROR' })
+      const otherLevelLog = storedLog({ level: 'ERROR' })
       const otherLineLog = storedLog({ origin: '/server/docker_utils/log/prune_images.jsonl:9' })
       const otherFileLog = storedLog({ origin: '/server/log/backup.jsonl:3' })
       const withoutOriginLog = storedLog({ origin: undefined })
@@ -274,7 +274,7 @@ describe('createSelfLogReportRepository', () => {
         storedLog(),
         otherMessageLog,
         storedLog({ jobId: 2, date: daysAgo(30) }),
-        otherCategoryLog,
+        otherLevelLog,
         otherLineLog,
         otherFileLog,
         withoutOriginLog,
@@ -296,7 +296,7 @@ describe('createSelfLogReportRepository', () => {
 
       expect(lastSavedLogs().slice(0, 5)).toEqual([
         otherMessageLog,
-        otherCategoryLog,
+        otherLevelLog,
         otherLineLog,
         otherFileLog,
         withoutOriginLog

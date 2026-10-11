@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { LogCategory, LogCategorySchema } from './logCategory.schema.js'
+import { LogLevel, LogLevelSchema } from './logLevel.schema.js'
 
 /**
  * Gives the message returned to the client when the date field `fieldName` of the query is not an
@@ -13,13 +13,13 @@ import { LogCategory, LogCategorySchema } from './logCategory.schema.js'
 export const getInvalidDateFieldMessage = (fieldName: string): string =>
   `Field ${fieldName} is not a valid date, it should be an ISO string`
 
-/** Explains which value of `logCategories` is not a log category, and which ones can be used. */
-const describeInvalidLogCategory = (logCategories: unknown): string => {
-  const invalidLogCategory = [logCategories]
+/** Explains which value of `logLevels` is not a log level, and which ones can be used. */
+const describeInvalidLogLevel = (logLevels: unknown): string => {
+  const invalidLogLevel = [logLevels]
     .flat()
-    .find((logCategory) => !LogCategorySchema.safeParse(logCategory).success)
+    .find((logLevel) => !LogLevelSchema.safeParse(logLevel).success)
 
-  return `${invalidLogCategory} is not a valid log category, use ${Object.values(LogCategory).join('|')}`
+  return `${invalidLogLevel} is not a valid log level, use ${Object.values(LogLevel).join('|')}`
 }
 
 /**
@@ -46,9 +46,9 @@ export const GetLogsParamsSchema = z.object({
     .meta({ format: 'date-time' })
     .optional(),
   /** The severities to keep: all of them when left out. */
-  logCategories: z
-    .union([LogCategorySchema, z.array(LogCategorySchema)], {
-      error: (issue) => describeInvalidLogCategory(issue.input)
+  logLevels: z
+    .union([LogLevelSchema, z.array(LogLevelSchema)], {
+      error: (issue) => describeInvalidLogLevel(issue.input)
     })
     .optional(),
   /** The search typed by the user, in the syntax `parseLogSearchInput` reads. */

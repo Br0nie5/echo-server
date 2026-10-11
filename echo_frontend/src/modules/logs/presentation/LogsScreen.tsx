@@ -15,8 +15,8 @@ const LogsScreenComponent: React.FC = () => {
     logsStatus,
     refetchLogs,
     logsFromDateState,
-    availableLogCategories,
-    logCategoriesFiltersState,
+    availableLogLevels,
+    logLevelsFiltersState,
     logSearchState,
     logSearchFilters
   } = useLogsScreen()
@@ -28,8 +28,8 @@ const LogsScreenComponent: React.FC = () => {
   const header = (
     <LogsScreenHeader
       logsFromDateState={logsFromDateState}
-      availableLogCategories={availableLogCategories}
-      logCategoriesFiltersState={logCategoriesFiltersState}
+      availableLogLevels={availableLogLevels}
+      logLevelsFiltersState={logLevelsFiltersState}
       logSearchState={logSearchState}
     />
   )
@@ -46,7 +46,7 @@ const LogsScreenComponent: React.FC = () => {
     <PageLayout header={header}>
       <FilteredLogsLayout
         logs={logs}
-        logCategoriesFilters={logCategoriesFiltersState.value}
+        logLevelsFilters={logLevelsFiltersState.value}
         logSearchFilters={logSearchFilters}
       />
     </PageLayout>

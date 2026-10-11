@@ -14,16 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Breaking:** `call_file` and `call_line` of a log line are replaced by `origin`, an optional string saying where the line was emitted from, in any form but an empty one (`rotate_logs.sh:12`). A line that still carries `call_file` and `call_line` is read, without them. In the `Log` returned by `GET /api/logs`, `callFile` and `callLine` are replaced by the optional `origin`, a required `contentId` is added, which two logs share when they have the same `location`, `category`, `message` and `origin`, and the `id` is now made of the position of the line, its date, its job and those same four. The `origin` of a self report is the path of the log file followed by the position of the failing line (`/watched_logs/backup/log/nightly.log.jsonl:3`).
+- **Breaking:** the category of a log is now called its level. In the log files, `status` is replaced by `level`, with the same values (`SUCCESS`, `INFO`, `WARNING`, `ERROR`): a line that still carries `status` is no longer read, so update the scripts writing your logs and the lines they already wrote. In the `Log` returned by `GET /api/logs`, `category` is replaced by `level`, and the `logCategories` query parameter by `logLevels`.
+
+- **Breaking:** `call_file` and `call_line` of a log line are replaced by `origin`, an optional string saying where the line was emitted from, in any form but an empty one (`rotate_logs.sh:12`). A line that still carries `call_file` and `call_line` is read, without them. In the `Log` returned by `GET /api/logs`, `callFile` and `callLine` are replaced by the optional `origin`, a required `contentId` is added, which two logs share when they have the same `location`, `level`, `message` and `origin`, and the `id` is now made of the position of the line, its date, its job and those same four. The `origin` of a self report is the path of the log file followed by the position of the failing line (`/watched_logs/backup/log/nightly.log.jsonl:3`).
 
 - **Breaking:** the environment variables of the Telegram notifications are renamed. Update the environment of your container:
 
-  | Before                              | After                                   |
-  | ----------------------------------- | --------------------------------------- |
-  | `LOGS_CRON_SCHEDULE_REGEX`          | `LOGS_NOTIFIER_SCHEDULE`                |
-  | `LOGS_CRON_WATCHED_LOGS_CATEGORIES` | `LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES` |
-  | `LOGS_CRON_TELEGRAM_TIMEZONE`       | `LOGS_NOTIFIER_TIMEZONE`                |
-  | `LOGS_CRON_TELEGRAM_CHAT_ID`        | `TELEGRAM_CHAT_ID`                      |
+  | Before                              | After                               |
+  | ----------------------------------- | ----------------------------------- |
+  | `LOGS_CRON_SCHEDULE_REGEX`          | `LOGS_NOTIFIER_SCHEDULE`            |
+  | `LOGS_CRON_WATCHED_LOGS_CATEGORIES` | `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` |
+  | `LOGS_CRON_TELEGRAM_TIMEZONE`       | `LOGS_NOTIFIER_TIMEZONE`            |
+  | `LOGS_CRON_TELEGRAM_CHAT_ID`        | `TELEGRAM_CHAT_ID`                  |
 
 - **Breaking:** `LOGS_CRON_TELEGRAM_BASE_URL`, which held the URL of the Telegram bot API with the token of the bot, is replaced by `TELEGRAM_BOT_TOKEN`, which holds the token alone: set it to what followed `https://api.telegram.org/bot` in the former value. Without it, the Telegram notifications are disabled.
 

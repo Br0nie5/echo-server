@@ -1,4 +1,4 @@
-import { createLogWithIds, type Log, type LogCategory } from '@echo/utilities'
+import { createLogWithIds, type Log, type LogLevel } from '@echo/utilities'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../../../application/getFilteredLogs.js')
@@ -10,7 +10,7 @@ const log: Log = createLogWithIds(
   {
     jobId: 1,
     date: '2026-01-01T10:00:00.000Z',
-    category: 'ERROR',
+    level: 'ERROR',
     location: '/server/log/worker.jsonl',
     locationName: 'worker',
     message: 'Something broke',
@@ -30,14 +30,14 @@ const logsSelfReportRepository = { saveSelfReports: vi.fn() }
 const notifierService = { getMessageSizeLimit: vi.fn(), notify: vi.fn() }
 const checkDateRepository = { getLastCheckDate: vi.fn(), saveLastCheckDate: vi.fn() }
 const selfReportRepository = { saveSelfReports: vi.fn() }
-const WATCHED = ['ERROR', 'WARNING'] as LogCategory[]
+const WATCHED = ['ERROR', 'WARNING'] as LogLevel[]
 const PREVIOUS_CHECK = { lastCheckDate: new Date('2026-01-01T00:00:00.000Z') }
 /** When the check being tested runs: it looks at the logs from `PREVIOUS_CHECK` up to it. */
 const CHECK_DATE = new Date('2026-01-01T00:30:00.000Z')
 
 const check = (): Promise<void> =>
   checkProblemLogsAndNotify({
-    watchedLogsCategories: WATCHED,
+    watchedLogsLevels: WATCHED,
     serverName: 'test-device',
     timezone: 'UTC+2',
     logsRepository,
@@ -80,7 +80,7 @@ describe('checkProblemLogsAndNotify', () => {
     expect(getFilteredLogs).toHaveBeenCalledWith(logsRepository, logsSelfReportRepository, {
       fromDate: PREVIOUS_CHECK.lastCheckDate,
       toDate: CHECK_DATE,
-      categories: WATCHED,
+      levels: WATCHED,
       searchFilters: []
     })
     expect(notifierService.notify).toHaveBeenCalledWith(

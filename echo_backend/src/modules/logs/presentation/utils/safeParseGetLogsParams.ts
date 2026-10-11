@@ -26,9 +26,7 @@ const ParsedGetLogsParamsSchema = GetLogsParamsSchema.extend({
   toDate: GetLogsParamsSchema.shape.toDate.transform((value, context) =>
     value === undefined ? undefined : parseQueryDate(value, 'toDate', context)
   ),
-  logCategories: GetLogsParamsSchema.shape.logCategories.transform((value) =>
-    value ? [value].flat() : []
-  )
+  logLevels: GetLogsParamsSchema.shape.logLevels.transform((value) => (value ? [value].flat() : []))
 })
 
 /**
@@ -36,7 +34,7 @@ const ParsedGetLogsParamsSchema = GetLogsParamsSchema.extend({
  *
  * The validation is the one of `GetLogsParamsSchema`, shared with the frontend; on top of it,
  * `fromDate`, and `toDate` when it is given, have to be real ISO dates. On success, `data` holds
- * the query with `fromDate` and `toDate` as `Date`s and `logCategories` as an array, empty when the
+ * the query with `fromDate` and `toDate` as `Date`s and `logLevels` as an array, empty when the
  * client sent none. On failure, the
  * messages of `error.issues` are meant to be returned to the client as they are.
  *
@@ -45,7 +43,7 @@ const ParsedGetLogsParamsSchema = GetLogsParamsSchema.extend({
  * if (!parsedParams.success) {
  *   return reply.status(400).send({ statusCode: 400, message: parsedParams.error.issues[0].message })
  * }
- * const { fromDate, toDate, logCategories, logSearch } = parsedParams.data
+ * const { fromDate, toDate, logLevels, logSearch } = parsedParams.data
  * ```
  */
 export const safeParseGetLogsParams = (

@@ -7,7 +7,7 @@ import type {
 } from 'fastify'
 
 import type { LogsController } from './logs.controller.js'
-import { GetLogsParamsJsonSchema, LogJsonSchema, LogCategoryJsonSchema } from './logs.schemas.js'
+import { GetLogsParamsJsonSchema, LogJsonSchema, LogLevelJsonSchema } from './logs.schemas.js'
 
 /** Options of the `logsRoutes` plugin. */
 export interface LogsRoutesOptions extends FastifyPluginOptions {
@@ -24,7 +24,7 @@ export const logsRoutes: FastifyPluginAsync<LogsRoutesOptions> = async (
   server: FastifyInstance,
   { controller, authenticate }
 ): Promise<void> => {
-  server.addSchema(LogCategoryJsonSchema)
+  server.addSchema(LogLevelJsonSchema)
   server.addSchema(LogJsonSchema)
 
   server.route<{ Querystring: GetLogsParams; Reply: Log[] | EchoError }>({

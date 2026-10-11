@@ -1,15 +1,10 @@
-import {
-  parseLogSearchInput,
-  type Log,
-  type LogCategory,
-  type LogSearchFilter
-} from '@echo/utilities'
+import { parseLogSearchInput, type Log, type LogLevel, type LogSearchFilter } from '@echo/utilities'
 import type { QueryStatus } from '@tanstack/react-query'
 import { useMemo } from 'react'
 
 import type { ControlledState } from '../../../../shared/types/controlledState'
 import { useGetLogs } from '../../application/useGetLogs'
-import { sortLogCategories } from '../utils/sortLogCategories'
+import { sortLogLevels } from '../utils/sortLogLevels'
 
 import { useLogsFilters } from './useLogsFilters'
 
@@ -18,15 +13,15 @@ interface UseLogsScreenReturnType {
   logsStatus: QueryStatus
   refetchLogs: () => void
   logsFromDateState: ControlledState<Date>
-  availableLogCategories: LogCategory[] | undefined
-  logCategoriesFiltersState: ControlledState<LogCategory[]>
+  availableLogLevels: LogLevel[] | undefined
+  logLevelsFiltersState: ControlledState<LogLevel[]>
   logSearchState: ControlledState<string>
   logSearchFilters: LogSearchFilter[]
 }
 
-/** Data and filters of the logs screen. Only the date is applied by the backend; categories and search are applied client-side (see `useFilteredLogs`), and the available categories are those found in the fetched logs plus the selected ones. */
+/** Data and filters of the logs screen. Only the date is applied by the backend; levels and search are applied client-side (see `useFilteredLogs`), and the available levels are those found in the fetched logs plus the selected ones. */
 export const useLogsScreen = (): UseLogsScreenReturnType => {
-  const { logsFromDateState, logCategoriesFiltersState, logSearchState } = useLogsFilters()
+  const { logsFromDateState, logLevelsFiltersState, logSearchState } = useLogsFilters()
 
   const {
     data: logs,
@@ -34,19 +29,19 @@ export const useLogsScreen = (): UseLogsScreenReturnType => {
     refetch: refetchLogs
   } = useGetLogs({ fromDate: logsFromDateState.value.toISOString() })
 
-  const availableLogCategories = useMemo(() => {
+  const availableLogLevels = useMemo(() => {
     if (logs === undefined) {
       return undefined
     }
-    const logCategoriesFromLogs = logs.map((log) => log.category)
-    const logCategoriesFromFilters = logCategoriesFiltersState.value
+    const logLevelsFromLogs = logs.map((log) => log.level)
+    const logLevelsFromFilters = logLevelsFiltersState.value
 
-    const combinedLogCategories = Array.from(
-      new Set([...logCategoriesFromLogs, ...logCategoriesFromFilters])
-    ).sort(sortLogCategories)
+    const combinedLogLevels = Array.from(
+      new Set([...logLevelsFromLogs, ...logLevelsFromFilters])
+    ).sort(sortLogLevels)
 
-    return combinedLogCategories
-  }, [logs, logCategoriesFiltersState.value])
+    return combinedLogLevels
+  }, [logs, logLevelsFiltersState.value])
 
   const logSearchFilters = useMemo(() => {
     return parseLogSearchInput(logSearchState.value)
@@ -57,8 +52,8 @@ export const useLogsScreen = (): UseLogsScreenReturnType => {
     logsStatus,
     refetchLogs,
     logsFromDateState,
-    availableLogCategories,
-    logCategoriesFiltersState,
+    availableLogLevels,
+    logLevelsFiltersState,
     logSearchState,
     logSearchFilters
   }

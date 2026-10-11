@@ -7,10 +7,10 @@ import type { RawLogLineDto } from '../dto/rawLogLine.dto.js'
 import { createLogsFilesRepository } from '../logsFiles.repository.js'
 
 const lineContents = [
-  '{"job_id":1,"timestamp":"2024-05-12T14:30:00.001Z","status":"INFO","message":"First log","origin":"/server/docker_utils/prune_images.sh:1"}',
-  '{"job_id":2,"timestamp":"2024-05-12T15:00:00.145Z","status":"ERROR","message":"Second [Test] log","origin":"/server/docker_utils/prune_images.sh:2"}',
-  '{"job_id":3,"timestamp":"2024-05-12 14:30:00.000","status":"INFO","message":"Old timestamp format","origin":"/server/docker_utils/prune_images.sh:3"}',
-  '{"job_id":3,"timestamp":"2024-05-12T14:33:00.334Z","status":"INFO","message":"Log with a\\nline breaker","origin":"/server/docker_utils/prune_images.sh:4"}',
+  '{"job_id":1,"timestamp":"2024-05-12T14:30:00.001Z","level":"INFO","message":"First log","origin":"/server/docker_utils/prune_images.sh:1"}',
+  '{"job_id":2,"timestamp":"2024-05-12T15:00:00.145Z","level":"ERROR","message":"Second [Test] log","origin":"/server/docker_utils/prune_images.sh:2"}',
+  '{"job_id":3,"timestamp":"2024-05-12 14:30:00.000","level":"INFO","message":"Old timestamp format","origin":"/server/docker_utils/prune_images.sh:3"}',
+  '{"job_id":3,"timestamp":"2024-05-12T14:33:00.334Z","level":"INFO","message":"Log with a\\nline breaker","origin":"/server/docker_utils/prune_images.sh:4"}',
   'invalid line'
 ]
 
@@ -69,7 +69,7 @@ describe('LogsFilesRepository', () => {
       expect(logs).toHaveLength(3)
       expect(logs[0]).toMatchObject({
         jobId: 1,
-        category: 'INFO',
+        level: 'INFO',
         message: 'First log',
         location: '/server/docker_utils/log/prune_images.jsonl',
         locationName: 'prune_images',
@@ -78,13 +78,13 @@ describe('LogsFilesRepository', () => {
       })
       expect(logs[1]).toMatchObject({
         jobId: 2,
-        category: 'ERROR',
+        level: 'ERROR',
         message: 'Second [Test] log',
         origin: '/server/docker_utils/prune_images.sh:2'
       })
       expect(logs[2]).toMatchObject({
         jobId: 3,
-        category: 'INFO',
+        level: 'INFO',
         message: 'Log with a\nline breaker',
         origin: '/server/docker_utils/prune_images.sh:4'
       })
@@ -195,7 +195,7 @@ describe('LogsFilesRepository', () => {
           locationName: 'prune_images',
           date: '2024-05-12T14:30:00.001Z',
           jobId: 1,
-          category: 'INFO',
+          level: 'INFO',
           message: 'First log',
           origin: '/server/docker_utils/prune_images.sh:1',
           ...overrides
@@ -206,7 +206,7 @@ describe('LogsFilesRepository', () => {
     const secondLogOverrides: Partial<Omit<Log, 'id' | 'contentId'>> = {
       date: '2024-05-12T15:00:00.145Z',
       jobId: 2,
-      category: 'ERROR',
+      level: 'ERROR',
       message: 'Second [Test] log',
       origin: '/server/docker_utils/prune_images.sh:2'
     }

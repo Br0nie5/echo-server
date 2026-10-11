@@ -70,14 +70,14 @@ describe('logsNotifier plugin', () => {
     expect(stopMock).toHaveBeenCalledTimes(1)
   })
 
-  it('Should check the problem logs of the watched categories at each run', async () => {
+  it('Should check the problem logs of the watched levels at each run', async () => {
     const fastify = mockFastify()
     const cronCallback = await registerAndGetCronCallback(fastify)
 
     await cronCallback()
 
     expect(checkProblemLogsAndNotify).toHaveBeenCalledWith({
-      watchedLogsCategories: logsNotifierConfig.watchedLogsCategories,
+      watchedLogsLevels: logsNotifierConfig.watchedLogsLevels,
       serverName: logsNotifierConfig.serverName,
       timezone: logsNotifierConfig.notifierTimezone,
       logsRepository: pluginOptions.logsRepository,

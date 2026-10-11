@@ -1,4 +1,4 @@
-import type { Log, LogCategory, LogSearchFilter } from '@echo/utilities'
+import type { Log, LogLevel, LogSearchFilter } from '@echo/utilities'
 
 /**
  * Message sent to the filter worker.
@@ -10,7 +10,7 @@ export type FilterWorkerRequest =
   | { type: 'setLogs'; logs: Log[] }
   | {
       type: 'filterLogs'
-      logCategoriesFilters: LogCategory[]
+      logLevelsFilters: LogLevel[]
       logSearchFilters: LogSearchFilter[]
     }
 

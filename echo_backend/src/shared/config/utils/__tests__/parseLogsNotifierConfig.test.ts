@@ -4,7 +4,7 @@ import { parseLogsNotifierConfig } from '../parseLogsNotifierConfig.js'
 
 const CRON_ENV: NodeJS.ProcessEnv = {
   LOGS_NOTIFIER_SCHEDULE: '*/30 * * * *',
-  LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: 'WARNING,ERROR'
+  LOGS_NOTIFIER_WATCHED_LOGS_LEVELS: 'WARNING,ERROR'
 }
 
 const CRON_CONSTANTS = {
@@ -16,14 +16,14 @@ describe('parseLogsNotifierConfig', () => {
   it('Should define the logs notifier config if all the required variables are set', () => {
     expect(parseLogsNotifierConfig(CRON_ENV, CRON_CONSTANTS)).toStrictEqual({
       schedule: '*/30 * * * *',
-      watchedLogsCategories: ['WARNING', 'ERROR'],
+      watchedLogsLevels: ['WARNING', 'ERROR'],
       notifierTimezone: 'UTC',
       serverName: 'Echo',
       lastLogsCheckFilePath: '/data/last_logs_check.json'
     })
   })
 
-  it.each(['LOGS_NOTIFIER_SCHEDULE', 'LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES'])(
+  it.each(['LOGS_NOTIFIER_SCHEDULE', 'LOGS_NOTIFIER_WATCHED_LOGS_LEVELS'])(
     'Should not define the logs notifier config if %s is not set',
     (key) => {
       expect(
@@ -41,35 +41,35 @@ describe('parseLogsNotifierConfig', () => {
     ).toThrow('LOGS_NOTIFIER_SCHEDULE: Invalid cron expression: invalid-cron-expression')
   })
 
-  it('Should not read the schedule if no category is watched', () => {
+  it('Should not read the schedule if no level is watched', () => {
     expect(
       parseLogsNotifierConfig({ LOGS_NOTIFIER_SCHEDULE: 'invalid-cron-expression' }, CRON_CONSTANTS)
     ).toBeUndefined()
   })
 
-  describe('watched logs categories', () => {
-    it('Should ignore the spaces around the categories', () => {
+  describe('watched logs levels', () => {
+    it('Should ignore the spaces around the levels', () => {
       const logsNotifierConfig = parseLogsNotifierConfig(
-        { ...CRON_ENV, LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: ' WARNING , ERROR ' },
+        { ...CRON_ENV, LOGS_NOTIFIER_WATCHED_LOGS_LEVELS: ' WARNING , ERROR ' },
         CRON_CONSTANTS
       )
 
-      expect(logsNotifierConfig?.watchedLogsCategories).toStrictEqual(['WARNING', 'ERROR'])
+      expect(logsNotifierConfig?.watchedLogsLevels).toStrictEqual(['WARNING', 'ERROR'])
     })
 
-    it('Should ignore the unknown categories', () => {
+    it('Should ignore the unknown levels', () => {
       const logsNotifierConfig = parseLogsNotifierConfig(
-        { ...CRON_ENV, LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: 'WARNING,UNKNOWN' },
+        { ...CRON_ENV, LOGS_NOTIFIER_WATCHED_LOGS_LEVELS: 'WARNING,UNKNOWN' },
         CRON_CONSTANTS
       )
 
-      expect(logsNotifierConfig?.watchedLogsCategories).toStrictEqual(['WARNING'])
+      expect(logsNotifierConfig?.watchedLogsLevels).toStrictEqual(['WARNING'])
     })
 
-    it('Should not define the logs notifier config if no category is a known one', () => {
+    it('Should not define the logs notifier config if no level is a known one', () => {
       expect(
         parseLogsNotifierConfig(
-          { ...CRON_ENV, LOGS_NOTIFIER_WATCHED_LOGS_CATEGORIES: 'UNKNOWN' },
+          { ...CRON_ENV, LOGS_NOTIFIER_WATCHED_LOGS_LEVELS: 'UNKNOWN' },
           CRON_CONSTANTS
         )
       ).toBeUndefined()

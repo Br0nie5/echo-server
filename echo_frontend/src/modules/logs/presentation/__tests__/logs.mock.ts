@@ -19,7 +19,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:1',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
   },
@@ -29,7 +29,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:2',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Updates for group echo has been applied.',
     groupName: 'docker_utils'
   },
@@ -39,7 +39,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:3',
-    category: 'SUCCESS',
+    level: 'SUCCESS',
     message: "Action 'Apply echo update for active services: (echo)' succeeded on attempt 1.",
     groupName: 'docker_utils'
   },
@@ -49,7 +49,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:4',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Starting updated services: echo.',
     groupName: 'docker_utils'
   },
@@ -59,7 +59,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:5',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Applying the updates for group echo...',
     groupName: 'docker_utils'
   },
@@ -69,7 +69,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:6',
-    category: 'WARNING',
+    level: 'WARNING',
     message: "Unused docker images couldn't be removed.",
     groupName: 'docker_utils'
   },
@@ -79,7 +79,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:7',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Removing unused docker images...',
     groupName: 'docker_utils'
   },
@@ -89,7 +89,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:8',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Group echo latest updates has been pulled.',
     groupName: 'docker_utils'
   },
@@ -99,7 +99,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:9',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
   },
@@ -109,7 +109,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:10',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
   },
@@ -119,7 +119,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:11',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
   },
@@ -129,7 +129,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:12',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
   },
@@ -139,7 +139,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 66,
     origin: '/server/docker_utils/update_docker_container.sh:13',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'
   },
@@ -149,7 +149,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:14',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Finished check_logs script.',
     groupName: 'utils'
   },
@@ -159,7 +159,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:15',
-    category: 'INFO',
+    level: 'INFO',
     message:
       'Last logs check time updated to ${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01Z.',
     groupName: 'utils'
@@ -170,7 +170,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:16',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Updating last logs check time...',
     groupName: 'utils'
   },
@@ -180,7 +180,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:17',
-    category: 'INFO',
+    level: 'INFO',
     message: 'No logs to send to Telegram.',
     groupName: 'utils'
   },
@@ -190,7 +190,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:18',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Preparing Telegram logs message...',
     groupName: 'utils'
   },
@@ -200,7 +200,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:19',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Logs have been received and formatted.',
     groupName: 'utils'
   },
@@ -210,7 +210,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:20',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Fetching logs from API...',
     groupName: 'utils'
   },
@@ -220,7 +220,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:21',
-    category: 'INFO',
+    level: 'INFO',
     message:
       'Last logs check time is ${formatDateToMock(date, { daysToRemove: 0 })}T13:53:01Z and current time is ${formatDateToMock(date, { daysToRemove: 0 })}T14:23:01Z.',
     groupName: 'utils'
@@ -231,7 +231,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:22',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Getting logs check times...',
     groupName: 'utils'
   },
@@ -241,7 +241,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:23',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Starting check_logs script.',
     groupName: 'utils'
   },
@@ -251,7 +251,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'check_logs',
     jobId: 3983,
     origin: '/server/utils/check_logs.sh:24',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'utils'
   },
@@ -261,7 +261,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'not_an_undefined_filename_though',
     jobId: 1,
     origin: '/server/not_an_undefined_filename_though.sh:25',
-    category: 'INFO',
+    level: 'INFO',
     message: 'The only log of an undefined group name...',
     groupName: undefined
   },
@@ -271,7 +271,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:26',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
   },
@@ -281,7 +281,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:27',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Updates for group echo has been applied.',
     groupName: 'docker_utils'
   },
@@ -291,7 +291,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:28',
-    category: 'SUCCESS',
+    level: 'SUCCESS',
     message: "Action 'Apply echo update for active services: (echo)' succeeded on attempt 1.",
     groupName: 'docker_utils'
   },
@@ -301,7 +301,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:29',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Starting updated services: echo.',
     groupName: 'docker_utils'
   },
@@ -311,7 +311,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:30',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Applying the updates for group echo...',
     groupName: 'docker_utils'
   },
@@ -321,7 +321,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:31',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Unused docker images are now removed.',
     groupName: 'docker_utils'
   },
@@ -331,7 +331,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:32',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Removing unused docker images...',
     groupName: 'docker_utils'
   },
@@ -341,7 +341,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:33',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Group echo latest updates has been pulled.',
     groupName: 'docker_utils'
   },
@@ -351,7 +351,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:34',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
   },
@@ -361,7 +361,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:35',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
   },
@@ -371,7 +371,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:36',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
   },
@@ -381,7 +381,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:37',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
   },
@@ -391,7 +391,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 65,
     origin: '/server/docker_utils/update_docker_container.sh:38',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'
   },
@@ -401,7 +401,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 48,
     origin: '/server/docker_utils/update_docker_container.sh:39',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
   },
@@ -411,7 +411,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 48,
     origin: '/server/docker_utils/update_docker_container.sh:40',
-    category: 'ERROR',
+    level: 'ERROR',
     message:
       'Unexpected error in \'update_docker_container\'\n  Command   : "${dockerCompose[@]}" pull\n  Exit code : 1\n  Line      : 120\n  Call stack:\n      ↳  main()  @ /scripts/docker/utils/update_docker_container.sh:120',
     groupName: 'docker_utils'
@@ -422,7 +422,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 48,
     origin: '/server/docker_utils/update_docker_container.sh:41',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
   },
@@ -432,7 +432,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 48,
     origin: '/server/docker_utils/update_docker_container.sh:42',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
   },
@@ -442,7 +442,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 48,
     origin: '/server/docker_utils/update_docker_container.sh:43',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
   },
@@ -452,7 +452,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 48,
     origin: '/server/docker_utils/update_docker_container.sh:44',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
   },
@@ -462,7 +462,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 48,
     origin: '/server/docker_utils/update_docker_container.sh:45',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'
   },
@@ -472,7 +472,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:46',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
   },
@@ -482,7 +482,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:47',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Updates for group echo has been applied.',
     groupName: 'docker_utils'
   },
@@ -492,7 +492,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:48',
-    category: 'SUCCESS',
+    level: 'SUCCESS',
     message: "Action 'Apply echo update for active services: (echo)' succeeded on attempt 1.",
     groupName: 'docker_utils'
   },
@@ -502,7 +502,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:49',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Starting updated services: echo.',
     groupName: 'docker_utils'
   },
@@ -512,7 +512,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:50',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Applying the updates for group echo...',
     groupName: 'docker_utils'
   },
@@ -522,7 +522,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:51',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Unused docker images are now removed.',
     groupName: 'docker_utils'
   },
@@ -532,7 +532,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:52',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Removing unused docker images...',
     groupName: 'docker_utils'
   },
@@ -542,7 +542,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:53',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Group echo latest updates has been pulled.',
     groupName: 'docker_utils'
   },
@@ -552,7 +552,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:54',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
   },
@@ -562,7 +562,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:55',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
   },
@@ -572,7 +572,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:56',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
   },
@@ -582,7 +582,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:57',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
   },
@@ -592,7 +592,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 47,
     origin: '/server/docker_utils/update_docker_container.sh:58',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'
   },
@@ -602,7 +602,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:59',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Finished update_docker_container script.',
     groupName: 'docker_utils'
   },
@@ -612,7 +612,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:60',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Updates for group echo has been applied.',
     groupName: 'docker_utils'
   },
@@ -622,7 +622,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:61',
-    category: 'SUCCESS',
+    level: 'SUCCESS',
     message: "Action 'Create stopped services for echo: (echo)' succeeded on attempt 1.",
     groupName: 'docker_utils'
   },
@@ -632,7 +632,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:62',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Recreating previously stopped services (without starting): echo.',
     groupName: 'docker_utils'
   },
@@ -642,7 +642,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:63',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Applying the updates for group echo...',
     groupName: 'docker_utils'
   },
@@ -652,7 +652,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:64',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Unused docker images are now removed.',
     groupName: 'docker_utils'
   },
@@ -662,7 +662,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:65',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Removing unused docker images...',
     groupName: 'docker_utils'
   },
@@ -672,7 +672,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:66',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Group echo latest updates has been pulled.',
     groupName: 'docker_utils'
   },
@@ -682,7 +682,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:67',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Pulling latest updates for group echo...',
     groupName: 'docker_utils'
   },
@@ -692,7 +692,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:68',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Docker services group: echo is valid.',
     groupName: 'docker_utils'
   },
@@ -702,7 +702,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:69',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Validating docker services group: echo...',
     groupName: 'docker_utils'
   },
@@ -712,7 +712,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:70',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Starting update_docker_container script.',
     groupName: 'docker_utils'
   },
@@ -722,7 +722,7 @@ const getLogsMockWithoutIds = (date: Date): Array<Omit<Log, 'id' | 'contentId'>>
     locationName: 'update_docker_container',
     jobId: 46,
     origin: '/server/docker_utils/update_docker_container.sh:71',
-    category: 'INFO',
+    level: 'INFO',
     message: 'Log file has been successfully set up.',
     groupName: 'docker_utils'
   }

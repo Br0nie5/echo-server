@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 
 import { GetLogsParamsSchema, getInvalidDateFieldMessage } from '../getLogsParams.schema.js'
-import { LogCategory } from '../logCategory.schema.js'
+import { LogLevel } from '../logLevel.schema.js'
 
 const fromDate = '2026-04-28T10:00:00.000Z'
-const usableLogCategories = Object.values(LogCategory).join('|')
+const usableLogLevels = Object.values(LogLevel).join('|')
 
 describe('GetLogsParamsSchema', () => {
   it('Should accept a query with only fromDate', () => {
@@ -25,14 +25,14 @@ describe('GetLogsParamsSchema', () => {
     )
   })
 
-  it('Should accept a single log category', () => {
-    const query = { fromDate, logCategories: LogCategory.INFO }
+  it('Should accept a single log level', () => {
+    const query = { fromDate, logLevels: LogLevel.INFO }
 
     expect(GetLogsParamsSchema.safeParse(query).data).toEqual(query)
   })
 
-  it('Should accept several log categories', () => {
-    const query = { fromDate, logCategories: [LogCategory.INFO, LogCategory.ERROR] }
+  it('Should accept several log levels', () => {
+    const query = { fromDate, logLevels: [LogLevel.INFO, LogLevel.ERROR] }
 
     expect(GetLogsParamsSchema.safeParse(query).data).toEqual(query)
   })
@@ -57,30 +57,30 @@ describe('GetLogsParamsSchema', () => {
     )
   })
 
-  it('Should fail with a specific message when the log category is invalid', () => {
+  it('Should fail with a specific message when the log level is invalid', () => {
     const result = GetLogsParamsSchema.safeParse({
       fromDate,
-      logCategories: 'Invalid_log_category'
+      logLevels: 'Invalid_log_level'
     })
 
     expect(result.error?.issues[0]?.message).toBe(
-      `Invalid_log_category is not a valid log category, use ${usableLogCategories}`
+      `Invalid_log_level is not a valid log level, use ${usableLogLevels}`
     )
   })
 
-  it('Should name the invalid log category among several ones', () => {
+  it('Should name the invalid log level among several ones', () => {
     const result = GetLogsParamsSchema.safeParse({
       fromDate,
-      logCategories: [LogCategory.INFO, 'Invalid_log_category']
+      logLevels: [LogLevel.INFO, 'Invalid_log_level']
     })
 
     expect(result.error?.issues[0]?.message).toBe(
-      `Invalid_log_category is not a valid log category, use ${usableLogCategories}`
+      `Invalid_log_level is not a valid log level, use ${usableLogLevels}`
     )
   })
 
-  it('Should report the fromDate issue before a logCategories issue when both are invalid', () => {
-    const result = GetLogsParamsSchema.safeParse({ logCategories: 'Invalid_log_category' })
+  it('Should report the fromDate issue before a logLevels issue when both are invalid', () => {
+    const result = GetLogsParamsSchema.safeParse({ logLevels: 'Invalid_log_level' })
 
     expect(result.error?.issues[0]?.message).toBe('Missing required field: fromDate')
   })

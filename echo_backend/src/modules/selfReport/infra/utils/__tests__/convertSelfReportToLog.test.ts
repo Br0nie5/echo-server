@@ -30,7 +30,7 @@ describe('convertSelfReportToLog', () => {
           groupName: 'Echo',
           date: '2026-09-19T14:41:09.669Z',
           jobId: 5,
-          category: 'WARNING',
+          level: 'WARNING',
           message: 'bad line',
           origin: '/server/docker_utils/log/prune_images.jsonl:4'
         },
@@ -39,9 +39,7 @@ describe('convertSelfReportToLog', () => {
     )
   })
 
-  it('Should store an error with the ERROR category', () => {
-    expect(convertSelfReportToLog(selfReport({ level: 'ERROR' }), context, 0).category).toBe(
-      'ERROR'
-    )
+  it('Should store an error with the ERROR level', () => {
+    expect(convertSelfReportToLog(selfReport({ level: 'ERROR' }), context, 0).level).toBe('ERROR')
   })
 })

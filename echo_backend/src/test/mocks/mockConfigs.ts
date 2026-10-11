@@ -53,7 +53,7 @@ export const getMockLogsNotifierConfig = (
   overrides: Partial<LogsNotifierConfig> = {}
 ): LogsNotifierConfig => ({
   schedule: '*/30 * * * *',
-  watchedLogsCategories: ['ERROR', 'WARNING'],
+  watchedLogsLevels: ['ERROR', 'WARNING'],
   notifierTimezone: 'UTC',
   serverName: 'test-device',
   lastLogsCheckFilePath: '/fake/data/last_logs_check.json',

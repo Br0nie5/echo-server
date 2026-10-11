@@ -1,4 +1,4 @@
-import { filterLogByCategories, filterLogBySearch, type Log } from '@echo/utilities'
+import { filterLogByLevels, filterLogBySearch, type Log } from '@echo/utilities'
 
 import type { FilterWorkerAnswer, FilterWorkerRequest } from './filterWorkerMessages'
 
@@ -15,7 +15,7 @@ type FilterWorkerRequestHandler = (request: FilterWorkerRequest) => FilterWorker
  * handleFilterWorkerRequest({ type: 'setLogs', logs })
  * const answer = handleFilterWorkerRequest({
  *   type: 'filterLogs',
- *   logCategoriesFilters: ['ERROR'],
+ *   logLevelsFilters: ['ERROR'],
  *   logSearchFilters: []
  * })
  * ```
@@ -33,7 +33,7 @@ export const createFilterWorkerRequestHandler = (): FilterWorkerRequestHandler =
 
     logs.forEach((log, logIndex) => {
       if (
-        filterLogByCategories(log, request.logCategoriesFilters) &&
+        filterLogByLevels(log, request.logLevelsFilters) &&
         filterLogBySearch(log, request.logSearchFilters)
       ) {
         matchingLogIndexes.push(logIndex)

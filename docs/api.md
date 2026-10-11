@@ -23,14 +23,14 @@ Requires a valid session when authentication is enabled.
 | --------------- | :------: | ------------------------------------------------------------------------------- |
 | `fromDate`      |   yes    | ISO 8601 date-time. Only logs at or after it are returned.                      |
 | `toDate`        |    no    | ISO 8601 date-time. Only logs before it are returned, it excluded.              |
-| `logCategories` |    no    | One of `SUCCESS`, `INFO`, `WARNING`, `ERROR`; repeat the parameter for several. |
+| `logLevels`     |    no    | One of `SUCCESS`, `INFO`, `WARNING`, `ERROR`; repeat the parameter for several. |
 | `logSearch`     |    no    | Free-text filter.                                                               |
 
 Example:
 
 ```bash
 curl --cookie cookies.txt \
-  "http://localhost:4000/api/logs?fromDate=2026-09-19T00:00:00Z&logCategories=ERROR&logCategories=WARNING"
+  "http://localhost:4000/api/logs?fromDate=2026-09-19T00:00:00Z&logLevels=ERROR&logLevels=WARNING"
 ```
 
 Each returned log:
@@ -38,19 +38,19 @@ Each returned log:
 ```json
 {
   "id": "{\"idNumber\":0,\"date\":\"2026-09-19T14:41:09.669Z\",\"jobId\":1,\"location\":...}",
-  "contentId": "{\"location\":\"/watched_logs/scripts/docker/utils/log/prune.log.jsonl\",\"category\":\"INFO\",\"message\":\"Pruning the unused Docker images.\",\"origin\":\"prune.sh:12\"}",
+  "contentId": "{\"location\":\"/watched_logs/scripts/docker/utils/log/prune.log.jsonl\",\"level\":\"INFO\",\"message\":\"Pruning the unused Docker images.\",\"origin\":\"prune.sh:12\"}",
   "date": "2026-09-19T14:41:09.669Z",
   "groupName": "docker_utils",
   "location": "/watched_logs/scripts/docker/utils/log/prune.log.jsonl",
   "locationName": "prune.log",
   "jobId": 1,
-  "category": "INFO",
+  "level": "INFO",
   "message": "Pruning the unused Docker images.",
   "origin": "prune.sh:12"
 }
 ```
 
-`location` is where the log is stored (the path of its file on the server) and `locationName` its short name, the one the app shows: the name of the file without its last extension. `contentId` is the same for two logs with the same `location`, `category`, `message` and `origin`, whatever their date and job. `origin`, where the log was emitted from, is whatever the script wrote, never empty, and is left out when it wrote none. A search can target `locationName`, `groupName`, `jobId` or `message` with `key:` (`locationName:prune`).
+`location` is where the log is stored (the path of its file on the server) and `locationName` its short name, the one the app shows: the name of the file without its last extension. `contentId` is the same for two logs with the same `location`, `level`, `message` and `origin`, whatever their date and job. `origin`, where the log was emitted from, is whatever the script wrote, never empty, and is left out when it wrote none. A search can target `locationName`, `groupName`, `jobId` or `message` with `key:` (`locationName:prune`).
 
 Errors use the `EchoError` schema: `400` invalid params, `401` unauthenticated, `429` too many login or sign-up attempts from one address (5 a minute), `500` server error.
 

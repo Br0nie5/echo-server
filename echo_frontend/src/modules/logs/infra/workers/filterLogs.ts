@@ -1,4 +1,4 @@
-import type { Log, LogCategory, LogSearchFilter } from '@echo/utilities'
+import type { Log, LogLevel, LogSearchFilter } from '@echo/utilities'
 
 import type { LogsRepository } from '../../domain/logs.repository'
 
@@ -9,7 +9,7 @@ type FilterLogs = LogsRepository['filterLogs']
 
 interface FilterRequest {
   logs: Log[]
-  logCategoriesFilters: LogCategory[]
+  logLevelsFilters: LogLevel[]
   logSearchFilters: LogSearchFilter[]
   resolve: (filteredLogs: Log[]) => void
   reject: (reason: unknown) => void
@@ -46,13 +46,13 @@ export const createFilterLogs = (
       return
     }
 
-    const { logs, logCategoriesFilters, logSearchFilters } = runningRequest
+    const { logs, logLevelsFilters, logSearchFilters } = runningRequest
 
     if (logs !== logsHeldByWorker) {
       sendToWorker({ type: 'setLogs', logs })
       logsHeldByWorker = logs
     }
-    sendToWorker({ type: 'filterLogs', logCategoriesFilters, logSearchFilters })
+    sendToWorker({ type: 'filterLogs', logLevelsFilters, logSearchFilters })
   }
 
   worker.onmessage = ({ data: answer }: MessageEvent<FilterWorkerAnswer>): void => {
@@ -76,7 +76,7 @@ export const createFilterLogs = (
     waitingRequests = []
   }
 
-  return (logs, logCategoriesFilters, logSearchFilters, signal) =>
+  return (logs, logLevelsFilters, logSearchFilters, signal) =>
     new Promise((resolve, reject) => {
       if (workerFailure !== undefined) {
         reject(workerFailure)
@@ -92,7 +92,7 @@ export const createFilterLogs = (
 
       const request: FilterRequest = {
         logs,
-        logCategoriesFilters,
+        logLevelsFilters,
         logSearchFilters,
         resolve: (filteredLogs) => {
           stopListeningToSignal.abort()

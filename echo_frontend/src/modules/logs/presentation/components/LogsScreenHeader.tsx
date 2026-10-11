@@ -1,4 +1,4 @@
-import type { LogCategory } from '@echo/utilities'
+import type { LogLevel } from '@echo/utilities'
 import { logSearchableKeys } from '@echo/utilities'
 import { Box, Stack, Typography } from '@mui/material'
 import { memo } from 'react'
@@ -14,15 +14,15 @@ import { getDateFromDaysAgo } from '../../../../shared/utils/getDateFromDaysAgo'
 
 type LogsScreenHeaderProps = {
   logsFromDateState: ControlledState<Date>
-  availableLogCategories: LogCategory[] | undefined
-  logCategoriesFiltersState: ControlledState<LogCategory[]>
+  availableLogLevels: LogLevel[] | undefined
+  logLevelsFiltersState: ControlledState<LogLevel[]>
   logSearchState: ControlledState<string>
 }
 
 const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
   logsFromDateState,
-  availableLogCategories,
-  logCategoriesFiltersState,
+  availableLogLevels,
+  logLevelsFiltersState,
   logSearchState
 }) => {
   const { SERVER_NAME, LOGS_MINIMAL_DATE_DAYS_AGO } = useConfig()
@@ -48,7 +48,7 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
       <Typography variant="h4" gutterBottom align="center" sx={{ mt: 3 }}>
         {`${SERVER_NAME}: ${translation('logs.viewer')}`}
       </Typography>
-      {!!availableLogCategories && availableLogCategories.length > 0 && (
+      {!!availableLogLevels && availableLogLevels.length > 0 && (
         <Stack
           direction={isSmallScreen ? 'column' : 'row'}
           spacing={isSmallScreen ? 2 : 7}
@@ -59,12 +59,12 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
         >
           <Box sx={{ mb: 3 }}>
             <Typography variant="h5" align="center" sx={{ mb: 3 }}>
-              {translation('logs.filterByCategory')}
+              {translation('logs.filterByLevel')}
             </Typography>
             <FilterChips
-              tags={availableLogCategories}
+              tags={availableLogLevels}
               mode="multi-select"
-              controlledState={logCategoriesFiltersState}
+              controlledState={logLevelsFiltersState}
             />
           </Box>
           <SearchBar
@@ -78,5 +78,5 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
   )
 }
 
-/** Header of the logs page: the start date picker (limited to the last `LOGS_MINIMAL_DATE_DAYS_AGO` days of the config), the server name and, once categories are available, the category chips and the search bar. */
+/** Header of the logs page: the start date picker (limited to the last `LOGS_MINIMAL_DATE_DAYS_AGO` days of the config), the server name and, once levels are available, the level chips and the search bar. */
 export const LogsScreenHeader = memo(LogsScreenHeaderComponent)

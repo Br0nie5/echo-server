@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { LogCategorySchema } from './logCategory.schema.js'
+import { LogLevelSchema } from './logLevel.schema.js'
 
 /**
  * Runtime validation of one entry emitted by a watched script.
@@ -12,7 +12,7 @@ export const LogSchema = z.strictObject({
   /** Identifies the log among all the stored ones (see `createLogId`). */
   id: z.string(),
   /**
-   * Identifies what the log says: two logs share it when they have the same `location`, `category`,
+   * Identifies what the log says: two logs share it when they have the same `location`, `level`,
    * `message` and `origin`, whenever and by whichever job they were emitted (see `createLogContentId`).
    */
   contentId: z.string(),
@@ -27,7 +27,7 @@ export const LogSchema = z.strictObject({
   /** The run of the script that emitted the log. */
   jobId: z.int(),
   /** The severity of the log. */
-  category: LogCategorySchema,
+  level: LogLevelSchema,
   /** What the script reported, as it wrote it. */
   message: z.string(),
   /** Where the log was emitted from, in any form but an empty one, when the script said it: `backup.sh:12`. */

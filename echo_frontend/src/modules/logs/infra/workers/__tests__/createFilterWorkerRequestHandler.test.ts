@@ -8,7 +8,7 @@ const buildLog = (overrides: Partial<Omit<Log, 'id' | 'contentId'>>): Log =>
     {
       date: '2026-01-02T10:00:00.000Z',
       jobId: 1,
-      category: 'INFO',
+      level: 'INFO',
       location: '/server/log/prune_images.jsonl',
       locationName: 'prune_images',
       message: 'message',
@@ -19,9 +19,9 @@ const buildLog = (overrides: Partial<Omit<Log, 'id' | 'contentId'>>): Log =>
   )
 
 const logs = [
-  buildLog({ category: 'ERROR', message: 'disk is full' }),
-  buildLog({ category: 'INFO', message: 'disk checked' }),
-  buildLog({ category: 'ERROR', message: 'network is down' })
+  buildLog({ level: 'ERROR', message: 'disk is full' }),
+  buildLog({ level: 'INFO', message: 'disk checked' }),
+  buildLog({ level: 'ERROR', message: 'network is down' })
 ]
 
 describe('createFilterWorkerRequestHandler', () => {
@@ -31,14 +31,14 @@ describe('createFilterWorkerRequestHandler', () => {
     expect(handleFilterWorkerRequest({ type: 'setLogs', logs })).toBeUndefined()
   })
 
-  test('Should answer with the indexes of the logs matching both the categories and the search', () => {
+  test('Should answer with the indexes of the logs matching both the levels and the search', () => {
     const handleFilterWorkerRequest = createFilterWorkerRequestHandler()
     handleFilterWorkerRequest({ type: 'setLogs', logs })
 
     expect(
       handleFilterWorkerRequest({
         type: 'filterLogs',
-        logCategoriesFilters: ['ERROR'],
+        logLevelsFilters: ['ERROR'],
         logSearchFilters: []
       })
     ).toEqual({ matchingLogIndexes: [0, 2] })
@@ -46,7 +46,7 @@ describe('createFilterWorkerRequestHandler', () => {
     expect(
       handleFilterWorkerRequest({
         type: 'filterLogs',
-        logCategoriesFilters: ['ERROR'],
+        logLevelsFilters: ['ERROR'],
         logSearchFilters: [{ mode: 'find', search: 'disk' }]
       })
     ).toEqual({ matchingLogIndexes: [0] })
@@ -60,7 +60,7 @@ describe('createFilterWorkerRequestHandler', () => {
     expect(
       handleFilterWorkerRequest({
         type: 'filterLogs',
-        logCategoriesFilters: ['ERROR'],
+        logLevelsFilters: ['ERROR'],
         logSearchFilters: []
       })
     ).toEqual({ matchingLogIndexes: [1] })
@@ -72,7 +72,7 @@ describe('createFilterWorkerRequestHandler', () => {
     expect(
       handleFilterWorkerRequest({
         type: 'filterLogs',
-        logCategoriesFilters: [],
+        logLevelsFilters: [],
         logSearchFilters: []
       })
     ).toEqual({ matchingLogIndexes: [] })

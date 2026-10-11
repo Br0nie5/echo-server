@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { createLogWithIds } from '../../utils/createLogWithIds.js'
 import type { Log } from '../log.schema.js'
 import { LogArraySchema, LogSchema } from '../log.schema.js'
-import { LogCategory } from '../logCategory.schema.js'
+import { LogLevel } from '../logLevel.schema.js'
 
 const validLog: Log = createLogWithIds(
   {
@@ -12,7 +12,7 @@ const validLog: Log = createLogWithIds(
     location: '/server/docker_utils/log/update_docker_container.jsonl',
     locationName: 'update_docker_container',
     jobId: 66,
-    category: LogCategory.INFO,
+    level: LogLevel.INFO,
     message: 'Finished update_docker_container script.',
     origin: '/server/docker_utils/update_docker_container.sh:12'
   },
@@ -41,7 +41,7 @@ describe('LogSchema', () => {
     'location',
     'locationName',
     'jobId',
-    'category',
+    'level',
     'message'
   ])('Should reject a Log missing the required %s', (requiredField) => {
     expect(LogSchema.safeParse(validLogWithout(requiredField)).success).toBeFalsy()
@@ -55,8 +55,8 @@ describe('LogSchema', () => {
     expect(LogSchema.safeParse({ ...validLog, origin: '' }).success).toBeFalsy()
   })
 
-  it('Should reject a Log with an invalid category', () => {
-    expect(LogSchema.safeParse({ ...validLog, category: 'NOT_A_CATEGORY' }).success).toBeFalsy()
+  it('Should reject a Log with an invalid level', () => {
+    expect(LogSchema.safeParse({ ...validLog, level: 'NOT_A_LEVEL' }).success).toBeFalsy()
   })
 
   it('Should reject a Log with a non-integer jobId', () => {

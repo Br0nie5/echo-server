@@ -1,4 +1,4 @@
-import { createLogWithIds, LogCategory, type GetLogsParams, type Log } from '@echo/utilities'
+import { createLogWithIds, LogLevel, type GetLogsParams, type Log } from '@echo/utilities'
 import nock from 'nock'
 import { describe, expect, test } from 'vitest'
 
@@ -16,7 +16,7 @@ const logMock: Log = createLogWithIds(
     location: '/server/docker_utils/log/prune_images.jsonl',
     locationName: 'prune_images',
     jobId: 1,
-    category: LogCategory.INFO,
+    level: LogLevel.INFO,
     message: 'some message',
     groupName: 'docker_utils',
     origin: '/server/docker_utils/prune_images.sh:12'

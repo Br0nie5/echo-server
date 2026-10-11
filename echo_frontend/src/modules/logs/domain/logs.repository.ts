@@ -1,4 +1,4 @@
-import type { GetLogsParams, Log, LogCategory, LogSearchFilter } from '@echo/utilities'
+import type { GetLogsParams, Log, LogLevel, LogSearchFilter } from '@echo/utilities'
 
 /**
  * The logs of the server, and what the logs module needs from the outside for them.
@@ -9,10 +9,10 @@ import type { GetLogsParams, Log, LogCategory, LogSearchFilter } from '@echo/uti
 export interface LogsRepository {
   /** Gives the logs matching `params`. Aborting `signal` cancels the search. Throws when the logs cannot be fetched, or when what is fetched is not a list of logs. */
   findLogs: (params: GetLogsParams, signal?: AbortSignal) => Promise<Log[]>
-  /** Gives the logs of `logs` that match the category filters and the search filters. Aborting `signal` cancels the filtering. Throws when the logs cannot be filtered. */
+  /** Gives the logs of `logs` that match the level filters and the search filters. Aborting `signal` cancels the filtering. Throws when the logs cannot be filtered. */
   filterLogs: (
     logs: Log[],
-    logCategoriesFilters: LogCategory[],
+    logLevelsFilters: LogLevel[],
     logSearchFilters: LogSearchFilter[],
     signal?: AbortSignal
   ) => Promise<Log[]>

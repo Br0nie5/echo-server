@@ -1,4 +1,4 @@
-import type { Log, LogCategory, LogSearchFilter } from '@echo/utilities'
+import type { Log, LogLevel, LogSearchFilter } from '@echo/utilities'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { useDebounce } from 'use-debounce'
@@ -17,20 +17,20 @@ import { useLogsRepository } from '../infra/useLogsRepository'
  */
 export const useFilteredLogs = (
   logs: Log[],
-  logCategoriesFilters: LogCategory[],
+  logLevelsFilters: LogLevel[],
   logSearchFilters: LogSearchFilter[]
 ): UseQueryResult<Log[], Error> => {
   const logsRepository = useLogsRepository()
 
   const logsIdsKey = useMemo(() => JSON.stringify(logs.map((log) => log.id)), [logs])
 
-  const [debouncedCategories] = useDebounce(logCategoriesFilters, 150)
+  const [debouncedLevels] = useDebounce(logLevelsFilters, 150)
   const [debouncedSearch] = useDebounce(logSearchFilters, 150)
 
   return useQuery({
-    queryKey: ['filteredLogs', logsIdsKey, debouncedCategories, debouncedSearch],
+    queryKey: ['filteredLogs', logsIdsKey, debouncedLevels, debouncedSearch],
     queryFn: ({ signal }) =>
-      logsRepository.filterLogs(logs, debouncedCategories, debouncedSearch, signal),
+      logsRepository.filterLogs(logs, debouncedLevels, debouncedSearch, signal),
     placeholderData: (previousFilteredLogs) => previousFilteredLogs
   })
 }
