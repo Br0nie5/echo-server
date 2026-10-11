@@ -2,7 +2,26 @@
 
 set -eu
 
+warn() {
+  echo "$1" >&2
+}
+
+# Stops the container when the directory variable named $1, whose value is $2, is not the directory
+# $3 the image creates for it.
+refuse_if_not_image_directory() {
+  if [ "${2%/}" != "$3" ]; then
+    warn "$1 must not be set to \"$2\": the image creates \"$3\" for it, remove the variable and mount your volume there instead."
+    exit 1
+  fi
+}
+
+if [ "${NODE_ENV:-production}" != "production" ]; then
+  warn "NODE_ENV shouldn't have been set to \"$NODE_ENV\", setting it back to \"production\"."
+fi
 export NODE_ENV="production"
+
+refuse_if_not_image_directory LOGS_DIR_PATH "$LOGS_DIR_PATH" /watched_logs
+refuse_if_not_image_directory SERVER_LOGS_DIR_PATH "$SERVER_LOGS_DIR_PATH" /server_logs
 
 # Set defaults only if not already defined in the environment
 export SERVER_NAME="${SERVER_NAME:-Docker Production}"

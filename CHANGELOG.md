@@ -11,8 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `LOGS_INITIAL_DATE_DAYS_AGO` (default `2`) and `LOGS_MINIMAL_DATE_DAYS_AGO` (default `14`) set how many days back the logs start by default in the UI, and how far back their start date can be set.
 - Echo can be served under a path of its domain behind a reverse proxy (`SERVER_URL=https://example.com/echo`), whether the proxy forwards that path or strips it. The session cookie is then limited to that path, so two instances served at two paths of one domain keep their own session.
+- The container warns in its logs when `NODE_ENV` is set to anything but `production` (it is set back to `production`, as before).
 
 ### Changed
+
+- **Breaking:** the container no longer starts when `LOGS_DIR_PATH` or `SERVER_LOGS_DIR_PATH` is set to another path than the directory the image creates for it (`/watched_logs`, `/server_logs`). Remove the variable from the environment of your container and mount your volume on that directory.
 
 - **Breaking:** the directory scripts put their log files in, which is left out of the group names, is now named `logs` instead of `log`. Rename the `log` directories of your watched logs, otherwise `log` becomes part of the group names (`docker_utils_log`). The self reports are now stored in `/server_logs/self_reports/<SERVER_NAME>/logs`: move the files of the former `log` directory there to keep them in the group of the server.
 

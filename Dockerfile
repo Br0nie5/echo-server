@@ -30,7 +30,8 @@ COPY docker-health-check.ts /usr/local/bin/docker-health-check.ts
 # Defaults set in the environment of the container rather than by the entrypoint: the health check,
 # which Docker starts apart from the server, reads the port too, and the directories below are
 # created from these paths. The host directories of the logs are chosen by the volumes mounted on
-# them, so the paths themselves never need to change.
+# them, so the paths themselves never need to change: the entrypoint refuses any other one, so
+# change them there too.
 ENV HTTP_PORT=4000 \
   LOGS_DIR_PATH=/watched_logs \
   SERVER_LOGS_DIR_PATH=/server_logs
