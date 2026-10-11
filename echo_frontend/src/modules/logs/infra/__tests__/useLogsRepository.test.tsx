@@ -1,4 +1,4 @@
-import { LogCategory, type GetLogsParams, type Log } from '@echo/utilities'
+import { createLogWithIds, LogCategory, type GetLogsParams, type Log } from '@echo/utilities'
 import nock from 'nock'
 import { describe, expect, test } from 'vitest'
 
@@ -10,17 +10,19 @@ const buildLogsRequestMock = (params: GetLogsParams): nock.Interceptor => {
   return nock(mockConfig.API_URL).get('/logs').query(params)
 }
 
-const logMock: Log = {
-  id: '1 [group] [file] [1] [2026-04-27 10:00:00.000] [INFO] some message',
-  date: '2026-04-27T10:00:00.000Z',
-  location: '/logs/file.jsonl',
-  locationName: 'file',
-  jobId: 1,
-  category: LogCategory.INFO,
-  message: 'some message',
-  groupName: 'group',
-  origin: 'file.sh:1'
-}
+const logMock: Log = createLogWithIds(
+  {
+    date: '2026-04-27T10:00:00.000Z',
+    location: '/server/docker_utils/log/prune_images.jsonl',
+    locationName: 'prune_images',
+    jobId: 1,
+    category: LogCategory.INFO,
+    message: 'some message',
+    groupName: 'docker_utils',
+    origin: '/server/docker_utils/prune_images.sh:12'
+  },
+  0
+)
 
 describe('useLogsRepository', () => {
   describe('findLogs', () => {

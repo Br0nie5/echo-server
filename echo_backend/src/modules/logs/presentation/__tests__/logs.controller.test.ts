@@ -1,4 +1,5 @@
 import {
+  createLogWithIds,
   LogCategory as LogCategoryConst,
   type EchoError,
   type GetLogsParams,
@@ -34,17 +35,19 @@ describe('LogsController.getLogs', () => {
   }
 
   const mockLogs: Log[] = [
-    {
-      id: '1',
-      date: FROM_DATE,
-      location: '/logs/f.jsonl',
-      locationName: 'f',
-      groupName: 'grp',
-      jobId: 1,
-      category: 'INFO',
-      message: 'test',
-      origin: 'f.sh:1'
-    }
+    createLogWithIds(
+      {
+        date: FROM_DATE,
+        location: '/server/docker_utils/log/prune_images.jsonl',
+        locationName: 'prune_images',
+        groupName: 'docker_utils',
+        jobId: 1,
+        category: 'INFO',
+        message: 'test',
+        origin: '/server/docker_utils/prune_images.sh:12'
+      },
+      0
+    )
   ]
 
   const mockGetFilteredLogs = vi.mocked(getFilteredLogs)

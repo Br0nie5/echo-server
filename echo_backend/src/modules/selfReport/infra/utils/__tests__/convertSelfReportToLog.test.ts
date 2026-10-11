@@ -1,3 +1,4 @@
+import { createLogWithIds } from '@echo/utilities'
 import { describe, it, expect } from 'vitest'
 
 import type { SelfReport } from '../../../domain/selfReport.js'
@@ -8,7 +9,7 @@ const selfReport = (overrides: Partial<SelfReport> = {}): SelfReport => ({
   date: new Date('2026-09-19T14:41:09.669Z'),
   message: 'bad line',
   level: 'WARNING',
-  origin: 'someFile:4',
+  origin: '/server/docker_utils/log/prune_images.jsonl:4',
   ...overrides
 })
 
@@ -21,20 +22,26 @@ const context: SelfReportLogContext = {
 
 describe('convertSelfReportToLog', () => {
   it('Should build the log a self report is stored as, from the self report and its context', () => {
-    expect(convertSelfReportToLog(selfReport(), context)).toEqual({
-      id: 'someSelfReportId',
-      location: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
-      locationName: 'parseLogFile',
-      groupName: 'Echo',
-      date: '2026-09-19T14:41:09.669Z',
-      jobId: 5,
-      category: 'WARNING',
-      message: 'bad line',
-      origin: 'someFile:4'
-    })
+    expect(convertSelfReportToLog(selfReport(), context, 2)).toEqual(
+      createLogWithIds(
+        {
+          location: '/server_logs/self_reports/Echo/log/parseLogFile.jsonl',
+          locationName: 'parseLogFile',
+          groupName: 'Echo',
+          date: '2026-09-19T14:41:09.669Z',
+          jobId: 5,
+          category: 'WARNING',
+          message: 'bad line',
+          origin: '/server/docker_utils/log/prune_images.jsonl:4'
+        },
+        2
+      )
+    )
   })
 
   it('Should store an error with the ERROR category', () => {
-    expect(convertSelfReportToLog(selfReport({ level: 'ERROR' }), context).category).toBe('ERROR')
+    expect(convertSelfReportToLog(selfReport({ level: 'ERROR' }), context, 0).category).toBe(
+      'ERROR'
+    )
   })
 })

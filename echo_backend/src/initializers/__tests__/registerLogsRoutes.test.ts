@@ -17,11 +17,11 @@ const LOGS_URL = '/custom-api/logs?fromDate=2026-01-01T00:00:00.000Z'
 
 const selfReports: SelfReport[] = [
   {
-    id: '2026-09-19T14:41:09.669Z invalid line WARNING /logs/backup.jsonl:2',
+    id: '2026-09-19T14:41:09.669Z invalid line WARNING /server/log/backup.jsonl:2',
     date: new Date('2026-09-19T14:41:09.669Z'),
     message: 'invalid line',
     level: 'WARNING',
-    origin: '/logs/backup.jsonl:2'
+    origin: '/server/log/backup.jsonl:2'
   }
 ]
 

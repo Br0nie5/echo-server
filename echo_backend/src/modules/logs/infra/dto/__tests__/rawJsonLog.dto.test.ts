@@ -1,4 +1,4 @@
-import type { Log } from '@echo/utilities'
+import { createLogWithIds, type Log } from '@echo/utilities'
 import { describe, it, expect } from 'vitest'
 
 import { convertLogToRawJsonLogLine, RawJsonLogLineSchema } from '../rawJsonLog.dto.js'
@@ -11,7 +11,7 @@ describe('RawJsonLogLineSchema', () => {
       timestamp: '2024-05-12T14:30:00.386Z',
       status: 'WARNING',
       message: 'Ok',
-      origin: 'check_logs.sh:4'
+      origin: '/server/docker_utils/check_logs.sh:4'
     }
 
     expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeTruthy()
@@ -52,7 +52,7 @@ describe('RawJsonLogLineSchema', () => {
       timestamp: '2024-05-12T14:30:00.386Z',
       status: 'INFO',
       message: 'Ok',
-      origin: 'check_logs.sh:4'
+      origin: '/server/docker_utils/check_logs.sh:4'
     }
 
     expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeFalsy()
@@ -64,43 +64,44 @@ describe('RawJsonLogLineSchema', () => {
 })
 
 describe('convertLogToRawJsonLogLine', () => {
-  const log: Log = {
-    id: 'whatever',
-    location: '/logs/myGroup/file1.jsonl',
-    locationName: 'file1',
-    groupName: 'myGroup',
-    date: '2024-05-12T14:30:00.386Z',
-    jobId: 123,
-    category: 'INFO',
-    message: 'Something happened',
-    origin: 'check_logs.sh:4'
-  }
+  const log: Log = createLogWithIds(
+    {
+      location: '/server/docker_utils/log/check_logs.jsonl',
+      locationName: 'check_logs',
+      groupName: 'docker_utils',
+      date: '2024-05-12T14:30:00.386Z',
+      jobId: 123,
+      category: 'INFO',
+      message: 'Something happened',
+      origin: '/server/docker_utils/check_logs.sh:4'
+    },
+    0
+  )
 
-  it('Should give the JSON of the line of the log, without what says where it is stored', () => {
+  it('Should give the JSON of the line of the log, without its ids nor what says where it is stored', () => {
     expect(convertLogToRawJsonLogLine(log)).toEqual({
       job_id: 123,
       timestamp: '2024-05-12T14:30:00.386Z',
       status: 'INFO',
       message: 'Something happened',
-      origin: 'check_logs.sh:4'
+      origin: '/server/docker_utils/check_logs.sh:4'
     })
   })
 
-  it('Should give a line that is read back as the same log, with the id of its line', () => {
+  it('Should give a line that is read back as the same log, when it is at the position of its id', () => {
     const content = JSON.stringify(convertLogToRawJsonLogLine(log))
 
     expect(
       convertRawLogLineToLog({
         logFile: {
-          id: '/logs/myGroup/file1.jsonl',
-          path: '/logs/myGroup/file1.jsonl',
-          fileName: 'file1',
-          groupName: 'myGroup'
+          path: '/server/docker_utils/log/check_logs.jsonl',
+          fileName: 'check_logs',
+          groupName: 'docker_utils'
         },
         index: 0,
         content
       })
-    ).toEqual({ ...log, id: `0 /logs/myGroup/file1.jsonl ${content}` })
+    ).toEqual(log)
   })
 
   it('Should give a line without origin for a log that has none', () => {

@@ -9,11 +9,11 @@ describe('createNoopSelfReportRepository', () => {
     await expect(
       selfReportRepository.saveSelfReports([
         {
-          id: '2026-09-19T14:41:09.669Z bad line WARNING someFile:3',
+          id: '2026-09-19T14:41:09.669Z bad line WARNING /server/docker_utils/log/prune_images.jsonl:3',
           date: new Date('2026-09-19T14:41:09.669Z'),
           message: 'bad line',
           level: 'WARNING',
-          origin: 'someFile:3'
+          origin: '/server/docker_utils/log/prune_images.jsonl:3'
         }
       ])
     ).resolves.toBeUndefined()

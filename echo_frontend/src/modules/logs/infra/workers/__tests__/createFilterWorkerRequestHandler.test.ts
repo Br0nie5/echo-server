@@ -1,24 +1,27 @@
-import type { Log } from '@echo/utilities'
+import { createLogWithIds, type Log } from '@echo/utilities'
 import { describe, expect, test } from 'vitest'
 
 import { createFilterWorkerRequestHandler } from '../createFilterWorkerRequestHandler'
 
-const buildLog = (overrides: Partial<Log>): Log => ({
-  id: 'id',
-  date: '2026-01-02T10:00:00.000Z',
-  jobId: 1,
-  category: 'INFO',
-  location: '/logs/file.jsonl',
-  locationName: 'file',
-  message: 'message',
-  origin: 'file.sh:1',
-  ...overrides
-})
+const buildLog = (overrides: Partial<Omit<Log, 'id' | 'contentId'>>): Log =>
+  createLogWithIds(
+    {
+      date: '2026-01-02T10:00:00.000Z',
+      jobId: 1,
+      category: 'INFO',
+      location: '/server/log/prune_images.jsonl',
+      locationName: 'prune_images',
+      message: 'message',
+      origin: '/server/prune_images.sh:12',
+      ...overrides
+    },
+    0
+  )
 
 const logs = [
-  buildLog({ id: 'a', category: 'ERROR', message: 'disk is full' }),
-  buildLog({ id: 'b', category: 'INFO', message: 'disk checked' }),
-  buildLog({ id: 'c', category: 'ERROR', message: 'network is down' })
+  buildLog({ category: 'ERROR', message: 'disk is full' }),
+  buildLog({ category: 'INFO', message: 'disk checked' }),
+  buildLog({ category: 'ERROR', message: 'network is down' })
 ]
 
 describe('createFilterWorkerRequestHandler', () => {

@@ -1,21 +1,24 @@
-import type { Log } from '@echo/utilities'
+import { createLogWithIds, type Log } from '@echo/utilities'
 import { afterEach, describe, expect, test, vi, type Mock } from 'vitest'
 
 import { createFilterLogs } from '../filterLogs'
 import type { FilterWorkerAnswer, FilterWorkerRequest } from '../filterWorkerMessages'
 
-const buildLog = (id: string): Log => ({
-  id,
-  date: '2026-01-02T10:00:00.000Z',
-  jobId: 1,
-  category: 'INFO',
-  location: '/logs/file.jsonl',
-  locationName: 'file',
-  message: 'message',
-  origin: 'file.sh:1'
-})
+const buildLog = (idNumber: number): Log =>
+  createLogWithIds(
+    {
+      date: '2026-01-02T10:00:00.000Z',
+      jobId: 1,
+      category: 'INFO',
+      location: '/server/log/prune_images.jsonl',
+      locationName: 'prune_images',
+      message: 'message',
+      origin: '/server/prune_images.sh:12'
+    },
+    idNumber
+  )
 
-const logs = [buildLog('a'), buildLog('b'), buildLog('c')]
+const logs = [buildLog(0), buildLog(1), buildLog(2)]
 
 interface FakeWorker {
   postMessage: Mock<(request: FilterWorkerRequest) => void>
@@ -68,7 +71,7 @@ describe('createFilterLogs', () => {
   test('Should only give the worker the logs again when they are another list', async () => {
     const worker = buildFakeWorker()
     const filterLogs = createFilterLogs(worker)
-    const otherLogs = [buildLog('d')]
+    const otherLogs = [buildLog(3)]
 
     const firstFiltering = filterLogs(logs, [], [])
     answer(worker, { matchingLogIndexes: [] })

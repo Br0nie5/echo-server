@@ -21,8 +21,9 @@ type RawJsonLogLine = z.infer<typeof RawJsonLogLineSchema>
 /**
  * Converts a log to the JSON its line holds in a log file.
  *
- * A line does not hold the `id`, the `location`, the `locationName` nor the `groupName` of the
- * log: they come from the file the line is in when it is read back.
+ * A line does not hold the `id`, the `contentId`, the `location`, the `locationName` nor the
+ * `groupName` of the log: they are worked out again from the line and the file it is in when it
+ * is read back.
  *
  * ```ts
  * const content = JSON.stringify(convertLogToRawJsonLogLine(log))

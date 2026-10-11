@@ -1,4 +1,4 @@
-import { LogCategory as LogCategoryConst, type Log } from '@echo/utilities'
+import { createLogWithIds, LogCategory as LogCategoryConst, type Log } from '@echo/utilities'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import type { SelfReport } from '../../../selfReport/domain/selfReport.js'
@@ -19,17 +19,20 @@ describe('getFilteredLogs', () => {
   })
 
   it('Should return only the logs logged since fromDate, fromDate included', async () => {
-    const createLog = (id: string, date: string): Log => ({
-      date,
-      jobId: 1,
-      category: 'INFO',
-      location: '/logs/f.jsonl',
-      locationName: 'f',
-      id,
-      message: id,
-      groupName: 'grp',
-      origin: 'f.sh:1'
-    })
+    const createLog = (message: string, date: string): Log =>
+      createLogWithIds(
+        {
+          date,
+          jobId: 1,
+          category: 'INFO',
+          location: '/server/docker_utils/log/prune_images.jsonl',
+          locationName: 'prune_images',
+          message,
+          groupName: 'docker_utils',
+          origin: '/server/docker_utils/prune_images.sh:12'
+        },
+        0
+      )
     const fromDateLog = createLog('at fromDate', '2026-01-01T10:00:00.000Z')
     const afterFromDateLog = createLog('after fromDate', '2026-01-01T10:30:00.000Z')
     mockFindAllLogs.mockResolvedValue({
@@ -51,16 +54,19 @@ describe('getFilteredLogs', () => {
   })
 
   it('Should return only the logs logged before toDate, toDate left out', async () => {
-    const createLog = (id: string, date: string): Log => ({
-      date,
-      jobId: 1,
-      category: 'ERROR',
-      location: '/logs/f.jsonl',
-      locationName: 'f',
-      id,
-      message: id,
-      origin: 'f.sh:1'
-    })
+    const createLog = (message: string, date: string): Log =>
+      createLogWithIds(
+        {
+          date,
+          jobId: 1,
+          category: 'ERROR',
+          location: '/server/log/prune_images.jsonl',
+          locationName: 'prune_images',
+          message,
+          origin: '/server/prune_images.sh:12'
+        },
+        0
+      )
     const fromDateLog = createLog('fromDate', '2026-01-01T10:00:00.000Z')
     const beforeToDateLog = createLog('before toDate', '2026-01-01T10:29:59.999Z')
     mockFindAllLogs.mockResolvedValue({
@@ -80,16 +86,19 @@ describe('getFilteredLogs', () => {
 
   it('Should return the logs from the newest to the oldest, whatever the order of the repository', async () => {
     const logAt = (jobId: number, date: string): Log =>
-      ({
-        date,
-        jobId,
-        category: 'INFO',
-        location: '/logs/f.jsonl',
-        locationName: 'f',
-        id: String(jobId),
-        message: `log${jobId}`,
-        groupName: 'grp'
-      }) as Log
+      createLogWithIds(
+        {
+          date,
+          jobId,
+          category: 'INFO',
+          location: '/server/docker_utils/log/prune_images.jsonl',
+          locationName: 'prune_images',
+          message: `log${jobId}`,
+          groupName: 'docker_utils',
+          origin: '/server/docker_utils/prune_images.sh:12'
+        },
+        0
+      )
 
     mockFindAllLogs.mockResolvedValue({
       logs: [
@@ -110,18 +119,21 @@ describe('getFilteredLogs', () => {
   })
 
   it('Should return an empty array if no logs after fromDate', async () => {
-    const log = {
-      date: '2026-01-01T09:00:00.000Z',
-      jobId: 1,
-      category: 'INFO',
-      location: '/logs/f.jsonl',
-      locationName: 'f',
-      id: '1',
-      message: 'old',
-      groupName: 'grp'
-    }
+    const log = createLogWithIds(
+      {
+        date: '2026-01-01T09:00:00.000Z',
+        jobId: 1,
+        category: 'INFO',
+        location: '/server/docker_utils/log/prune_images.jsonl',
+        locationName: 'prune_images',
+        message: 'old',
+        groupName: 'docker_utils',
+        origin: '/server/docker_utils/prune_images.sh:12'
+      },
+      0
+    )
 
-    mockFindAllLogs.mockResolvedValue({ logs: [log] as Log[], selfReports: [] })
+    mockFindAllLogs.mockResolvedValue({ logs: [log], selfReports: [] })
 
     const result = await getFilteredLogs(repository, selfReportRepository, {
       fromDate: new Date('2026-01-01T10:00:00.000Z'),
@@ -138,7 +150,7 @@ describe('getFilteredLogs', () => {
     const result = await getFilteredLogs(repository, selfReportRepository, {
       fromDate: new Date('2026-01-01T10:00:00.000Z'),
       categories: Object.values(LogCategoryConst),
-      searchFilters: [{ mode: 'find', search: 'file1' }]
+      searchFilters: [{ mode: 'find', search: 'prune_images' }]
     })
 
     expect(result).toEqual([])
@@ -147,18 +159,18 @@ describe('getFilteredLogs', () => {
   it('Should save the self reports of the repository in a single save', async () => {
     const selfReports: SelfReport[] = [
       {
-        id: '2026-09-19T14:41:09.669Z invalid line WARNING /logs/a.jsonl:2',
+        id: '2026-09-19T14:41:09.669Z invalid line WARNING /server/docker_utils/log/prune_images.jsonl:2',
         date: new Date('2026-09-19T14:41:09.669Z'),
         message: 'invalid line',
         level: 'WARNING',
-        origin: '/logs/a.jsonl:2'
+        origin: '/server/docker_utils/log/prune_images.jsonl:2'
       },
       {
-        id: '2026-09-19T14:41:09.669Z cut line WARNING /logs/b.jsonl:1',
+        id: '2026-09-19T14:41:09.669Z cut line WARNING /server/log/rotate_logs.jsonl:1',
         date: new Date('2026-09-19T14:41:09.669Z'),
         message: 'cut line',
         level: 'WARNING',
-        origin: '/logs/b.jsonl:1'
+        origin: '/server/log/rotate_logs.jsonl:1'
       }
     ]
     mockFindAllLogs.mockResolvedValue({ logs: [], selfReports })

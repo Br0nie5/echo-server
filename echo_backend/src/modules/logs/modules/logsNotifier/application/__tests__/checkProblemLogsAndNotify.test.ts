@@ -1,4 +1,4 @@
-import type { Log, LogCategory } from '@echo/utilities'
+import { createLogWithIds, type Log, type LogCategory } from '@echo/utilities'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../../../application/getFilteredLogs.js')
@@ -6,16 +6,18 @@ vi.mock('../../../../application/getFilteredLogs.js')
 import { getFilteredLogs as actualGetFilteredLogs } from '../../../../application/getFilteredLogs.js'
 import { checkProblemLogsAndNotify } from '../checkProblemLogsAndNotify.js'
 
-const log: Log = {
-  id: 'log-1',
-  jobId: 1,
-  date: '2026-01-01T10:00:00.000Z',
-  category: 'ERROR',
-  location: '/logs/worker.jsonl',
-  locationName: 'worker',
-  message: 'Something broke',
-  origin: 'worker.sh:1'
-}
+const log: Log = createLogWithIds(
+  {
+    jobId: 1,
+    date: '2026-01-01T10:00:00.000Z',
+    category: 'ERROR',
+    location: '/server/log/worker.jsonl',
+    locationName: 'worker',
+    message: 'Something broke',
+    origin: '/server/worker.sh:12'
+  },
+  0
+)
 
 const getFilteredLogs = vi.mocked(actualGetFilteredLogs)
 const logsRepository = {

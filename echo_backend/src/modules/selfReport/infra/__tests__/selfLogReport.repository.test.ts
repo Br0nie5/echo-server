@@ -1,4 +1,4 @@
-import type { Log } from '@echo/utilities'
+import { createLogWithIds, type Log } from '@echo/utilities'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { getMockSelfReportsConfig } from '../../../../test/mocks/mockConfigs.js'
@@ -33,11 +33,11 @@ const options = {
 }
 
 const selfReport = (overrides: Partial<SelfReport> = {}): SelfReport => ({
-  id: '2026-09-19T14:41:09.669Z bad line WARNING someFile:3',
+  id: '2026-09-19T14:41:09.669Z bad line WARNING /server/docker_utils/log/prune_images.jsonl:3',
   date: new Date('2026-09-19T14:41:09.669Z'),
   message: 'bad line',
   level: 'WARNING',
-  origin: 'someFile:3',
+  origin: '/server/docker_utils/log/prune_images.jsonl:3',
   ...overrides
 })
 
@@ -47,19 +47,25 @@ const NOW = new Date('2026-10-01T00:00:00.000Z')
 const daysAgo = (days: number): string =>
   new Date(NOW.getTime() - days * MILLISECONDS_PER_DAY).toISOString()
 
-/** A log stored at the location, a day ago unless `overrides` says otherwise. */
-const storedLog = (overrides: Partial<Log> = {}): Log => ({
-  id: 'stored',
-  location: SELF_REPORTS_LOCATION,
-  locationName: 'parseLogFile',
-  groupName: 'Echo',
-  date: daysAgo(1),
-  jobId: 1,
-  category: 'WARNING',
-  message: 'bad line',
-  origin: 'someFile:3',
-  ...overrides
-})
+/**
+ * A log stored at the location, a day ago unless `overrides` says otherwise, with the ids it has
+ * when it is read back.
+ */
+const storedLog = (overrides: Partial<Omit<Log, 'id' | 'contentId'>> = {}): Log => {
+  const log: Omit<Log, 'id' | 'contentId'> = {
+    location: SELF_REPORTS_LOCATION,
+    locationName: 'parseLogFile',
+    groupName: 'Echo',
+    date: daysAgo(1),
+    jobId: 1,
+    category: 'WARNING',
+    message: 'bad line',
+    origin: '/server/docker_utils/log/prune_images.jsonl:3',
+    ...overrides
+  }
+
+  return createLogWithIds(log, 0)
+}
 
 const mockStoredLogs = (logs: Log[]): void => {
   logsRepository.getLogs.mockResolvedValueOnce({ logs, selfReports: [] })
@@ -214,48 +220,55 @@ describe('createSelfLogReportRepository', () => {
       mockStoredLogs([alreadyStoredLog])
 
       await selfReportRepository.saveSelfReports([
-        selfReport({ message: 'bad line 1', origin: 'someFile:1' }),
+        selfReport({
+          message: 'bad line 1',
+          origin: '/server/docker_utils/log/prune_images.jsonl:1'
+        }),
         selfReport({
           date: new Date('2026-09-20T08:00:00.000Z'),
           message: 'bad line 2',
           level: 'ERROR',
-          origin: 'someFile'
+          origin: '/server/docker_utils/log/prune_images.jsonl'
         })
       ])
 
       const whereItIsStored = {
-        id: expect.any(String),
         location: SELF_REPORTS_LOCATION,
         locationName: 'parseLogFile',
-        groupName: 'Echo'
+        groupName: 'Echo',
+        jobId: 5
       }
       expect(logsRepository.saveLogs).toHaveBeenLastCalledWith([
         alreadyStoredLog,
-        {
-          ...whereItIsStored,
-          date: '2026-09-19T14:41:09.669Z',
-          jobId: 5,
-          category: 'WARNING',
-          message: 'bad line 1',
-          origin: 'someFile:1'
-        },
-        {
-          ...whereItIsStored,
-          date: '2026-09-20T08:00:00.000Z',
-          jobId: 5,
-          category: 'ERROR',
-          message: 'bad line 2',
-          origin: 'someFile'
-        }
+        createLogWithIds(
+          {
+            ...whereItIsStored,
+            date: '2026-09-19T14:41:09.669Z',
+            category: 'WARNING',
+            message: 'bad line 1',
+            origin: '/server/docker_utils/log/prune_images.jsonl:1'
+          },
+          0
+        ),
+        createLogWithIds(
+          {
+            ...whereItIsStored,
+            date: '2026-09-20T08:00:00.000Z',
+            category: 'ERROR',
+            message: 'bad line 2',
+            origin: '/server/docker_utils/log/prune_images.jsonl'
+          },
+          1
+        )
       ])
     })
 
-    it('Should leave out the stored logs with the same category, message and origin as a self report', async () => {
+    it('Should leave out the stored logs with the same contentId as a self report', async () => {
       const selfReportRepository = await createSelfLogReportRepository(options)
       const otherMessageLog = storedLog({ message: 'other' })
       const otherCategoryLog = storedLog({ category: 'ERROR' })
-      const otherLineLog = storedLog({ origin: 'someFile:9' })
-      const otherFileLog = storedLog({ origin: 'otherFile:3' })
+      const otherLineLog = storedLog({ origin: '/server/docker_utils/log/prune_images.jsonl:9' })
+      const otherFileLog = storedLog({ origin: '/server/log/backup.jsonl:3' })
       const withoutOriginLog = storedLog({ origin: undefined })
       mockStoredLogs([
         storedLog(),
@@ -265,14 +278,20 @@ describe('createSelfLogReportRepository', () => {
         otherLineLog,
         otherFileLog,
         withoutOriginLog,
-        storedLog({ message: 'second', origin: 'someFile:7' }),
-        storedLog({ message: 'without line', origin: 'someFile' })
+        storedLog({ message: 'second', origin: '/server/docker_utils/log/prune_images.jsonl:7' }),
+        storedLog({
+          message: 'without line',
+          origin: '/server/docker_utils/log/prune_images.jsonl'
+        })
       ])
 
       await selfReportRepository.saveSelfReports([
         selfReport(),
-        selfReport({ message: 'second', origin: 'someFile:7' }),
-        selfReport({ message: 'without line', origin: 'someFile' })
+        selfReport({ message: 'second', origin: '/server/docker_utils/log/prune_images.jsonl:7' }),
+        selfReport({
+          message: 'without line',
+          origin: '/server/docker_utils/log/prune_images.jsonl'
+        })
       ])
 
       expect(lastSavedLogs().slice(0, 5)).toEqual([

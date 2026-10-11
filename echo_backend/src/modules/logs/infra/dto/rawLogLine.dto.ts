@@ -1,4 +1,4 @@
-import { isLogCategory, type Log } from '@echo/utilities'
+import { createLogWithIds, isLogCategory, type Log } from '@echo/utilities'
 
 import { convertToDateFromISO } from '../../../../shared/utils/convertToDate.js'
 
@@ -19,7 +19,8 @@ export interface RawLogLineDto {
  *
  * Returns `undefined` when the line does not hold a log: its content is not JSON, does not have
  * the shape `RawJsonLogLineSchema` describes, has an unknown status or a timestamp that is not a date.
- * The `id` of the log is made of the position of the line, the id of its file and its content.
+ * The ids of the log are those `createLogWithIds` gives it, with the position of the line as its
+ * id number.
  *
  * ```ts
  * const logs = rawLogLines.map(convertRawLogLineToLog).filter((log) => log !== undefined)
@@ -51,8 +52,7 @@ export const convertRawLogLineToLog = ({
     return
   }
 
-  return {
-    id: `${index} ${logFile.id} ${content}`,
+  const noIdsLog: Omit<Log, 'id' | 'contentId'> = {
     date,
     groupName: logFile.groupName,
     location: logFile.path,
@@ -62,4 +62,6 @@ export const convertRawLogLineToLog = ({
     message,
     origin
   }
+
+  return createLogWithIds(noIdsLog, index)
 }

@@ -18,7 +18,7 @@ export interface LogsFilesApi {
   /**
    * The log file at `filePath`, whether it exists yet or not.
    *
-   * Its id is `filePath`, and its name the name of the file without its extension. Its group is made of the directories
+   * Its name is the name of the file without its extension. Its group is made of the directories
    * between the first one under its logs directory and the file, joined with `_` (a directory
    * named `logFilesDirName` is skipped), and is `undefined` when there is none, or when the file is in none of
    * the logs directories.
@@ -69,7 +69,6 @@ export const createLogsFilesApi = (
         : ''
 
     return {
-      id: filePath,
       path: filePath,
       fileName: path.basename(filePath, path.extname(filePath)),
       groupName: directoriesLinkedName !== '' ? directoriesLinkedName : undefined

@@ -1,20 +1,23 @@
 import { describe, it, expect } from 'vitest'
 
+import { createLogWithIds } from '../../utils/createLogWithIds.js'
 import type { Log } from '../log.schema.js'
 import { LogArraySchema, LogSchema } from '../log.schema.js'
 import { LogCategory } from '../logCategory.schema.js'
 
-const validLog: Log = {
-  id: '1',
-  date: '2026-04-28T10:00:00.000Z',
-  groupName: 'docker_utils',
-  location: '/logs/update_docker_container.jsonl',
-  locationName: 'update_docker_container',
-  jobId: 66,
-  category: LogCategory.INFO,
-  message: 'Finished update_docker_container script.',
-  origin: 'update_docker_container.sh:12'
-}
+const validLog: Log = createLogWithIds(
+  {
+    date: '2026-04-28T10:00:00.000Z',
+    groupName: 'docker_utils',
+    location: '/server/docker_utils/log/update_docker_container.jsonl',
+    locationName: 'update_docker_container',
+    jobId: 66,
+    category: LogCategory.INFO,
+    message: 'Finished update_docker_container script.',
+    origin: '/server/docker_utils/update_docker_container.sh:12'
+  },
+  0
+)
 
 const validLogWithout = (field: keyof Log): Partial<Log> =>
   Object.fromEntries(Object.entries(validLog).filter(([key]) => key !== field))
@@ -31,12 +34,18 @@ describe('LogSchema', () => {
     }
   )
 
-  it.each<keyof Log>(['id', 'date', 'location', 'locationName', 'jobId', 'category', 'message'])(
-    'Should reject a Log missing the required %s',
-    (requiredField) => {
-      expect(LogSchema.safeParse(validLogWithout(requiredField)).success).toBeFalsy()
-    }
-  )
+  it.each<keyof Log>([
+    'id',
+    'contentId',
+    'date',
+    'location',
+    'locationName',
+    'jobId',
+    'category',
+    'message'
+  ])('Should reject a Log missing the required %s', (requiredField) => {
+    expect(LogSchema.safeParse(validLogWithout(requiredField)).success).toBeFalsy()
+  })
 
   it('Should accept a Log with an origin in any form', () => {
     expect(LogSchema.safeParse({ ...validLog, origin: 'the nightly backup' }).success).toBeTruthy()

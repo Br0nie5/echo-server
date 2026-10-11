@@ -1,7 +1,5 @@
 /** A log file as it is stored, without its content. */
 export interface LogFileDto {
-  /** Identifies the file among all the log files. */
-  id: string
   path: string
   /** Base name of the file, without its directories nor its extension. */
   fileName: string

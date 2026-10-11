@@ -1,3 +1,4 @@
+import { createLogWithIds } from '@echo/utilities'
 import type { ValidateFunction } from 'ajv'
 import { Ajv } from 'ajv'
 import addFormats from 'ajv-formats'
@@ -40,66 +41,36 @@ describe('LogJsonSchema', () => {
     validateLog = ajv.compile(LogJsonSchema)
   })
 
-  it('Should accept a valid log object', () => {
-    const log = {
-      id: '0 [myGroup] [file1] [123] Something happened',
+  const validLog = createLogWithIds(
+    {
       date: LOG_DATE,
-      groupName: 'myGroup',
-      location: '/logs/file1.jsonl',
-      locationName: 'file1',
+      groupName: 'docker_utils',
+      location: '/server/docker_utils/log/prune_images.jsonl',
+      locationName: 'prune_images',
       jobId: 123,
       category: 'INFO',
       message: 'Something happened',
-      origin: 'file1.sh:4'
-    }
-    expect(validateLog(log)).toBe(true)
+      origin: '/server/docker_utils/prune_images.sh:12'
+    },
+    0
+  )
+
+  it('Should accept a valid log object', () => {
+    expect(validateLog(validLog)).toBe(true)
   })
 
   it('Should reject log object with missing required fields', () => {
-    const log = {
-      id: '1',
-      date: LOG_DATE,
-      location: '/logs/file1.jsonl',
-      locationName: 'file1',
-      jobId: 1,
-      category: 'INFO',
-      origin: 'file1.sh:4'
-      // missing 'message'
-    }
-    expect(validateLog(log)).toBe(false)
+    expect(validateLog({ ...validLog, message: undefined })).toBe(false)
     expect(validateLog.errors?.[0].message).toContain('required')
   })
 
   it('Should reject log object with invalid category', () => {
-    const log = {
-      id: '1',
-      date: LOG_DATE,
-      groupName: 'grp',
-      location: '/logs/file1.jsonl',
-      locationName: 'file1',
-      jobId: 1,
-      category: 'INVALID',
-      message: 'oops',
-      origin: 'file1.sh:4'
-    }
-    expect(validateLog(log)).toBe(false)
+    expect(validateLog({ ...validLog, category: 'INVALID' })).toBe(false)
     expect(validateLog.errors?.[0].message).toContain('must be equal to one of the allowed values')
   })
 
   it('Should reject log object with additional properties', () => {
-    const log = {
-      id: '1',
-      date: LOG_DATE,
-      groupName: 'grp',
-      location: '/logs/file1.jsonl',
-      locationName: 'file1',
-      jobId: 1,
-      category: 'INFO',
-      message: 'test',
-      origin: 'file1.sh:4',
-      extra: 'not allowed'
-    }
-    expect(validateLog(log)).toBe(false)
+    expect(validateLog({ ...validLog, extra: 'not allowed' })).toBe(false)
     expect(validateLog.errors?.[0].message).toContain('must NOT have additional properties')
   })
 })
