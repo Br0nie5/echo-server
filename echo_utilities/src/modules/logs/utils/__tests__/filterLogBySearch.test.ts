@@ -3,142 +3,125 @@ import { describe, it, expect } from 'vitest'
 import type { LogSearchableKey } from '../../consts/logSearchFilter.js'
 import type { Log } from '../../schemas/log.schema.js'
 import { LogLevel } from '../../schemas/logLevel.schema.js'
-import { createLogWithIds } from '../createLogWithIds.js'
 import { filterLogBySearch } from '../filterLogBySearch.js'
 
+const log: Log = {
+  id: 'log-id',
+  contentId: 'log-content-id',
+  date: '2026-04-25T22:00:00.000Z',
+  groupName: 'billing',
+  location: '/storage/first',
+  locationName: 'send_invoices',
+  jobId: 123,
+  level: LogLevel.INFO,
+  message: 'Quota almost reached',
+  origin: 'export.sh:7'
+}
+
+const searchOfEachKey: Array<{ key: LogSearchableKey; search: string }> = [
+  { key: 'locationName', search: 'send_invoices' },
+  { key: 'groupName', search: 'billing' },
+  { key: 'jobId', search: '123' },
+  { key: 'message', search: 'Quota almost reached' }
+]
+
 describe('filterLogBySearch', () => {
-  const log: Log = createLogWithIds(
-    {
-      date: '2026-04-25T22:00:00.000Z',
-      groupName: 'log_group_name',
-      location: '/server/log_group_name/logs/log_file_name.jsonl',
-      locationName: 'log_file_name',
-      jobId: 123,
-      level: LogLevel.INFO,
-      message: 'some log message',
-      origin: '/server/log_group_name/log_file_name.sh:4'
-    },
-    0
+  it.each(searchOfEachKey)(
+    'Should keep a log whose $key holds what a find filter looks for in it',
+    ({ key, search }) => {
+      expect(filterLogBySearch(log, [{ key, mode: 'find', search }])).toBe(true)
+    }
   )
 
-  const expectMatch = (key: LogSearchableKey): void => {
-    expect(
-      filterLogBySearch(log, [
-        {
-          key,
-          mode: 'find',
-          search: log[`${key}`]?.toString() ?? ''
-        }
-      ])
-    ).toBeTruthy()
+  it.each(searchOfEachKey)(
+    'Should leave out a log whose $key holds what a remove filter looks for in it',
+    ({ key, search }) => {
+      expect(filterLogBySearch(log, [{ key, mode: 'remove', search }])).toBe(false)
+    }
+  )
 
-    expect(
-      filterLogBySearch(log, [
-        {
-          key,
-          mode: 'remove',
-          search: log[`${key}`]?.toString() ?? ''
-        }
-      ])
-    ).toBeFalsy()
-
-    expect(
-      filterLogBySearch(log, [
-        {
-          key,
-          mode: 'find',
-          search: log[`${key}`]?.toString() ?? ''
-        },
-        {
-          key,
-          mode: 'remove',
-          search: log[`${key}`]?.toString() ?? ''
-        }
-      ])
-    ).toBeFalsy()
-  }
-
-  it('Should match log individual fields', () => {
-    expectMatch('locationName')
-    expectMatch('groupName')
-    expectMatch('jobId')
-    expectMatch('message')
+  it.each<{ key: LogSearchableKey; search: string }>([
+    { key: 'locationName', search: 'billing' },
+    { key: 'groupName', search: '123' },
+    { key: 'jobId', search: 'Quota' },
+    { key: 'message', search: 'send_invoices' }
+  ])('Should look for "$search" in $key only, when the filter has that key', ({ key, search }) => {
+    expect(filterLogBySearch(log, [{ key, mode: 'find', search }])).toBe(false)
+    expect(filterLogBySearch(log, [{ key, mode: 'remove', search }])).toBe(true)
   })
 
-  it('Should not match undefined group name', () => {
-    expect(
-      filterLogBySearch({ ...log, groupName: undefined }, [
-        {
-          key: 'groupName',
-          mode: 'find',
-          search: 'undefined'
-        }
-      ])
-    ).toBeFalsy()
+  it.each(searchOfEachKey)(
+    'Should look for "$search" in every searchable field, $key included, when the filter has no key',
+    ({ search }) => {
+      expect(filterLogBySearch(log, [{ mode: 'find', search }])).toBe(true)
+      expect(filterLogBySearch(log, [{ mode: 'remove', search }])).toBe(false)
+    }
+  )
+
+  it.each<{ key: LogSearchableKey; search: string }>([
+    { key: 'locationName', search: 'invoice' },
+    { key: 'groupName', search: 'bill' },
+    { key: 'jobId', search: '12' },
+    { key: 'message', search: 'almost' }
+  ])('Should find "$search", a part of the $key', ({ key, search }) => {
+    expect(filterLogBySearch(log, [{ key, mode: 'find', search }])).toBe(true)
   })
 
-  it('Should match without being case sensitive', () => {
-    expect(
-      filterLogBySearch({ ...log, locationName: 'MY_FILE_NAME' }, [
-        {
-          key: 'locationName',
-          mode: 'find',
-          search: 'my_file_name'
-        }
-      ])
-    ).toBeTruthy()
+  it.each<{ key: LogSearchableKey; search: string }>([
+    { key: 'locationName', search: 'Send_Invoices' },
+    { key: 'groupName', search: 'BILLING' },
+    { key: 'message', search: 'quota ALMOST reached' }
+  ])('Should find "$search" in the $key whatever its case', ({ key, search }) => {
+    expect(filterLogBySearch(log, [{ key, mode: 'find', search }])).toBe(true)
   })
 
-  it('Should not match if at least one of the filter is not matching', () => {
-    expect(
-      filterLogBySearch(log, [
-        {
-          mode: 'find',
-          search: 'not_matching_anything'
-        },
-        {
-          mode: 'find',
-          search: log.message
-        }
-      ])
-    ).toBeFalsy()
+  it.each([
+    { field: 'id', search: 'log-id' },
+    { field: 'contentId', search: 'log-content-id' },
+    { field: 'date', search: '2026-04-25' },
+    { field: 'location', search: '/storage/first' },
+    { field: 'level', search: 'INFO' },
+    { field: 'origin', search: 'export.sh' }
+  ])('Should not look in the $field, which is not searchable', ({ search }) => {
+    expect(filterLogBySearch(log, [{ mode: 'find', search }])).toBe(false)
   })
 
-  it('Should match any searchable field of the log when the key is left out', () => {
-    expect(
-      filterLogBySearch(log, [
-        {
-          mode: 'find',
-          search: log.locationName
-        }
-      ])
-    ).toBeTruthy()
+  it('Should find nothing in the group name of a log that has none', () => {
+    const logWithoutGroup: Log = { ...log, groupName: undefined }
 
     expect(
-      filterLogBySearch(log, [
-        {
-          mode: 'remove',
-          search: log.groupName ?? ''
-        }
+      filterLogBySearch(logWithoutGroup, [{ key: 'groupName', mode: 'find', search: 'undefined' }])
+    ).toBe(false)
+    expect(
+      filterLogBySearch(logWithoutGroup, [
+        { key: 'groupName', mode: 'remove', search: 'undefined' }
       ])
-    ).toBeFalsy()
+    ).toBe(true)
+  })
 
+  it('Should keep a log that satisfies every filter', () => {
     expect(
       filterLogBySearch(log, [
-        {
-          mode: 'find',
-          search: log.jobId.toString()
-        }
+        { key: 'message', mode: 'find', search: 'quota' },
+        { mode: 'find', search: 'send_invoices' },
+        { mode: 'remove', search: 'refund' }
       ])
-    ).toBeTruthy()
+    ).toBe(true)
+  })
 
+  it.each([
+    { reason: 'a find filter finds nothing', mode: 'find' as const, search: 'refund' },
+    { reason: 'a remove filter finds something', mode: 'remove' as const, search: 'send_invoices' }
+  ])('Should leave out a log when $reason, whatever the other filters', ({ mode, search }) => {
     expect(
       filterLogBySearch(log, [
-        {
-          mode: 'remove',
-          search: log.message
-        }
+        { key: 'message', mode: 'find', search: 'quota' },
+        { mode, search }
       ])
-    ).toBeFalsy()
+    ).toBe(false)
+  })
+
+  it('Should keep a log when there is no filter', () => {
+    expect(filterLogBySearch(log, [])).toBe(true)
   })
 })

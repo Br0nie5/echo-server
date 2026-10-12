@@ -1,10 +1,9 @@
 import type { Log } from '../schemas/log.schema.js'
 
 /**
- * The log fields a search can target with `key:`, in the order they are proposed while typing.
+ * The log fields a search can target with `key:`, in the order to offer them in.
  *
- * It is the single source of truth of the searchable fields: `LogSearchableKey` is derived from it,
- * and `parseLogSearchInput` recognizes these keys only.
+ * `LogSearchableKey` is inferred from it, and `parseLogSearchInput` recognizes these keys only.
  */
 export const logSearchableKeys = ['jobId', 'locationName', 'message', 'groupName'] satisfies Array<
   keyof Log

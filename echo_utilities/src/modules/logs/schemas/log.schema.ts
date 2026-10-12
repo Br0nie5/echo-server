@@ -5,8 +5,7 @@ import { LogLevelSchema } from './logLevel.schema.js'
 /**
  * Runtime validation of one entry emitted by a watched script.
  *
- * It is the single source of truth of a log: the `Log` type is derived from it, and so is the schema
- * of the API (see `logs.schemas.ts` in the backend). The frontend checks the API answers with it.
+ * The `Log` type is inferred from it. A log with a property it does not describe is refused.
  */
 export const LogSchema = z.strictObject({
   /** Identifies the log among all the stored ones (see `createLogId`). */
@@ -30,7 +29,7 @@ export const LogSchema = z.strictObject({
   level: LogLevelSchema,
   /** What the script reported, as it wrote it. */
   message: z.string(),
-  /** Where the log was emitted from, in any form but an empty one, when the script said it: `backup.sh:12`. */
+  /** Where the log was emitted from, in any form but an empty one, when the script said it: `send_invoices.sh:12`. */
   origin: z.string().min(1).optional()
 })
 

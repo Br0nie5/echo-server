@@ -3,25 +3,31 @@ import { describe, it, expect } from 'vitest'
 import type { EchoError } from '../echoError.schema.js'
 import { EchoErrorSchema } from '../echoError.schema.js'
 
-const validEchoError: EchoError = { statusCode: 400, message: 'Bad input.' }
+const echoError: EchoError = { statusCode: 400, message: 'Bad input.' }
 
 describe('EchoErrorSchema', () => {
   it('Should accept a status code and a message', () => {
-    expect(EchoErrorSchema.safeParse(validEchoError).success).toBeTruthy()
+    expect(EchoErrorSchema.parse(echoError)).toEqual(echoError)
   })
 
   it('Should leave out the properties it does not describe', () => {
-    expect(EchoErrorSchema.parse({ ...validEchoError, code: 'FST_ERR_VALIDATION' })).toEqual(
-      validEchoError
-    )
+    expect(EchoErrorSchema.parse({ ...echoError, details: 'Some details.' })).toEqual(echoError)
   })
 
-  it('Should reject an EchoError missing the message', () => {
-    expect(EchoErrorSchema.safeParse({ statusCode: 400 }).success).toBeFalsy()
-  })
-
-  it('Should reject an EchoError with a non-integer statusCode', () => {
-    expect(EchoErrorSchema.safeParse({ ...validEchoError, statusCode: 400.5 }).success).toBeFalsy()
-    expect(EchoErrorSchema.safeParse({ ...validEchoError, statusCode: '400' }).success).toBeFalsy()
+  it.each([
+    { reason: 'without status code', error: { message: 'Bad input.' } },
+    { reason: 'without message', error: { statusCode: 400 } },
+    {
+      reason: 'with a status code that is not an integer',
+      error: { ...echoError, statusCode: 400.5 }
+    },
+    {
+      reason: 'with a status code written as a text',
+      error: { ...echoError, statusCode: '400' }
+    },
+    { reason: 'with a message that is not a text', error: { ...echoError, message: 400 } },
+    { reason: 'that is not an object', error: 'Bad input.' }
+  ])('Should refuse an error $reason', ({ error }) => {
+    expect(EchoErrorSchema.safeParse(error).success).toBe(false)
   })
 })

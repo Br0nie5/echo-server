@@ -4,27 +4,27 @@ import type { Log } from '../../schemas/log.schema.js'
 import { LogLevel } from '../../schemas/logLevel.schema.js'
 import { createLogContentId } from '../createLogContentId.js'
 
-const log: Omit<Log, 'id' | 'contentId'> = {
+const noIdsLog: Omit<Log, 'id' | 'contentId'> = {
   date: '2026-04-28T10:00:00.000Z',
-  groupName: 'docker_utils',
-  location: '/server/docker_utils/logs/backup.jsonl',
-  locationName: 'backup',
+  groupName: 'billing',
+  location: '/storage/send_invoices',
+  locationName: 'send_invoices',
   jobId: 66,
   level: LogLevel.WARNING,
-  message: 'Disk almost full',
-  origin: '/server/docker_utils/backup.sh:12'
+  message: 'Quota almost reached',
+  origin: 'send_invoices.sh:12'
 }
 
 describe('createLogContentId', () => {
   it('Should be made of the location, the level, the message and the origin', () => {
-    expect(createLogContentId(log)).toBe(
-      '{"location":"/server/docker_utils/logs/backup.jsonl","level":"WARNING","message":"Disk almost full","origin":"/server/docker_utils/backup.sh:12"}'
+    expect(createLogContentId(noIdsLog)).toBe(
+      '{"location":"/storage/send_invoices","level":"WARNING","message":"Quota almost reached","origin":"send_invoices.sh:12"}'
     )
   })
 
   it('Should leave the origin out when the log has none', () => {
-    expect(createLogContentId({ ...log, origin: undefined })).toBe(
-      '{"location":"/server/docker_utils/logs/backup.jsonl","level":"WARNING","message":"Disk almost full"}'
+    expect(createLogContentId({ ...noIdsLog, origin: undefined })).toBe(
+      '{"location":"/storage/send_invoices","level":"WARNING","message":"Quota almost reached"}'
     )
   })
 
@@ -34,6 +34,18 @@ describe('createLogContentId', () => {
     { groupName: 'other' },
     { locationName: 'other' }
   ])('Should be the same for a log that only differs by %o', (difference) => {
-    expect(createLogContentId({ ...log, ...difference })).toBe(createLogContentId(log))
+    expect(createLogContentId({ ...noIdsLog, ...difference })).toBe(createLogContentId(noIdsLog))
+  })
+
+  it.each<Partial<Log>>([
+    { location: '/storage/other' },
+    { level: LogLevel.ERROR },
+    { message: 'Quota reached' },
+    { origin: 'send_invoices.sh:13' },
+    { origin: undefined }
+  ])('Should be another one for a log that differs by %o', (difference) => {
+    expect(createLogContentId({ ...noIdsLog, ...difference })).not.toBe(
+      createLogContentId(noIdsLog)
+    )
   })
 })

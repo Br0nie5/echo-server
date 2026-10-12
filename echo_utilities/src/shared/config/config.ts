@@ -1,11 +1,6 @@
-/**
- * The configuration common to the backend and the frontend.
- *
- * It is built by `parseConfig`, from the environment of each one. Where Echo is reached is not part
- * of it: the backend reads it from each request, and the frontend from the page it was loaded from.
- */
+/** The configuration every part of Echo shares, which `parseConfig` builds. */
 export type Config = {
-  /** Name of the server Echo runs on, shown to the user and naming its self reports. */
+  /** Name of the server Echo runs on, the one shown to the user. */
   SERVER_NAME: string
   /** Whether a user must log in to read the logs. */
   HAS_AUTHENTICATION: boolean

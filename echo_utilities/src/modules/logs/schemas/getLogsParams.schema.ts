@@ -3,8 +3,8 @@ import { z } from 'zod'
 import { LogLevel, LogLevelSchema } from './logLevel.schema.js'
 
 /**
- * Gives the message returned to the client when the date field `fieldName` of the query is not an
- * ISO date.
+ * Gives the message telling the client that `fieldName`, a date field of the query, is not an ISO
+ * date.
  *
  * ```ts
  * getInvalidDateFieldMessage('fromDate') // 'Field fromDate is not a valid date, it should be an ISO string'
@@ -25,10 +25,17 @@ const describeInvalidLogLevel = (logLevels: unknown): string => {
 /**
  * Runtime validation of the query of `GET /logs`, as the client sends it.
  *
- * It is the single source of truth of that query: the `GetLogsParams` type is derived from it, and
- * so is the schema of the route (see `logs.schemas.ts` in the backend). The backend validates the
- * query with it and turns it into what its use case needs (see `safeParseGetLogsParams`). The
- * messages are returned to the client as they are.
+ * The `GetLogsParams` type is inferred from it. The messages of its errors are written for the
+ * client, to be returned as they are. A date is only checked to be a text: `format: 'date-time'`
+ * describes it in the JSON schema `z.toJSONSchema` gives, and whoever turns that text into a date
+ * checks that it is one.
+ *
+ * ```ts
+ * const result = GetLogsParamsSchema.safeParse({ logLevels: 'DEBUG' })
+ * const [missingDateIssue, invalidLevelIssue] = result.error?.issues ?? []
+ * missingDateIssue.message // 'Missing required field: fromDate'
+ * invalidLevelIssue.message // 'DEBUG is not a valid log level, use SUCCESS|INFO|WARNING|ERROR'
+ * ```
  */
 export const GetLogsParamsSchema = z.object({
   /** The logs emitted before this ISO 8601 date are left out. */
@@ -45,7 +52,7 @@ export const GetLogsParamsSchema = z.object({
     .string({ error: getInvalidDateFieldMessage('toDate') })
     .meta({ format: 'date-time' })
     .optional(),
-  /** The severities to keep: all of them when left out. */
+  /** The severities to keep, one or several: all of them when left out. */
   logLevels: z
     .union([LogLevelSchema, z.array(LogLevelSchema)], {
       error: (issue) => describeInvalidLogLevel(issue.input)

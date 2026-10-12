@@ -4,13 +4,11 @@ import { LogLevel } from '../../schemas/logLevel.schema.js'
 import { isLogLevel } from '../isLogLevel.js'
 
 describe('isLogLevel', () => {
-  it('Should return true if string is a log level', () => {
-    Object.values(LogLevel).forEach((level) => {
-      expect(isLogLevel(level)).toBeTruthy()
-    })
+  it.each(Object.values(LogLevel))('Should tell that %s is a log level', (level) => {
+    expect(isLogLevel(level)).toBe(true)
   })
 
-  it('Should return false if string is not a log level', () => {
-    expect(isLogLevel('Not a log level')).toBeFalsy()
+  it.each(['DEBUG', 'info', ' INFO', ''])('Should tell that "%s" is not a log level', (text) => {
+    expect(isLogLevel(text)).toBe(false)
   })
 })

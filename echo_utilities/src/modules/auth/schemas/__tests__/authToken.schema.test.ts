@@ -4,29 +4,21 @@ import type { AuthToken } from '../authToken.schema.js'
 import { AuthTokenSchema } from '../authToken.schema.js'
 
 describe('AuthTokenSchema', () => {
-  it('Should accept a valid AuthToken with a message', () => {
-    const authToken: AuthToken = { success: true, message: 'Login successful.' }
-
-    expect(AuthTokenSchema.safeParse(authToken).success).toBeTruthy()
+  it.each<AuthToken>([
+    { success: true, message: 'Login successful.' },
+    { success: false, message: 'Invalid credentials.' },
+    { success: true }
+  ])('Should accept the answer %j', (authToken) => {
+    expect(AuthTokenSchema.parse(authToken)).toEqual(authToken)
   })
 
-  it('Should accept a valid AuthToken without the optional message', () => {
-    const authToken: AuthToken = { success: false }
-
-    expect(AuthTokenSchema.safeParse(authToken).success).toBeTruthy()
-  })
-
-  it('Should reject an AuthToken missing the required success field', () => {
-    expect(AuthTokenSchema.safeParse({ message: 'Login successful.' }).success).toBeFalsy()
-  })
-
-  it('Should reject an AuthToken with a non-boolean success field', () => {
-    expect(AuthTokenSchema.safeParse({ success: 'true' }).success).toBeFalsy()
-  })
-
-  it('Should reject an AuthToken with an unknown extra property', () => {
-    const authToken: AuthToken = { success: true, message: 'Login successful.' }
-
-    expect(AuthTokenSchema.safeParse({ ...authToken, extra: 'not allowed' }).success).toBeFalsy()
+  it.each([
+    { reason: 'without success', answer: { message: 'Login successful.' } },
+    { reason: 'with a success that is not a boolean', answer: { success: 'true' } },
+    { reason: 'with a message that is not a text', answer: { success: true, message: 404 } },
+    { reason: 'with a property it does not describe', answer: { success: true, token: 'abc' } },
+    { reason: 'that is not an object', answer: 'success' }
+  ])('Should refuse an answer $reason', ({ answer }) => {
+    expect(AuthTokenSchema.safeParse(answer).success).toBe(false)
   })
 })

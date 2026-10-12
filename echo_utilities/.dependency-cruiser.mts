@@ -56,7 +56,7 @@ const config: IConfiguration = {
       name: 'utilities-not-to-node',
       severity: 'error',
       comment:
-        'The frontend runs @echo/utilities in the browser, where Node.js is not: it imports no built-in module of Node.js (fs, path, crypto, ...).',
+        '@echo/utilities also runs in the browser, where Node.js is not: it imports no built-in module of Node.js (fs, path, crypto, ...).',
       from: { pathNot: TESTS },
       to: { dependencyTypes: ['core'] }
     },

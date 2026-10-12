@@ -1,95 +1,83 @@
 import { describe, it, expect } from 'vitest'
 
+import type { GetLogsParams } from '../getLogsParams.schema.js'
 import { GetLogsParamsSchema, getInvalidDateFieldMessage } from '../getLogsParams.schema.js'
 import { LogLevel } from '../logLevel.schema.js'
 
 const fromDate = '2026-04-28T10:00:00.000Z'
-const usableLogLevels = Object.values(LogLevel).join('|')
+const toDate = '2026-04-28T12:00:00.000Z'
+
+const missingFromDateMessage = 'Missing required field: fromDate'
+const invalidFromDateMessage = 'Field fromDate is not a valid date, it should be an ISO string'
+const invalidToDateMessage = 'Field toDate is not a valid date, it should be an ISO string'
+const invalidLogLevelMessage = 'DEBUG is not a valid log level, use SUCCESS|INFO|WARNING|ERROR'
+
+const getIssuesMessages = (query: unknown): string[] | undefined =>
+  GetLogsParamsSchema.safeParse(query).error?.issues.map((issue) => issue.message)
 
 describe('GetLogsParamsSchema', () => {
-  it('Should accept a query with only fromDate', () => {
-    expect(GetLogsParamsSchema.safeParse({ fromDate }).data).toEqual({ fromDate })
+  it.each<GetLogsParams>([
+    { fromDate },
+    { fromDate, toDate },
+    { fromDate, logLevels: LogLevel.INFO },
+    { fromDate, logLevels: [LogLevel.INFO, LogLevel.ERROR] },
+    { fromDate, logLevels: [] },
+    { fromDate, logSearch: 'message:boom -groupName:billing' },
+    { fromDate, toDate, logLevels: [LogLevel.WARNING], logSearch: 'boom' }
+  ])('Should accept the query %j', (query) => {
+    expect(GetLogsParamsSchema.parse(query)).toEqual(query)
   })
 
-  it('Should accept a toDate', () => {
-    const query = { fromDate, toDate: '2026-04-28T12:00:00.000Z' }
+  it('Should accept a date that is a text without checking that it is a date', () => {
+    const query: GetLogsParams = { fromDate: 'yesterday', toDate: 'tomorrow' }
 
-    expect(GetLogsParamsSchema.safeParse(query).data).toEqual(query)
+    expect(GetLogsParamsSchema.parse(query)).toEqual(query)
   })
 
-  it('Should fail with a specific message when toDate is not a string', () => {
-    const result = GetLogsParamsSchema.safeParse({ fromDate, toDate: 12345 })
-
-    expect(result.error?.issues[0]?.message).toBe(
-      'Field toDate is not a valid date, it should be an ISO string'
-    )
+  it.each([
+    { reason: 'fromDate is missing', query: {}, message: missingFromDateMessage },
+    {
+      reason: 'fromDate is not a text',
+      query: { fromDate: 12345 },
+      message: invalidFromDateMessage
+    },
+    { reason: 'fromDate is null', query: { fromDate: null }, message: invalidFromDateMessage },
+    {
+      reason: 'toDate is not a text',
+      query: { fromDate, toDate: 12345 },
+      message: invalidToDateMessage
+    },
+    {
+      reason: 'the log level is not one',
+      query: { fromDate, logLevels: 'DEBUG' },
+      message: invalidLogLevelMessage
+    },
+    {
+      reason: 'one of the log levels is not one',
+      query: { fromDate, logLevels: [LogLevel.INFO, 'DEBUG'] },
+      message: invalidLogLevelMessage
+    }
+  ])('Should tell the client that $reason', ({ query, message }) => {
+    expect(getIssuesMessages(query)).toEqual([message])
   })
 
-  it('Should accept a single log level', () => {
-    const query = { fromDate, logLevels: LogLevel.INFO }
-
-    expect(GetLogsParamsSchema.safeParse(query).data).toEqual(query)
+  it('Should tell the client every field that is wrong', () => {
+    expect(getIssuesMessages({ toDate: 12345, logLevels: 'DEBUG' })).toEqual([
+      missingFromDateMessage,
+      invalidToDateMessage,
+      invalidLogLevelMessage
+    ])
   })
 
-  it('Should accept several log levels', () => {
-    const query = { fromDate, logLevels: [LogLevel.INFO, LogLevel.ERROR] }
-
-    expect(GetLogsParamsSchema.safeParse(query).data).toEqual(query)
-  })
-
-  it('Should accept a logSearch', () => {
-    const query = { fromDate, logSearch: 'message:boom' }
-
-    expect(GetLogsParamsSchema.safeParse(query).data).toEqual(query)
-  })
-
-  it('Should fail with a specific message when fromDate is missing', () => {
-    const result = GetLogsParamsSchema.safeParse({})
-
-    expect(result.error?.issues[0]?.message).toBe('Missing required field: fromDate')
-  })
-
-  it('Should fail with a specific message when fromDate is not a string', () => {
-    const result = GetLogsParamsSchema.safeParse({ fromDate: 12345 })
-
-    expect(result.error?.issues[0]?.message).toBe(
-      'Field fromDate is not a valid date, it should be an ISO string'
-    )
-  })
-
-  it('Should fail with a specific message when the log level is invalid', () => {
-    const result = GetLogsParamsSchema.safeParse({
-      fromDate,
-      logLevels: 'Invalid_log_level'
-    })
-
-    expect(result.error?.issues[0]?.message).toBe(
-      `Invalid_log_level is not a valid log level, use ${usableLogLevels}`
-    )
-  })
-
-  it('Should name the invalid log level among several ones', () => {
-    const result = GetLogsParamsSchema.safeParse({
-      fromDate,
-      logLevels: [LogLevel.INFO, 'Invalid_log_level']
-    })
-
-    expect(result.error?.issues[0]?.message).toBe(
-      `Invalid_log_level is not a valid log level, use ${usableLogLevels}`
-    )
-  })
-
-  it('Should report the fromDate issue before a logLevels issue when both are invalid', () => {
-    const result = GetLogsParamsSchema.safeParse({ logLevels: 'Invalid_log_level' })
-
-    expect(result.error?.issues[0]?.message).toBe('Missing required field: fromDate')
+  it('Should refuse a logSearch that is not a text', () => {
+    expect(GetLogsParamsSchema.safeParse({ fromDate, logSearch: 42 }).success).toBe(false)
   })
 })
 
 describe('getInvalidDateFieldMessage', () => {
-  it('Should name the date field that is not an ISO date', () => {
-    expect(getInvalidDateFieldMessage('toDate')).toBe(
-      'Field toDate is not a valid date, it should be an ISO string'
+  it.each(['fromDate', 'toDate'])('Should name %s as the field that is not a date', (fieldName) => {
+    expect(getInvalidDateFieldMessage(fieldName)).toBe(
+      `Field ${fieldName} is not a valid date, it should be an ISO string`
     )
   })
 })

@@ -12,10 +12,12 @@ describe('parseInteger', () => {
     expect(parseInteger(raw)).toBe(integer)
   })
 
-  it.each(['ten', '1.5', '1e3', ' 5', '', '-', '0x10'])(
+  it.each(['ten', '1.5', '1e3', '0x10', '+5', '--5', '-', ' 5', '5 ', '1 000', ''])(
     'Should throw when "%s" is not an integer',
     (raw) => {
-      expect(() => parseInteger(raw)).toThrow(`Invalid integer: ${raw} is not an integer`)
+      expect(() => parseInteger(raw)).toThrow(
+        new Error(`Invalid integer: ${raw} is not an integer`)
+      )
     }
   )
 })

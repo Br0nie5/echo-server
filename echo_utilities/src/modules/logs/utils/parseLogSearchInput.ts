@@ -58,8 +58,9 @@ const splitLogSearchInput = (searchInput: string): string[] => {
  * dropped.
  *
  * ```ts
- * parseLogSearchInput('message:error -"docker utils"')
- * // [{ key: 'message', mode: 'find', search: 'error' }, { mode: 'remove', search: 'docker utils' }]
+ * const [findFilter, removeFilter] = parseLogSearchInput('message:error -"sent twice"')
+ * findFilter // { key: 'message', mode: 'find', search: 'error' }
+ * removeFilter // { mode: 'remove', search: 'sent twice' }
  * ```
  */
 export const parseLogSearchInput = (logSearchInput: string): LogSearchFilter[] => {

@@ -3,12 +3,18 @@ import { describe, it, expect } from 'vitest'
 import { requireEnv } from '../requireEnv.js'
 
 describe('requireEnv', () => {
-  it('Should return the value of the variable', () => {
-    expect(requireEnv({ LOGS_DIR_PATH: '/some/path' }, 'LOGS_DIR_PATH')).toBe('/some/path')
+  it('Should give the text of the variable', () => {
+    expect(requireEnv({ SOME_VARIABLE: 'some value' }, 'SOME_VARIABLE')).toBe('some value')
   })
 
-  it('Should leave out the spaces around the value', () => {
-    expect(requireEnv({ SERVER_NAME: '  Echo ' }, 'SERVER_NAME')).toBe('Echo')
+  it('Should read the variable it is asked for among the others', () => {
+    const env = { SOME_VARIABLE: 'some value', ANOTHER_VARIABLE: 'another value' }
+
+    expect(requireEnv(env, 'ANOTHER_VARIABLE')).toBe('another value')
+  })
+
+  it('Should leave out the spaces around the text, and keep those inside it', () => {
+    expect(requireEnv({ SOME_VARIABLE: '  some value ' }, 'SOME_VARIABLE')).toBe('some value')
   })
 
   it.each([
@@ -20,12 +26,18 @@ describe('requireEnv', () => {
     expect(requireEnv({ SOME_VARIABLE: value }, 'SOME_VARIABLE')).toBe(text)
   })
 
-  it.each([undefined, null, '', '   ', {}])(
-    'Should throw if the variable is missing or blank (%j)',
+  it.each([undefined, null, '', '   ', {}, ['some value']])(
+    'Should throw when the variable is %j, which is no text to read',
     (value) => {
-      expect(() => requireEnv({ LOGS_DIR_PATH: value }, 'LOGS_DIR_PATH')).toThrow(
-        'Missing required environment variable: LOGS_DIR_PATH'
+      expect(() => requireEnv({ SOME_VARIABLE: value }, 'SOME_VARIABLE')).toThrow(
+        new Error('Missing required environment variable: SOME_VARIABLE')
       )
     }
   )
+
+  it('Should throw when the variable is not in the env', () => {
+    expect(() => requireEnv({ ANOTHER_VARIABLE: 'another value' }, 'SOME_VARIABLE')).toThrow(
+      new Error('Missing required environment variable: SOME_VARIABLE')
+    )
+  })
 })

@@ -3,14 +3,12 @@ import { describe, it, expect } from 'vitest'
 import { LogLevel, LogLevelSchema } from '../logLevel.schema.js'
 
 describe('LogLevelSchema', () => {
-  it('Should accept every LogLevel value', () => {
-    Object.values(LogLevel).forEach((level) => {
-      expect(LogLevelSchema.safeParse(level).success).toBeTruthy()
-    })
+  it.each(['SUCCESS', 'INFO', 'WARNING', 'ERROR'])('Should accept %s', (level) => {
+    expect(LogLevelSchema.parse(level)).toBe(level)
   })
 
-  it('Should reject a string that is not a LogLevel', () => {
-    expect(LogLevelSchema.safeParse('NOT_A_LEVEL').success).toBeFalsy()
+  it.each(['DEBUG', 'info', '', 3, null])('Should refuse %j', (notALevel) => {
+    expect(LogLevelSchema.safeParse(notALevel).success).toBe(false)
   })
 })
 

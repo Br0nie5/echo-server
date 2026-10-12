@@ -3,8 +3,7 @@ import { z } from 'zod'
 /**
  * Runtime validation of the body of `POST /auth/signup`.
  *
- * It is the single source of truth of that body: the `SignUpRequest` type is derived from it, and
- * so is the schema of the route (see `auth.schemas.ts` in the backend).
+ * The `SignUpRequest` type is inferred from it.
  */
 export const SignUpRequestSchema = z.object({
   /** Name the account is created with. */

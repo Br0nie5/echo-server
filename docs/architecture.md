@@ -30,6 +30,8 @@ There is no database for logs. Every request re-reads the files.
 
 The filter functions `filterLogByLevels` and `filterLogBySearch` live in `@echo/utilities` so backend filtering and the frontend's live filtering (a Web Worker, `filterWorker.ts`) behave identically.
 
+`@echo/utilities` also holds `needsSignupMessage`, the message of the 401 the backend answers the auth check with when no account exists yet: the frontend compares the message of that answer to it to show the sign up form instead of the login one.
+
 ## Backend layout
 
 Code is split by domain under `echo_backend/src/modules` (`auth`, `logs`, `selfReport`).

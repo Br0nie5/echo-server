@@ -25,6 +25,8 @@ Thanks for your interest in Echo. Bug reports, ideas and pull requests are welco
 - Never declare by hand a type the API exchanges: change its zod schema in `echo_utilities` (the type and the schema of the route are derived from it).
 - Run `npm run arch:check`: it enforces the import boundaries above (no `shared/` → `modules/`, a module importing only the `domain/` and the `infra/` of another one, no cycles).
 - Keep filtering logic in `@echo/utilities` so client and server stay identical.
+- Invent the data of your tests, mocks and examples: never copy a name, a path or a message from real logs, such as those you put in `test_logs/` or `server_logs/`.
+- Keep the README, the documentation comments and the tests of a package about that package only. What links the packages is said in the root `README.md` and in `docs/`.
 
 ## Reporting security issues
 

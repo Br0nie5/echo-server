@@ -3,8 +3,7 @@ import { z } from 'zod'
 /**
  * Runtime validation of the body of `POST /auth/login`.
  *
- * It is the single source of truth of that body: the `LoginRequest` type is derived from it, and so
- * is the schema of the route (see `auth.schemas.ts` in the backend).
+ * The `LoginRequest` type is inferred from it.
  */
 export const LoginRequestSchema = z.object({
   /** Name of the account to log into. */

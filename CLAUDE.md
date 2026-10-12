@@ -141,6 +141,14 @@ Echo can be reached at any path behind a reverse proxy, `BASE_PATH` (`basePath` 
 
 `@fastify/swagger` + `@fastify/swagger-ui` are registered in `initializers/registerDocumentation.ts` and serve live docs at `/documentation`, only when `hasDocumentationRoute` of the `ServerConfig` is `true` (`HAS_DOCUMENTATION_ROUTE`, required, which `docker-entrypoint.sh` defaults to `false`): otherwise neither is registered, and `/documentation` answers the 404 of any unknown path. Keep route `schema` blocks (especially `operationId`, request/response shapes) accurate, since they drive these docs.
 
+## Documentation of a package
+
+The README, the documentation comments and the tests of a package talk about that package only. What links the packages is said here, in the root `README.md` and in `docs/`: who imports `@echo/utilities`, that it is built before the others, that the filtering is shared so the backend and the frontend filter the same way, that the frontend compares the message of the 401 of the auth check to `needsSignupMessage` to show the sign up form.
+
+## Sample data
+
+`test_logs/` and `server_logs/`, at the root, hold real logs, git-ignored so that they stay out of the repository. Nothing that is committed takes a value from them, whether a mock, a fixture, an example of the documentation or anything else: no group, script or server name, no path, no message. Invent the data instead (`billing`, `send_invoices`, `Quota almost reached`), and do not read these directories to write it.
+
 ## Testing
 
 Vitest is used in all three workspaces with 100% coverage thresholds enforced by `test:coverage` (see `vitest.config.ts` in the backend and the utilities, and `vite.config.ts` in the frontend, for exclude lists — the entry points are excluded). Tests live in `__tests__` directories colocated with the code under test.

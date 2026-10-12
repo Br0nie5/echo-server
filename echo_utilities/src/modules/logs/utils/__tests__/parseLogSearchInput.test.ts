@@ -1,106 +1,96 @@
 import { describe, it, expect } from 'vitest'
 
-import type { LogSearchableKey, LogSearchFilter } from '../../consts/logSearchFilter.js'
+import { logSearchableKeys, type LogSearchFilter } from '../../consts/logSearchFilter.js'
 import { parseLogSearchInput } from '../parseLogSearchInput.js'
 
-const VALID_SEARCH_KEY: LogSearchableKey = 'locationName'
+interface ParsedInput {
+  input: string
+  searchFilters: LogSearchFilter[]
+}
 
 describe('parseLogSearchInput', () => {
-  describe('splitLogSearchInput', () => {
-    it('Should split the search input on bare spaces', () => {
-      const searchFilters: LogSearchFilter[] = [
+  it.each<ParsedInput>([
+    {
+      input: 'foo bar',
+      searchFilters: [
         { mode: 'find', search: 'foo' },
         { mode: 'find', search: 'bar' }
       ]
-
-      expect(parseLogSearchInput('foo bar')).toEqual(searchFilters)
-    })
-
-    it('Should not split search input on escaped spaces', () => {
-      const searchFilters: LogSearchFilter[] = [{ mode: 'find', search: 'foo bar' }]
-
-      expect(parseLogSearchInput('foo\\ bar')).toEqual(searchFilters)
-    })
-
-    it('Should not split search input on spaces inside quotes', () => {
-      const searchFilters: LogSearchFilter[] = [{ mode: 'find', search: 'foo bar' }]
-
-      expect(parseLogSearchInput('"foo bar"')).toEqual(searchFilters)
-    })
-
-    it('Should handle a mixed escaped spaces and quotes in one search input', () => {
-      const searchFilters: LogSearchFilter[] = [{ mode: 'find', search: 'My custom search' }]
-
-      expect(parseLogSearchInput('My\\ "custom"\\ search')).toEqual(searchFilters)
-    })
-
-    it('Should ignore consecutive spaces', () => {
-      const searchFilters: LogSearchFilter[] = [
+    },
+    {
+      input: '  foo   bar ',
+      searchFilters: [
         { mode: 'find', search: 'foo' },
         { mode: 'find', search: 'bar' }
       ]
+    },
+    { input: 'foo\\ bar', searchFilters: [{ mode: 'find', search: 'foo bar' }] },
+    { input: '"foo bar"', searchFilters: [{ mode: 'find', search: 'foo bar' }] },
+    { input: '"foo bar', searchFilters: [{ mode: 'find', search: 'foo bar' }] },
+    {
+      input: 'My\\ "custom"\\ search',
+      searchFilters: [{ mode: 'find', search: 'My custom search' }]
+    },
+    { input: 'foo\\bar', searchFilters: [{ mode: 'find', search: 'foo\\bar' }] }
+  ])(
+    'Should split the input `$input` on the spaces that are neither escaped nor quoted',
+    ({ input, searchFilters }) => {
+      expect(parseLogSearchInput(input)).toEqual(searchFilters)
+    }
+  )
 
-      expect(parseLogSearchInput('foo  bar')).toEqual(searchFilters)
-    })
+  it.each<ParsedInput>([
+    { input: 'foo', searchFilters: [{ mode: 'find', search: 'foo' }] },
+    { input: '-foo', searchFilters: [{ mode: 'remove', search: 'foo' }] },
+    { input: '-"foo bar"', searchFilters: [{ mode: 'remove', search: 'foo bar' }] },
+    { input: '--foo', searchFilters: [{ mode: 'remove', search: '-foo' }] },
+    { input: 'foo-bar', searchFilters: [{ mode: 'find', search: 'foo-bar' }] }
+  ])(
+    'Should read `$input` as a remove filter only when it starts with a dash',
+    ({ input, searchFilters }) => {
+      expect(parseLogSearchInput(input)).toEqual(searchFilters)
+    }
+  )
 
-    it('Should return an empty array for empty string', () => {
-      expect(parseLogSearchInput('')).toEqual([])
-    })
+  it.each(logSearchableKeys)('Should limit a filter to the %s field named before it', (key) => {
+    expect(parseLogSearchInput(`${key}:error -${key}:warning`)).toEqual([
+      { key, mode: 'find', search: 'error' },
+      { key, mode: 'remove', search: 'warning' }
+    ])
   })
 
-  describe('mode', () => {
-    it('Should use find as a default mode', () => {
-      expect(parseLogSearchInput('foo')[0].mode).toBe('find')
-    })
-
-    it('Should set remove mode when search input part is prefixed with -', () => {
-      const searchFilter: LogSearchFilter = { mode: 'remove', search: 'foo' }
-
-      expect(parseLogSearchInput('-foo')[0]).toEqual(searchFilter)
-    })
-
-    it('Should not add the search input part when the rest of the string after the - is empty', () => {
-      expect(parseLogSearchInput('-')).toEqual([])
-    })
+  it.each<ParsedInput>([
+    {
+      input: 'message:"quota reached"',
+      searchFilters: [{ key: 'message', mode: 'find', search: 'quota reached' }]
+    },
+    {
+      input: 'message:code:42',
+      searchFilters: [{ key: 'message', mode: 'find', search: 'code:42' }]
+    }
+  ])('Should search for everything after the key in `$input`', ({ input, searchFilters }) => {
+    expect(parseLogSearchInput(input)).toEqual(searchFilters)
   })
 
-  describe('key detection', () => {
-    it('Should leave the key out when no known key prefix was found', () => {
-      expect(parseLogSearchInput('unknown:value')[0].key).toBeUndefined()
-    })
+  it.each(['origin:send_invoices', 'Message:error', 'unknown:value'])(
+    'Should search for the whole `%s`, which starts with no searchable key',
+    (input) => {
+      expect(parseLogSearchInput(input)).toEqual([{ mode: 'find', search: input }])
+    }
+  )
 
-    it('Should set key to the detected prefix when a valid key prefix is found', () => {
-      const searchFilter: LogSearchFilter = { key: VALID_SEARCH_KEY, mode: 'find', search: 'error' }
+  it.each(['', '   ', '""', '-', 'message:', '-message:'])(
+    'Should give no filter for `%s`, which has nothing to search for',
+    (input) => {
+      expect(parseLogSearchInput(input)).toEqual([])
+    }
+  )
 
-      expect(parseLogSearchInput(`${VALID_SEARCH_KEY}:error`)[0]).toEqual(searchFilter)
-    })
-
-    it('Should still detect the prefix if the search input part starts with a - for the remove mode', () => {
-      const searchFilter: LogSearchFilter = {
-        key: VALID_SEARCH_KEY,
-        mode: 'remove',
-        search: 'error'
-      }
-
-      expect(parseLogSearchInput(`-${VALID_SEARCH_KEY}:error`)[0]).toEqual(searchFilter)
-    })
-
-    it('Should not add the search input part when the rest of the string after the key is empty', () => {
-      expect(parseLogSearchInput(`${VALID_SEARCH_KEY}:`)).toEqual([])
-    })
-  })
-
-  describe('combined', () => {
-    it('Should parse a complex multi-part query', () => {
-      const searchFilters: LogSearchFilter[] = [
-        { key: VALID_SEARCH_KEY, mode: 'find', search: 'error' },
-        { mode: 'remove', search: 'notAKey:auth' },
-        { mode: 'find', search: 'my message' }
-      ]
-
-      expect(parseLogSearchInput(`${VALID_SEARCH_KEY}:error -notAKey:auth "my message"`)).toEqual(
-        searchFilters
-      )
-    })
+  it('Should give the filters in the order of the input', () => {
+    expect(parseLogSearchInput('locationName:send_invoices -unknown:auth - "my message"')).toEqual([
+      { key: 'locationName', mode: 'find', search: 'send_invoices' },
+      { mode: 'remove', search: 'unknown:auth' },
+      { mode: 'find', search: 'my message' }
+    ])
   })
 })

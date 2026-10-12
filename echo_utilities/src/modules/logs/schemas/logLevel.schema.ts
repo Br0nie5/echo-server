@@ -3,8 +3,7 @@ import { z } from 'zod'
 /**
  * Runtime validation of the severity of a log.
  *
- * It is the single source of truth of the severities: the `LogLevel` values and type are derived
- * from it, and so is the schema of the API (see `logs.schemas.ts` in the backend).
+ * The `LogLevel` values and type are inferred from it.
  */
 export const LogLevelSchema = z.enum(['SUCCESS', 'INFO', 'WARNING', 'ERROR'])
 

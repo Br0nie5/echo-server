@@ -7,9 +7,13 @@
  * message, and the error of the parser as its `cause`.
  *
  * ```ts
- * const trustedProxies = addEnvNameToError('TRUSTED_PROXIES', () =>
- *   parseTrustedProxies(processEnv.TRUSTED_PROXIES)
- * )
+ * addEnvNameToError('MAX_RETRIES', () => parseInteger('3')) // 3
+ *
+ * try {
+ *   addEnvNameToError('MAX_RETRIES', () => parseInteger('many'))
+ * } catch (error) {
+ *   error.message // 'MAX_RETRIES: Invalid integer: many is not an integer'
+ * }
  * ```
  */
 export const addEnvNameToError = <T>(envName: string, parse: () => T): T => {
