@@ -279,6 +279,24 @@ describe('buildServer', () => {
       expect(response.body.trim()).toBe('asset content')
     })
 
+    test.each<{ basePath: string; url: string; location: string }>([
+      { basePath: '', url: '/', location: '/app/' },
+      { basePath: '/echo', url: '/echo', location: '/echo/app/' },
+      { basePath: '/echo', url: '/', location: '/echo/app/' }
+    ])(
+      'Should redirect $url to the frontend at $location when the base path is "$basePath"',
+      async ({ basePath, url, location }) => {
+        const { server } = await buildTestServer({
+          config: { server: getMockServerConfig({ basePath }) }
+        })
+
+        const response = await server.inject(url)
+
+        expect(response.statusCode).toBe(302)
+        expect(response.headers.location).toBe(location)
+      }
+    )
+
     test('Should answer a 404 error to a path that only starts like the one of the frontend', async () => {
       const { server } = await buildTestServer({
         config: { server: getMockServerConfig({ frontendDistDirPath }) },

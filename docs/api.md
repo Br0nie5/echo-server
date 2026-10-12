@@ -21,7 +21,7 @@ Unless a route says otherwise below, an error is answered as an `EchoError`:
 | ------ | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `400`  | The query or the body of the request is not valid. The message says what is wrong.                                                  |
 | `401`  | The route needs a session and the request has none, or one that is over.                                                            |
-| `404`  | The path is no route. A path under `/app` is not concerned: it answers the page of the app.                                         |
+| `404`  | The path is no route. A path under `/app` answers the page of the app instead, and the root (`/`) redirects to it.                  |
 | `429`  | Too many login or sign-up attempts from one address: 5 a minute.                                                                    |
 | `500`  | Anything else, with the message `An unexpected error occurred.`: what went wrong is in the logs of the server, never in the answer. |
 

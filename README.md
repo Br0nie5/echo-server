@@ -96,6 +96,8 @@ Echo serves three things, below the address you reach it at:
 | `/api`           | The REST API the app reads the logs from. See the [API reference](docs/api.md).               |
 | `/documentation` | The interactive documentation of the API, only with `HAS_DOCUMENTATION_ROUTE=true`. No login. |
 
+The address itself, with no path, redirects to the web app.
+
 The logs screen shows the logs from a start date to now, newest first, in three levels of boxes you open and close:
 
 1. **By day**, in the time zone of your browser. Only the most recent day starts open.

@@ -12,13 +12,14 @@ import type { EchoServer } from './types/echoServer.js'
 const INDEX_HTML_FILE_NAME = 'index.html'
 
 /**
- * Serves the built frontend under `appRoutePrefix`.
+ * Serves the built frontend under `appRoutePrefix`, and redirects the root of the server to it.
  *
  * The frontend is built with relative URLs, so it can be reached at any path behind a reverse
  * proxy: `index.html`, read through `filesService`, is answered with a `<base>` saying where it
  * really is (`basePath` followed by `appRoutePrefix`), for its URLs to resolve against it. It is
- * answered to the prefix itself and to any unknown path under it (SPA routing). Anything else gets
- * a 404 `EchoError`, a path that only starts like the prefix (`/application` for `/app`) included.
+ * answered to the prefix itself and to any unknown path under it (SPA routing). The root (`/`)
+ * answers a redirection to the prefix. Anything else gets a 404 `EchoError`, a path that only
+ * starts like the prefix (`/application` for `/app`) included.
  */
 export const registerFrontend = async (
   server: EchoServer,
@@ -55,6 +56,10 @@ export const registerFrontend = async (
   // @fastify/static answers a directory with a 403 when it is not to serve its index.html.
   server.get(`${appRoutePrefix}/`, { schema: { hide: true } }, async (_request, reply) =>
     sendIndexHtml(reply)
+  )
+
+  server.get('/', { schema: { hide: true } }, async (_request, reply) =>
+    reply.redirect(`${appRoutePrefix}/`)
   )
 
   server.setNotFoundHandler(async (request, reply) => {

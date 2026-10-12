@@ -8,7 +8,7 @@ The server of Echo, a Fastify app in TypeScript (ESM). It reads `.jsonl` log fil
 | `/app`           | The built web app, any unknown path under it answering its `index.html`.      |
 | `/documentation` | Swagger UI, only when `HAS_DOCUMENTATION_ROUTE` is `true`.                    |
 
-Anything else answers a 404, as JSON. All of it can be served under a path of a domain behind a reverse proxy (`BASE_PATH`), whether the proxy forwards that path or strips it.
+The root (`/`) redirects to `/app/`. Anything else answers a 404, as JSON. All of it can be served under a path of a domain behind a reverse proxy (`BASE_PATH`), whether the proxy forwards that path or strips it.
 
 ## Commands
 

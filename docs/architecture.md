@@ -114,7 +114,7 @@ A module or a submodule may import the `domain/` and the `infra/` of any other o
 | `registerDocumentation` | Swagger and its UI, only when the config asks for them.                                           |
 | `registerAuthRoutes`    | The auth routes and their rate limit, on top of the users database, only with the authentication. |
 | `registerLogsRoutes`    | The logs routes, given the authentication hook when there is one.                                 |
-| `registerFrontend`      | The built frontend, and the 404 of any unknown path.                                              |
+| `registerFrontend`      | The built frontend, the redirection of the root to it, and the 404 of any unknown path.           |
 | `registerLogsNotifier`  | The cron, only when it is configured along with the notifications.                                |
 
 They build the `infra/` of the modules and hand it to their `presentation/`, which calls their `application/` itself: an initializer never imports an `application/`. Nothing but `server.ts` imports `initializers/`, and nothing but `main.ts` imports `server.ts`.
@@ -274,7 +274,7 @@ Once authenticated, the user goes to the `redirect` query param, only when it is
 
 ## Serving the frontend at any path
 
-In production, the backend serves the build of the frontend under `/app`, with `@fastify/static`. Any unknown path under `/app` answers `index.html`, for the router of the app to handle it, and any other unknown path a 404 `EchoError`, a path that only starts like `/app` (`/application`) included.
+In production, the backend serves the build of the frontend under `/app`, with `@fastify/static`. Any unknown path under `/app` answers `index.html`, for the router of the app to handle it, the root (`/`) a redirection to `/app/`, and any other unknown path a 404 `EchoError`, a path that only starts like `/app` (`/application`) included.
 
 Echo can be reached at any path behind a reverse proxy, `BASE_PATH`, which the proxy may forward or strip:
 
