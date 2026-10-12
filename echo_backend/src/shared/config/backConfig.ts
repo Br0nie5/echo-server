@@ -7,19 +7,13 @@ export type TlsConfig = {
   key: string
 }
 
-/** What the HTTP server needs to listen, to say where it is reached and to serve the frontend. */
+/** What the HTTP server needs to listen, to know the paths it is reached under and to serve the frontend. */
 export type ServerConfig = {
   /** Display name of the server (`SERVER_NAME`). */
   serverName: string
-  /** URL both the API and the frontend are reached under (`SERVER_URL`): an origin, possibly followed by the path of a reverse proxy. */
-  serverUrl: string
-  /** `serverUrl` followed by `apiRoutePrefix`. */
-  apiUrl: string
-  /** `serverUrl` followed by `appRoutePrefix`. */
-  appUrl: string
   /**
-   * Path of `serverUrl`, without its trailing slash: `/echo` when a reverse proxy serves Echo at
-   * `https://domain.com/echo`, an empty string at the root of its origin.
+   * Path a reverse proxy serves Echo under (`BASE_PATH`), without its trailing slash: `/echo` when
+   * Echo is reached at `https://domain.com/echo`, an empty string at the root of its origin.
    *
    * The proxy may forward a request with it or without it: the server takes both, and serves its
    * routes below it.
@@ -34,8 +28,17 @@ export type ServerConfig = {
   host: string
   /** Port the server listens on (`HTTP_PORT`). */
   port: number
-  /** Domain allowed by CORS, with its subdomains: the registrable domain of `serverUrl`, or its host when it is a bare name or an IP address. */
-  allowedDomain: string
+  /**
+   * Reverse proxies whose `X-Forwarded-*` headers the server believes (`TRUSTED_PROXIES`): the
+   * protocol, the host and the address of a request they forward are those of these headers. Each
+   * one is an IP address, a range of them in CIDR notation, or a named range (`loopback`,
+   * `linklocal`, `uniquelocal`).
+   *
+   * Missing, whatever sends the request is believed. A client reaching the server without a proxy
+   * then writes these headers itself: the protocol and the host they give are believed all the
+   * same, but not the address, which nothing that protects the server may rely on.
+   */
+  trustedProxies?: string[]
   /** Set when the server uses HTTPS (`TLS_CERT_PATH` and `TLS_KEY_PATH`). */
   tls?: TlsConfig
   /** Directory holding the built frontend, served under `appRoutePrefix`. */

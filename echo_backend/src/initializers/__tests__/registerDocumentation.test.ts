@@ -16,11 +16,8 @@ describe('registerDocumentation', () => {
     await server.close()
   })
 
-  it('Should describe the API as served below the server URL, base path included', async () => {
-    await registerDocumentation(
-      server,
-      getMockServerConfig({ serverUrl: 'https://allowed-domain.com:3700/echo/', basePath: '/echo' })
-    )
+  it('Should describe the API as served below the base path', async () => {
+    await registerDocumentation(server, getMockServerConfig({ basePath: '/echo' }))
     await server.ready()
 
     const openApi = server.swagger() as {
@@ -30,8 +27,15 @@ describe('registerDocumentation', () => {
     }
 
     expect(openApi.info.title).toBe('Echo API')
-    expect(openApi.servers).toEqual([{ url: 'https://allowed-domain.com:3700/echo' }])
+    expect(openApi.servers).toEqual([{ url: '/echo' }])
     expect(openApi.tags.map((tag) => tag.name)).toEqual(['Logs', 'Authentication'])
+  })
+
+  it('Should describe the API as served at the root of its origin without base path', async () => {
+    await registerDocumentation(server, getMockServerConfig())
+    await server.ready()
+
+    expect(server.swagger()).not.toHaveProperty('servers')
   })
 
   it('Should serve the OpenAPI document and its UI under /documentation', async () => {

@@ -9,14 +9,18 @@
     "echo_backend"
   ],
   "scripts": {
+    "prebuild": "npm install",
     "build": "npm run build --workspaces && tsc",
     "prestart": "npm run build",
     "start": "npm run start --workspace=echo_backend",
     "start:docker": "bash scripts/start_docker.sh",
+    "dns:enable": "bash scripts/local_dns.sh enable",
+    "dns:disable": "bash scripts/local_dns.sh disable",
+    "certs:generate": "bash scripts/generate_certificates.sh",
     "predev": "npm run build --workspace=echo_utilities",
     "dev": "concurrently --names \"utilities,backend,frontend\" \"npm run dev --workspace=echo_utilities\" \"npm run dev --workspace=echo_backend\" \"npm run dev --workspace=echo_frontend\"",
     "deploy:server": "bash scripts/deploy_server.sh",
-    "format": "npm run format --workspaces && prettier --write \"*.{ts,js,json,md}\" \"docs/**/*.md\"",
+    "format": "npm run format --workspaces && prettier --write \"*.{ts,js,json,md}\" \"docs/**/*.md\" \"examples/**/*.{md,yaml}\"",
     "lint": "npm run lint --workspaces && eslint . --fix",
     "test:coverage": "npm run test:coverage --workspaces",
     "open:coverage": "npm run open:coverage --workspaces",
@@ -42,7 +46,8 @@
     "better-sqlite3@13.0.3": true,
     "esbuild@0.28.2": true,
     "unrs-resolver@1.12.2": true,
-    "lefthook@2.2.1": true
+    "lefthook@2.2.1": true,
+    "fsevents@2.3.3": true
   },
   "//": "overrides: concurrently 10.0.5 pins shell-quote to 1.9.0, which has a critical command injection (GHSA-pqg4-j6r4-53mv, fixed in 1.11.0). Remove the override once concurrently depends on a patched shell-quote.",
   "overrides": {

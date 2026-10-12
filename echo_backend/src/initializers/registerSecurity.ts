@@ -12,10 +12,16 @@ import { isOriginAllowed } from './utils/isOriginAllowed.js'
 /** Random secret regenerated at each start, so the sessions do not survive a restart. */
 const DYNAMIC_JWT_SECRET = crypto.randomBytes(256).toString('hex')
 
-/** Registers cookie/JWT support when authentication is enabled, the JWT expiring with the session, and CORS restricted to the origins `isOriginAllowed` accepts: the allowed domain, its subdomains and the address the request itself is sent to. */
+/**
+ * Registers cookie/JWT support when authentication is enabled, the JWT expiring with the session,
+ * and CORS restricted to the origin `isOriginAllowed` accepts: the one the request itself is sent
+ * to.
+ *
+ * That one is the host of the request, which behind a reverse proxy is the one the browser
+ * reached only when the proxy forwards it: as the `Host` header, or as `X-Forwarded-Host` when it
+ * is one of the `trustedProxies` of the config, or when the config has none.
+ */
 export const registerSecurity = async (server: EchoServer, config: BackConfig): Promise<void> => {
-  const { allowedDomain } = config.server
-
   if (config.auth) {
     await server.register(fastifyCookie)
 
@@ -40,7 +46,7 @@ export const registerSecurity = async (server: EchoServer, config: BackConfig): 
 
   await server.register(cors, {
     // The options are decided per request, and not by the `origin` option alone, which is not
-    // given the request: the origin is also compared to the host the request was sent to.
+    // given the request: the origin is compared to the host the request was sent to.
     delegator: (request, callback) => {
       const { origin } = request.headers
 
@@ -49,11 +55,11 @@ export const registerSecurity = async (server: EchoServer, config: BackConfig): 
       }
 
       try {
-        if (isOriginAllowed(origin, { allowedDomain, requestHost: request.host })) {
+        if (isOriginAllowed(origin, request.host)) {
           return callback(null, corsOptions)
         }
 
-        return callback(new Error(`Not allowed by CORS: ${origin} (Allowed: ${allowedDomain})`))
+        return callback(new Error(`Not allowed by CORS: ${origin} (Allowed: ${request.host})`))
       } catch {
         return callback(new Error('Invalid Origin Header'))
       }

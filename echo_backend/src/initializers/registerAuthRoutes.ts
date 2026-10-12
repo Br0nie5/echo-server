@@ -15,11 +15,15 @@ import type { EchoServer } from './types/echoServer.js'
  *
  * The file of the database is prepared through `filesService`. `@fastify/rate-limit` is registered
  * for the routes that ask for it only: those receiving credentials, limited to the
- * `credentialsAttemptsLimit` of the auth config.
+ * `credentialsAttemptsLimit` of the auth config. The attempts are counted per client address when
+ * the `trustedProxies` of the server config say which proxies to believe. When it has none, whatever
+ * sends the request being trusted, a client could name any address in `X-Forwarded-For` to never reach the
+ * limit, so they are counted per connecting address instead: the one of the reverse proxy, shared
+ * by all its clients, when there is one.
  */
 export const registerAuthRoutes = async (
   server: EchoServer,
-  { auth: authConfig, server: { apiRoutePrefix } }: BackConfig,
+  { auth: authConfig, server: { apiRoutePrefix, trustedProxies } }: BackConfig,
   filesService: FilesService
 ): Promise<void> => {
   if (!authConfig) {
@@ -28,7 +32,11 @@ export const registerAuthRoutes = async (
   }
 
   const authRepository = createAuthUsersDbRepository(await createUsersDb(authConfig, filesService))
-  await server.register(rateLimit, { global: false })
+  await server.register(rateLimit, {
+    global: false,
+    keyGenerator: (request) =>
+      trustedProxies === undefined ? String(request.socket.remoteAddress) : request.ip
+  })
   await server.register(authRoutes, {
     prefix: apiRoutePrefix,
     controller: createAuthController(authRepository, authConfig),

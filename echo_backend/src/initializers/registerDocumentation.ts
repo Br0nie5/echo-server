@@ -10,7 +10,7 @@ import type { EchoServer } from './types/echoServer.js'
  * `documentationRoutePrefix`.
  *
  * Both say where Echo is really reached, `basePath` included: the document gives the routes below
- * `serverUrl`, and the UI loads its files below the path the reverse proxy serves it under.
+ * it, on the origin the document is loaded from, and the UI loads its files below it.
  */
 export const registerDocumentation = async (
   server: EchoServer,
@@ -23,7 +23,8 @@ export const registerDocumentation = async (
         description: 'Auto-generated API documentation for the Echo server',
         version: '1.0.0'
       },
-      servers: [{ url: `${new URL(serverConfig.serverUrl).origin}${serverConfig.basePath}` }],
+      // Without `servers`, the routes are at the root of the origin the document is loaded from.
+      ...(serverConfig.basePath && { servers: [{ url: serverConfig.basePath }] }),
       tags: [
         {
           name: 'Logs',

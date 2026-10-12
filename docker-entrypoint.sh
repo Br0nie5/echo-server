@@ -24,9 +24,7 @@ refuse_if_not_image_directory LOGS_DIR_PATH "$LOGS_DIR_PATH" /watched_logs
 refuse_if_not_image_directory SERVER_LOGS_DIR_PATH "$SERVER_LOGS_DIR_PATH" /server_logs
 
 # Set defaults only if not already defined in the environment
-export SERVER_NAME="${SERVER_NAME:-Docker Production}"
-
-export SERVER_URL="${SERVER_URL:-http://localhost:${HTTP_PORT}}"
+export SERVER_NAME="${SERVER_NAME:-Echo}"
 
 export HAS_AUTHENTICATION="${HAS_AUTHENTICATION:-true}"
 

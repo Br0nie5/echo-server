@@ -18,15 +18,12 @@ export default defineConfig(({ command }) => ({
   ],
   server: {
     host: '127.0.0.1',
+    // The `Host` header is forwarded as it is: the backend only answers a request whose `Origin`
+    // is the host it was sent to. A target written as a string would replace it with the host of
+    // the target, as Vite then enables `changeOrigin` on its own.
     proxy: {
-      '/api': {
-        target: 'http://localhost:4000',
-        changeOrigin: true
-      },
-      '/documentation': {
-        target: 'http://localhost:4000',
-        changeOrigin: true
-      }
+      '/api': { target: 'http://localhost:4000' },
+      '/documentation': { target: 'http://localhost:4000' }
     }
   },
   test: {

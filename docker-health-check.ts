@@ -10,9 +10,9 @@
  *
  * It targets the port of `HTTP_PORT`, which the Dockerfile defaults, so that this process, which
  * Docker starts apart from the server, sees the same value as the server does. It throws, hence
- * exits with `1`, when `HTTP_PORT` is not a port. It always targets `localhost`: `SERVER_URL` is
- * the address of the browser, behind a reverse proxy possibly, whose host, port and scheme can
- * all differ from those the server listens on. It uses HTTPS only when `TLS_CERT_PATH` is set.
+ * exits with `1`, when `HTTP_PORT` is not a port. It always targets `localhost`: the
+ * address of the browser, behind a reverse proxy possibly, has a host, a port and a scheme that
+ * can all differ from those the server listens on. It uses HTTPS only when `TLS_CERT_PATH` is set.
  */
 
 import http from 'node:http'

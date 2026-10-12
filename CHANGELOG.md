@@ -10,10 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `LOGS_INITIAL_DATE_DAYS_AGO` (default `2`) and `LOGS_MINIMAL_DATE_DAYS_AGO` (default `14`) set how many days back the logs start by default in the UI, and how far back their start date can be set.
-- Echo can be served under a path of its domain behind a reverse proxy (`SERVER_URL=https://example.com/echo`), whether the proxy forwards that path or strips it. The session cookie is then limited to that path, so two instances served at two paths of one domain keep their own session.
+- Echo can be served under a path of its domain behind a reverse proxy (`BASE_PATH=/echo` for `https://example.com/echo`), whether the proxy forwards that path or strips it. The session cookie is then limited to that path, so two instances served at two paths of one domain keep their own session.
 - The container warns in its logs when `NODE_ENV` is set to anything but `production` (it is set back to `production`, as before).
+- `TRUSTED_PROXIES` restricts the reverse proxies whose `X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-For` headers Echo believes (a list, separated by `;`, of IP addresses, CIDR ranges, `loopback`, `linklocal` and `uniquelocal`). It is optional: by default, Echo believes whatever sends a request, so it works behind any reverse proxy. Once it lists your proxy, the login attempts are limited per client instead of being shared by everyone behind the proxy.
+- [examples/](examples/) holds a complete deployment, with its `compose.yaml` and the configuration of its reverse proxy (Caddy), for each common setup: without a proxy, behind an HTTP or an HTTPS proxy, with HTTPS up to Echo, on a subdomain and under a path.
 
 ### Changed
+
+- **Breaking:** `SERVER_URL` is removed. Echo reads the address it is reached at from each request, so remove the variable from the environment of your container. What it carried is now given as follows:
+  - its path, when a reverse proxy serves Echo under one, by `BASE_PATH` (`/echo`);
+  - its scheme, by the request: the session cookie is `secure` when Echo serves HTTPS itself, or when a reverse proxy sends `X-Forwarded-Proto: https`;
+  - its host, by the request: your reverse proxy must forward the host the browser reached, as the `Host` header (`proxy_set_header Host $http_host;` with nginx) or as `X-Forwarded-Host`, otherwise the login is refused with `Not allowed by CORS`.
+
+- **Breaking:** the session cookie is now named after `SERVER_NAME` (`Echo_echo_access_token` by default) and bound to the host that set it, no longer to its whole domain and its subdomains.
+
+- **Breaking:** `SERVER_NAME` now defaults to `Echo` in the container, instead of `Docker Production`. If you never set it, the self reports are now stored and shown under `Echo`: set `SERVER_NAME=Docker Production` to keep the former name.
 
 - **Breaking:** the container no longer starts when `LOGS_DIR_PATH` or `SERVER_LOGS_DIR_PATH` is set to another path than the directory the image creates for it (`/watched_logs`, `/server_logs`). Remove the variable from the environment of your container and mount your volume on that directory.
 
@@ -59,7 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - A request to `GET /api/logs` without a valid session gets a `401` before its query is validated, instead of the `400` describing what is wrong with its query.
-- When `SERVER_URL` is `localhost` or an IP address, the API no longer accepts cross-origin requests from any website: only `localhost` and the loopback addresses, or that IP address, are allowed. The address a request is itself sent to stays allowed, so an instance reached at another address than `SERVER_URL` keeps working.
+- The API no longer accepts cross-origin requests: only the origin a request is itself sent to is allowed. Before, any website was allowed when `SERVER_URL` was `localhost` or an IP address, and every subdomain of its domain otherwise.
 
 ## [1.2.0] - 2026-09-23
 

@@ -1,0 +1,5 @@
+# Caddy forwards the Host header as it is and adds X-Forwarded-Proto, X-Forwarded-Host and
+# X-Forwarded-For on its own, which is all Echo needs.
+http://testing.cc {
+	reverse_proxy echo:4000
+}

@@ -1,0 +1,33 @@
+# Echo on its own, over HTTP, without a reverse proxy.
+#
+# URL: http://localhost:4000/app
+
+services:
+  echo:
+    image: ${ECHO_IMAGE:-ghcr.io/br0nie5/echo:latest}
+    container_name: echo
+    # Optional, in production too: without it, Node.js ignores the stop signal of Docker, which
+    # waits 10 seconds before killing the container each time it is stopped or restarted.
+    init: true
+    environment:
+      - SERVER_NAME=Echo No Proxy HTTP
+      # Authentication is enabled by default (true): uncomment to disable it.
+      # - HAS_AUTHENTICATION=false
+      # Disabled by default (false): enabled here, hence the /server_logs volume.
+      - SAVE_SELF_REPORTS_TO_FILE=true
+      # Telegram notifications: disabled unless the four are set.
+      # - LOGS_NOTIFIER_SCHEDULE=*/30 * * * *
+      # - LOGS_NOTIFIER_WATCHED_LOGS_LEVELS=ERROR,WARNING
+      # - TELEGRAM_CHAT_ID=123456789
+      # - TELEGRAM_BOT_TOKEN=<token>
+      # When unset, every proxy is trusted. There is none to list here: set it to the address of
+      # yours if you put one in front of this container.
+      # - TRUSTED_PROXIES=172.30.0.2
+    volumes:
+      # The directories of this repository: replace them with your own.
+      - ../../test_logs:/watched_logs:ro
+      - ../../server_logs:/server_logs
+      - ../../data:/app/data
+    ports:
+      - 4000:4000
+    restart: unless-stopped

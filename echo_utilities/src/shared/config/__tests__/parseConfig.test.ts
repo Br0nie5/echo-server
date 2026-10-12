@@ -19,7 +19,7 @@ describe('parseConfig', () => {
   })
 
   it('Should leave out the variables it does not read', () => {
-    expect(parseConfig({ ...rawConfig, SERVER_URL: 'https://example.com' })).toEqual(fullConfig)
+    expect(parseConfig({ ...rawConfig, HTTP_PORT: '4000' })).toEqual(fullConfig)
   })
 
   it('Should still parse a fully provided config if HAS_AUTHENTICATION is a string', () => {

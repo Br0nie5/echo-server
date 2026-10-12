@@ -27,7 +27,9 @@ import { createFilesService, type FilesService } from './shared/services/files.s
  * Whatever reads or writes files is given `filesService`, the one access to the file system. A
  * request is routed the same whether the reverse proxy forwarded it with the `basePath` of the
  * config or without it, and a redirection to a path of the server is sent below `basePath`, where
- * the browser reaches it.
+ * the browser reaches it. The protocol, the host and the address of a request are those its
+ * `X-Forwarded-*` headers give when it comes from one of the `trustedProxies` of the config, or
+ * from anything when the config has none.
  */
 export const buildServer = async (
   config: BackConfig,
@@ -39,6 +41,7 @@ export const buildServer = async (
   // plain-http shape Fastify's default overload expects; `https` still drives TLS at runtime.
   const serverOptions = {
     logger: true,
+    trustProxy: config.server.trustedProxies ?? true,
     rewriteUrl: (request: IncomingMessage) =>
       removeBasePath(request.url ?? '/', config.server.basePath),
     ...(config.server.tls && { https: config.server.tls })
@@ -108,8 +111,9 @@ export const startServer = async (): Promise<void> => {
 
     await server.listen({ port: config.server.port, host: config.server.host })
 
-    server.log.info(`Api is accessible through ${config.server.apiUrl}`)
-    server.log.info(`App is accessible through ${config.server.appUrl}`)
+    const { basePath, apiRoutePrefix, appRoutePrefix } = config.server
+    server.log.info(`Api is served under ${basePath}${apiRoutePrefix}`)
+    server.log.info(`App is served under ${basePath}${appRoutePrefix}`)
   } catch (error) {
     if (server) {
       server.log.error(error)

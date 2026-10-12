@@ -49,12 +49,13 @@ const createSelfReportRepository = vi.mocked(actualCreateSelfReportRepository)
 const selfReportRepository: SelfReportRepository = { saveSelfReports: vi.fn() }
 const filesService = getMockFilesService()
 
-/** A config with every optional part set: TLS, authentication, logs notifier and notifications. */
+/** A config with every optional part set: a trusted proxy, TLS, authentication, logs notifier and notifications. */
 const getFullConfig = (): BackConfig =>
   getMockBackConfig({
     server: getMockServerConfig({
       host: '127.0.0.1',
       port: 0,
+      trustedProxies: ['10.0.0.1'],
       tls: { cert: 'certificate', key: 'key' }
     }),
     logs: getMockLogsConfig({ logsNotifier: getMockLogsNotifierConfig() }),
@@ -91,6 +92,7 @@ describe('server', () => {
 
       expect(Fastify).toHaveBeenCalledWith({
         logger: true,
+        trustProxy: ['10.0.0.1'],
         rewriteUrl: expect.any(Function),
         https: config.server.tls
       })
@@ -132,6 +134,16 @@ describe('server', () => {
       expect(securityOrder).toBeLessThan(authRoutesOrder)
       expect(documentationOrder).toBeLessThan(authRoutesOrder)
       expect(documentationOrder).toBeLessThan(logsRoutesOrder)
+    })
+
+    it('Should trust whatever sends the request when the config has no trusted proxies', async () => {
+      const config = getMockBackConfig({
+        server: getMockServerConfig({ trustedProxies: undefined })
+      })
+
+      servers.push(await buildServer(config, filesService))
+
+      expect(Fastify).toHaveBeenCalledWith(expect.objectContaining({ trustProxy: true }))
     })
 
     it('Should route a request the same with the base path of the config or without it', async () => {
@@ -206,9 +218,9 @@ describe('server', () => {
       return stubs
     }
 
-    it('Should listen on the host and port of the config and say where it is reached', async () => {
+    it('Should listen on the host and port of the config and say which paths it serves', async () => {
       const config = getMockBackConfig({
-        server: getMockServerConfig({ host: '127.0.0.1', port: 4000 })
+        server: getMockServerConfig({ host: '127.0.0.1', port: 4000, basePath: '/echo' })
       })
       loadBackConfig.mockResolvedValue(config)
       const { listen, logInfo } = await stubNextServer(async () => 'http://127.0.0.1:4000')
@@ -217,8 +229,8 @@ describe('server', () => {
       getBuiltServer()
 
       expect(listen).toHaveBeenCalledExactlyOnceWith({ port: 4000, host: '127.0.0.1' })
-      expect(logInfo).toHaveBeenCalledWith(`Api is accessible through ${config.server.apiUrl}`)
-      expect(logInfo).toHaveBeenCalledWith(`App is accessible through ${config.server.appUrl}`)
+      expect(logInfo).toHaveBeenCalledWith('Api is served under /echo/api')
+      expect(logInfo).toHaveBeenCalledWith('App is served under /echo/app')
     })
 
     it('Should exit the process when the config cannot be loaded', async () => {

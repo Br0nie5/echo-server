@@ -5,35 +5,39 @@ import { parseBasePath } from '../parseBasePath.js'
 const ROUTE_PREFIXES = ['/api', '/app', '/documentation']
 
 describe('parseBasePath', () => {
-  it('Should return an empty path when the server URL is at the root of its origin', () => {
-    expect(parseBasePath('https://domain.com', ROUTE_PREFIXES)).toBe('')
-    expect(parseBasePath('https://domain.com/', ROUTE_PREFIXES)).toBe('')
-  })
+  it.each([undefined, '', '/', '//'])(
+    'Should return an empty path when the base path is %o',
+    (raw) => {
+      expect(parseBasePath(raw, ROUTE_PREFIXES)).toBe('')
+    }
+  )
 
-  it('Should return the path of the server URL, without its trailing slashes', () => {
-    expect(parseBasePath('https://domain.com/echo', ROUTE_PREFIXES)).toBe('/echo')
-    expect(parseBasePath('https://domain.com:3700/tools/echo//', ROUTE_PREFIXES)).toBe(
-      '/tools/echo'
-    )
+  it('Should return the base path, without its trailing slashes', () => {
+    expect(parseBasePath('/echo', ROUTE_PREFIXES)).toBe('/echo')
+    expect(parseBasePath('/tools/echo_2.0//', ROUTE_PREFIXES)).toBe('/tools/echo_2.0')
   })
 
   it('Should accept a path that only starts like a route prefix', () => {
-    expect(parseBasePath('https://domain.com/application', ROUTE_PREFIXES)).toBe('/application')
-    expect(parseBasePath('https://domain.com/echo/api', ROUTE_PREFIXES)).toBe('/echo/api')
+    expect(parseBasePath('/application', ROUTE_PREFIXES)).toBe('/application')
+    expect(parseBasePath('/echo/api', ROUTE_PREFIXES)).toBe('/echo/api')
   })
 
   it.each([
-    ['https://domain.com/api', '/api'],
-    ['https://domain.com/app/echo', '/app'],
-    ['https://domain.com/documentation/', '/documentation']
-  ])('Should throw when the path of %s starts with %s', (serverUrl, routePrefix) => {
-    expect(() => parseBasePath(serverUrl, ROUTE_PREFIXES)).toThrow(
-      `Invalid SERVER_URL: ${serverUrl}, its path cannot start with ${routePrefix}, ` +
-        'which Echo serves itself'
+    ['/api', '/api'],
+    ['/app/echo', '/app'],
+    ['/documentation/', '/documentation']
+  ])('Should throw when the base path %s starts with %s', (raw, routePrefix) => {
+    expect(() => parseBasePath(raw, ROUTE_PREFIXES)).toThrow(
+      `Invalid BASE_PATH: ${raw}, it cannot start with ${routePrefix}, which Echo serves itself`
     )
   })
 
-  it('Should throw a TypeError when the server URL is not a valid URL', () => {
-    expect(() => parseBasePath('not-a-url', ROUTE_PREFIXES)).toThrow(TypeError)
-  })
+  it.each(['echo', 'https://domain.com/echo', '/tools//echo', '/echo?page=1', '/"><script>'])(
+    'Should throw when the base path is not a path: %s',
+    (raw) => {
+      expect(() => parseBasePath(raw, ROUTE_PREFIXES)).toThrow(
+        `Invalid BASE_PATH: ${raw}, it must be a path like /echo or /tools/echo`
+      )
+    }
+  )
 })

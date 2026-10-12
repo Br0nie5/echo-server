@@ -17,7 +17,7 @@ npm run dev
 
 - Utilities: built first, then rebuilt on every change (`tsc --watch`), which restarts the backend.
 - Backend: `http://localhost:4000` (tsx watch)
-- Frontend: `http://localhost:5173` (Vite). **Use this URL.** Vite proxies `/api` to the backend so `SERVER_URL` stays a single origin.
+- Frontend: `http://localhost:5173` (Vite). **Use this URL.** Vite proxies `/api` and `/documentation` to the backend, forwarding the `Host` header as it is, so the app and the API share one origin.
 - Config: `echo_backend/.env.development` (see [configuration](configuration.md)). Development is HTTP only: the Vite dev server serves the app and proxies the API over HTTP, so the backend refuses to start there when `TLS_CERT_PATH` or `TLS_KEY_PATH` is set. Try HTTPS with `npm start` or `npm run start:docker`.
 - `data/` is created on first run and holds the dev SQLite database. It is git-ignored.
 
@@ -25,18 +25,20 @@ Backend and frontend import `echo_utilities` from its build, `echo_utilities/dis
 
 ## Scripts
 
-| Command                        | Purpose                                                                                                                               |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`                  | Utilities (watched), backend and frontend together                                                                                    |
-| `npm run build`                | Build all workspaces, then type-check the files at the root ([tsconfig.json](../tsconfig.json))                                       |
-| `npm start`                    | Build, then run the backend in production mode                                                                                        |
-| `npm run lint` / `format`      | ESLint (with fix) / Prettier, in every workspace and on the files at the root                                                         |
-| `npm run test:coverage`        | Vitest across workspaces, 100% thresholds                                                                                             |
-| `npm run open:coverage`        | Open coverage reports                                                                                                                 |
-| `npm run arch:check`           | Architecture rules (import boundaries, cycles), see [architecture](architecture.md#enforcing-the-architecture)                        |
-| `npm run dead-code:check`      | Unused files, exports and dependencies across the workspaces, with [Knip](https://knip.dev) (configured in [knip.json](../knip.json)) |
-| `npm run vulnerabilities:scan` | `npm audit`                                                                                                                           |
-| `npm run start:docker`         | Build the workspaces and the image, then run it on `test_logs/`                                                                       |
+| Command                              | Purpose                                                                                                                                                                                           |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`                        | Utilities (watched), backend and frontend together                                                                                                                                                |
+| `npm run build`                      | Run `npm install` (so the packages match the platform when `node_modules` is shared between two), build all workspaces, then type-check the files at the root ([tsconfig.json](../tsconfig.json)) |
+| `npm start`                          | Build, then run the backend in production mode                                                                                                                                                    |
+| `npm run lint` / `format`            | ESLint (with fix) / Prettier, in every workspace and on the files at the root                                                                                                                     |
+| `npm run test:coverage`              | Vitest across workspaces, 100% thresholds                                                                                                                                                         |
+| `npm run open:coverage`              | Open coverage reports                                                                                                                                                                             |
+| `npm run arch:check`                 | Architecture rules (import boundaries, cycles), see [architecture](architecture.md#enforcing-the-architecture)                                                                                    |
+| `npm run dead-code:check`            | Unused files, exports and dependencies across the workspaces, with [Knip](https://knip.dev) (configured in [knip.json](../knip.json))                                                             |
+| `npm run vulnerabilities:scan`       | `npm audit`                                                                                                                                                                                       |
+| `npm run start:docker`               | Build the workspaces and the image, then run the deployment of [examples/](../examples/) you pick with it, on `test_logs/`                                                                        |
+| `npm run dns:enable` / `dns:disable` | Make the hosts of the examples (`testing.cc`, `local.testing.cc`) resolve to this machine, in `/etc/hosts`, or stop doing so                                                                      |
+| `npm run certs:generate`             | Create the test certificate of the examples again, in `certs/`                                                                                                                                    |
 
 Target one workspace with `--workspace=echo_backend` (or `echo_frontend`, `echo_utilities`).
 
@@ -62,8 +64,10 @@ One Prettier config, [prettier.config.js](../prettier.config.js) at the root, ap
 
 ```bash
 npm run build && docker build -t echo .   # build the workspaces, then the image
-npm run start:docker                      # build both, then run the image on test_logs/ with the dev certificates in certs/
+npm run start:docker                      # build both, then run one of the examples with the image, on test_logs/
 ```
+
+`npm run start:docker` ([start_docker.sh](../scripts/start_docker.sh)) lists the directories of [examples/](../examples/), one deployment each (with or without a reverse proxy, over HTTP or HTTPS, on a subdomain, under a base path), asks which one to run, and stops it on Ctrl+C. `npm run start:docker -- proxy-https` names it instead. An example is a directory holding a `compose.yaml` whose header gives its address (`# URL: …`): add a directory to add one. See the [README of the examples](../examples/README.md) for their hosts (`npm run dns:enable`) and their certificate.
 
 The image builds on `node:24-slim`, compiles `better-sqlite3` in a first stage, runs as the unprivileged `node` user (uid `1000`), and starts through [docker-entrypoint.sh](../docker-entrypoint.sh), which applies defaults and writes the frontend's runtime env file.
 

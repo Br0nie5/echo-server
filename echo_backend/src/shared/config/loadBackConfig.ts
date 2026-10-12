@@ -8,18 +8,18 @@ import type { FilesService } from '../services/files.service.js'
 
 import type { BackConfig } from './backConfig.js'
 import { addEnvNameToError } from './utils/addEnvNameToError.js'
+import { createCookieSerializeOptions } from './utils/createCookieSerializeOptions.js'
 import { createSelfReportsDirPath } from './utils/createSelfReportsDirPath.js'
 import { createSelfReportsGroupName } from './utils/createSelfReportsGroupName.js'
-import { parseAllowedDomain } from './utils/parseAllowedDomain.js'
+import { createSessionCookieName } from './utils/createSessionCookieName.js'
 import { parseBasePath } from './utils/parseBasePath.js'
-import { parseCookieSerializeOptions } from './utils/parseCookieSerializeOptions.js'
 import { parseDaysNumber } from './utils/parseDaysNumber.js'
 import { parseHttpPort } from './utils/parseHttpPort.js'
 import { parseLogsNotifierConfig } from './utils/parseLogsNotifierConfig.js'
 import { parseNotificationConfig } from './utils/parseNotificationConfig.js'
 import { parseOptionalBoolean } from './utils/parseOptionalBoolean.js'
-import { parseServerUrls } from './utils/parseServerUrls.js'
 import { parseTlsConfig } from './utils/parseTlsConfig.js'
+import { parseTrustedProxies } from './utils/parseTrustedProxies.js'
 import { requireEnv } from './utils/requireEnv.js'
 
 /** ESM has no `__dirname`, so it is rebuilt from the module URL. */
@@ -35,7 +35,7 @@ const LOG_FILE_EXTENSION = '.jsonl'
 /** Name of the directory scripts put their log files in, and the backend its self-report files. */
 const LOG_FILES_DIR_NAME = 'logs'
 
-/** Path the documentation of the API is served under, below the path of `SERVER_URL`. */
+/** Path the documentation of the API is served under, below `BASE_PATH`. */
 const DOCUMENTATION_ROUTE_PREFIX = '/documentation'
 
 /** How long a session lasts: one day. */
@@ -86,13 +86,7 @@ export const loadBackConfig = async (
 
   const config = parseConfig({ ...processEnv })
 
-  const { serverUrl, apiUrl, appUrl } = parseServerUrls(
-    requireEnv(processEnv, 'SERVER_URL'),
-    apiRoutePrefix,
-    appRoutePrefix
-  )
-  const allowedDomain = parseAllowedDomain(serverUrl)
-  const basePath = parseBasePath(serverUrl, [
+  const basePath = parseBasePath(processEnv.BASE_PATH, [
     apiRoutePrefix,
     appRoutePrefix,
     DOCUMENTATION_ROUTE_PREFIX
@@ -115,19 +109,18 @@ export const loadBackConfig = async (
   return {
     server: {
       serverName: config.SERVER_NAME,
-      serverUrl,
-      apiUrl,
-      appUrl,
       basePath,
       apiRoutePrefix,
       appRoutePrefix,
       documentationRoutePrefix: DOCUMENTATION_ROUTE_PREFIX,
       host: '0.0.0.0',
       port: parseHttpPort(requireEnv(processEnv, 'HTTP_PORT')),
-      allowedDomain,
+      trustedProxies: addEnvNameToError('TRUSTED_PROXIES', () =>
+        parseTrustedProxies(processEnv.TRUSTED_PROXIES)
+      ),
       tls: await parseTlsConfig(
         processEnv,
-        { serverUrl, isDevelopment: mode === 'development' },
+        { isDevelopment: mode === 'development' },
         filesService
       ),
       frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
@@ -136,14 +129,8 @@ export const loadBackConfig = async (
       ? {
           sessionDurationSeconds: SESSION_DURATION_SECONDS,
           credentialsAttemptsLimit: CREDENTIALS_ATTEMPTS_LIMIT,
-          // The brackets and the colons of an IPv6 address are not allowed in the name of a cookie.
-          cookieName: `${allowedDomain.replace(/[^a-zA-Z0-9.-]/g, '_')}_access_token`,
-          cookieSerializeOptions: parseCookieSerializeOptions(
-            allowedDomain,
-            serverUrl,
-            basePath,
-            SESSION_DURATION_SECONDS
-          ),
+          cookieName: createSessionCookieName(config.SERVER_NAME),
+          cookieSerializeOptions: createCookieSerializeOptions(basePath, SESSION_DURATION_SECONDS),
           usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')
         }
       : undefined,

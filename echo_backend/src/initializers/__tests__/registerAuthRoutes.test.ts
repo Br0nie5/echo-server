@@ -82,6 +82,51 @@ describe('registerAuthRoutes', () => {
     expect(limitedResponse.json()).toMatchObject({ statusCode: 429 })
   })
 
+  describe('behind a reverse proxy', () => {
+    /** Sends a failing login per address of `clientAddresses`, each forwarded by a proxy trusted as `trustedProxies` says, and gives the status codes. */
+    const loginFromClients = async (
+      trustedProxies: string[] | undefined,
+      clientAddresses: string[]
+    ): Promise<number[]> => {
+      await server.close()
+      server = Fastify({ trustProxy: trustedProxies ?? true })
+      server.addSchema(EchoErrorJsonSchema)
+      await registerAuthRoutes(
+        server,
+        getMockBackConfig({
+          server: getMockServerConfig({ trustedProxies }),
+          auth: getMockAuthConfig({
+            credentialsAttemptsLimit: { maxAttempts: 1, timeWindowMilliseconds: 60 * 1000 }
+          })
+        }),
+        filesService
+      )
+      usersDb.exec(USERS_TABLE)
+
+      const statusCodes: number[] = []
+      for (const clientAddress of clientAddresses) {
+        const response = await server.inject({
+          method: 'POST',
+          url: '/api/auth/login',
+          headers: { 'x-forwarded-for': clientAddress },
+          payload: { username: 'ghost', password: 'wrong password' }
+        })
+        statusCodes.push(response.statusCode)
+      }
+      return statusCodes
+    }
+
+    it('Should limit the login attempts per client address when the proxy is a known one', async () => {
+      expect(await loginFromClients(['127.0.0.1'], ['10.0.0.1', '10.0.0.2', '10.0.0.1'])).toEqual([
+        401, 401, 429
+      ])
+    })
+
+    it('Should not let a client escape the limit by naming another address when any proxy is trusted', async () => {
+      expect(await loginFromClients(undefined, ['10.0.0.1', '10.0.0.2'])).toEqual([401, 429])
+    })
+  })
+
   it('Should not limit the routes receiving no credentials', async () => {
     await registerAuthRoutes(
       server,

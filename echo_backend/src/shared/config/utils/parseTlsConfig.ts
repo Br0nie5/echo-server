@@ -7,12 +7,12 @@ import type { TlsConfig } from '../backConfig.js'
  *
  * It is `undefined`, the server then using HTTP, when neither variable is set. Throws when one of
  * them is set in development (`isDevelopment`), where the Vite dev server in front of the backend
- * serves the app and proxies the API over HTTP only. Throws too when only one of them is set, when
- * `serverUrl` does not use `https://`, or when one of the two files cannot be read.
+ * serves the app and proxies the API over HTTP only. Throws too when only one of them is set, or
+ * when one of the two files cannot be read.
  */
 export const parseTlsConfig = async (
   processEnv: NodeJS.ProcessEnv,
-  { serverUrl, isDevelopment }: { serverUrl: string; isDevelopment: boolean },
+  { isDevelopment }: { isDevelopment: boolean },
   filesService: FilesService
 ): Promise<TlsConfig | undefined> => {
   const TLS_CERT_PATH = processEnv.TLS_CERT_PATH
@@ -32,10 +32,6 @@ export const parseTlsConfig = async (
 
   if (!TLS_CERT_PATH || !TLS_KEY_PATH) {
     throw new Error('TLS_CERT_PATH and TLS_KEY_PATH must both be set to enable HTTPS')
-  }
-
-  if (new URL(serverUrl).protocol !== 'https:') {
-    throw new Error('SERVER_URL must use https:// when TLS_CERT_PATH and TLS_KEY_PATH are set')
   }
 
   const [cert, key] = await Promise.all([

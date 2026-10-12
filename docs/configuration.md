@@ -12,7 +12,7 @@ Echo is configured entirely through environment variables. They are parsed and v
 
 Real environment variables always win over `.env.*` files. The file is chosen by `NODE_ENV` (`production` or anything else meaning development). It is read from the working directory of the backend, `echo_backend/`, where npm runs its scripts.
 
-Development is HTTP only: `SERVER_URL` is the address of the Vite dev server, which serves the app and proxies the API over HTTP. In development, the backend refuses to start when `TLS_CERT_PATH` or `TLS_KEY_PATH` is set, with an error saying what to change. Keep `SERVER_URL` on `http://` there too. Try HTTPS with `npm start` or `npm run start:docker`.
+Development is HTTP only: the Vite dev server serves the app and proxies the API over HTTP. In development, the backend refuses to start when `TLS_CERT_PATH` or `TLS_KEY_PATH` is set, with an error saying what to change. Try HTTPS with `npm start` or `npm run start:docker`.
 
 ## Common (frontend and backend)
 
@@ -23,20 +23,21 @@ Parsed by [parseConfig.ts](../echo_utilities/src/shared/config/parseConfig.ts).
 | `SERVER_NAME`        |   yes    | Display name of the instance. |
 | `HAS_AUTHENTICATION` |   yes    | `true` or `false`.            |
 
-The frontend is not given where Echo is reached: it reads it from the page it was loaded from. The backend gives `index.html` a `<base>` (`<path of SERVER_URL>/app/`): the app is there, and the API next to it, under `/api`, on whatever address the user reached, a LAN IP included.
+The frontend is not given where Echo is reached: it reads it from the page it was loaded from. The backend gives `index.html` a `<base>` (`<BASE_PATH>/app/`): the app is there, and the API next to it, under `/api`, on whatever address the user reached, a LAN IP included.
 
 ## Backend only
 
-Two values are derived from `SERVER_URL` and are not separate variables: the URL of the API, `${SERVER_URL}/api`, and the one of the app, `${SERVER_URL}/app`. Both keep the path of `SERVER_URL`: `https://example.com/echo` gives `https://example.com/echo/api`. The backend answers a request whether the reverse proxy forwards it with that path or strips it, so the same image works at any path.
+The backend is not given the URL it is reached at either: it reads the protocol and the host from each request, those of its `X-Forwarded-*` headers when it has some, unless `TRUSTED_PROXIES` says not to believe its sender. Only the path a reverse proxy serves it under cannot be read from a request, hence `BASE_PATH`: the API is then under `<BASE_PATH>/api` and the app under `<BASE_PATH>/app`. The backend answers a request whether the reverse proxy forwards it with that path or strips it, so the same image works at any path.
 
 Parsed by [loadBackConfig.ts](../echo_backend/src/shared/config/loadBackConfig.ts), which builds the `BackConfig` ([backConfig.ts](../echo_backend/src/shared/config/backConfig.ts)) the backend is wired with. Each variable is read by its own parser, in [utils/](../echo_backend/src/shared/config/utils/).
 
 | Variable                            | Required | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ----------------------------------- | :------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SERVER_URL`                        |   yes    | Public URL of the instance, possibly with the path a reverse proxy serves it under (`https://example.com/echo`). Must be a valid URL, whose path does not start with `/api`, `/app` or `/documentation`.                                                                                                                                                                                                                                                                                                                                                                           |
+| `BASE_PATH`                         |    no    | Path a reverse proxy serves Echo under (`/echo` for `https://example.com/echo`), empty by default. Its parts hold letters, digits, `.`, `_`, `~` and `-` only, and it does not start with `/api`, `/app` or `/documentation`.                                                                                                                                                                                                                                                                                                                                                      |
+| `TRUSTED_PROXIES`                   |    no    | Reverse proxies whose `X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-For` the backend believes. Unset, whatever sends the request, so the backend works behind any proxy. A list, separated by `;`, of IP addresses, CIDR ranges and `loopback`, `linklocal`, `uniquelocal` restricts it to them. A host name is not resolved.                                                                                                                                                                                                                                           |
 | `HTTP_PORT`                         |   yes    | Integer between 1 and 65535.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `LOGS_DIR_PATH`                     |   yes    | Directory scanned for `.jsonl` files. Relative paths resolve from the backend's working directory. Defaults to `/watched_logs` in Docker, a directory of the image: leave it as is and mount your logs there.                                                                                                                                                                                                                                                                                                                                                                      |
-| `TLS_CERT_PATH`, `TLS_KEY_PATH`     |    no    | Enable HTTPS. Both or neither; `SERVER_URL` must be `https://`. Refused in development.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `TLS_CERT_PATH`, `TLS_KEY_PATH`     |    no    | Enable HTTPS. Both or neither. Refused in development.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `LOGS_NOTIFIER_SCHEDULE`            |   no*    | Cron expression ([node-cron](https://github.com/node-cron/node-cron) syntax). Throws at startup if invalid while `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` names a level.                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` |   no*    | Comma-separated subset of `SUCCESS,INFO,WARNING,ERROR`. Invalid entries are dropped.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `TELEGRAM_CHAT_ID`                  |   no*    | Telegram chat id.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -50,38 +51,24 @@ Parsed by [loadBackConfig.ts](../echo_backend/src/shared/config/loadBackConfig.t
 
 The server always binds to `0.0.0.0`.
 
-## Derived cookie settings
+## Cookie settings
 
-The auth cookie is named `<allowed domain>_access_token`, after the cookie domain below (`localhost` or the IP address when there is none), each character a cookie name cannot hold replaced with `_`: `example.com_access_token` for `https://echo.example.com`. Its domain, path and flags come from `SERVER_URL`:
+The auth cookie is named `<SERVER_NAME>_echo_access_token`, each character of `SERVER_NAME` other than a letter, a digit, `-` or `_` replaced with `_` (`My_Server_echo_access_token` for `My Server`), so two instances reached on one host keep their own session when they are named differently. It is bound to no domain, so the browser only sends it back to the host that set it. Its other settings:
 
-| `SERVER_URL` host                   | Cookie domain                                              |
-| ----------------------------------- | ---------------------------------------------------------- |
-| `localhost` or an IP address        | not set                                                    |
-| a hostname, e.g. `echo.example.com` | its registrable domain, `example.com`, subdomains included |
+| Setting  | Value                                                                                                                                        |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Path     | `BASE_PATH`, or `/` when it is empty: two instances served at two paths of one host keep their own session                                   |
+| `secure` | decided for each request: yes over HTTPS, no over HTTP, since a browser refuses a secure cookie set over HTTP (in development, for instance) |
 
-| `SERVER_URL` path                       | Cookie path                                                                                |
-| --------------------------------------- | ------------------------------------------------------------------------------------------ |
-| none, e.g. `https://echo.example.com`   | `/`                                                                                        |
-| a path, e.g. `https://example.com/echo` | that path, `/echo`: two instances served at two paths of one domain keep their own session |
+A request is over HTTPS when the backend serves HTTPS itself (`TLS_CERT_PATH`, `TLS_KEY_PATH`), or when it carries `X-Forwarded-Proto: https` and `TRUSTED_PROXIES` lets its sender be believed, which is the default. With a list that leaves out a reverse proxy terminating TLS, the backend only sees HTTP, and the cookie is not `secure`.
 
-| `SERVER_URL` scheme |                                                       `secure`                                                       |
-| ------------------- | :------------------------------------------------------------------------------------------------------------------: |
-| `https://`          |                                    yes: browsers only send the cookie over HTTPS                                     |
-| `http://`           | no: a browser refuses a secure cookie set over HTTP, so login over HTTP (in development, for instance) keeps working |
+The login attempts are limited per address. While whatever sends a request is believed (the default), a client could name any address in `X-Forwarded-For`, so the address counted is the one of the connection: the reverse proxy, shared by all its clients, when there is one. Once `TRUSTED_PROXIES` lists the proxies, it is the address of the client they forward.
 
-Other flags are fixed: `httpOnly`, `sameSite=lax`, max age 24 hours. Use `https://` in `SERVER_URL` for any public deployment, behind a reverse proxy terminating TLS included, since it is the address the browser reaches.
+Other flags are fixed: `httpOnly`, `sameSite=lax`, max age 24 hours.
 
-## Derived CORS settings
+## CORS settings
 
-The API only answers a request carrying an `Origin` header when that origin is one the server serves itself. Which ones are allowed comes from `SERVER_URL` too:
-
-| `SERVER_URL` host                   | Allowed origins                                           |
-| ----------------------------------- | --------------------------------------------------------- |
-| `localhost`                         | `localhost`, `127.0.0.1` and `[::1]`, on any port         |
-| an IP address                       | that address, on any port                                 |
-| a hostname, e.g. `echo.example.com` | its registrable domain (`example.com`) and its subdomains |
-
-Whatever `SERVER_URL` is, the origin a request is itself sent to (same host and port as its `Host` header) is allowed too, so the app keeps working when it is reached at another address than `SERVER_URL`, a LAN IP for instance. Any other origin is refused with an error.
+The API only answers a request carrying an `Origin` header when that origin is the one the request is itself sent to (same host and port as its `Host` header, or as its `X-Forwarded-Host` when its sender is believed, see `TRUSTED_PROXIES`): the page then comes from the server itself, on whatever address the user reached, a LAN IP included. Any other origin is refused with an error. A reverse proxy must therefore forward the host the browser reached, one way or the other.
 
 ## Frontend runtime configuration
 

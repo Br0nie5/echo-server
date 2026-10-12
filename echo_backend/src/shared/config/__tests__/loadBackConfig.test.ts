@@ -24,7 +24,6 @@ const filesService = getMockFilesService()
 
 const REQUIRED_ENV: NodeJS.ProcessEnv = {
   SERVER_NAME: 'Echo',
-  SERVER_URL: 'http://localhost:5173',
   HAS_AUTHENTICATION: 'false',
   HTTP_PORT: '4000',
   LOGS_DIR_PATH: '/some/path',
@@ -88,8 +87,8 @@ describe('loadBackConfig', () => {
 
   it.each([
     { variable: 'SERVER_NAME', value: '' },
-    { variable: 'SERVER_URL', value: 'not-a-url' },
-    { variable: 'SERVER_URL', value: 'https://domain.com/api' },
+    { variable: 'BASE_PATH', value: '/api' },
+    { variable: 'TRUSTED_PROXIES', value: 'not-an-address' },
     { variable: 'HAS_AUTHENTICATION', value: 'maybe' },
     { variable: 'HTTP_PORT', value: 'not-a-number' },
     { variable: 'LOGS_DIR_PATH', value: '' },
@@ -113,7 +112,6 @@ describe('loadBackConfig', () => {
     await expect(
       loadBackConfig(filesService, {
         ...REQUIRED_ENV,
-        SERVER_URL: 'https://localhost:5173',
         TLS_CERT_PATH,
         TLS_KEY_PATH
       })
@@ -124,16 +122,13 @@ describe('loadBackConfig', () => {
     expect(await loadBackConfig(filesService, { ...REQUIRED_ENV })).toStrictEqual({
       server: {
         serverName: 'Echo',
-        serverUrl: 'http://localhost:5173',
-        apiUrl: 'http://localhost:5173/api',
-        appUrl: 'http://localhost:5173/app',
         basePath: '',
         apiRoutePrefix: '/api',
         appRoutePrefix: '/app',
         documentationRoutePrefix: '/documentation',
         host: '0.0.0.0',
         port: 4000,
-        allowedDomain: 'localhost',
+        trustedProxies: undefined,
         tls: undefined,
         frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
       },
@@ -153,7 +148,8 @@ describe('loadBackConfig', () => {
     const config = await loadBackConfig(filesService, {
       NODE_ENV: 'production',
       SERVER_NAME: 'Docker Prod',
-      SERVER_URL: 'https://allowed-domain.com:3700',
+      BASE_PATH: '/tools/echo',
+      TRUSTED_PROXIES: '10.0.0.1; uniquelocal',
       HAS_AUTHENTICATION: 'true',
       HTTP_PORT: '3700',
       LOGS_DIR_PATH: '/watched_logs',
@@ -172,27 +168,23 @@ describe('loadBackConfig', () => {
     expect(config).toStrictEqual({
       server: {
         serverName: 'Docker Prod',
-        serverUrl: 'https://allowed-domain.com:3700',
-        apiUrl: 'https://allowed-domain.com:3700/api',
-        appUrl: 'https://allowed-domain.com:3700/app',
-        basePath: '',
+        basePath: '/tools/echo',
         apiRoutePrefix: '/api',
         appRoutePrefix: '/app',
         documentationRoutePrefix: '/documentation',
         host: '0.0.0.0',
         port: 3700,
-        allowedDomain: 'allowed-domain.com',
+        trustedProxies: ['10.0.0.1', 'uniquelocal'],
         tls: { cert: 'certificate content', key: 'private key content' },
         frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
       },
       auth: {
         sessionDurationSeconds: 86400,
         credentialsAttemptsLimit: { maxAttempts: 5, timeWindowMilliseconds: 60 * 1000 },
-        cookieName: 'allowed-domain.com_access_token',
+        cookieName: 'Docker_Prod_echo_access_token',
         cookieSerializeOptions: {
-          domain: 'allowed-domain.com',
-          path: '/',
-          secure: true,
+          path: '/tools/echo',
+          secure: 'auto',
           httpOnly: true,
           sameSite: 'lax',
           maxAge: 86400
