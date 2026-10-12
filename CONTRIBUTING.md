@@ -4,6 +4,7 @@ Thanks for your interest in Echo. Bug reports, ideas and pull requests are welco
 
 ## Before you start
 
+- Report a bug with the [bug report form](https://github.com/Br0nie5/echo-server/issues/new/choose), after searching the existing issues.
 - Open an issue for anything non-trivial so we can agree on the approach first.
 - Read the [architecture overview](docs/architecture.md) and the [development guide](docs/development.md).
 
@@ -12,8 +13,9 @@ Thanks for your interest in Echo. Bug reports, ideas and pull requests are welco
 1. Fork and create a branch.
 2. `npm ci` then `npm run dev`.
 3. Make your change with tests. The project enforces **100% coverage**.
-4. Run `npm run build && npm run lint && npm run format && npm run arch:check && npm run test:coverage`. The pre-commit hook only runs the format and the lint.
-5. Open a pull request describing what changed and why.
+4. Run `npm run build && npm run lint && npm run format && npm run arch:check && npm run dead-code:check && npm run test:coverage`, which the CI runs too. The pre-commit hook only runs the format and the lint.
+5. Update the documentation (`README.md`, `docs/`), and add an entry to `CHANGELOG.md` under `[Unreleased]` for anything a user can notice.
+6. Open a pull request and fill in its template: what changed and why, the issue it closes, how to test it. Its title is a Conventional Commit, like the commits of the repository: `type(scope): summary`.
 
 ## Conventions
 
@@ -26,4 +28,4 @@ Thanks for your interest in Echo. Bug reports, ideas and pull requests are welco
 
 ## Reporting security issues
 
-Please do not open a public issue for vulnerabilities. Contact the maintainer privately through their GitHub profile.
+Please do not open a public issue for vulnerabilities. [Report them privately](https://github.com/Br0nie5/echo-server/security/advisories/new) instead: only the maintainer sees the report.

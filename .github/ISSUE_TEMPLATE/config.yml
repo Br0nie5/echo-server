@@ -1,1 +1,8 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/Br0nie5/echo-server/security/advisories/new
+    about: Report a vulnerability privately. Please do not open a public issue for it.
+  - name: Documentation
+    url: https://github.com/Br0nie5/echo-server#readme
+    about: Setup, environment variables, log file format and reverse proxy examples.
