@@ -1,7 +1,6 @@
 import {
-  AuthTokenSchema,
-  needsSignupMessage,
-  type AuthToken,
+  AuthStatusSchema,
+  type AuthStatus,
   type LoginRequest,
   type SignUpRequest
 } from '@echo/utilities'
@@ -14,16 +13,23 @@ import {
   type AuthRepository
 } from '../domain/auth.repository'
 
-const authCheckUrl = '/auth/check'
+const authStatusUrl = '/auth/status'
 const loginUrl = '/auth/login'
 const signUpUrl = '/auth/signup'
+
+const authCheckResultsByStatus: Record<AuthStatus['status'], AuthCheckResult> = {
+  authenticated: 'redirect',
+  unauthenticated: 'login',
+  needsSignUp: 'signUp'
+}
 
 /**
  * Gives the `AuthRepository` on top of the auth endpoints of the API.
  *
- * Every answer is validated against `AuthTokenSchema`. A 401 is how the API refuses, and no caller
- * gets to see it: the auth check reads it as a result (`signUp` when its message is
- * `needsSignupMessage`, `login` otherwise), and the login throws an `InvalidCredentialsError`.
+ * The auth check validates the answer of the API against `AuthStatusSchema`, throwing when it does
+ * not match, and gives the `AuthCheckResult` of its status. The login and the sign up succeed when
+ * the API accepts the request, whatever it answers with. A 401 is how the API refuses credentials,
+ * and no caller gets to see it: the login throws an `InvalidCredentialsError`.
  *
  * ```ts
  * const authRepository = useAuthRepository()
@@ -33,40 +39,19 @@ const signUpUrl = '/auth/signup'
 export const useAuthRepository = (): AuthRepository => {
   const sendApiRequest = useSendApiRequest()
 
-  const postCredentials = async <TRequest>(url: string, request: TRequest): Promise<void> => {
-    const data = await sendApiRequest<AuthToken, unknown, TRequest>({
-      url,
-      method: 'POST',
-      data: request
-    })
-
-    AuthTokenSchema.parse(data)
-  }
+  const postCredentials = <TRequest>(url: string, request: TRequest): Promise<void> =>
+    sendApiRequest<void, unknown, TRequest>({ url, method: 'POST', data: request })
 
   return {
     checkAuthentication: async (signal?: AbortSignal): Promise<AuthCheckResult> => {
-      try {
-        const data = await sendApiRequest<AuthToken>({
-          url: authCheckUrl,
-          method: 'GET',
-          signal,
-          withCredentials: true
-        })
-        const parsedData = AuthTokenSchema.safeParse(data)
-        if (!parsedData.success) {
-          throw new Error('Invalid auth token format')
-        }
-        return 'redirect'
-      } catch (error) {
-        if (isUnauthorizedError<AuthToken>(error)) {
-          const parsedBody = AuthTokenSchema.safeParse(error.response?.data)
-          return parsedBody.success && parsedBody.data.message === needsSignupMessage
-            ? 'signUp'
-            : 'login'
-        }
+      const data = await sendApiRequest<AuthStatus>({
+        url: authStatusUrl,
+        method: 'GET',
+        signal,
+        withCredentials: true
+      })
 
-        throw error
-      }
+      return authCheckResultsByStatus[AuthStatusSchema.parse(data).status]
     },
     login: async (request: LoginRequest): Promise<void> => {
       try {

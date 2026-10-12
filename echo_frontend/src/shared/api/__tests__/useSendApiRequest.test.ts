@@ -45,7 +45,7 @@ describe('useSendApiRequest', () => {
   })
 
   test('Should throw, and stay on the auth screen, when the API answers a 401 there', async () => {
-    nock(mockConfig.API_URL).get('/auth/check').reply(401)
+    nock(mockConfig.API_URL).post('/auth/login').reply(401)
     const onLocationChange = vi.fn<(location: Location) => void>()
 
     const { result } = renderAppHook(() => useSendApiRequest(), {
@@ -53,7 +53,7 @@ describe('useSendApiRequest', () => {
       onLocationChange
     })
 
-    await expect(result.current({ url: '/auth/check', method: 'GET' })).rejects.toThrow()
+    await expect(result.current({ url: '/auth/login', method: 'POST' })).rejects.toThrow()
     expect(onLocationChange).toHaveBeenCalledTimes(1)
   })
 })

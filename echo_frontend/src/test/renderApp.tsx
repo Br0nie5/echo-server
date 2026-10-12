@@ -64,7 +64,7 @@ export const renderRealRouterApp = (path: string, params?: RenderAppParams): Ren
  * the app went. Read the path the app is at with `getAppPath`.
  *
  * ```tsx
- * nock(mockConfig.API_URL).get('/auth/check').reply(200, { success: true })
+ * nock(mockConfig.API_URL).get('/auth/status').reply(200, { status: 'authenticated' })
  *
  * const screen = renderFakeRouterApp('/auth')
  *

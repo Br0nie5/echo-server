@@ -1,5 +1,4 @@
-import type { SignUpRequest } from '@echo/utilities'
-import { needsSignupMessage, type AuthToken, type LoginRequest } from '@echo/utilities'
+import type { AuthStatus, EchoError, LoginRequest, SignUpRequest } from '@echo/utilities'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
 import type { AuthConfig } from '../../../shared/config/backConfig.js'
@@ -8,13 +7,22 @@ import { validateCredentials } from '../application/validateCredentials.js'
 import type { AuthRepository } from '../domain/auth.repository.js'
 import { SignUpRefusedError } from '../domain/signUpRefusedError.js'
 
-type AuthReply = FastifyReply<{ Reply: AuthToken }>
+/** What the sign up, the login and the logout answer, by status code: nothing, or why they refuse. */
+export type SessionReply = { 204: undefined; 401: EchoError; 403: EchoError }
 
-/** Request handlers of the auth routes. Each one answers with an `AuthToken` describing the outcome. */
+type AuthReply = FastifyReply<{ Reply: SessionReply }>
+type AuthStatusReply = FastifyReply<{ Reply: AuthStatus }>
+
+/**
+ * Request handlers of the auth routes.
+ *
+ * `signUp`, `login` and `logout` answer a 204 with no body when they did what was asked, and
+ * `getStatus` an `AuthStatus`.
+ */
 export interface AuthController {
   signUp: (request: FastifyRequest<{ Body: SignUpRequest }>, reply: AuthReply) => Promise<void>
   login: (request: FastifyRequest<{ Body: LoginRequest }>, reply: AuthReply) => Promise<void>
-  check: (request: FastifyRequest, reply: AuthReply) => Promise<void>
+  getStatus: (request: FastifyRequest, reply: AuthStatusReply) => Promise<void>
   logout: (request: FastifyRequest, reply: AuthReply) => Promise<void>
 }
 
@@ -23,8 +31,13 @@ export interface AuthController {
  *
  * `signUp` and `login` call the use cases of `application/`, which decide whether the user may.
  * When it may, they sign a JWT and store it in the session cookie described by `authConfig`;
- * `logout` clears it. A sign up the use case refuses is answered with a 403, and any other error
- * of the use cases is thrown.
+ * `logout` clears it. A sign up the use case refuses is answered with a 403 and credentials that
+ * are not those of an account with a 401, both an `EchoError`, and any other error of the use
+ * cases is thrown.
+ *
+ * `getStatus` always answers a 200, saying where the request stands: `needsSignUp` while no
+ * account exists, whatever the request carries, then `authenticated` or `unauthenticated`
+ * depending on its JWT.
  */
 export const createAuthController = (
   authRepository: AuthRepository,
@@ -49,7 +62,7 @@ export const createAuthController = (
       } catch (error) {
         if (error instanceof SignUpRefusedError) {
           request.log.warn({ err: error }, 'Sign up refused')
-          return reply.status(403).send({ success: false, message: 'Unauthorized.' })
+          return reply.status(403).send({ statusCode: 403, message: 'Sign up refused.' })
         }
 
         throw error
@@ -57,7 +70,7 @@ export const createAuthController = (
 
       openSession(request, reply, username)
 
-      return reply.status(200).send({ success: true, message: 'Sign up successful.' })
+      return reply.status(204).send()
     },
 
     login: async (
@@ -67,32 +80,31 @@ export const createAuthController = (
       const { username, password } = request.body
 
       if (!(await validateCredentials(authRepository, username, password))) {
-        return reply.status(401).send({ success: false, message: 'Invalid credentials.' })
+        return reply.status(401).send({ statusCode: 401, message: 'Invalid credentials.' })
       }
 
       openSession(request, reply, username)
 
-      return reply.status(200).send({ success: true, message: 'Login successful.' })
+      return reply.status(204).send()
     },
 
-    /** Answers 401 with `needsSignupMessage` while no account exists, so the client knows to offer the sign up. */
-    check: async (request: FastifyRequest, reply: AuthReply): Promise<void> => {
+    getStatus: async (request: FastifyRequest, reply: AuthStatusReply): Promise<void> => {
       if (await canSignUp(authRepository)) {
-        return reply.status(401).send({ success: false, message: needsSignupMessage })
+        return reply.status(200).send({ status: 'needsSignUp' })
       }
 
       try {
         await request.jwtVerify()
-        return reply.status(200).send({ success: true, message: 'Token is valid.' })
+        return reply.status(200).send({ status: 'authenticated' })
       } catch {
-        return reply.status(401).send({ success: false, message: 'Invalid token.' })
+        return reply.status(200).send({ status: 'unauthenticated' })
       }
     },
 
     logout: async (_: FastifyRequest, reply: AuthReply): Promise<void> => {
       reply.clearCookie(cookieName, cookieSerializeOptions)
 
-      return reply.status(200).send({ success: true, message: 'Logged out successfully.' })
+      return reply.status(204).send()
     }
   }
 }

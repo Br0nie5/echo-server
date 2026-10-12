@@ -1,11 +1,11 @@
-import type { AuthToken, LoginRequest, SignUpRequest } from '@echo/utilities'
+import type { AuthStatus, LoginRequest, SignUpRequest } from '@echo/utilities'
 import type { FastifyInstance, FastifyPluginAsync, FastifyPluginOptions } from 'fastify'
 
 import type { AuthConfig } from '../../../shared/config/backConfig.js'
 
-import type { AuthController } from './auth.controller.js'
+import type { AuthController, SessionReply } from './auth.controller.js'
 import {
-  AuthTokenJsonSchema,
+  AuthStatusJsonSchema,
   LoginRequestJsonSchema,
   SignUpRequestJsonSchema
 } from './auth.schemas.js'
@@ -34,19 +34,22 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (
 ): Promise<void> => {
   const credentialsRateLimit = { max: maxAttempts, timeWindow: timeWindowMilliseconds }
 
-  server.addSchema(AuthTokenJsonSchema)
+  server.addSchema(AuthStatusJsonSchema)
   server.addSchema(LoginRequestJsonSchema)
   server.addSchema(SignUpRequestJsonSchema)
 
-  server.route<{ Body: SignUpRequest; Reply: AuthToken }>({
+  server.route<{ Body: SignUpRequest; Reply: SessionReply }>({
     method: 'POST',
     url: '/auth/signup',
     schema: {
       operationId: 'signUp',
       body: { $ref: 'SignUpRequest#' },
       response: {
-        200: { $ref: 'AuthToken#' },
-        403: { $ref: 'AuthToken#' },
+        204: { description: 'The account is created and the session opened.', type: 'null' },
+        403: {
+          description: 'An account already exists, or another sign up is in progress.',
+          $ref: 'EchoError#'
+        },
         429: { description: 'Too many attempts from this address.', $ref: 'EchoError#' }
       },
       tags: ['Authentication'],
@@ -56,15 +59,15 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (
     handler: controller.signUp
   })
 
-  server.route<{ Body: LoginRequest; Reply: AuthToken }>({
+  server.route<{ Body: LoginRequest; Reply: SessionReply }>({
     method: 'POST',
     url: '/auth/login',
     schema: {
       operationId: 'login',
       body: { $ref: 'LoginRequest#' },
       response: {
-        200: { $ref: 'AuthToken#' },
-        401: { $ref: 'AuthToken#' },
+        204: { description: 'The session is opened.', type: 'null' },
+        401: { description: 'The username or the password is wrong.', $ref: 'EchoError#' },
         429: { description: 'Too many attempts from this address.', $ref: 'EchoError#' }
       },
       tags: ['Authentication'],
@@ -74,28 +77,28 @@ export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (
     handler: controller.login
   })
 
-  server.route<{ Reply: AuthToken }>({
+  server.route<{ Reply: AuthStatus }>({
     method: 'GET',
-    url: '/auth/check',
+    url: '/auth/status',
     schema: {
-      operationId: 'checkAuthStatus',
+      operationId: 'getAuthStatus',
       response: {
-        200: { $ref: 'AuthToken#' },
-        401: { $ref: 'AuthToken#' }
+        200: { $ref: 'AuthStatus#' }
       },
       tags: ['Authentication'],
-      summary: 'Check if authenticated or not.'
+      summary:
+        'Tell whether the request is authenticated, is not, or whether no account exists yet.'
     },
-    handler: controller.check
+    handler: controller.getStatus
   })
 
-  server.route<{ Reply: AuthToken }>({
+  server.route<{ Reply: SessionReply }>({
     method: 'POST',
     url: '/auth/logout',
     schema: {
       operationId: 'logout',
       response: {
-        200: { $ref: 'AuthToken#' }
+        204: { description: 'The session cookie is cleared.', type: 'null' }
       },
       tags: ['Authentication'],
       summary: 'Clear the session cookie.'

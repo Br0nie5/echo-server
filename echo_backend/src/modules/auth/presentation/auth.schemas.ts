@@ -1,9 +1,9 @@
-import { AuthTokenSchema, LoginRequestSchema, SignUpRequestSchema } from '@echo/utilities'
+import { AuthStatusSchema, LoginRequestSchema, SignUpRequestSchema } from '@echo/utilities'
 import { z } from 'zod'
 
 /** The `@echo/utilities` schemas the auth routes expose, with the name the API gives them. */
 const authApiSchemas = z.registry<{ id: string }>()
-authApiSchemas.add(AuthTokenSchema, { id: 'AuthToken' })
+authApiSchemas.add(AuthStatusSchema, { id: 'AuthStatus' })
 authApiSchemas.add(LoginRequestSchema, { id: 'LoginRequest' })
 authApiSchemas.add(SignUpRequestSchema, { id: 'SignUpRequest' })
 
@@ -17,12 +17,12 @@ const { schemas } = z.toJSONSchema(authApiSchemas, {
 })
 
 /**
- * JSON schema of the answer of the auth routes, generated from `AuthTokenSchema` of
+ * JSON schema of the answer of `GET /auth/status`, generated from `AuthStatusSchema` of
  * `@echo/utilities`.
  *
- * Once registered with `addSchema`, a route refers to it with `{ $ref: 'AuthToken#' }`.
+ * Once registered with `addSchema`, a route refers to it with `{ $ref: 'AuthStatus#' }`.
  */
-export const AuthTokenJsonSchema = schemas.AuthToken
+export const AuthStatusJsonSchema = schemas.AuthStatus
 
 /**
  * JSON schema of the body of `POST /auth/login`, generated from `LoginRequestSchema` of

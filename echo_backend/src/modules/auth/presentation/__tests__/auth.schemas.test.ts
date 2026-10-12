@@ -3,40 +3,42 @@ import { Ajv } from 'ajv'
 import { describe, it, expect, beforeAll } from 'vitest'
 
 import {
-  AuthTokenJsonSchema,
+  AuthStatusJsonSchema,
   LoginRequestJsonSchema,
   SignUpRequestJsonSchema
 } from '../auth.schemas.js'
 
-describe('AuthTokenJsonSchema', () => {
-  let validateAuthToken: ValidateFunction
+describe('AuthStatusJsonSchema', () => {
+  let validateAuthStatus: ValidateFunction
 
   beforeAll(() => {
-    validateAuthToken = new Ajv().compile(AuthTokenJsonSchema)
+    validateAuthStatus = new Ajv().compile(AuthStatusJsonSchema)
   })
 
-  it('Should be named AuthToken', () => {
-    expect(AuthTokenJsonSchema.$id).toBe('AuthToken')
+  it('Should be named AuthStatus', () => {
+    expect(AuthStatusJsonSchema.$id).toBe('AuthStatus')
   })
 
-  it('Should accept an auth token with or without a message', () => {
-    expect(validateAuthToken({ success: true, message: 'Login successful.' })).toBe(true)
-    expect(validateAuthToken({ success: false })).toBe(true)
+  it.each(['authenticated', 'unauthenticated', 'needsSignUp'])(
+    'Should accept the status %s',
+    (status) => {
+      expect(validateAuthStatus({ status })).toBe(true)
+    }
+  )
+
+  it('Should reject an auth status without status', () => {
+    expect(validateAuthStatus({})).toBe(false)
+    expect(validateAuthStatus.errors?.[0].message).toContain('required')
   })
 
-  it('Should reject an auth token without success', () => {
-    expect(validateAuthToken({ message: 'Login successful.' })).toBe(false)
-    expect(validateAuthToken.errors?.[0].message).toContain('required')
+  it('Should reject a status it does not know', () => {
+    expect(validateAuthStatus({ status: 'loggedOut' })).toBe(false)
+    expect(validateAuthStatus.errors?.[0].message).toContain('allowed values')
   })
 
-  it('Should reject an auth token whose success is not a boolean', () => {
-    expect(validateAuthToken({ success: 'true' })).toBe(false)
-    expect(validateAuthToken.errors?.[0].message).toContain('boolean')
-  })
-
-  it('Should reject an auth token with additional properties', () => {
-    expect(validateAuthToken({ success: true, extra: 'not allowed' })).toBe(false)
-    expect(validateAuthToken.errors?.[0].message).toContain('must NOT have additional properties')
+  it('Should reject an auth status with additional properties', () => {
+    expect(validateAuthStatus({ status: 'authenticated', extra: 'not allowed' })).toBe(false)
+    expect(validateAuthStatus.errors?.[0].message).toContain('must NOT have additional properties')
   })
 })
 

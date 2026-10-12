@@ -1,4 +1,3 @@
-import { needsSignupMessage } from '@echo/utilities'
 import type { LightMyRequestResponse } from 'fastify'
 import { describe, expect, test } from 'vitest'
 
@@ -19,37 +18,34 @@ const postCredentials = (
 ): Promise<LightMyRequestResponse> =>
   server.inject({ method: 'POST', url: `/api/auth/${route}`, payload, headers })
 
-const checkAuthentication = (
+const getAuthStatus = (
   server: EchoServer,
   cookies: Record<string, string> = {}
 ): Promise<LightMyRequestResponse> =>
-  server.inject({ method: 'GET', url: '/api/auth/check', cookies })
+  server.inject({ method: 'GET', url: '/api/auth/status', cookies })
 
 describe('auth routes', () => {
   test('Should let the first user sign up, which logs them in, and nobody after them', async () => {
     const { server, config } = await buildTestServer()
     const cookieName = config.auth!.cookieName
 
-    const checkBeforeSignUpResponse = await checkAuthentication(server)
+    const statusBeforeSignUpResponse = await getAuthStatus(server)
 
-    expect(checkBeforeSignUpResponse.statusCode).toBe(401)
-    expect(checkBeforeSignUpResponse.json()).toEqual({
-      success: false,
-      message: needsSignupMessage
-    })
+    expect(statusBeforeSignUpResponse.statusCode).toBe(200)
+    expect(statusBeforeSignUpResponse.json()).toEqual({ status: 'needsSignUp' })
 
     const signUpResponse = await postCredentials(server, 'signup')
     const sessionCookie = signUpResponse.cookies.find(({ name }) => name === cookieName)
 
-    expect(signUpResponse.statusCode).toBe(200)
-    expect(signUpResponse.json()).toEqual({ success: true, message: 'Sign up successful.' })
+    expect(signUpResponse.statusCode).toBe(204)
+    expect(signUpResponse.body).toBe('')
     expect(sessionCookie).toMatchObject({ httpOnly: true, path: '/' })
 
-    const checkAfterSignUpResponse = await checkAuthentication(server, {
+    const statusAfterSignUpResponse = await getAuthStatus(server, {
       [cookieName]: sessionCookie!.value
     })
 
-    expect(checkAfterSignUpResponse.statusCode).toBe(200)
+    expect(statusAfterSignUpResponse.json()).toEqual({ status: 'authenticated' })
 
     const secondSignUpResponse = await postCredentials(server, 'signup', {
       username: 'intruder',
@@ -57,7 +53,7 @@ describe('auth routes', () => {
     })
 
     expect(secondSignUpResponse.statusCode).toBe(403)
-    expect(secondSignUpResponse.json()).toEqual({ success: false, message: 'Unauthorized.' })
+    expect(secondSignUpResponse.json()).toEqual({ statusCode: 403, message: 'Sign up refused.' })
     expect(secondSignUpResponse.cookies).toEqual([])
   })
 
@@ -73,7 +69,7 @@ describe('auth routes', () => {
 
     expect(wrongPasswordResponse.statusCode).toBe(401)
     expect(wrongPasswordResponse.json()).toEqual({
-      success: false,
+      statusCode: 401,
       message: 'Invalid credentials.'
     })
     expect(wrongPasswordResponse.cookies).toEqual([])
@@ -81,22 +77,22 @@ describe('auth routes', () => {
     const loginResponse = await postCredentials(server, 'login')
     const sessionCookie = loginResponse.cookies.find(({ name }) => name === cookieName)
 
-    expect(loginResponse.statusCode).toBe(200)
-    expect(loginResponse.json()).toEqual({ success: true, message: 'Login successful.' })
+    expect(loginResponse.statusCode).toBe(204)
+    expect(loginResponse.body).toBe('')
 
-    const loggedInCheckResponse = await checkAuthentication(server, {
+    const loggedInStatusResponse = await getAuthStatus(server, {
       [cookieName]: sessionCookie!.value
     })
-    const anonymousCheckResponse = await checkAuthentication(server)
+    const anonymousStatusResponse = await getAuthStatus(server)
 
-    expect(loggedInCheckResponse.statusCode).toBe(200)
-    expect(anonymousCheckResponse.statusCode).toBe(401)
-    expect(anonymousCheckResponse.json()).toEqual({ success: false, message: 'Invalid token.' })
+    expect(loggedInStatusResponse.json()).toEqual({ status: 'authenticated' })
+    expect(anonymousStatusResponse.statusCode).toBe(200)
+    expect(anonymousStatusResponse.json()).toEqual({ status: 'unauthenticated' })
 
     const logoutResponse = await server.inject({ method: 'POST', url: '/api/auth/logout' })
     const clearedCookie = logoutResponse.cookies.find(({ name }) => name === cookieName)
 
-    expect(logoutResponse.statusCode).toBe(200)
+    expect(logoutResponse.statusCode).toBe(204)
     expect(clearedCookie).toMatchObject({ value: '', expires: new Date(0) })
   })
 
@@ -109,10 +105,7 @@ describe('auth routes', () => {
     const loginResponse = await postCredentials(server, 'login', { password: 'secret' })
     expect(loginResponse.statusCode).toBe(400)
 
-    expect((await checkAuthentication(server)).json()).toEqual({
-      success: false,
-      message: needsSignupMessage
-    })
+    expect((await getAuthStatus(server)).json()).toEqual({ status: 'needsSignUp' })
   })
 
   describe('Session cookie', () => {

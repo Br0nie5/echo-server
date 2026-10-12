@@ -26,7 +26,7 @@ interface ApiRequest<TParams = unknown, TBody = unknown> {
  * The function returns the body of the response, and throws the axios error when the request fails.
  * When the API answers a 401, the user is not authenticated: it also navigates to the auth screen
  * (see `useGoToAuthScreen`), which brings them back once they are. It stays on the auth screen,
- * where a 401 is the answer the auth endpoints give, which the caller reads.
+ * where a 401 is how the API refuses the credentials of a login, which the caller reads.
  *
  * Call it inside the router, which it navigates with.
  *

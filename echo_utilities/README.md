@@ -29,7 +29,7 @@ Each shape the API exchanges is a zod schema, its single source of truth, in a `
 | `LogArraySchema`      | `Log[]`         | The answer of `GET /logs`.             |
 | `LogLevelSchema`      | `LogLevel`      | The severity of a log.                 |
 | `GetLogsParamsSchema` | `GetLogsParams` | The query of `GET /logs`.              |
-| `AuthTokenSchema`     | `AuthToken`     | The answer of every auth route.        |
+| `AuthStatusSchema`    | `AuthStatus`    | The answer of `GET /auth/status`.      |
 | `LoginRequestSchema`  | `LoginRequest`  | The body of `POST /auth/login`.        |
 | `SignUpRequestSchema` | `SignUpRequest` | The body of `POST /auth/signup`.       |
 | `EchoErrorSchema`     | `EchoError`     | The error the API answers with.        |
@@ -85,10 +85,6 @@ The search syntax `parseLogSearchInput` reads:
 | `"disk full"`     | Keeps those holding these words together. A space can also be escaped: `disk\ full`. |
 
 A log is kept when it satisfies every term. Case is ignored.
-
-### Auth
-
-`needsSignupMessage` (`src/modules/auth/`) is the message of the 401 answer of the auth check when no account exists yet, which tells it from the 401 of a missing session.
 
 ## Commands
 

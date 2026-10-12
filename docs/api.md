@@ -33,22 +33,30 @@ They only exist with `HAS_AUTHENTICATION=true`: otherwise their paths answer a `
 
 A session is a JWT, valid for 24 hours, in an `httpOnly` cookie named after `SERVER_NAME` (see [Session cookie](configuration.md#session-cookie)). A client only has to send its cookies back.
 
-Every one of these routes answers an `AuthToken`, whatever the status:
+The sign-up, the login and the logout answer a `204` with no body when they did what was asked, and an `EchoError` otherwise. `/auth/status` answers an `AuthStatus`, always with a `200`:
 
 ```json
-{ "success": true, "message": "Login successful." }
+{ "status": "authenticated" }
 ```
 
 | Method | Path           | Body                     | Answers                                                                                                                                 |
 | ------ | -------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST` | `/auth/signup` | `{ username, password }` | `200` the account is created, as the admin, and the session opened. `403` an account already exists, or another sign-up is in progress. |
-| `POST` | `/auth/login`  | `{ username, password }` | `200` the session is opened. `401` the username or the password is wrong.                                                               |
-| `GET`  | `/auth/check`  | none                     | `200` the request has a valid session. `401` it has none, or no account exists yet: the message is then `No account found.`             |
-| `POST` | `/auth/logout` | none                     | `200`, and the cookie is cleared.                                                                                                       |
+| `POST` | `/auth/signup` | `{ username, password }` | `204` the account is created, as the admin, and the session opened. `403` an account already exists, or another sign-up is in progress. |
+| `POST` | `/auth/login`  | `{ username, password }` | `204` the session is opened. `401` the username or the password is wrong.                                                               |
+| `GET`  | `/auth/status` | none                     | `200` with where the request stands, see below.                                                                                         |
+| `POST` | `/auth/logout` | none                     | `204`, and the cookie is cleared.                                                                                                       |
 
-Only the very first user can sign up. A client tells the two `401` of `/auth/check` apart by their message, to offer the sign-up instead of the login.
+The `status` of `/auth/status` is one of:
 
-`/auth/signup` and `/auth/login` are the two rate-limited routes: their `429`, and the `400` of a body that is not valid, are `EchoError`s.
+| Status            | Meaning                                              |
+| ----------------- | ---------------------------------------------------- |
+| `authenticated`   | The request has a valid session.                     |
+| `unauthenticated` | The request has no valid session.                    |
+| `needsSignUp`     | No account exists yet, whatever the request carries. |
+
+Only the very first user can sign up: a client offers the sign-up instead of the login on `needsSignUp`.
+
+`/auth/signup` and `/auth/login` are the two rate-limited routes, which answer a `429` past the limit, and a `400` to a body that is not valid.
 
 ```bash
 curl --cookie-jar cookies.txt \

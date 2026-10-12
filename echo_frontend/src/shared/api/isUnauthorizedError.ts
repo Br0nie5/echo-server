@@ -6,7 +6,7 @@ import axios, { type AxiosError } from 'axios'
  * `TData` is the type of the body of that answer.
  *
  * ```ts
- * if (isUnauthorizedError<AuthToken>(error)) {
+ * if (isUnauthorizedError<EchoError>(error)) {
  *   const message = error.response?.data.message
  * }
  * ```

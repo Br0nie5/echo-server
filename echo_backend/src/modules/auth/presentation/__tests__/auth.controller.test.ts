@@ -1,10 +1,10 @@
-import type { AuthToken, SignUpRequest } from '@echo/utilities'
+import type { SignUpRequest } from '@echo/utilities'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { describe, expect, it, vi } from 'vitest'
 
 import { getMockAuthConfig } from '../../../../test/mocks/mockConfigs.js'
 import type { AuthRepository } from '../../domain/auth.repository.js'
-import { createAuthController } from '../auth.controller.js'
+import { createAuthController, type SessionReply } from '../auth.controller.js'
 
 // The routes are tested through the server (`auth.routes.test.ts`). Here is only what no request
 // can make happen: the storage of the accounts failing.
@@ -20,7 +20,7 @@ describe('createAuthController', () => {
       const request = {
         body: { username: 'admin', password: 'secret' }
       } as FastifyRequest<{ Body: SignUpRequest }>
-      const reply = { setCookie: vi.fn() } as unknown as FastifyReply<{ Reply: AuthToken }>
+      const reply = { setCookie: vi.fn() } as unknown as FastifyReply<{ Reply: SessionReply }>
 
       const controller = createAuthController(authRepository, getMockAuthConfig())
 

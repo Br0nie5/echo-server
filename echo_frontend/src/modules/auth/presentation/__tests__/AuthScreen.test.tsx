@@ -1,4 +1,4 @@
-import { needsSignupMessage, type AuthToken } from '@echo/utilities'
+import type { AuthStatus } from '@echo/utilities'
 import type { RenderResult } from '@testing-library/react'
 import userEvent, { type UserEvent } from '@testing-library/user-event'
 import nock from 'nock'
@@ -11,20 +11,21 @@ import { resizeWindow } from '../../../../test/utils/resizeWindow'
 
 const credentials = { username: 'admin', password: 'secret' }
 
-const notLoggedInAuthToken: AuthToken = { success: false, message: 'Not logged in.' }
-const noAccountYetAuthToken: AuthToken = { success: false, message: needsSignupMessage }
+const authenticatedStatus: AuthStatus = { status: 'authenticated' }
+const notLoggedInStatus: AuthStatus = { status: 'unauthenticated' }
+const noAccountYetStatus: AuthStatus = { status: 'needsSignUp' }
 
 type TranslationKey = Parameters<typeof appTranslation>[0]
 
-const mockAuthCheckRequest = (status: number, answer: unknown): void => {
-  nock(mockConfig.API_URL).get('/auth/check').reply(status, answer)
+const mockAuthStatusRequest = (statusCode: number, answer: unknown): void => {
+  nock(mockConfig.API_URL).get('/auth/status').reply(statusCode, answer)
 }
 
-const mockLoginRequest = (status: number, answer: unknown): void => {
+const mockLoginRequest = (status: number, answer?: object): void => {
   nock(mockConfig.API_URL).post('/auth/login', credentials).reply(status, answer)
 }
 
-const mockSignUpRequest = (status: number, answer: unknown): void => {
+const mockSignUpRequest = (status: number, answer?: object): void => {
   nock(mockConfig.API_URL).post('/auth/signup', credentials).reply(status, answer)
 }
 
@@ -50,7 +51,7 @@ beforeEach(() => {
 
 describe('AuthScreen', () => {
   test('Should display the login form to the user who is not logged in', async () => {
-    mockAuthCheckRequest(401, notLoggedInAuthToken)
+    mockAuthStatusRequest(200, notLoggedInStatus)
 
     const screen = renderRealRouterApp('/auth')
 
@@ -61,13 +62,13 @@ describe('AuthScreen', () => {
 
   test('Should let the user retry if the authentication check failed', async () => {
     const user = userEvent.setup()
-    mockAuthCheckRequest(500, { statusCode: 500, message: 'Some error.' })
+    mockAuthStatusRequest(500, { statusCode: 500, message: 'Some error.' })
 
     const screen = renderFakeRouterApp('/auth')
 
     expect(await screen.findByText(appTranslation('query.error'))).toBeInTheDocument()
 
-    mockAuthCheckRequest(401, notLoggedInAuthToken)
+    mockAuthStatusRequest(200, notLoggedInStatus)
 
     await user.click(screen.getByText(appTranslation('query.refetchButton')))
 
@@ -75,7 +76,7 @@ describe('AuthScreen', () => {
   })
 
   test('Should redirect the user if he is already authenticated', async () => {
-    mockAuthCheckRequest(200, { success: true })
+    mockAuthStatusRequest(200, authenticatedStatus)
 
     const screen = renderFakeRouterApp(
       `/auth?${new URLSearchParams({ redirect: '/logs?logSearch=stock' })}`
@@ -86,11 +87,11 @@ describe('AuthScreen', () => {
 
   test('Should show the user whether its login was successful', async () => {
     const user = userEvent.setup()
-    mockAuthCheckRequest(401, notLoggedInAuthToken)
+    mockAuthStatusRequest(200, notLoggedInStatus)
 
     const screen = renderFakeRouterApp('/auth')
 
-    mockLoginRequest(401, { success: false, message: 'Invalid credentials.' })
+    mockLoginRequest(401, { statusCode: 401, message: 'Invalid credentials.' })
     await typeCredentials(user, screen)
     await submit(user, screen, 'auth.login.button')
 
@@ -103,18 +104,15 @@ describe('AuthScreen', () => {
 
     expect(await screen.findByText(appTranslation('auth.error'))).toBeInTheDocument()
 
-    mockLoginRequest(200, { success: true })
+    mockLoginRequest(204)
     await submit(user, screen, 'auth.login.button')
 
-    // The message is only displayed until the app has navigated, which it does at once: finding
-    // it is the check, as it is already gone when an assertion looks at it.
-    await screen.findByText(appTranslation('auth.login.success'))
     expect(await screen.findByTestId(getRouteTestId('/logs'))).toBeInTheDocument()
   })
 
   test('Should let the user create an account and tell him whether its signup was successful', async () => {
     const user = userEvent.setup()
-    mockAuthCheckRequest(401, noAccountYetAuthToken)
+    mockAuthStatusRequest(200, noAccountYetStatus)
 
     const screen = renderFakeRouterApp('/auth')
 
@@ -122,13 +120,10 @@ describe('AuthScreen', () => {
 
     expect(await screen.findByText(appTranslation('auth.form.fieldsRequired'))).toBeInTheDocument()
 
-    mockSignUpRequest(200, { success: true })
+    mockSignUpRequest(204)
     await typeCredentials(user, screen)
     await submit(user, screen, 'auth.signUp.button')
 
-    // The message is only displayed until the app has navigated, which it does at once: finding
-    // it is the check, as it is already gone when an assertion looks at it.
-    await screen.findByText(appTranslation('auth.signUp.success'))
     expect(await screen.findByTestId(getRouteTestId('/logs'))).toBeInTheDocument()
   })
 })

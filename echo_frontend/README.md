@@ -95,7 +95,7 @@ The tests live in a `__tests__` directory next to the code they test. They never
 - **A module is tested through its screen**, with a few integration tests (`LogsScreen.test.tsx`, `AuthScreen.test.tsx`): a snapshot shows what the user sees, for each layout, and every other test is an action of the user (filtering, opening and closing a box, logging in), one test telling a whole feature.
 
   ```tsx
-  nock(mockConfig.API_URL).get('/auth/check').reply(200, { success: true })
+  nock(mockConfig.API_URL).get('/auth/status').reply(200, { status: 'authenticated' })
 
   const screen = renderFakeRouterApp('/auth')
 

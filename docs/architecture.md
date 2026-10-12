@@ -48,7 +48,7 @@ The types the API exchanges are not written by hand, and no file is generated. E
 | Schemas                                                                                           | Folder                      |
 | ------------------------------------------------------------------------------------------------- | --------------------------- |
 | `LogSchema`, `LogArraySchema`, `LogLevelSchema`, `GetLogsParamsSchema` (the query of `GET /logs`) | `src/modules/logs/schemas/` |
-| `AuthTokenSchema`, `LoginRequestSchema`, `SignUpRequestSchema`                                    | `src/modules/auth/schemas/` |
+| `AuthStatusSchema`, `LoginRequestSchema`, `SignUpRequestSchema`                                   | `src/modules/auth/schemas/` |
 | `EchoErrorSchema`                                                                                 | `src/shared/schemas/`       |
 
 Everything else is derived from it:
@@ -65,7 +65,7 @@ echo_utilities/…/schemas/*.schema.ts ─┼─► parse / safeParse ─► the
 
 `GetLogsParamsSchema` describes the query as the client sends it. `safeParseGetLogsParams` (`presentation/utils/`) turns it into what `getFilteredLogs` needs: `fromDate` and the optional `toDate` as `Date`s, `logLevels` always an array.
 
-`@echo/utilities` also holds `needsSignupMessage`, the message of the 401 the backend answers the auth check with when no account exists yet: the frontend compares the message of that answer to it, to show the sign-up form instead of the login one.
+`AuthStatusSchema` is the answer of `GET /auth/status`, which the backend always answers with a 200: `authenticated`, `unauthenticated`, or `needsSignUp` while no account exists yet. The frontend reads that status to redirect, or to show the login form or the sign-up one.
 
 ## Backend
 
@@ -256,7 +256,7 @@ The logs are filtered in a **Web Worker**, so typing a search never freezes the 
 ### The `auth` module
 
 - **`domain/`**: `AuthRepository` (`checkAuthentication`, `login`, `signUp`), with what it gives and throws, `AuthCheckResult` and `InvalidCredentialsError`.
-- **`infra/`**: `useAuthRepository`, on top of the auth endpoints. It turns the 401 of the API into the `AuthCheckResult` of the auth check (`login` or `signUp`) and into the `InvalidCredentialsError` of the login, so no layer above it reads an HTTP status or an axios error.
+- **`infra/`**: `useAuthRepository`, on top of the auth endpoints. It turns the status the API answers into the `AuthCheckResult` of the auth check (`redirect`, `login` or `signUp`) and the 401 of a refused login into the `InvalidCredentialsError`, so no layer above it reads an HTTP status or an axios error.
 - **`application/`**: `useGetAuthCheck`, and the two mutations, `usePostLogin` and `usePostSignUp`.
 - **`presentation/`**: `AuthScreen` shows one of two layouts after the auth check. `AuthFormLayout` is the credentials form, of the login or of the sign-up. `RedirectLayout`, when the user is already authenticated, redirects at once.
 

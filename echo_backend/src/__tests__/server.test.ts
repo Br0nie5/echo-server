@@ -40,7 +40,7 @@ vi.mock('../modules/logs/presentation/logs.routes.js', () => ({
 
 vi.mock('../modules/auth/presentation/auth.routes.js', () => ({
   authRoutes: async (server: FastifyInstance): Promise<void> => {
-    server.get('/auth/check', async () => ({ success: true }))
+    server.get('/auth/status', async () => ({ status: 'authenticated' }))
   }
 }))
 
@@ -122,7 +122,7 @@ describe('buildServer', () => {
       const { server } = await buildTestServer()
 
       expect((await server.inject('/api/logs')).statusCode).toBe(200)
-      expect((await server.inject('/api/auth/check')).statusCode).toBe(200)
+      expect((await server.inject('/api/auth/status')).statusCode).toBe(200)
       expect((await server.inject('/logs')).statusCode).toBe(404)
     })
 
@@ -130,7 +130,7 @@ describe('buildServer', () => {
       const { server } = await buildTestServer({ config: { auth: undefined } })
 
       expect((await server.inject('/api/logs')).statusCode).toBe(200)
-      expect((await server.inject('/api/auth/check')).statusCode).toBe(404)
+      expect((await server.inject('/api/auth/status')).statusCode).toBe(404)
     })
 
     test('Should answer a 404 error to a path that is no route', async () => {

@@ -10,28 +10,14 @@ const buildRequestMockScope = (): nock.Scope => {
   return nock(mockConfig.API_URL)
 }
 
-const buildAuthCheckRequestMock = (): nock.Interceptor => {
-  return buildRequestMockScope().get('/auth/check').query({})
-}
-
 describe('useAuthRepository', () => {
   describe('checkAuthentication', () => {
-    test('Should treat a malformed 401 auth check body as needing login, not sign up', async () => {
-      buildAuthCheckRequestMock().reply(401, { success: 'not-a-boolean' })
+    test('Should throw if the answer of the API does not match the AuthStatus schema', async () => {
+      buildRequestMockScope().get('/auth/status').reply(200, { status: 'loggedOut' })
 
       const { result } = renderAppHook(() => useAuthRepository())
 
-      await expect(result.current.checkAuthentication()).resolves.toBe('login')
-    })
-
-    test('Should throw if a successful auth check response does not match the AuthToken schema', async () => {
-      buildAuthCheckRequestMock().reply(200, { success: 'not-a-boolean' })
-
-      const { result } = renderAppHook(() => useAuthRepository())
-
-      await expect(result.current.checkAuthentication()).rejects.toThrow(
-        'Invalid auth token format'
-      )
+      await expect(result.current.checkAuthentication()).rejects.toThrow()
     })
   })
 
@@ -39,7 +25,7 @@ describe('useAuthRepository', () => {
     test('Should throw an InvalidCredentialsError if the API refuses the credentials', async () => {
       buildRequestMockScope()
         .post('/auth/login')
-        .reply(401, { success: false, message: 'Invalid credentials.' })
+        .reply(401, { statusCode: 401, message: 'Invalid credentials.' })
 
       const { result } = renderAppHook(() => useAuthRepository())
 

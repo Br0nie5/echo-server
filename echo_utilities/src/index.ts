@@ -9,9 +9,7 @@ export * from './shared/config/utils/parseInteger.js'
 export * from './shared/config/utils/parseRequiredEnv.js'
 export * from './shared/config/utils/requireEnv.js'
 
-export * from './modules/auth/consts.js'
-
-export * from './modules/auth/schemas/authToken.schema.js'
+export * from './modules/auth/schemas/authStatus.schema.js'
 export * from './modules/auth/schemas/loginRequest.schema.js'
 export * from './modules/auth/schemas/signUpRequest.schema.js'
 
