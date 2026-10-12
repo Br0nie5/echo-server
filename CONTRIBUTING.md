@@ -4,30 +4,46 @@ Thanks for your interest in Echo. Bug reports, ideas and pull requests are welco
 
 ## Before you start
 
-- Report a bug with the [bug report form](https://github.com/Br0nie5/echo-server/issues/new/choose), after searching the existing issues.
-- Open an issue for anything non-trivial so we can agree on the approach first.
-- Read the [architecture overview](docs/architecture.md) and the [development guide](docs/development.md).
+- **A bug?** Search the existing issues, then use the [bug report form](https://github.com/Br0nie5/echo-server/issues/new/choose).
+- **A vulnerability?** Do not open a public issue: [report it privately](https://github.com/Br0nie5/echo-server/security/advisories/new). Only the maintainer sees the report.
+- **A change that is not trivial?** Open an issue first, so we agree on the approach before you write it.
+
+Then read the [development guide](docs/development.md), to run the project, and the [architecture](docs/architecture.md), to know where things go.
 
 ## Workflow
 
-1. Fork and create a branch.
-2. `npm ci` then `npm run dev`.
-3. Make your change with tests. The project enforces **100% coverage**.
-4. Run `npm run build && npm run lint && npm run format && npm run arch:check && npm run dead-code:check && npm run test:coverage`, which the CI runs too. The pre-commit hook only runs the format and the lint.
-5. Update the documentation (`README.md`, `docs/`), and add an entry to `CHANGELOG.md` under `[Unreleased]` for anything a user can notice.
+1. Fork the repository and create a branch.
+2. Run `npm ci`, `npx lefthook install`, then `npm run dev`.
+3. Make your change, with its tests. The project enforces **100% coverage**.
+4. Run the checks, which the CI runs too:
+
+   ```bash
+   npm run build && npm run format && npm run lint && npm run arch:check && npm run dead-code:check && npm run test:coverage
+   ```
+
+   The pre-commit hook only runs the format and the lint.
+
+5. Update the documentation, and add an entry to `CHANGELOG.md` under `[Unreleased]` for anything a user can notice. Start it with `**Breaking:**` when an existing deployment has something to change, and say what.
 6. Open a pull request and fill in its template: what changed and why, the issue it closes, how to test it. Its title is a Conventional Commit, like the commits of the repository: `type(scope): summary`.
 
 ## Conventions
 
-- Follow the module layout (`domain/` / `application/` / `infra/` / `presentation/`) described in the architecture doc.
-- Import shared code from `@echo/utilities`, never from its internal paths.
-- Read configuration (settings, paths, file names) through the `BackConfig` built by `loadBackConfig` (`echo_backend/src/shared/config/`), not `process.env` directly. A function takes the config of its domain (`ServerConfig`, `AuthConfig`, `LogsConfig`, `LogsNotifierConfig`, `SelfReportsConfig`, `NotificationConfig`) rather than loose values.
-- Never declare by hand a type the API exchanges: change its zod schema in `echo_utilities` (the type and the schema of the route are derived from it).
-- Run `npm run arch:check`: it enforces the import boundaries above (no `shared/` → `modules/`, a module importing only the `domain/` and the `infra/` of another one, no cycles).
-- Keep filtering logic in `@echo/utilities` so client and server stay identical.
+### Code
+
+- **Layers.** A file of a module is in `domain/`, `application/`, `infra/` or `presentation/`, and imports go one way. `npm run arch:check` enforces it: see [the rules](docs/architecture.md#enforcing-the-architecture).
+- **Shared code.** Import it from `@echo/utilities`, never from one of its internal paths. Keep the filtering of the logs there, so the API and the app always filter the same way.
+- **Types of the API.** Never declare by hand a type the API exchanges: change its zod schema in `echo_utilities`, which the type and the JSON schema of the route are derived from.
+- **Configuration.** The backend reads its settings, its paths and its file names from the `BackConfig` built by `loadBackConfig` (`echo_backend/src/shared/config/`), never from `process.env`. A function takes the config of its domain (`LogsConfig`, `AuthConfig`…) rather than loose values. A new variable gets its own parser, no default in the code, and its default for the container in `docker-entrypoint.sh`.
+- **Files.** The backend reads and writes files through the `FilesService` only.
+
+### Tests
+
+- A piece (a util, a parser, a schema, an adapter) has thorough unit tests. A screen, a route or the cron has a few integration tests, one per feature. See [Testing](docs/development.md#testing).
+- No test reaches the network, writes a file or depends on the clock.
 - Invent the data of your tests, mocks and examples: never copy a name, a path or a message from real logs, such as those you put in `test_logs/` or `server_logs/`.
-- Keep the README, the documentation comments and the tests of a package about that package only. What links the packages is said in the root `README.md` and in `docs/`.
 
-## Reporting security issues
+### Documentation
 
-Please do not open a public issue for vulnerabilities. [Report them privately](https://github.com/Br0nie5/echo-server/security/advisories/new) instead: only the maintainer sees the report.
+- Every exported function, type and component has a documentation comment, which the lint requires: a one-sentence summary, then the details, and a code sample for what is used often.
+- A package talks about itself only, in its README, its documentation comments and its tests. What links the packages is said in the root `README.md` and in `docs/`.
+- What a user reads is in `README.md`, what a variable does in `docs/configuration.md`, the routes in `docs/api.md`, and the `schema` of each route, which the Swagger docs are built from.

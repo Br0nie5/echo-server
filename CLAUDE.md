@@ -30,7 +30,7 @@ npm run dead-code:check        # knip: unused files, exports and dependencies, a
 Single test file / watch mode (run inside the relevant workspace dir, e.g. `cd echo_backend`):
 
 ```bash
-npx vitest run src/modules/logs/application/__tests__/getFilteredLogs.test.ts
+npx vitest run src/modules/auth/application/__tests__/signUpFirstAdmin.test.ts
 npm run test:watch
 ```
 

@@ -2,59 +2,40 @@
 
 [![Docker image](https://img.shields.io/badge/ghcr.io-br0nie5%2Fecho-blue?logo=docker)](https://github.com/Br0nie5/echo-server/pkgs/container/echo)
 
-Echo is a self-hosted log viewer. Point it at a directory of `.jsonl` log files and it serves them through a web UI where you can browse, filter by level, and search. Optionally, it can push warnings and errors to Telegram on a schedule.
+Echo is a self-hosted log viewer. Mount a directory of `.jsonl` log files, and Echo shows them in a web app where you browse them by day, by group of scripts and by run, filter them by level and search them. It can also send the warnings and the errors to Telegram on a schedule.
 
-- Reads log files straight from disk. No database, no ingestion pipeline.
-- Web UI with live filtering by date, level and free text.
-- Optional login (first user becomes admin) or fully open mode for use behind your own proxy.
-- Optional Telegram notifications for problem logs.
-- Optional HTTPS.
-- Multi-arch image: `amd64` and `arm64`.
+- **No database, no ingestion.** The log files are read from the disk at each request.
+- **A web app** grouping the logs by day, group and job, with a date, level and text filter.
+- **An optional login.** The first user to sign up becomes the admin. Without it, Echo is open, for use behind something that already authenticates.
+- **Optional Telegram notifications** of the problem logs.
+- **HTTPS**, served by Echo itself or by a reverse proxy, at the root of a domain or under a path.
+- **One image for `amd64` and `arm64`**, running as an unprivileged user.
 
-## Table of contents
+## Contents
 
-- [Supported architectures](#supported-architectures)
-- [Application setup](#application-setup)
-- [Usage](#usage)
-  - [docker-compose (recommended)](#docker-compose-recommended)
-  - [docker cli](#docker-cli)
+- [Quick start](#quick-start)
+- [Using the app](#using-the-app)
 - [Parameters](#parameters)
-  - [Environment variables](#environment-variables)
-  - [Volumes](#volumes)
   - [Ports](#ports)
+  - [Volumes](#volumes)
+  - [Environment variables](#environment-variables)
 - [Log file format](#log-file-format)
 - [Self reports](#self-reports)
 - [Authentication](#authentication)
 - [Telegram notifications](#telegram-notifications)
 - [HTTPS](#https)
 - [Reverse proxy](#reverse-proxy)
-- [Building locally](#building-locally)
-- [Development](#development)
+- [Running from the sources](#running-from-the-sources)
 - [Further documentation](#further-documentation)
 
-## Supported architectures
+## Quick start
 
-| Architecture | Available |
-| :----------: | :-------: |
-|    amd64     |    ✅     |
-|    arm64     |    ✅     |
+1. Run the container with the directory holding your `.jsonl` logs mounted at `/watched_logs`, and a directory for its data at `/app/data`.
+2. Open `http://localhost:4000/app`. With the authentication enabled, which is the default, the first visit asks you to create the admin account.
 
-Pulling `ghcr.io/br0nie5/echo:latest` retrieves the right image for your platform.
+Your logs must follow the [log file format](#log-file-format): a line that does not is left out.
 
-## Application setup
-
-The web UI is available under `/app` of the address you reach Echo at (for example `http://localhost:4000/app`). The REST API lives under `/api`. Interactive API docs are served under `/documentation` when `HAS_DOCUMENTATION_ROUTE=true`.
-
-1. Mount the directory that holds your `.jsonl` logs at `/watched_logs`.
-2. Open `/app`. With authentication enabled (the default), the first visit asks you to create the admin account. See [Authentication](#authentication).
-
-Echo is not told the address it is reached at: it reads it from each request. Behind a reverse proxy, see [Reverse proxy](#reverse-proxy).
-
-Your logs must follow the [log file format](#log-file-format), otherwise lines are silently skipped.
-
-## Usage
-
-### docker-compose (recommended)
+### docker compose (recommended)
 
 ```yaml
 services:
@@ -72,14 +53,13 @@ services:
       # - LOGS_NOTIFIER_WATCHED_LOGS_LEVELS=ERROR,WARNING
       # - TELEGRAM_CHAT_ID=123456789
       # - TELEGRAM_BOT_TOKEN=<token>
-      # Optional: surface log-parsing failures in the UI, see the section below
+      # Optional: show the lines Echo cannot read among the logs, see the section below
       # - SAVE_SELF_REPORTS_TO_FILE=true
-      # - SELF_REPORTS_RETENTION_DAYS=10
     volumes:
       - /path/to/your/logs:/watched_logs:ro
-      # Needed if SAVE_SELF_REPORTS_TO_FILE=true: a writable volume of its own, so /watched_logs stays read-only.
-      # - /path/to/echo/server-logs:/server_logs
       - /path/to/echo/data:/app/data
+      # Needed with SAVE_SELF_REPORTS_TO_FILE=true: a writable volume of its own, so /watched_logs stays read-only.
+      # - /path/to/echo/server-logs:/server_logs
     ports:
       - 4000:4000
     restart: unless-stopped
@@ -102,127 +82,194 @@ docker run -d \
 
 `--init` is optional: without it, Node.js ignores the stop signal of Docker, which waits 10 seconds before killing the container each time it is stopped or restarted.
 
-If you enable `SAVE_SELF_REPORTS_TO_FILE` (see below), also add `-e SAVE_SELF_REPORTS_TO_FILE=true` and a writable volume of its own: `-v /path/to/echo/server-logs:/server_logs`.
+`ghcr.io/br0nie5/echo:latest` is the highest stable version, for `amd64` and `arm64`: Docker pulls the image of your platform. Each version also has its own tag (`ghcr.io/br0nie5/echo:1.2.0`).
+
+[examples/](examples/) holds a complete deployment for each common setup: on its own, behind an HTTP or an HTTPS reverse proxy, on a subdomain, under a path.
+
+## Using the app
+
+Echo serves three things, below the address you reach it at:
+
+| Path             | What                                                                                          |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| `/app`           | The web app.                                                                                  |
+| `/api`           | The REST API the app reads the logs from. See the [API reference](docs/api.md).               |
+| `/documentation` | The interactive documentation of the API, only with `HAS_DOCUMENTATION_ROUTE=true`. No login. |
+
+The logs screen shows the logs from a start date to now, newest first, in three levels of boxes you open and close:
+
+1. **By day**, in the time zone of your browser. Only the most recent day starts open.
+2. **By group**, the directory of the log file (see [grouping](#grouping)).
+3. **By job**, the consecutive logs of one file that share a `jobId`: one run of a script.
+
+Its header holds the filters:
+
+- **The start date.** It starts `LOGS_INITIAL_DATE_DAYS_AGO` days ago (2 by default) and can go back `LOGS_MINIMAL_DATE_DAYS_AGO` days at most (14 by default).
+- **The levels**, one chip for each level the displayed logs have. Select several to keep the logs of any of them.
+- **The search**, applied when you submit it (Enter, or its button).
+
+The filters are written in the address of the page (`fromDate`, `logLevels`, `logSearch`), so a filtered view can be bookmarked or shared.
+
+### Search syntax
+
+A search is a list of terms separated by spaces. A log is kept when it satisfies every one of them. Case is ignored.
+
+| Term              | Keeps the logs…                                                                                                 |
+| ----------------- | --------------------------------------------------------------------------------------------------------------- |
+| `timeout`         | holding `timeout` in their message, their file name, their group or their job id                                |
+| `message:timeout` | holding `timeout` in that field only: one of `message`, `locationName` (the file name), `groupName` and `jobId` |
+| `-timeout`        | that do **not** hold `timeout`. Works with a field too: `-groupName:billing`                                    |
+| `"disk full"`     | holding these words together. A space can also be escaped: `disk\ full`                                         |
+
+For example, `message:"disk full" -groupName:billing` keeps the logs whose message holds `disk full`, outside of the `billing` group. Type `:` in the search field to pick a field name from a list.
 
 ## Parameters
 
-Container parameters are given as `<external>:<internal>` for ports and volumes. For example `-p 8080:4000` exposes container port 4000 on host port 8080.
+Ports and volumes are given as `<host>:<container>`: `-p 8080:4000` exposes the port 4000 of the container on the port 8080 of the host.
 
 ### Ports
 
-| Parameter | Function                                                                      |
-| :-------: | ----------------------------------------------------------------------------- |
-|  `4000`   | Web UI (`/app`), API (`/api`) and, when enabled, API docs (`/documentation`). |
-
-### Environment variables
-
-| Variable                            | Default         | Description                                                                                                                                                                                                                                                                                                                                                                                         |
-| ----------------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SERVER_NAME`                       | `Echo`          | Display name of this instance. Shown in the UI and in Telegram messages.                                                                                                                                                                                                                                                                                                                            |
-| `HAS_AUTHENTICATION`                | `true`          | `true` enables login (cookie + JWT). `false` disables auth entirely and exposes logs to anyone who can reach the port.                                                                                                                                                                                                                                                                              |
-| `LOGS_INITIAL_DATE_DAYS_AGO`        | `2`             | How many days back the logs shown in the UI start by default. A positive integer or zero, at most `LOGS_MINIMAL_DATE_DAYS_AGO`.                                                                                                                                                                                                                                                                     |
-| `LOGS_MINIMAL_DATE_DAYS_AGO`        | `14`            | How many days back the start date of the logs can be set in the UI at most. A positive integer or zero.                                                                                                                                                                                                                                                                                             |
-| `LOGS_NOTIFIER_SCHEDULE`            | `*/30 * * * *`  | Cron expression for the Telegram check.                                                                                                                                                                                                                                                                                                                                                             |
-| `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` | `ERROR,WARNING` | Comma-separated levels that trigger a notification. Valid values: `SUCCESS`, `INFO`, `WARNING`, `ERROR`.                                                                                                                                                                                                                                                                                            |
-| `TELEGRAM_CHAT_ID`                  | _(empty)_       | Telegram chat that receives notifications.                                                                                                                                                                                                                                                                                                                                                          |
-| `TELEGRAM_BOT_TOKEN`                | _(empty)_       | Token of the Telegram bot, as given by BotFather (`123456:ABC-DEF…`), without the `https://api.telegram.org/bot` prefix. Treat as a secret.                                                                                                                                                                                                                                                         |
-| `LOGS_NOTIFIER_TIMEZONE`            | `UTC`           | Timezone the dates of Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`, follows daylight saving). An unknown value stops the server at startup.                                                                                                                                                                                                    |
-| `TLS_CERT_PATH`                     | _(empty)_       | Path (inside the container) to a PEM certificate. Set with `TLS_KEY_PATH` to serve HTTPS.                                                                                                                                                                                                                                                                                                           |
-| `TLS_KEY_PATH`                      | _(empty)_       | Path (inside the container) to the PEM private key.                                                                                                                                                                                                                                                                                                                                                 |
-| `SAVE_SELF_REPORTS_TO_FILE`         | `false`         | When `true`, `.jsonl` lines the backend fails to parse are written to `/server_logs/self_reports/<SERVER_NAME>/logs/parseLogFile.jsonl`, and `/server_logs` is scanned too, so they show up in the UI like any other log. Requires a writable volume, see Volumes below.                                                                                                                            |
-| `SELF_REPORTS_RETENTION_DAYS`       | `10`            | Self-report lines older than this many days are pruned once at each server start.                                                                                                                                                                                                                                                                                                                   |
-| `BASE_PATH`                         | _(empty)_       | Path a reverse proxy serves Echo under, when it is not at the root of its domain (`/echo` for `https://example.com/echo`). See [Reverse proxy](#reverse-proxy).                                                                                                                                                                                                                                     |
-| `TRUSTED_PROXIES`                   | _(empty)_       | Optional hardening. By default, Echo believes the `X-Forwarded-*` headers of whatever sends a request, so it works behind any reverse proxy. Set it to the addresses of your proxy to believe only that one: a list, separated by `;`, of IP addresses, CIDR ranges (`172.16.0.0/12`) and `loopback`, `linklocal`, `uniquelocal`. A host name is not resolved. See [Reverse proxy](#reverse-proxy). |
-| `HAS_DOCUMENTATION_ROUTE`           | `false`         | When `true`, the interactive documentation of the API (Swagger UI) is served under `/documentation`, and its OpenAPI document under `/documentation/json`. Neither asks for a login.                                                                                                                                                                                                                |
-
-The Telegram job only starts when `TELEGRAM_CHAT_ID` and `TELEGRAM_BOT_TOKEN` are both set. Otherwise it is disabled. Once they are, an invalid `LOGS_NOTIFIER_SCHEDULE` or `LOGS_NOTIFIER_TIMEZONE`, or a `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` naming no valid level, stops the server at startup.
-
-#### Advanced
-
-| Variable    | Default | Description                                                                                                                                                                                                                                                                                                            |
-| ----------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `HTTP_PORT` | `4000`  | Port the server listens on inside the container. Only needed when the container has no port mapping of its own: with host networking (`--network host`), or when it shares the network of another container (`network_mode: service:<name>`, a Kubernetes pod). Otherwise leave it and choose the host port with `-p`. |
-
-`NODE_ENV` is always `production` in the container: any other value is replaced, with a warning in the logs of the container.
+| Port   | Function                                                       |
+| ------ | -------------------------------------------------------------- |
+| `4000` | The web app, the API and, when enabled, the API documentation. |
 
 ### Volumes
 
-| Parameter       | Function                                                                                                                                                                                                                                        |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/watched_logs` | The directory containing your `.jsonl` logs (subdirectories are scanned). Read-only (`:ro`) is enough.                                                                                                                                          |
-| `/server_logs`  | Optional, only needed when `SAVE_SELF_REPORTS_TO_FILE=true`: a writable volume for the backend's own self reports, apart from `/watched_logs`, which can stay read-only. Without it, the self reports are lost when the container is recreated. |
-| `/app/data`     | Persistent state: `users.db` (SQLite, hashed passwords) and `last_logs_check.json` (Telegram checkpoint). Without this volume, the admin account is lost when the container is recreated.                                                       |
+| Path            | Function                                                                                                                                                                                                                                                      |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/watched_logs` | The directory holding your `.jsonl` logs, read at any depth. Read-only (`:ro`) is enough.                                                                                                                                                                     |
+| `/app/data`     | What Echo remembers: `users.db` (the accounts, with hashed passwords), `last_logs_check.json` (when the logs were last checked for Telegram) and `self_reports_session.json`. Without this volume, the admin account is lost when the container is recreated. |
+| `/server_logs`  | Only with `SAVE_SELF_REPORTS_TO_FILE=true`: where Echo writes its [self reports](#self-reports). Writable, and apart from `/watched_logs`, which can stay read-only.                                                                                          |
 
-Choose the host directories with the volumes, and leave these paths as they are: they are the defaults of `LOGS_DIR_PATH` and `SERVER_LOGS_DIR_PATH`, directories the image creates, `/server_logs` writable by its user. The container refuses to start when one of them is set to another path, and says which one in its logs.
+Choose the host directories with the volumes, and leave these paths as they are. `/watched_logs` and `/server_logs` are the values of `LOGS_DIR_PATH` and `SERVER_LOGS_DIR_PATH` in the image: the container refuses to start when one of them is set to another path, and says which one in its logs.
 
-The container runs as the unprivileged `node` user (uid `1000`, gid `1000`), not as root. It must be able to read the logs, and to write to `/app/data` and `/server_logs`: with bind mounts, give the host directories to that user, for example `sudo chown -R 1000:1000 /path/to/echo/data /path/to/echo/server-logs`. A new named volume needs nothing: Docker gives it the owner of the directory of the image.
+The container runs as the unprivileged `node` user (uid `1000`, gid `1000`), not as root. It must be able to read the logs, and to write to `/app/data` and `/server_logs`. With bind mounts, give the host directories to that user:
+
+```bash
+sudo chown -R 1000:1000 /path/to/echo/data /path/to/echo/server-logs
+```
+
+A new named volume needs nothing: Docker gives it the owner the directory has in the image.
+
+### Environment variables
+
+Every variable has a default in the container, so none is required there. A value that is not valid stops the container at startup, with an error naming the variable.
+
+| Variable                            | Default         | Description                                                                                                                                                                                                                  |
+| ----------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SERVER_NAME`                       | `Echo`          | Name of this instance, shown in the app and in the Telegram messages. It also names the session cookie and the group of the self reports.                                                                                    |
+| `HAS_AUTHENTICATION`                | `true`          | `true` asks for a login. `false` removes it: anyone who can reach the port reads the logs. See [Authentication](#authentication).                                                                                            |
+| `LOGS_INITIAL_DATE_DAYS_AGO`        | `2`             | How many days back the logs shown in the app start by default. A positive integer or zero, at most `LOGS_MINIMAL_DATE_DAYS_AGO`.                                                                                             |
+| `LOGS_MINIMAL_DATE_DAYS_AGO`        | `14`            | How many days back the start date of the logs can be set at most. A positive integer or zero.                                                                                                                                |
+| `SAVE_SELF_REPORTS_TO_FILE`         | `false`         | `true` shows the lines Echo cannot read among the logs. Needs the `/server_logs` volume. See [Self reports](#self-reports).                                                                                                  |
+| `SELF_REPORTS_RETENTION_DAYS`       | `10`            | How many days a self report is kept. A strictly positive integer. Only read when the self reports are enabled.                                                                                                               |
+| `TELEGRAM_CHAT_ID`                  | _(empty)_       | Telegram chat the notifications are sent to. See [Telegram notifications](#telegram-notifications).                                                                                                                          |
+| `TELEGRAM_BOT_TOKEN`                | _(empty)_       | Token of the Telegram bot sending them, as BotFather gives it (`123456:ABC-DEF…`), without `https://api.telegram.org/bot` in front. A secret.                                                                                |
+| `LOGS_NOTIFIER_SCHEDULE`            | `*/30 * * * *`  | Cron expression saying when the logs are checked for Telegram.                                                                                                                                                               |
+| `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` | `ERROR,WARNING` | Levels that are notified, separated by commas, among `SUCCESS`, `INFO`, `WARNING` and `ERROR`.                                                                                                                               |
+| `LOGS_NOTIFIER_TIMEZONE`            | `UTC`           | Time zone the dates of the Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`), which follows daylight saving.                                                                |
+| `TLS_CERT_PATH`                     | _(empty)_       | Path, in the container, of a PEM certificate. Set with `TLS_KEY_PATH` to make Echo serve HTTPS itself. See [HTTPS](#https).                                                                                                  |
+| `TLS_KEY_PATH`                      | _(empty)_       | Path, in the container, of the PEM private key of that certificate.                                                                                                                                                          |
+| `BASE_PATH`                         | _(empty)_       | Path a reverse proxy serves Echo under, when it is not at the root of its domain: `/echo` for `https://example.com/echo`. See [Reverse proxy](#reverse-proxy).                                                               |
+| `TRUSTED_PROXIES`                   | _(empty)_       | Optional hardening: the reverse proxies whose `X-Forwarded-*` headers Echo believes. Empty, it believes whatever sends a request, so it works behind any proxy. See [Reverse proxy](#reverse-proxy).                         |
+| `HAS_DOCUMENTATION_ROUTE`           | `false`         | `true` serves the interactive documentation of the API under `/documentation`, and its OpenAPI document under `/documentation/json`. Neither asks for a login.                                                               |
+| `HTTP_PORT`                         | `4000`          | Port Echo listens on in the container. Only change it when the container has no port mapping of its own: with host networking, or when it shares the network of another container. Otherwise choose the host port with `-p`. |
+
+The three `LOGS_NOTIFIER_*` variables are only read once `TELEGRAM_CHAT_ID` and `TELEGRAM_BOT_TOKEN` are both set.
+
+`NODE_ENV` is always `production` in the container: any other value is replaced, with a warning in the logs of the container.
+
+The [configuration reference](docs/configuration.md) has the details of each variable, and of the cookie and CORS settings.
 
 ## Log file format
 
-Echo reads every `.jsonl` file under the logs directory. Each line must be one JSON object with these fields, `origin` being the only optional one:
+Echo reads every file whose name ends with `.jsonl` under the logs directory, at any depth. Each line is one JSON object:
 
 <!-- prettier-ignore -->
 ```jsonl
 {"jobId":1,"timestamp":"2026-09-19T14:41:09.669Z","level":"INFO","message":"Log file has been successfully set up.","origin":"rotate_logs.sh:12"}
 ```
 
-| Field       | Type   | Notes                                                                                                                                                                                                                |
-| ----------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `jobId`     | number | Identifier of the run/job that produced the line.                                                                                                                                                                    |
-| `timestamp` | string | ISO 8601, e.g. `2026-09-19T14:41:09.669Z` (`date -u +'%Y-%m-%dT%H:%M:%S.%3NZ'`). Read as UTC when it carries no offset. Any other format (including the former `yyyy-MM-dd HH:mm:ss.SSS`) makes the line unparsable. |
-| `level`     | string | One of `SUCCESS`, `INFO`, `WARNING`, `ERROR`.                                                                                                                                                                        |
-| `message`   | string | Free text.                                                                                                                                                                                                           |
-| `origin`    | string | Optional. Where the line was emitted from, in any form but an empty string, e.g. `rotate_logs.sh:12`.                                                                                                                |
+| Field       | Type   | Required | Notes                                                                                                                              |
+| ----------- | ------ | :------: | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `jobId`     | number |   yes    | Identifies the run of the script that wrote the line. The app shows the lines of one run together.                                 |
+| `timestamp` | string |   yes    | An ISO 8601 date, such as `2026-09-19T14:41:09.669Z` (`date -u +'%Y-%m-%dT%H:%M:%S.%3NZ'`). Read as UTC when it carries no offset. |
+| `level`     | string |   yes    | One of `SUCCESS`, `INFO`, `WARNING`, `ERROR`.                                                                                      |
+| `message`   | string |   yes    | Free text.                                                                                                                         |
+| `origin`    | string |    no    | Where the line was emitted from, in any form but an empty string: `rotate_logs.sh:12`.                                             |
 
-Lines that are not valid JSON, do not match this shape, have an unknown `level`, or have an unparsable timestamp are skipped without error (unless `SAVE_SELF_REPORTS_TO_FILE=true`, see below).
+A blank line is ignored. A line that is not JSON, that misses a required field, or whose `level` or `timestamp` is not valid is left out of the logs, without an error. Enable the [self reports](#self-reports) to see these lines in the app.
 
-**Grouping.** Logs are grouped by their directory. The first directory level under the logs root is dropped, any directory named `logs` is ignored, and the rest are joined with `_`. For example, with the logs root mounted at `/watched_logs`:
+### Grouping
+
+The app shows each log with the name of its file, without its last extension: `nightly.log.jsonl` shows as `nightly.log`.
+
+The group of a log comes from the directories of its file. Below the logs directory, the first directory is left out, every directory named `logs` too, and what is left is joined with `_`:
 
 | File                                                      | Group          |
 | --------------------------------------------------------- | -------------- |
 | `/watched_logs/backup/logs/nightly.log.jsonl`             | _(none)_       |
 | `/watched_logs/scripts/docker/utils/logs/prune.log.jsonl` | `docker_utils` |
 
-The file name, without its last extension, is shown as the log source: `nightly.log.jsonl` shows as `nightly.log`.
+So scripts can keep their log files in a `logs` directory next to them without `logs` showing up in the group names.
 
 ## Self reports
 
-Set `SAVE_SELF_REPORTS_TO_FILE=true` to have the backend report the `.jsonl` lines it fails to parse as regular log entries, so they show up in the UI instead of only in the container's own logs. Each failing line becomes a `WARNING` entry in group `<SERVER_NAME>`, source `parseLogFile`, at `/server_logs/self_reports/<SERVER_NAME>/logs/parseLogFile.jsonl` (scanned along with `/watched_logs`). This needs a writable volume of its own (see Volumes above), so `/watched_logs` can stay read-only. All entries written to one self-report file during one server run share the same `jobId`, and each self-report file takes its own, so a server start uses as many `jobId`s as it has self-report files; entries older than `SELF_REPORTS_RETENTION_DAYS` (default `10`) are pruned once at each start.
+By default, a line Echo cannot read is silently left out. With `SAVE_SELF_REPORTS_TO_FILE=true`, Echo reports it instead, as a log of its own, which shows up in the app like any other:
 
-Since every request re-scans and re-parses all `.jsonl` files, a line that still fails to parse is reported again on every request. It is not written a second time: each entry's `origin` is the path of the log file the failing line comes from, followed by that line's position (1-based, among the non-blank lines of that file), as in `/watched_logs/backup/logs/nightly.log.jsonl:3`, and reporting a failure that already has an entry with the same `level`, `origin` and message only brings the `timestamp` of that entry up to now. So the entry of a problem that is still there always has a recent date, and the entry of a problem you fixed keeps the date it was last seen at, until `SELF_REPORTS_RETENTION_DAYS` prunes it at a later start. A line of a self-report file that fails to parse is reported the same way, with the path of that self-report file in its `origin`, and is then removed from that file the next time it is written or at the next start.
+- its level is `WARNING`, its message is the line itself, and its `origin` is the path of the log file followed by the position of the line among its non-blank lines, starting at 1: `/watched_logs/backup/logs/nightly.log.jsonl:3`;
+- it is in the group named after `SERVER_NAME` (every character other than a letter, a digit, `-`, `_` or a space replaced with `_`), in the file `parseLogFile`.
+
+The self reports are stored in `/server_logs/self_reports/<group>/logs/`, which Echo then reads along with `/watched_logs`. This needs the writable `/server_logs` volume (see [Volumes](#volumes)). When that directory cannot be written, Echo says so in the logs of the container and starts without the self reports.
+
+A line that is still wrong is reported again each time the logs are read, but stored once: reporting it again only brings its date up to now. So the report of a problem that is still there always has a recent date, and the report of a problem you fixed keeps the date it was last seen at, until it is older than `SELF_REPORTS_RETENTION_DAYS` (10 by default): old reports are removed each time the container starts.
+
+The self reports written between two starts of the container share a `jobId`, and each start takes a new one, so the app shows them as one job per run of Echo.
 
 ## Authentication
 
 With `HAS_AUTHENTICATION=true`:
 
-- Until a user exists, the UI offers a sign-up form. **Only the very first user can sign up, and becomes the admin.** Further sign-ups are refused.
-- Passwords are hashed with bcrypt and stored in `/app/data/users.db`.
-- Sessions use a JWT in an `httpOnly` cookie, both valid for 24 hours. The signing secret is regenerated at every start, so **restarting the container logs everyone out**.
-- Login and sign-up are limited to 5 attempts a minute per address. Behind a reverse proxy, that address is the one of the proxy, so the limit is shared by all its clients, unless `TRUSTED_PROXIES` names the proxy: the limit is then per client.
-- The cookie is named after `SERVER_NAME` (`Echo_echo_access_token` by default), and marked `secure` when the request that opens the session is sent over HTTPS: to Echo itself (see [HTTPS](#https)), or to a reverse proxy saying so with `X-Forwarded-Proto` (see [Reverse proxy](#reverse-proxy)). Use HTTPS for any public deployment.
+- Until an account exists, the app shows a sign-up form. **Only the very first user can sign up, and becomes the admin.** Any later sign-up is refused.
+- Passwords are hashed with bcrypt and stored in `/app/data/users.db`, which only the user of the container can read.
+- A session is a JWT in an `httpOnly` cookie, both valid for 24 hours. The secret signing it is created again at every start, so **restarting the container logs everyone out**.
+- Login and sign-up are limited to 5 attempts a minute per address. Behind a reverse proxy, that address is the one of the proxy, so its clients share the limit, unless `TRUSTED_PROXIES` names the proxy: the limit is then per client.
+- The cookie is named after `SERVER_NAME` (`Echo_echo_access_token` by default) and bound to the host that set it. It is `secure` when the request opening the session is sent over HTTPS: to Echo itself (see [HTTPS](#https)), or to a reverse proxy saying so with `X-Forwarded-Proto` (see [Reverse proxy](#reverse-proxy)). Use HTTPS for any public deployment.
 
-With `HAS_AUTHENTICATION=false`, no auth routes exist and anyone with network access can read your logs. Only use this behind something that already authenticates (VPN, reverse proxy with SSO, etc.).
+With `HAS_AUTHENTICATION=false`, there is no login at all, and anyone who can reach Echo reads your logs. Only use it behind something that already authenticates: a VPN, a reverse proxy with SSO.
 
 ## Telegram notifications
 
-1. Create a bot with [@BotFather](https://t.me/BotFather) and note the token.
-2. Send your bot a message, then find your chat id (for example via `https://api.telegram.org/bot<token>/getUpdates`).
+1. Create a bot with [@BotFather](https://t.me/BotFather) and note its token.
+2. Send your bot a message, then find the id of your chat, for example at `https://api.telegram.org/bot<token>/getUpdates`.
 3. Set the variables:
 
 ```yaml
 environment:
-  - LOGS_NOTIFIER_SCHEDULE=*/30 * * * *
-  - LOGS_NOTIFIER_WATCHED_LOGS_LEVELS=ERROR,WARNING
   - TELEGRAM_CHAT_ID=123456789
   - TELEGRAM_BOT_TOKEN=<token>
-  - LOGS_NOTIFIER_TIMEZONE=UTC+2 # optional, UTC by default
+  - LOGS_NOTIFIER_SCHEDULE=*/30 * * * * # optional, every 30 minutes by default
+  - LOGS_NOTIFIER_WATCHED_LOGS_LEVELS=ERROR,WARNING # optional, the default
+  - LOGS_NOTIFIER_TIMEZONE=Europe/Paris # optional, UTC by default
 ```
 
-On each run, Echo sends the matching logs written since the previous run, each one once. The first run only records a checkpoint (in `/app/data/last_logs_check.json`) and sends nothing. With `SAVE_SELF_REPORTS_TO_FILE=true`, the lines Echo cannot read are reported as `WARNING` logs, dated from the last time they were read: when `WARNING` is watched, they are sent on every run until the file holding them is fixed. Messages are capped at Telegram's 4096 characters; overflow is summarized as "N other logs to see inside the console". Times in messages are shown in `LOGS_NOTIFIER_TIMEZONE` (UTC by default), labeled with their offset (e.g. `2026-01-01 12:00:00 UTC+2`).
+The notifications are enabled once both `TELEGRAM_*` variables are set. At each run of the schedule, Echo sends one message listing the logs of the watched levels written since the previous run, so each log is sent once:
+
+```
+Logs from device Echo:
+
+
+[12] [2026-09-19 16:41:09 UTC+2] [ERROR] - nightly.log > Backup failed: disk full
+```
+
+- The first run sends nothing: it only records its date, in `/app/data/last_logs_check.json`, so the logs written before it are never sent.
+- A message holds 4096 characters at most, the limit of Telegram. The logs that do not fit are counted in its last line: `3 other logs to see inside the console`.
+- When a message cannot be sent, the same logs are sent again by the next run.
+- With the [self reports](#self-reports) enabled and `WARNING` watched, a line Echo cannot read is sent at every run until its file is fixed, since it is reported again each time the logs are read.
 
 ## HTTPS
 
-Mount a certificate and key and point Echo at them:
+To make Echo serve HTTPS itself, mount a certificate and its key, and give their paths:
 
 ```yaml
 environment:
@@ -232,14 +279,16 @@ volumes:
   - /path/to/certs:/certs:ro
 ```
 
-Both variables are required together. The files must be readable by the `node` user of the container (uid `1000`). If you terminate TLS at a reverse proxy instead, leave these unset. [examples/](examples/) has a deployment of each kind.
+Both variables go together: the container does not start with only one of them. The files must be readable by the `node` user of the container (uid `1000`).
+
+When a reverse proxy handles HTTPS in front of Echo, leave them unset.
 
 ## Reverse proxy
 
-Proxy everything to the container port. [examples/](examples/) holds a complete deployment, with its `compose.yaml` and the configuration of the proxy, for each of the cases below. Echo is not told its public URL, so it relies on what your proxy forwards:
+Proxy everything to the port of the container. Echo is never told its public address: it reads it from each request, so it relies on what your proxy forwards.
 
-- **The host.** Echo only answers a login sent from the page it serves itself, which it recognizes by comparing the `Origin` of the request to its host. Your proxy must therefore forward the host the browser reached, either as the `Host` header (the default of Caddy and Traefik; `proxy_set_header Host $http_host;` with nginx) or as `X-Forwarded-Host`. Otherwise the login is refused with `Not allowed by CORS`.
-- **The protocol.** The session cookie is `secure` when your proxy says the browser uses HTTPS, with `X-Forwarded-Proto` (most send it by default).
+- **The host.** Echo only accepts a request sent by a page when it serves that page itself, which it checks by comparing the `Origin` header of the request to its host. Your proxy must therefore forward the host the browser reached, as the `Host` header (the default of Caddy and Traefik; `proxy_set_header Host $http_host;` with nginx) or as `X-Forwarded-Host`. Otherwise the login fails, and the logs of the container say `Not allowed by CORS`.
+- **The protocol.** The session cookie is `secure` when your proxy says the browser uses HTTPS, with `X-Forwarded-Proto`, which most proxies send by default.
 - **The path.** When Echo is not at the root of its domain (`https://example.com/echo`), set `BASE_PATH=/echo`. Your proxy may forward the requests with that path or strip it: Echo answers both. The path cannot start with `/api`, `/app` or `/documentation`, which Echo serves itself.
 
 Nothing else is required. To harden the instance, tell Echo which proxy to believe, with the address the container sees it at:
@@ -249,49 +298,39 @@ environment:
   - TRUSTED_PROXIES=172.18.0.2 # or a range: 172.18.0.0/16, uniquelocal; several are separated by ";"
 ```
 
-The `X-Forwarded-*` headers are then ignored when they come from anything else, and the login attempts are limited per client, read from `X-Forwarded-For`, instead of being shared by all the clients of the proxy. Only list addresses your proxy alone can have: whoever reaches Echo from one of them chooses its own client address, so it escapes that limit.
+An entry is an IP address, a CIDR range (`172.16.0.0/12`) or one of `loopback`, `linklocal` and `uniquelocal`. A host name is refused: it is never resolved. The `X-Forwarded-*` headers are then ignored when they come from anything else, and the login attempts are limited per client, read from `X-Forwarded-For`, instead of being shared by all the clients of the proxy. Only list addresses your proxy alone can have: whoever reaches Echo from one of them chooses its own client address, and so escapes that limit.
 
-The container health check always targets `localhost` inside the container, so it is unaffected by your proxy.
+The health check of the container always targets `localhost` inside the container, so your proxy does not change it.
 
-## Building locally
+[examples/](examples/) holds a complete deployment for each of these cases, with its `compose.yaml` and the configuration of its proxy.
 
-Requirements: Node.js 24 (see [.tool-versions](.tool-versions)), Docker.
+## Running from the sources
+
+Requirements: Node.js 24 (the version is pinned in [.tool-versions](.tool-versions)) and, for the image, Docker.
 
 ```bash
 git clone https://github.com/Br0nie5/echo-server.git
 cd echo-server
 npm ci
-npm run build
-docker build -t echo .
 ```
 
-`npm run start:docker` builds the image, asks which deployment of [examples/](examples/) to run with it, and runs it against the sample logs in `test_logs/`. Those behind a reverse proxy are reached at `testing.cc`, which `npm run dns:enable` makes resolve to your machine (`npm run dns:disable` undoes it), and serve HTTPS with the self-signed certificate in `certs/` (**never use it outside local testing**).
+| Command                  | What it runs                                                                             |
+| ------------------------ | ---------------------------------------------------------------------------------------- |
+| `npm run dev`            | The development servers. Open `http://localhost:5173/app`.                               |
+| `npm start`              | A production build, served by the backend alone, with `echo_backend/.env.production`.    |
+| `npm run start:docker`   | The image, built from the sources, in the deployment of [examples/](examples/) you pick. |
+| `docker build -t echo .` | The image alone, after `npm run build`.                                                  |
 
-## Development
+Without Docker, the logs are read from `test_logs/`, at the root of the repository: create it and put some `.jsonl` files in it. It is git-ignored.
 
-```bash
-npm ci
-npm run dev
-```
-
-This builds `echo_utilities`, then starts it in watch mode with the backend on `http://localhost:4000` and the Vite frontend on `http://localhost:5173` (open the latter). Development is HTTP only: the backend refuses to start there when `TLS_CERT_PATH` or `TLS_KEY_PATH` is set. By default the backend reads logs from `test_logs/` (create it and add some `.jsonl` files, it is git-ignored).
-
-Common commands:
-
-| Command                 | Purpose                         |
-| ----------------------- | ------------------------------- |
-| `npm run build`         | Build all workspaces            |
-| `npm run lint`          | ESLint (with fix)               |
-| `npm run format`        | Prettier                        |
-| `npm run test:coverage` | Vitest, 100% coverage threshold |
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/development.md](docs/development.md) for details.
+See the [development guide](docs/development.md) for the rest, and [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 ## Further documentation
 
-- [Configuration reference](docs/configuration.md)
-- [Architecture](docs/architecture.md)
+- [Configuration reference](docs/configuration.md): every variable, the cookie and CORS settings
 - [API reference](docs/api.md)
+- [Architecture](docs/architecture.md)
 - [Development guide](docs/development.md)
-- [Contributing](CONTRIBUTING.md)
-- Workspace READMEs: [echo_backend](echo_backend/README.md), [echo_frontend](echo_frontend/README.md), [echo_utilities](echo_utilities/README.md)
+- [Examples of deployments](examples/README.md)
+- [Changelog](CHANGELOG.md)
+- The packages: [echo_backend](echo_backend/README.md), [echo_frontend](echo_frontend/README.md), [echo_utilities](echo_utilities/README.md)

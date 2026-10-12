@@ -1,87 +1,155 @@
 # Configuration reference
 
-Echo is configured entirely through environment variables. They are parsed and validated once at startup; the server refuses to start if a required one is missing or invalid.
+Echo is configured with environment variables only. They are read and validated once, when the server starts: it refuses to start when a required one is missing or when one is not valid, with an error naming the variable. Nothing else in the code reads the environment.
 
-## Where variables come from
+- [Where the variables come from](#where-the-variables-come-from)
+- [Shared variables](#shared-variables)
+- [Backend variables](#backend-variables)
+- [Frontend variables](#frontend-variables)
+- [What is not a variable](#what-is-not-a-variable)
+- [The address Echo is reached at](#the-address-echo-is-reached-at)
+- [Session cookie](#session-cookie)
+- [CORS](#cors)
+- [Time zones](#time-zones)
 
-| Context                  | Source                                                                                                                                                          |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Docker                   | Container environment. The [Dockerfile](../Dockerfile) defaults `HTTP_PORT` and the logs directories, [docker-entrypoint.sh](../docker-entrypoint.sh) the rest. |
-| `npm run dev`            | `echo_backend/.env.development`                                                                                                                                 |
-| `npm start` (local prod) | `echo_backend/.env.production`                                                                                                                                  |
+## Where the variables come from
 
-Real environment variables always win over `.env.*` files. The file is chosen by `NODE_ENV` (`production` or anything else meaning development). It is read from the working directory of the backend, `echo_backend/`, where npm runs its scripts.
+| Context       | Source                                                                                                                                                                                                                      |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Docker        | The environment of the container. The [Dockerfile](../Dockerfile) sets `HTTP_PORT`, `LOGS_DIR_PATH` and `SERVER_LOGS_DIR_PATH`, and [docker-entrypoint.sh](../docker-entrypoint.sh) gives every other variable its default. |
+| `npm run dev` | `echo_backend/.env.development` for the backend, `echo_frontend/public/env.development.json` for the frontend.                                                                                                              |
+| `npm start`   | `echo_backend/.env.production` for the backend, `echo_frontend/public/env.production.json`, copied into the build, for the frontend.                                                                                        |
 
-Development is HTTP only: the Vite dev server serves the app and proxies the API over HTTP. In development, the backend refuses to start when `TLS_CERT_PATH` or `TLS_KEY_PATH` is set, with an error saying what to change. Try HTTPS with `npm start` or `npm run start:docker`.
+The backend loads `.env.production` when `NODE_ENV` is `production`, `.env.development` otherwise, from its working directory, `echo_backend/`, where npm runs its scripts. A variable already set in the environment wins over the file. `NODE_ENV` only chooses that file: no variable is read differently in development.
 
-## Common (frontend and backend)
+**The code holds no default.** A variable is required unless being unset means something (`BASE_PATH`, `TRUSTED_PROXIES`, the TLS and the Telegram variables). The "Docker default" columns below are the values the image gives, which is why nothing is required in a container.
 
-Parsed by [parseConfig.ts](../echo_utilities/src/shared/config/parseConfig.ts).
+The variables of a part that is disabled are not read, so a wrong value there stops nothing: `SELF_REPORTS_RETENTION_DAYS` without the self reports, the `LOGS_NOTIFIER_*` variables without Telegram.
 
-| Variable             | Required | Description                   |
-| -------------------- | :------: | ----------------------------- |
-| `SERVER_NAME`        |   yes    | Display name of the instance. |
-| `HAS_AUTHENTICATION` |   yes    | `true` or `false`.            |
+## Shared variables
 
-The frontend is not given where Echo is reached: it reads it from the page it was loaded from. The backend gives `index.html` a `<base>` (`<BASE_PATH>/app/`): the app is there, and the API next to it, under `/api`, on whatever address the user reached, a LAN IP included.
+Read by the backend and by the frontend, with `parseConfig` of [echo_utilities](../echo_utilities/src/shared/config/parseConfig.ts).
 
-## Backend only
+| Variable             | Required | Docker default | Description                                                                                                                                           |
+| -------------------- | :------: | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SERVER_NAME`        |   yes    | `Echo`         | Name of the instance, never blank. Shown in the app and in the Telegram messages, it also names the session cookie and the group of the self reports. |
+| `HAS_AUTHENTICATION` |   yes    | `true`         | `true` or `false`. Whether a user must log in to read the logs. `false` leaves out the auth routes, the cookie and the JWT.                           |
 
-The backend is not given the URL it is reached at either: it reads the protocol and the host from each request, those of its `X-Forwarded-*` headers when it has some, unless `TRUSTED_PROXIES` says not to believe its sender. Only the path a reverse proxy serves it under cannot be read from a request, hence `BASE_PATH`: the API is then under `<BASE_PATH>/api` and the app under `<BASE_PATH>/app`. The backend answers a request whether the reverse proxy forwards it with that path or strips it, so the same image works at any path.
+## Backend variables
 
-Parsed by [loadBackConfig.ts](../echo_backend/src/shared/config/loadBackConfig.ts), which builds the `BackConfig` ([backConfig.ts](../echo_backend/src/shared/config/backConfig.ts)) the backend is wired with. Each variable is read by its own parser, in [utils/](../echo_backend/src/shared/config/utils/).
+Read by [loadBackConfig.ts](../echo_backend/src/shared/config/loadBackConfig.ts), which builds the `BackConfig` ([backConfig.ts](../echo_backend/src/shared/config/backConfig.ts)) the server is built with. Each variable has its own parser, in [utils/](../echo_backend/src/shared/config/utils/).
 
-| Variable                            | Required | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| ----------------------------------- | :------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BASE_PATH`                         |    no    | Path a reverse proxy serves Echo under (`/echo` for `https://example.com/echo`), empty by default. Its parts hold letters, digits, `.`, `_`, `~` and `-` only, and it does not start with `/api`, `/app` or `/documentation`.                                                                                                                                                                                                                                                                                                                                                      |
-| `TRUSTED_PROXIES`                   |    no    | Reverse proxies whose `X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-For` the backend believes. Unset, whatever sends the request, so the backend works behind any proxy. A list, separated by `;`, of IP addresses, CIDR ranges and `loopback`, `linklocal`, `uniquelocal` restricts it to them. A host name is not resolved.                                                                                                                                                                                                                                           |
-| `HAS_DOCUMENTATION_ROUTE`           |   yes    | `true` or `false`. Whether the documentation of the API is served under `/documentation`. Defaults to `false` in Docker.                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `HTTP_PORT`                         |   yes    | Integer between 1 and 65535.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `LOGS_DIR_PATH`                     |   yes    | Directory scanned for `.jsonl` files. Relative paths resolve from the backend's working directory. Defaults to `/watched_logs` in Docker, a directory of the image: leave it as is and mount your logs there.                                                                                                                                                                                                                                                                                                                                                                      |
-| `TLS_CERT_PATH`, `TLS_KEY_PATH`     |    no    | Enable HTTPS. Both or neither. Leave them unset in development, where the Vite dev server reaches the backend over HTTP only.                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `LOGS_NOTIFIER_SCHEDULE`            | yes\*\*  | Cron expression ([node-cron](https://github.com/node-cron/node-cron) syntax) saying when the logs are checked. Throws at startup if invalid. Defaults to `*/30 * * * *` in Docker.                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` | yes\*\*  | Comma-separated subset of `SUCCESS,INFO,WARNING,ERROR`. Unknown entries are dropped; throws at startup if none is left. Defaults to `ERROR,WARNING` in Docker.                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `TELEGRAM_CHAT_ID`                  |   no*    | Telegram chat id.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `TELEGRAM_BOT_TOKEN`                |   no*    | Token of the Telegram bot, as given by BotFather (`123456:ABC-DEF…`), without the `https://api.telegram.org/bot` prefix. Treat as a secret.                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `LOGS_NOTIFIER_TIMEZONE`            | yes\*\*  | Timezone the dates of Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`). Throws at startup if unknown. Defaults to `UTC` in Docker.                                                                                                                                                                                                                                                                                                                                                                                               |
-| `SAVE_SELF_REPORTS_TO_FILE`         |   yes    | `true` or `false`. Defaults to `false` in Docker. When enabled, `.jsonl` lines the backend fails to parse are written to `SERVER_LOGS_DIR_PATH/self_reports/<SERVER_NAME>/logs/parseLogFile.jsonl`, and `SERVER_LOGS_DIR_PATH` is scanned next to `LOGS_DIR_PATH`, so they show up in the app like any other log.                                                                                                                                                                                                                                                                  |
-| `SERVER_LOGS_DIR_PATH`              |   yes    | Directory the backend writes its own logs under: the self reports, in its `self_reports` subdirectory, hence writable (see the Volumes section of the [README](../README.md)). Scanned for `.jsonl` files when the self reports are enabled. Relative paths resolve from the backend's working directory. Keep it outside `LOGS_DIR_PATH`, otherwise its files are scanned twice. Always required, but unused when the self reports are disabled. Defaults to `/server_logs` in Docker, a directory of the image writable by its user: leave it as is and mount your volume there. |
-| `SELF_REPORTS_RETENTION_DAYS`       | yes\*\*  | Strictly positive integer. Self-report lines older than this are pruned once at each server start. Defaults to `10` in Docker.                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+### Server
 
-\* The Telegram cron is registered only if **both** of these variables are set.
+| Variable                  | Required | Docker default | Description                                                                                                                                                                                                                                                                                                                          |
+| ------------------------- | :------: | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `HTTP_PORT`               |   yes    | `4000`         | Port the server listens on, an integer between 1 and 65535. The server always binds to `0.0.0.0`. The health check of the container reads it too.                                                                                                                                                                                    |
+| `HAS_DOCUMENTATION_ROUTE` |   yes    | `false`        | `true` or `false`. Whether Swagger UI is served under `/documentation`, and the OpenAPI document under `/documentation/json`. Neither asks for a login. When `false`, both paths answer a 404.                                                                                                                                       |
+| `BASE_PATH`               |    no    | _(empty)_      | Path a reverse proxy serves Echo under: `/echo` for `https://example.com/echo`. Unset, empty or `/` means the root. Its trailing slashes are left out. Each of its parts holds letters, digits, `.`, `_`, `~` and `-` only, and its first part cannot be `api`, `app` or `documentation`, which Echo serves itself.                  |
+| `TRUSTED_PROXIES`         |    no    | _(empty)_      | Reverse proxies whose `X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-For` headers are believed: a list separated by `;` of IP addresses, CIDR ranges (`172.16.0.0/12`) and `loopback`, `linklocal`, `uniquelocal`. Any other entry is refused, a host name included. Unset or empty, whatever sends a request is believed. |
+| `TLS_CERT_PATH`           |    no    | _(empty)_      | Path of a PEM certificate. With `TLS_KEY_PATH`, the server serves HTTPS instead of HTTP.                                                                                                                                                                                                                                             |
+| `TLS_KEY_PATH`            |    no    | _(empty)_      | Path of the PEM private key of that certificate. Both are set or neither: the server does not start with only one, nor when one of the two files cannot be read.                                                                                                                                                                     |
 
-\*\* Required, and checked, only when what it configures is enabled: the Telegram variables are set for the `LOGS_NOTIFIER_*` variables, `SAVE_SELF_REPORTS_TO_FILE` is `true` for `SELF_REPORTS_RETENTION_DAYS`. Otherwise it is not read.
+### Logs
 
-The server always binds to `0.0.0.0`.
+| Variable                      | Required | Docker default  | Description                                                                                                                                                                                                                                                                                                                               |
+| ----------------------------- | :------: | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LOGS_DIR_PATH`               |   yes    | `/watched_logs` | Directory the `.jsonl` log files are read from, at any depth. A relative path resolves from the working directory of the backend. In a container, leave it: the entrypoint refuses any other value, mount your logs there instead.                                                                                                        |
+| `SAVE_SELF_REPORTS_TO_FILE`   |   yes    | `false`         | `true` or `false`. Whether the backend stores its self reports, which makes it read the log files of `SERVER_LOGS_DIR_PATH` too, so they show up in the app like any other log.                                                                                                                                                           |
+| `SERVER_LOGS_DIR_PATH`        |   yes    | `/server_logs`  | Directory the backend writes its own log files under: the self reports go in `self_reports/<group>/logs/`, the group being `SERVER_NAME` made safe for a path. Always required, but only used with the self reports. Keep it outside `LOGS_DIR_PATH`, otherwise its files are read twice. In a container, leave it, like `LOGS_DIR_PATH`. |
+| `SELF_REPORTS_RETENTION_DAYS` |  yes\*   | `10`            | How many days a self report is kept, a strictly positive integer. The older ones are removed when the server starts.                                                                                                                                                                                                                      |
 
-## Cookie settings
+\* Only with `SAVE_SELF_REPORTS_TO_FILE=true`. Not read otherwise.
 
-The auth cookie is named `<SERVER_NAME>_echo_access_token`, each character of `SERVER_NAME` other than a letter, a digit, `-` or `_` replaced with `_` (`My_Server_echo_access_token` for `My Server`), so two instances reached on one host keep their own session when they are named differently. It is bound to no domain, so the browser only sends it back to the host that set it. Its other settings:
+### Notifications
 
-| Setting  | Value                                                                                                                                        |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Path     | `BASE_PATH`, or `/` when it is empty: two instances served at two paths of one host keep their own session                                   |
-| `secure` | decided for each request: yes over HTTPS, no over HTTP, since a browser refuses a secure cookie set over HTTP (in development, for instance) |
+| Variable                            | Required | Docker default  | Description                                                                                                                                                                  |
+| ----------------------------------- | :------: | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TELEGRAM_CHAT_ID`                  |    no    | _(empty)_       | Telegram chat the messages are sent to.                                                                                                                                      |
+| `TELEGRAM_BOT_TOKEN`                |    no    | _(empty)_       | Token of the bot sending them, as BotFather gives it (`123456:ABC-DEF…`), without `https://api.telegram.org/bot` in front. A secret.                                         |
+| `LOGS_NOTIFIER_SCHEDULE`            |  yes\*   | `*/30 * * * *`  | Cron expression ([node-cron](https://github.com/node-cron/node-cron) syntax) saying when the logs are checked.                                                               |
+| `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` |  yes\*   | `ERROR,WARNING` | Levels that are notified, separated by commas, among `SUCCESS`, `INFO`, `WARNING` and `ERROR`. An unknown entry is ignored, and the server does not start when none is left. |
+| `LOGS_NOTIFIER_TIMEZONE`            |  yes\*   | `UTC`           | Time zone the dates of the messages are shown in: a fixed offset (`UTC+2`, or `GMT+2`) or an IANA zone (`Europe/Paris`).                                                     |
 
-A request is over HTTPS when the backend serves HTTPS itself (`TLS_CERT_PATH`, `TLS_KEY_PATH`), or when it carries `X-Forwarded-Proto: https` and `TRUSTED_PROXIES` lets its sender be believed, which is the default. With a list that leaves out a reverse proxy terminating TLS, the backend only sees HTTP, and the cookie is not `secure`.
+\* Only once `TELEGRAM_CHAT_ID` and `TELEGRAM_BOT_TOKEN` are both set, which is what enables the notifications. Not read otherwise.
 
-The login attempts are limited per address. While whatever sends a request is believed (the default), a client could name any address in `X-Forwarded-For`, so the address counted is the one of the connection: the reverse proxy, shared by all its clients, when there is one. Once `TRUSTED_PROXIES` lists the proxies, it is the address of the client they forward.
+## Frontend variables
 
-Other flags are fixed: `httpOnly`, `sameSite=lax`, max age 24 hours.
+The built frontend holds no configuration, so one build fits any deployment. When it loads, it fetches `env.<mode>.json` next to itself, and [parseFrontConfig.ts](../echo_frontend/src/shared/config/utils/parseFrontConfig.ts) builds the `FrontConfig` ([frontConfig.ts](../echo_frontend/src/shared/config/frontConfig.ts)) from it: the [shared variables](#shared-variables), and the two below. The app shows an error page when the file cannot be loaded, or when a variable is missing or not valid.
 
-## CORS settings
+| Variable                     | Required | Docker default | Description                                                                                                                                           |
+| ---------------------------- | :------: | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LOGS_INITIAL_DATE_DAYS_AGO` |   yes    | `2`            | How many days back the logs start when the address of the page gives no `fromDate`. A positive integer or zero, at most `LOGS_MINIMAL_DATE_DAYS_AGO`. |
+| `LOGS_MINIMAL_DATE_DAYS_AGO` |   yes    | `14`           | How many days back the start date of the logs can be set at most. A positive integer or zero.                                                         |
 
-The API only answers a request carrying an `Origin` header when that origin is the one the request is itself sent to (same host and port as its `Host` header, or as its `X-Forwarded-Host` when its sender is believed, see `TRUSTED_PROXIES`): the page then comes from the server itself, on whatever address the user reached, a LAN IP included. Any other origin is refused with an error. A reverse proxy must therefore forward the host the browser reached, one way or the other.
+In the file, a value is written as text, as a number or as a boolean:
 
-## Frontend runtime configuration
+```json
+{
+  "SERVER_NAME": "Echo",
+  "HAS_AUTHENTICATION": true,
+  "LOGS_INITIAL_DATE_DAYS_AGO": 2,
+  "LOGS_MINIMAL_DATE_DAYS_AGO": 14
+}
+```
 
-The built frontend does not embed configuration. It fetches `env.<mode>.json` at load, and [parseFrontConfig.ts](../echo_frontend/src/shared/config/utils/parseFrontConfig.ts) builds the `FrontConfig` ([frontConfig.ts](../echo_frontend/src/shared/config/frontConfig.ts)) from it: the common variables above, plus the frontend-only ones below. The app shows an error page if one of them is missing or invalid. In Docker, the entrypoint writes `echo_frontend/dist/env.production.json` from the container environment at every start, so one image serves any deployment. In dev, the files in `echo_frontend/public/` are used.
+In a container, the entrypoint writes `echo_frontend/dist/env.production.json` from the environment at every start, which is how the same four variables configure both sides. Outside of one, the files of `echo_frontend/public/` are used.
 
-| Variable                     | Required | Description                                                                                                                                                                     |
-| ---------------------------- | :------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LOGS_INITIAL_DATE_DAYS_AGO` |   yes    | How many days back the logs start when the URL gives no `fromDate`. A positive integer or zero, at most `LOGS_MINIMAL_DATE_DAYS_AGO`. The Docker entrypoint defaults it to `2`. |
-| `LOGS_MINIMAL_DATE_DAYS_AGO` |   yes    | How many days back the start date of the logs can be set at most. A positive integer or zero. The Docker entrypoint defaults it to `14`.                                        |
+## What is not a variable
 
-## Time zone
+Paths, file names and limits are constants of `loadBackConfig`, part of the `BackConfig` like the rest. They are given here from the root of the repository, which is `/app` in the image:
 
-The backend does not depend on a time zone. Log timestamps are read as UTC unless they carry an offset (see [convertToDate.ts](../echo_backend/src/shared/utils/convertToDate.ts)), and Telegram messages display dates in `LOGS_NOTIFIER_TIMEZONE` (see [buildNotifierMessage.ts](../echo_backend/src/modules/logs/modules/logsNotifier/application/utils/buildNotifierMessage.ts)). The frontend displays dates and groups logs by day in the browser's time zone.
+| What                                              | Value                                       |
+| ------------------------------------------------- | ------------------------------------------- |
+| Users database                                    | `data/users.db`                             |
+| Date of the last check of the logs notifier       | `data/last_logs_check.json`                 |
+| Last `jobId` of the self reports                  | `data/self_reports_session.json`            |
+| Built frontend                                    | `echo_frontend/dist`                        |
+| Extension of a log file                           | `.jsonl`                                    |
+| Directory name left out of the group names        | `logs`                                      |
+| Self-report files                                 | `parseLogFile.jsonl`, `logsNotifier.jsonl`  |
+| Route prefixes, below `BASE_PATH`                 | `/api`, `/app`, `/documentation`            |
+| Length of a session                               | 24 hours                                    |
+| Login and sign-up attempts                        | 5 a minute per address                      |
+| Telegram bot API, and the size limit of a message | `https://api.telegram.org`, 4096 characters |
+
+## The address Echo is reached at
+
+No variable gives the URL of Echo. Both sides read it where it already is:
+
+- **The backend** reads the protocol and the host from each request: those of its `X-Forwarded-Proto` and `X-Forwarded-Host` headers when it has some and its sender is believed (see `TRUSTED_PROXIES`), those of the connection and of its `Host` header otherwise. Only the path a reverse proxy serves it under cannot be read from a request, hence `BASE_PATH`. The backend answers a request whether the proxy forwards it with that path or strips it, so the API is reached at `<BASE_PATH>/api` and the app at `<BASE_PATH>/app` either way.
+- **The frontend** reads it from the page it was loaded from. The backend answers `index.html` with a `<base href="<BASE_PATH>/app/">`: the app is there, and the API next to it, under `/api`, on whatever host the user reached, a LAN address included.
+
+## Session cookie
+
+Only with the authentication. The cookie holds the JWT of the session.
+
+| Setting    | Value                                                                                                                                                                                                                                                            |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name       | `<SERVER_NAME>_echo_access_token`, every character of `SERVER_NAME` other than a letter, a digit, `-` or `_` replaced with `_`: `My_Server_echo_access_token` for `My Server`. Two instances on one host keep their own session when they are named differently. |
+| Domain     | None: the browser only sends the cookie back to the host that set it.                                                                                                                                                                                            |
+| Path       | `BASE_PATH`, or `/` when it is empty: two instances served at two paths of one host keep their own session.                                                                                                                                                      |
+| `secure`   | Decided for each request: yes over HTTPS, no over HTTP, since a browser refuses a secure cookie set over HTTP.                                                                                                                                                   |
+| `httpOnly` | Yes.                                                                                                                                                                                                                                                             |
+| `sameSite` | `lax`.                                                                                                                                                                                                                                                           |
+| Max age    | 24 hours, like the JWT it holds.                                                                                                                                                                                                                                 |
+
+A request is over HTTPS when the backend serves HTTPS itself (`TLS_CERT_PATH`, `TLS_KEY_PATH`), or when it carries `X-Forwarded-Proto: https` and its sender is believed. With a `TRUSTED_PROXIES` that leaves out the reverse proxy handling HTTPS, the backend only sees HTTP, and the cookie is not `secure`.
+
+The JWT is signed with a secret created when the process starts, so no session survives a restart.
+
+**The limit of the login attempts** is per address. While whatever sends a request is believed (the default), a client could name any address in `X-Forwarded-For`, so the address counted is the one of the connection: the reverse proxy, shared by all its clients, when there is one. Once `TRUSTED_PROXIES` lists the proxies, it is the address of the client they forward.
+
+## CORS
+
+A request carrying an `Origin` header is only answered when that origin is the one the request is itself sent to: same host and port as its `Host` header, or as its `X-Forwarded-Host` when its sender is believed. The page then comes from the server itself, on whatever address the user reached. A request without `Origin`, which no page of another site sent, is answered.
+
+Any other origin is refused: the request gets a 500, and the logs of the server say `Not allowed by CORS: <origin> (Allowed: <host>)`. A reverse proxy must therefore forward the host the browser reached, one way or the other.
+
+In development, the Vite dev server forwards the `Host` header as it is, so the app and the API share the origin `http://localhost:5173` there too.
+
+## Time zones
+
+The backend does not depend on the time zone of its machine. The `timestamp` of a log line is read as UTC unless it carries an offset ([convertToDate.ts](../echo_backend/src/shared/utils/convertToDate.ts)), the API gives dates in UTC, and the Telegram messages show them in `LOGS_NOTIFIER_TIMEZONE` ([buildNotifierMessage.ts](../echo_backend/src/modules/logs/modules/logsNotifier/application/utils/buildNotifierMessage.ts)).
+
+The frontend shows the dates, and groups the logs by day, in the time zone of the browser.

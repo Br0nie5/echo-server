@@ -1,202 +1,356 @@
 # Architecture
 
-Echo is an npm-workspaces monorepo with three packages.
+Echo is an npm-workspaces monorepo of three packages.
 
-| Package                             | Role                                                                                                                       |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| [echo_backend](../echo_backend)     | Fastify API server (TypeScript, ESM). Also serves the built frontend in production.                                        |
-| [echo_frontend](../echo_frontend)   | React 19 + MUI + TanStack Query single-page app.                                                                           |
-| [echo_utilities](../echo_utilities) | `@echo/utilities`: shared types, env parsing and log-filtering logic. Built to `dist` and consumed by both other packages. |
+| Package                             | Role                                                                                                                                     |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| [echo_utilities](../echo_utilities) | `@echo/utilities`: what the two others must agree on. The shapes the API exchanges, the shared configuration, the filtering of the logs. |
+| [echo_backend](../echo_backend)     | The server (Fastify, TypeScript, ESM): the API, the cron notifying the problem logs, and the built frontend, which it serves.            |
+| [echo_frontend](../echo_frontend)   | The web app (React 19, MUI, TanStack Query), a single-page app.                                                                          |
+
+The backend and the frontend never import each other. Both import `@echo/utilities`, by its name and through its barrel (`src/index.ts`) only, from its build (`dist/`): it is therefore built first.
 
 ```
- browser ──► /app/*        static frontend (echo_frontend/dist)
-         ──► /api/*        REST API
-         ──► /documentation  Swagger UI
+ browser ──► /app/*            the built frontend (echo_frontend/dist)
+         ──► /api/*            the REST API
+         ──► /documentation    Swagger UI (optional)
 
- echo_backend ──reads──► LOGS_DIR_PATH/**/*.jsonl
-              ──reads/writes──► SERVER_LOGS_DIR_PATH/**/*.jsonl (optional)
-              ──reads/writes──► data/users.db, data/last_logs_check.json
-              ──POST──► Telegram Bot API (optional)
+ echo_backend ──reads────────► LOGS_DIR_PATH/**/*.jsonl
+              ──reads/writes─► SERVER_LOGS_DIR_PATH/self_reports/**/*.jsonl   (optional)
+              ──reads/writes─► data/users.db, data/*.json
+              ──POST─────────► Telegram bot API                               (optional)
 ```
 
-## Request flow for logs
+- [The life of a logs request](#the-life-of-a-logs-request)
+- [Type flow](#type-flow)
+- [Backend](#backend)
+- [Frontend](#frontend)
+- [Serving the frontend at any path](#serving-the-frontend-at-any-path)
+- [Enforcing the architecture](#enforcing-the-architecture)
 
-1. `GET /api/logs?fromDate=…` reaches `presentation/logs.routes.ts`.
-2. `presentation/logs.controller.ts` validates params and calls `getFilteredLogs` (`application/getFilteredLogs.ts`).
-3. `getFilteredLogs` asks the `LogsRepository` of `domain/` for every log. The repository gives them along with a self report for each stored line that holds no valid log: `getFilteredLogs` saves those to the `SelfReportRepository` it is given, then filters the logs and sorts them from the newest to the oldest, in memory.
-4. `infra/logsFiles.repository.ts` implements that repository, whose `getAllLogs` only reads: `infra/logsFiles.api.ts` lists the log files of `LOGS_DIR_PATH`, and of `SERVER_LOGS_DIR_PATH` when the self reports are enabled, and reads the lines of each one, through the [`FilesService`](#the-files-service) of `shared/services/`, and the repository converts each line to a log with `convertRawLogLineToLog` (`infra/dto/rawLogLine.dto.ts`).
+## The life of a logs request
 
-There is no database for logs. Every request re-reads the files.
+1. The logs screen asks for the logs from a date: `GET /api/logs?fromDate=…`. Only the date goes to the API.
+2. `presentation/logs.routes.ts` runs the authentication hook first, when there is one, then validates the query against its JSON schema.
+3. `presentation/logs.controller.ts` turns the query into dates and filters (`safeParseGetLogsParams`), and calls the use case, `application/getFilteredLogs.ts`.
+4. `getFilteredLogs` asks the `LogsRepository` for every log. `infra/logsFiles.repository.ts` lists the log files, reads their lines and converts each one to a log; a line that holds none becomes a self report.
+5. `getFilteredLogs` saves those self reports, then filters the logs and sorts them from the newest to the oldest, in memory.
+6. The app filters what it received by level and by search, in a Web Worker, each time the user changes a filter, without asking the API again.
 
-The filter functions `filterLogByLevels` and `filterLogBySearch` live in `@echo/utilities` so backend filtering and the frontend's live filtering (a Web Worker, `filterWorker.ts`) behave identically.
+There is no database of logs: every request reads the files again.
 
-`@echo/utilities` also holds `needsSignupMessage`, the message of the 401 the backend answers the auth check with when no account exists yet: the frontend compares the message of that answer to it to show the sign up form instead of the login one.
-
-## Backend layout
-
-Code is split by domain under `echo_backend/src/modules` (`auth`, `logs`, `selfReport`).
-
-The modules are split into layers, each in its own folder, and keep only those they need. Every file of a module is in one of these folders: any other folder would escape the rules about the layers, so [the check](#enforcing-the-architecture) refuses it. The core of the `logs` module has the four of them:
-
-| Folder          | Responsibility                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | May import                                                                |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `domain/`       | The contracts the module needs from the outside: `LogsRepository` reads the logs of every location it watches (`getAllLogs`), reads those of one location (`getLogs`), stores logs, each at its own `location`, where they replace what was stored (`saveLogs`), and empties a location (`deleteLogs`). A location is an opaque string saying where some logs are stored, which only the implementation gives a meaning to: the path of a file here, the address of another server elsewhere. The models themselves (`Log`, `LogLevel`) come from `@echo/utilities`, since the frontend shares them | nothing from the other layers, no built-in module of Node.js, nor Fastify |
-| `application/`  | Business logic, one file per use case, named after it (`getFilteredLogs.ts`), which knows nothing of HTTP                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | `domain/`, no built-in module of Node.js, nor Fastify                     |
-| `infra/`        | Implementations of the `domain/` contracts on top of a data source: `*.api.ts` reads it, `dto/` describes what it returns and converts it to models, `*.repository.ts` implements the contract with both                                                                                                                                                                                                                                                                                                                                                                                            | `domain/`                                                                 |
-| `presentation/` | Route registration (`*.routes.ts`), request handlers (`*.controller.ts`), the validation of their input (`utils/`) and the JSON schemas of the routes (`*.schemas.ts`), derived from the zod schemas of `@echo/utilities`                                                                                                                                                                                                                                                                                                                                                                           | `application/`, `domain/`                                                 |
-
-The `auth` module has the four of them too:
-
-| Folder          | Content                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `domain/`       | `AuthRepository`, the contract the accounts are stored through: whether one exists (`hasAnyUser`), the creation of one (`createUser`), the check of credentials (`areCredentialsValid`). It says nothing of who may sign up. `SignUpRefusedError`, what a refused sign up throws                                                                                                                                                                                                                                                |
-| `application/`  | `signUpFirstAdmin.ts`: only the very first user can sign up, and becomes the admin. `canSignUp` tells whether a user still can, which the auth check asks too. `createSignUpFirstAdmin` builds the use case, which throws a `SignUpRefusedError` when an account already exists or when another sign up is in progress, so two requests sent at the same time never both sign up. `validateCredentials.ts`: whether the credentials are those of an account, which the login handler asks                                       |
-| `infra/`        | `users.db.ts` (`createUsersDb`) opens the SQLite database, `dto/user.dto.ts` describes a row of its `users` table, `authUsersDb.repository.ts` implements the contract by querying that database, hashing the passwords with bcrypt                                                                                                                                                                                                                                                                                             |
-| `presentation/` | `auth.routes.ts`, `auth.controller.ts` (the handlers, calling the use cases, answering a 403 to a `SignUpRefusedError`, signing the JWT and setting the session cookie), `auth.schemas.ts` (the JSON schemas of the routes) and `auth.hooks.ts`, `rejectUnauthenticatedRequest`, answering a 401 to the requests without a valid JWT, which [registerLogsRoutes.ts](../echo_backend/src/initializers/registerLogsRoutes.ts) hands to the routes to protect as their `authenticate` option, run first, as their `onRequest` hook |
-
-`shared/` holds cross-module code (the config, error schemas, and `types/logger.ts`, the `Logger` a part of the backend writes its errors to, so that none depends on the logger of Fastify for it). It imports nothing of the backend but itself. `shared/services/` holds the technical capabilities the modules are given, the [`FilesService`](#the-files-service) and the [`NotifierService`](#the-notifier-service). `shared/config/` holds `BackConfig`, split into `ServerConfig`, `AuthConfig`, `LogsConfig` (itself holding the optional `LogsNotifierConfig`), the optional `SelfReportsConfig` and the optional `NotificationConfig`, and `loadBackConfig`, which builds it once from the environment variables and from constants (the paths under `data/`, the self-reports directory, file names, the extension of the log files). `shared/config/utils/` holds the helpers `loadBackConfig` builds it with, one per file: mostly the parsers the variables are read with. Each function is given the config of its domain and takes every setting and path from it. [server.ts](../echo_backend/src/server.ts) wires everything (`buildServer`), with the functions of [initializers/](../echo_backend/src/initializers/), one per file: they register cookie/JWT and CORS, Swagger, the routes of the API under `/api`, `/app` via `@fastify/static` (with an SPA fallback to `index.html`, given the `<base>` the relative URLs of the build resolve against, and JSON 404s elsewhere) and the logs notifier. The app takes `BASE_PATH` off the requests that carry it, so Echo works behind a reverse proxy at any path, whether the proxy forwards that path or strips it. Together they are the composition root, the one place importing the `infra/` and the `presentation/` of the modules, and never their `application/`: nothing but `server.ts` imports `initializers/`, and nothing but `main.ts` imports `server.ts`. Its `startServer` builds the server and starts listening, and [main.ts](../echo_backend/src/main.ts), the entry point, only calls it.
-
-The `logs` module itself has two parts: the core log retrieval in the four layer folders described above (the only one with HTTP routes), and a submodule, `modules/logs/modules/logsNotifier/` (the cron notifying the problem logs, see below), which depends on the core and never the other way round.
-
-### The files service
-
-`shared/services/files.service.ts` holds the `FilesService`, the one access of the backend's own code to the file system: `arch:check` refuses an import of `fs` anywhere else, tests included, but in its own tests (`backend-fs-only-through-files-service`). Only libraries given a path by the config reach the disk on their own: `better-sqlite3` (the users database), `dotenv` (the `.env.<mode>` file) and `@fastify/static` (the built frontend). It reads and writes the files of the machine as text: `createDirectory`, `getFileContent` (the whole content of a file) and `getFileLines` (its non-blank lines), both throwing a `FileDoesNotExistError` when the file is missing, `getFilesPaths` (the files of a directory, at any depth), `replaceFileContent` and `replaceFileLines` (through a temporary file, so a reader never sees the file half written, removed when the write fails; the writes of one file are done one after the other, a write waiting 10 seconds at most for the previous one, then throwing without writing, so two writes never share the temporary file) and `restrictFileAccessToOwner` (the users database). `startServer` builds it once, and hands it to `loadBackConfig`, which reads the TLS certificate and key through it, and to `buildServer`, which gives it to whatever reads or writes files.
-
-It knows nothing of what the files hold nor of how they are named: `getFilesPaths` is given the function saying which files to include, so the extension of the log files stays in the config (`logFileExtension`), like the name of the directory they are put in, which is left out of their group (`logFilesDirName`). `logs/infra` reads and writes the log files through it.
-
-### The notifier service
-
-`shared/services/notifier.service.ts` holds the `NotifierService`, how the backend sends a message to the outside. It gives the size limit of its messages (`getMessageSizeLimit`, the `telegramMessageSizeLimit` of `NotificationConfig`) and sends one (`notify`, through the Telegram bot API, throwing when the API cannot be reached or answers with an error status). It knows nothing of what the messages say: whoever notifies writes the message within that limit. [registerLogsNotifier.ts](../echo_backend/src/initializers/registerLogsNotifier.ts) builds it with `createNotifierService`, only when the notifications are configured, and hands it to the `logsNotifier` submodule. Another channel would be chosen inside `createNotifierService`, from the config, without changing whoever notifies.
-
-### The `logsNotifier` submodule
-
-A submodule lives in `modules/<module>/modules/<submodule>/` and follows the layers of its parent, keeping only those it needs. It is isolated like a module (see [the rules](#enforcing-the-architecture)): a module or a submodule may import the `domain/` and the `infra/` of any other one, whether it is another module, its parent, one of its submodules or a submodule next to it, and nothing else of it, except that the `application/` of a submodule may build on the use cases of the `application/` of its parent.
-
-`logsNotifier` is the optional cron that notifies the problem logs. It has a use case and an entry point of its own, so it has the four layers:
-
-| Folder          | Content                                                                                                                                                                                                                                                                                                                                                           |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `domain/`       | `LastCheckDate`, the date the logs were last checked at, and `CheckDateRepository`, the contract it is stored through                                                                                                                                                                                                                                             |
-| `application/`  | `checkProblemLogsAndNotify`, one check: it notifies the problem logs logged since the previous check, then saves the date of this one; `utils/buildNotifierMessage.ts` writes the message, never longer than the size limit: the logs listed, a footer counting those that do not fit, only their count when none fits, and no message when even that is too long |
-| `infra/`        | `CheckDateApi` reads and writes the last-check file (`data/last_logs_check.json`), `fileCheckDate.repository.ts` implements the contract on top of it, with `dto/lastCheckDate.dto.ts` (what the file holds)                                                                                                                                                      |
-| `presentation/` | `logs.notifier.ts`, the Fastify plugin that runs the check on the configured schedule: a cron is the entry point of the submodule, the way a route is the one of `logs`                                                                                                                                                                                           |
-
-The check gets its logs from the `getFilteredLogs` of `logs` (`application/getFilteredLogs.ts`), which it gives the `SelfReportRepository` of the logs, for the stored lines that hold no valid log, and sends its message through the [`NotifierService`](#the-notifier-service) of `shared/services/`. A check looks at the logs logged from the date of the previous check to its own, the latter left out (the `toDate` of `getFilteredLogs`): a log written while the logs are being read is left for the next check, so each log is notified once. The self reports are logs too, notified when their level is watched: a stored line that holds no valid log is reported again, with a new date, each time the logs are read, so it is notified at every check until its file is fixed. That is on purpose: dating it from when it was first seen would hide a new problem found on the same line. The very first check only saves its date, so the logs that predate it are not notified, and a check whose notification fails does not save its date, so the next one sends the same logs again. When the size limit of the channel is too small for any message, nothing is sent and the check reports it as a warning through its own `SelfReportRepository` (`logsNotifier.jsonl`). The repositories are built in [registerLogsNotifier.ts](../echo_backend/src/initializers/registerLogsNotifier.ts), only when both the cron and the notifications are configured (see the [configuration](configuration.md)).
-
-### The `selfReport` module
-
-`modules/selfReport/` is how the backend reports its own diagnostics. It has no route and no business rule, so it has two layers:
-
-| Folder    | Content                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `domain/` | `SelfReport`, a diagnostic the backend reports about itself (`id`, `date`, `message`, `level`, either `'WARNING'` or `'ERROR'`, and `origin`, what it is about, written `path:line:column`, `path:line` or `path`), and `SelfReportRepository`, the contract the other parts of the backend report through                                                                                                                                                                                                                                           |
-| `infra/`  | `selfReport.repository.ts` (`createSelfReportRepository`) creates the repository a part of the backend reports through, see below. `selfLogReport.repository.ts` implements the contract on top of the `LogsRepository` of `logs`, storing each self report as a log. `utils/convertSelfReportToLog.ts` converts one. `SessionJobIdApi` reads and writes the session file, which remembers the last `jobId` the self reports were written with (a repository takes the next one when it is created), `dto/sessionJobId.dto.ts` describes its content |
-
-A `SelfReport` is a model of its own, not a `Log`. The repository stores it as one (its `message`, its `level` and its `origin` are kept, a self report having two of the levels of a log, and its ids are created with `createLogWithIds` like those of any log; its `location` and `locationName` are those the repository is created with, its `groupName` the `selfReportsGroupName` of the config, which is the name of the server and of the directory the self reports are in), at a location the logs are read from, which is how it shows up in the app like any other log. `selfReport` knows neither files nor the format of a log line: it reads and saves logs through the `LogsRepository`, and `logs/infra` alone describes a line.
-
-When it is created, the repository stores its location again without the logs older than the retention (it empties it when none is left), which also tells whether the location can be written. When a self report is saved again (same `contentId` as its stored log, that is the same level, `message` and `origin`), its stored log is replaced, so a problem that lasts is stored once, with the date it was last seen at. What it cannot store goes to the `Logger` it is given, and never throws.
-
-A repository stores its self reports at one location, given when it is created by [createSelfReportRepository](../echo_backend/src/modules/selfReport/infra/selfReport.repository.ts), which makes it from the self-reports directory and a file name of the `SelfReportsConfig`, and names it after that file without its extension. It is given the `LogsRepository`, the `FilesService`, the `SelfReportsConfig`, the function picking the file name in it, and the `Logger` what cannot be stored is written to. Each part of the backend that reports diagnostics receives its own `SelfReportRepository` and never names a file: `getFilteredLogs` does, for the lines the logs repository could not read as logs (`parseLogFile.jsonl`), and so does the `logsNotifier` submodule, for the problem logs it could not notify (`logsNotifier.jsonl`). When self reports are disabled, that is when there is no `SelfReportsConfig`, or when their location cannot be prepared, it receives a repository that stores nothing.
-
-`logs` and `selfReport` depend on each other, through contracts only: `logs` imports the `domain/` of `selfReport`, to say what it reports, and `selfReport/infra` imports the `domain/` of `logs`, to store. The feature itself is circular (the self reports are logs about the reading of the logs); no `infra/` imports another one for it.
-
-## Frontend layout
-
-The modules of `echo_frontend/src/modules` are layered like the backend ones, `domain/` at the center: `presentation/` imports `application/`, and any layer may import `domain/`, which imports none of them and no package, only the models of `@echo/utilities`. Nothing is injected: `application/` imports the hook or the function of `infra/` directly, which TanStack Query makes easy, where the backend goes through the contract of `domain/`. The contracts of a frontend `domain/` therefore mostly document what its `infra/` gives. Only `presentation/` draws the screens and navigates: no other layer imports MUI or React Router. Every file of a module is in one of these four folders.
-
-`modules/logs`:
-
-| Folder          | Content                                                                                                                                                                                                                                                                                                                                                                                         |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `domain/`       | `LogsRepository`, the contract the module needs from the outside: it fetches the logs (`findLogs`) and gives those matching the level and search filters, wherever they are filtered (`filterLogs`). The models (`Log`, `LogLevel`) come from `@echo/utilities`                                                                                                                                 |
-| `infra/`        | `useLogsRepository`, the hook giving the `LogsRepository`: `findLogs` on top of the logs endpoint (it sends the request through `useSendApiRequest` and validates the answer against `LogArraySchema`), `filterLogs` on top of the Web Worker of `workers/` (see below). The worker is one way to implement `filterLogs`, which filtering on the main thread or through the API would be others |
-| `application/`  | The TanStack Query hooks: `useGetLogs` and `useFilteredLogs`, which is debounced, cancelled when its filters change before it ends, and keeps its previous result until the new one is ready                                                                                                                                                                                                    |
-| `presentation/` | `LogsScreen` and its `hooks/`, `layouts/`, `components/` and `utils/` (the grouping of the logs by day, group and job, the log levels to offer, the `fromDate` query param)                                                                                                                                                                                                                     |
-
-The logs are filtered in a Web Worker, with the same functions as the backend. `infra/workers/` holds both sides of it:
-
-| File                                  | Content                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `filterWorkerMessages.ts`             | The messages the two sides exchange: `setLogs` gives the worker the logs to keep, `filterLogs` asks which of them match the filters, and the answer is their indexes                                                                                                                                                                                                                                                                                    |
-| `filterLogs.ts`                       | The main-thread side: it wraps the worker into a promise-returning function. The worker gets one request at a time, so a request aborted while it waits is never sent. The logs are sent only when they are another list, and the answer being indexes, the logs given back are the very objects passed in. The promise rejects when the request is aborted, already when it is given, and when the worker fails, after which every request is rejected |
-| `createFilterWorkerRequestHandler.ts` | What the worker does with a request: it keeps the logs and filters them                                                                                                                                                                                                                                                                                                                                                                                 |
-| `filterWorker.ts`                     | The entry point of the worker, which only passes the messages on. It is excluded from the coverage, like `main.tsx` and the test helpers of `src/test/`                                                                                                                                                                                                                                                                                                 |
-
-`modules/auth`:
-
-| Folder          | Content                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `domain/`       | `AuthRepository`, the contract the backend is reached through (`checkAuthentication`, `login`, `signUp`), and, in the same file, what it gives and throws: `AuthCheckResult` and `InvalidCredentialsError`                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `infra/`        | `useAuthRepository`, the hook giving the `AuthRepository` on top of the auth endpoints: it sends the requests, validates the answers against `AuthTokenSchema` and turns the 401 of the backend into the `AuthCheckResult` of the auth check (`login` or `signUp`) and into the `InvalidCredentialsError` of the login, so that no layer above it reads an HTTP status or an axios error                                                                                                                                                                                                                                                |
-| `application/`  | The TanStack Query hooks: `useGetAuthCheck`, `usePostLogin` and `usePostSignUp`, the two mutations                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `presentation/` | `AuthScreen`, which shows one of two layouts after the auth check: `AuthFormLayout`, the credentials form of the login or of the sign up depending on its `formMode` (`useAuthForm` holds its state, submits with the mutation of that mode, alerts the outcome and redirects), or `RedirectLayout`, when already authenticated, which redirects at once, with a button to do it again in case it did not work. `hooks/useRedirectionOnAuth.ts` says where that is: the `redirect` query param, only when it is a path of the app (`utils/getRedirectionPathOnAuth.ts`), since anyone can write it in a link, otherwise the logs screen |
-
-`shared/` holds what the modules share: the config and the API client, each with its context and the hooks reading it (`useConfig`, `useApi`, and `useSendApiRequest`, which sends a request to the API), the navigation (`AppPathNames`, the paths of the screens, and `useGoToAuthScreen`), i18n (English only for now), layouts, theme, generic components and utilities. It imports nothing of the rest of `src/`. `initializers/` sets them up: `ConfigProvider` loads the config, `ApiProvider` creates the API client, `queryClient` is the TanStack Query client, and `AppRouter` holds the routes, below the path of `APP_URL`, the `basename` of its router. They are the composition root, with `App.tsx`, the one file importing them, which only `main.tsx`, the entry point, imports.
-
-The app navigates inside itself only, with React Router. When the API answers a 401, the user is not authenticated: `useSendApiRequest` navigates to the auth screen, whatever the request, with the page it was on as the `redirect` query param, where the auth screen brings the user back once authenticated. It does not on the auth screen, where a 401 is the answer the auth endpoints give, which `useAuthRepository` reads.
+Both sides filter with the same two functions of `@echo/utilities`, `filterLogByLevels` and `filterLogBySearch`, so the API and the app always agree on what a filter keeps.
 
 ## Type flow
 
 The types the API exchanges are not written by hand, and no file is generated. Each one is a [zod](https://zod.dev) schema in `echo_utilities`, its single source of truth:
 
-| Schemas                                                                         | Folder                      |
-| ------------------------------------------------------------------------------- | --------------------------- |
-| `LogSchema`, `LogLevelSchema`, `GetLogsParamsSchema` (the query of `GET /logs`) | `src/modules/logs/schemas/` |
-| `AuthTokenSchema`, `LoginRequestSchema`, `SignUpRequestSchema`                  | `src/modules/auth/schemas/` |
-| `EchoErrorSchema`                                                               | `src/shared/schemas/`       |
+| Schemas                                                                                           | Folder                      |
+| ------------------------------------------------------------------------------------------------- | --------------------------- |
+| `LogSchema`, `LogArraySchema`, `LogLevelSchema`, `GetLogsParamsSchema` (the query of `GET /logs`) | `src/modules/logs/schemas/` |
+| `AuthTokenSchema`, `LoginRequestSchema`, `SignUpRequestSchema`                                    | `src/modules/auth/schemas/` |
+| `EchoErrorSchema`                                                                                 | `src/shared/schemas/`       |
 
 Everything else is derived from it:
 
 ```
-                                    ┌─► z.infer ─► the type, used by both apps
-echo_utilities/…/schemas/*.schema.ts ┼─► the runtime validation: API answers in the frontend, the query and the thrown errors in the backend
-                                    └─► z.toJSONSchema ─► echo_backend/…/*.schemas.ts ─► route schemas ─► /documentation
+                                      ┌─► z.infer ──────────► the type, used by both apps
+echo_utilities/…/schemas/*.schema.ts ─┼─► parse / safeParse ─► the validation at runtime
+                                      └─► z.toJSONSchema ───► echo_backend/…/*.schemas.ts ─► the routes ─► /documentation
 ```
 
-The `*.schemas.ts` files of the backend convert the zod schemas when the server starts: [logs.schemas.ts](../echo_backend/src/modules/logs/presentation/logs.schemas.ts), [auth.schemas.ts](../echo_backend/src/modules/auth/presentation/auth.schemas.ts) and [errors.schemas.ts](../echo_backend/src/shared/schemas/errors.schemas.ts). What a type cannot say is said by the zod schema: `z.int()` for a number without decimals, `.meta({ format: 'date-time' })` for the format of a string.
+- **The type** is inferred, never declared again. What a TypeScript type cannot say is in the schema: `z.int()` for a number without decimals, `.meta({ format: 'date-time' })` for the format of a string.
+- **At runtime**, the frontend validates each answer of the API against its schema, and the backend the query of `GET /logs` and the errors it answers.
+- **The JSON schemas of the routes** are converted from the zod schemas when the server starts, in the `*.schemas.ts` files of the backend: [logs.schemas.ts](../echo_backend/src/modules/logs/presentation/logs.schemas.ts), [auth.schemas.ts](../echo_backend/src/modules/auth/presentation/auth.schemas.ts) and [errors.schemas.ts](../echo_backend/src/shared/schemas/errors.schemas.ts). To expose another zod schema, add it to the registry of one of them. They validate the requests and are what Swagger documents.
 
-`GetLogsParamsSchema` describes the query as the client sends it. The backend validates it with `safeParseGetLogsParams` (`presentation/utils/`), which turns it into what `getFilteredLogs` needs (`fromDate` and the optional `toDate` as `Date`s, `logLevels` always an array).
+`GetLogsParamsSchema` describes the query as the client sends it. `safeParseGetLogsParams` (`presentation/utils/`) turns it into what `getFilteredLogs` needs: `fromDate` and the optional `toDate` as `Date`s, `logLevels` always an array.
 
-## Authentication
+`@echo/utilities` also holds `needsSignupMessage`, the message of the 401 the backend answers the auth check with when no account exists yet: the frontend compares the message of that answer to it, to show the sign-up form instead of the login one.
 
-See the [README](../README.md#authentication) for behavior. Implementation: users live in SQLite (`better-sqlite3`, `infra/users.db.ts`) with bcrypt hashes. The JWT secret is generated with `crypto.randomBytes` at process start, so sessions do not survive restarts. A session lasts one day (`sessionDurationSeconds`), its cookie and its JWT alike. The sign up and the login are rate limited, 5 attempts a minute per address (`credentialsAttemptsLimit`, with `@fastify/rate-limit`, which `initializers/registerAuthRoutes.ts` registers for these routes only), and the credentials of an unknown user are compared to a dummy bcrypt hash, so the time of the answer does not tell which usernames exist. `presentation/auth.hooks.ts` provides `rejectUnauthenticatedRequest`, which `initializers/registerLogsRoutes.ts` gives to the protected routes as their `onRequest` hook, so a request without a session gets a 401 before its query is even validated: the other modules do not import it. With `HAS_AUTHENTICATION=false` the auth plugins and routes are not registered.
+## Backend
+
+```
+echo_backend/src/
+  main.ts            the entry point: calls startServer
+  server.ts          buildServer, the composition root, and startServer
+  initializers/      what buildServer registers on the Fastify app
+  modules/
+    auth/
+    logs/
+      modules/logsNotifier/
+    selfReport/
+  shared/            the config, the services, what the modules share
+  test/              the helpers of the tests
+```
+
+### Layers
+
+A module is split into layer folders, and keeps only those it needs. Imports go one way: `presentation → application → domain ← infra`.
+
+| Folder          | Holds                                                                                                                                                                                                          | May import                  |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `domain/`       | The models of the module, and the contracts it needs from the outside: what a storage must do, not how (`*.repository.ts`).                                                                                    | Nothing of the other layers |
+| `application/`  | The business rules, one file per use case, named after it. It is given the contracts it works with, and knows nothing of HTTP.                                                                                 | `domain/`                   |
+| `infra/`        | What implements the contracts on top of a data source: `*.api.ts` reads and writes it, `dto/*.dto.ts` describes what it holds and converts it to a model, `*.repository.ts` implements the contract with both. | `domain/`                   |
+| `presentation/` | The entry points: `*.routes.ts`, `*.controller.ts` (the request handlers, calling `application/`), `*.schemas.ts`, `utils/`. Or a cron, which is an entry point too.                                           | `application/`, `domain/`   |
+
+Neither `domain/` nor `application/` imports a built-in module of Node.js or Fastify: they would run the same on top of anything.
+
+Every file of a module is in one of these folders. A folder that is not a layer would escape the rules about the layers, so [the check](#enforcing-the-architecture) refuses it.
+
+A **submodule** lives in `modules/<module>/modules/<submodule>/` and is layered the same way.
+
+### Between modules
+
+A module or a submodule may import the `domain/` and the `infra/` of any other one, and only its own `infra/` may import the `infra/` of another. Its `application/` and its `presentation/` stay its own, with one exception: the `application/` of a submodule may build on the `application/` of its parent.
+
+### The composition root
+
+`server.ts` is where everything is put together. `buildServer(config, filesService)` creates the Fastify app, builds the repositories and calls the `register*` functions of [initializers/](../echo_backend/src/initializers/), one per file:
+
+| Initializer             | Registers                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------- |
+| `registerSecurity`      | Cookie and JWT support, only with the authentication, and CORS.                                   |
+| `registerDocumentation` | Swagger and its UI, only when the config asks for them.                                           |
+| `registerAuthRoutes`    | The auth routes and their rate limit, on top of the users database, only with the authentication. |
+| `registerLogsRoutes`    | The logs routes, given the authentication hook when there is one.                                 |
+| `registerFrontend`      | The built frontend, and the 404 of any unknown path.                                              |
+| `registerLogsNotifier`  | The cron, only when it is configured along with the notifications.                                |
+
+They build the `infra/` of the modules and hand it to their `presentation/`, which calls their `application/` itself: an initializer never imports an `application/`. Nothing but `server.ts` imports `initializers/`, and nothing but `main.ts` imports `server.ts`.
+
+`startServer`, next to `buildServer`, creates the `FilesService`, loads the config, builds the server and starts listening. `main.ts` only calls it.
+
+### The config
+
+`shared/config/loadBackConfig.ts` builds the `BackConfig` once, from the environment variables and from constants: the paths, the file names, the limits. It is split by what uses it: `server`, `logs` (which holds the optional `logsNotifier`) and the optional `auth`, `selfReports` and `notification`. A part that is missing is disabled.
+
+A function is given the config of its domain (`createLogsFilesApi(config.logs, filesService)`), and takes every setting, path and file name from it. No module reads `process.env`, builds a path from `import.meta.url` or declares a file name of its own. See the [configuration reference](configuration.md).
+
+### The `logs` module
+
+| Folder          | Content                                                                                                                                                                                                                                 |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain/`       | `LogsRepository`: it reads the logs of every location it watches (`getAllLogs`) or of one (`getLogs`), stores logs, each at its own `location`, where they replace what was stored (`saveLogs`), and empties a location (`deleteLogs`). |
+| `application/`  | `getFilteredLogs`, the one use case.                                                                                                                                                                                                    |
+| `infra/`        | `logsFiles.api.ts` lists the log files, reads the lines of one and replaces them. `logsFiles.repository.ts` implements `LogsRepository` on top of it, with the DTOs of `dto/`.                                                          |
+| `presentation/` | `GET /logs`.                                                                                                                                                                                                                            |
+
+The models, `Log` and `LogLevel`, come from `@echo/utilities`, since the frontend shares them.
+
+A **location** is an opaque string saying where some logs are stored. Only the implementation gives it a meaning: here the path of a file, elsewhere it could be the address of another server. A `Log` carries its `location` and its `locationName`, the short name shown to the user.
+
+A line of a log file holds neither the `id`, the `contentId`, the `locationName` nor the `groupName` of its log: they are worked out again each time it is read. `createLogWithIds` of `@echo/utilities` creates the two ids. The `contentId` is made of the `location`, the `level`, the `message` and the `origin`, so two logs saying the same thing share it, whatever their date and their job. The `id` adds the date, the job and the position of the line.
+
+### The `logsNotifier` submodule
+
+`modules/logs/modules/logsNotifier/` is the optional cron notifying the problem logs.
+
+| Folder          | Content                                                                                                                                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain/`       | `LastCheckDate`, when the logs were last checked, and `CheckDateRepository`, the contract it is stored through.                                                           |
+| `application/`  | `checkProblemLogsAndNotify`, one check. `utils/buildNotifierMessage.ts` writes the message, never longer than the size limit it is given.                                 |
+| `infra/`        | `CheckDateApi` reads and writes the last-check file, `fileCheckDate.repository.ts` implements the contract on top of it.                                                  |
+| `presentation/` | `logs.notifier.ts`, the Fastify plugin running the check on the schedule of the config. A cron is the entry point of the submodule, the way a route is the one of `logs`. |
+
+A check builds on `getFilteredLogs`, the use case of its parent:
+
+- It looks at the logs from the date of the previous check to its own, the latter left out. A log is therefore in the period of one check only, and is notified once, even when it is written while the logs are being read.
+- The very first check only saves its date, so the logs that predate it are never notified.
+- A check whose notification fails does not save its date: the next one sends the same logs again.
+- A run that is due while the previous one is still going is skipped.
+- The self reports are logs too, notified when their level is watched. A line that holds no valid log is reported with a new date each time the logs are read, so it is notified at every check until its file is fixed. That is on purpose: dating it from when it was first seen would hide a new problem found on the same line.
+- When the size limit of the channel is too small for any message, nothing is sent, and the check reports it as a warning to a `SelfReportRepository` of its own.
+
+It sends its message through the `NotifierService` of `shared/services/`.
+
+### The `selfReport` module
+
+`modules/selfReport/` is how the backend reports its own diagnostics. It has no route and no business rule, so it has two layers.
+
+| Folder    | Content                                                                                                                                                                                                                                                                                                                 |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain/` | `SelfReport`, a diagnostic: its `id`, `date`, `message`, `level` (`'WARNING'` or `'ERROR'`) and `origin`, what it is about, written `path:line:column`, `path:line` or `path`. `SelfReportRepository`, the contract the rest of the backend reports through.                                                            |
+| `infra/`  | `selfReport.repository.ts` (`createSelfReportRepository`) creates the repository a part of the backend reports through. `selfLogReport.repository.ts` implements the contract by storing each self report as a log. `noopSelfReport.repository.ts` stores nothing. `SessionJobIdApi` reads and writes the session file. |
+
+A `SelfReport` is a model of its own, not a `Log`. It is **stored** as one, through the `LogsRepository` of `logs`, at a location the logs are read from: that is how it shows up in the app like any other log. `selfReport` therefore knows neither files nor the format of a log line, which `logs/infra` alone describes.
+
+- **One repository per reporter.** Whoever reports is given its own `SelfReportRepository`, created for one location, and never names a file: `getFilteredLogs` reports the lines that hold no log (`parseLogFile.jsonl`), the logs notifier the problem logs it could not notify (`logsNotifier.jsonl`).
+- **Without self reports**, that is without a `SelfReportsConfig`, the repository stores nothing, so nobody checks whether they are enabled before reporting.
+- **When it is created**, the repository takes the next `jobId` of the session file and stores its location again without the logs older than the retention, which also tells whether the location can be written. Should that fail, the error is logged and the repository stores nothing: an optional feature never stops the server from starting.
+- **A self report saved again**, with the `contentId` of a stored one, replaces it: a problem that lasts is stored once, with the date it was last seen at.
+- **It never throws.** What cannot be stored goes to the `Logger` of `shared/types/logger.ts`: a diagnostic must not break what was being diagnosed.
+
+`logs` and `selfReport` depend on each other, through contracts only: `logs` imports the `domain/` of `selfReport`, to say what it reports, and `selfReport/infra` the `domain/` of `logs`, to store. The feature itself is circular, the self reports being logs about the reading of the logs.
+
+### The `auth` module
+
+| Folder          | Content                                                                                                                                                                                                                      |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain/`       | `AuthRepository`, the storage of the accounts: whether one exists (`hasAnyUser`), the creation of one (`createUser`), the check of credentials (`areCredentialsValid`). `SignUpRefusedError`, what a refused sign-up throws. |
+| `application/`  | `signUpFirstAdmin.ts`: only the very first user can sign up, and becomes the admin. `validateCredentials.ts`: whether the credentials are those of an account.                                                               |
+| `infra/`        | `users.db.ts` opens the SQLite database (`better-sqlite3`), `authUsersDb.repository.ts` implements the contract by querying it, hashing the passwords with bcrypt.                                                           |
+| `presentation/` | The four auth routes, their handlers (which sign the JWT and set the session cookie), and `auth.hooks.ts`, `rejectUnauthenticatedRequest`, which answers a 401 to a request without a valid JWT.                             |
+
+- **Two sign-ups never both succeed.** The use case refuses a sign-up while another one is in progress, a flag it checks and sets before any `await`, however long the storage takes to answer.
+- **The time of an answer does not tell which usernames exist.** The password of an unknown user is compared to a dummy bcrypt hash, which takes as long as a real comparison.
+- **The sign-up and the login are rate limited**, 5 attempts a minute per address, with `@fastify/rate-limit`, registered for these two routes only.
+- **No other module imports `auth`.** `registerLogsRoutes` hands `rejectUnauthenticatedRequest` to the logs routes as their `authenticate` option, which they run as their `onRequest` hook: a request without a session gets its 401 before its query is even validated.
+- **A session** lasts one day, its cookie and its JWT alike. The JWT is signed with a secret created when the process starts, so the sessions do not survive a restart. See [Session cookie](configuration.md#session-cookie).
+
+### `shared/`
+
+What several modules use. It imports nothing of the backend but itself.
+
+- **`config/`**: the `BackConfig`, `loadBackConfig`, and in `utils/` the parser of each variable.
+- **`services/files.service.ts`**: the `FilesService`, the one access of the backend's own code to the file system. Nothing else imports `fs`, the tests included, but its own tests. It creates a directory, reads a file as a whole or as lines (throwing a `FileDoesNotExistError` when it is missing), lists the files of a directory, replaces the content of a file and restricts a file to its owner. A write goes through a temporary file, so a reader never sees a file half written, and the writes of one file are done one after the other. It knows nothing of what the files hold nor of how they are named. `startServer` builds it once and hands it down. Only libraries given a path by the config reach the disk on their own: `better-sqlite3`, `dotenv` and `@fastify/static`.
+- **`services/notifier.service.ts`**: the `NotifierService`, how the backend sends a message to the outside. It gives the size limit of its messages and sends one, through the Telegram bot API. It knows nothing of what the messages say: another channel would be chosen inside `createNotifierService`, without changing whoever notifies.
+- **`types/logger.ts`**: the `Logger` a part of the backend writes its errors to, so that none depends on the logger of Fastify for it.
+- **`schemas/errors.schemas.ts`**: the JSON schema of `EchoError`, which every route may answer.
+
+## Frontend
+
+```
+echo_frontend/src/
+  main.tsx          the entry point
+  App.tsx           the composition root: the router inside the providers
+  initializers/     the providers and the routes
+  modules/
+    auth/
+    logs/
+  shared/           the config, the API client, the navigation, i18n, components
+  test/             the helpers of the tests
+```
+
+### Layers
+
+The modules are layered like those of the backend, `domain/` at the center: `presentation/` imports `application/`, and any layer may import `domain/`, which imports none of them and no package, only the models of `@echo/utilities`.
+
+One thing differs: **nothing is injected**. `application/` imports the hook of `infra/` directly, which TanStack Query makes easy, where the backend goes through the contract of `domain/`. The contracts of a frontend `domain/` therefore mostly document what its `infra/` gives.
+
+| Folder          | Holds                                                                          |
+| --------------- | ------------------------------------------------------------------------------ |
+| `domain/`       | The contract the module needs from the outside, and what it gives and throws.  |
+| `infra/`        | The hook giving that contract, on top of the endpoints of the API.             |
+| `application/`  | The TanStack Query hooks, one per file. Each query key is written in its hook. |
+| `presentation/` | The screen, with its `hooks/`, `layouts/`, `components/` and `utils/`.         |
+
+Only `presentation/` draws and navigates: no other layer imports MUI or React Router. A module never imports another module.
+
+### The `logs` module
+
+- **`domain/`**: `LogsRepository` fetches the logs (`findLogs`) and gives those matching the level and search filters, wherever they are filtered (`filterLogs`).
+- **`infra/`**: `useLogsRepository` implements `findLogs` on top of the logs endpoint, validating the answer against `LogArraySchema`, and `filterLogs` on top of the Web Worker below. The worker is one way to filter, which the main thread or the API would be others.
+- **`application/`**: `useGetLogs` and `useFilteredLogs`, which is debounced, cancelled when its filters change before it ends, and keeps its previous result until the new one is ready.
+- **`presentation/`**: `LogsScreen`. Its filters are read from the query params of the address and written back to them (`useLogsFilters`), and its `utils/` group the logs by day, by group and by job.
+
+The logs are filtered in a **Web Worker**, so typing a search never freezes the page. `infra/workers/` holds both sides of it:
+
+| File                                  | Content                                                                                                                                                                                                                                                                                      |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `filterWorkerMessages.ts`             | The messages the two sides exchange: `setLogs` gives the worker the logs to keep, `filterLogs` asks which of them match, and the answer is their indexes.                                                                                                                                    |
+| `filterLogs.ts`                       | The main-thread side, which wraps the worker into a promise-returning function. The worker gets one request at a time, the logs are sent only when they change, and the logs given back are the very objects passed in. The promise rejects when the request is aborted or the worker fails. |
+| `createFilterWorkerRequestHandler.ts` | What the worker does with a request: it keeps the logs and filters them.                                                                                                                                                                                                                     |
+| `filterWorker.ts`                     | The entry point of the worker, which only passes the messages on.                                                                                                                                                                                                                            |
+
+### The `auth` module
+
+- **`domain/`**: `AuthRepository` (`checkAuthentication`, `login`, `signUp`), with what it gives and throws, `AuthCheckResult` and `InvalidCredentialsError`.
+- **`infra/`**: `useAuthRepository`, on top of the auth endpoints. It turns the 401 of the API into the `AuthCheckResult` of the auth check (`login` or `signUp`) and into the `InvalidCredentialsError` of the login, so no layer above it reads an HTTP status or an axios error.
+- **`application/`**: `useGetAuthCheck`, and the two mutations, `usePostLogin` and `usePostSignUp`.
+- **`presentation/`**: `AuthScreen` shows one of two layouts after the auth check. `AuthFormLayout` is the credentials form, of the login or of the sign-up. `RedirectLayout`, when the user is already authenticated, redirects at once.
+
+Once authenticated, the user goes to the `redirect` query param, only when it is a path of the app (`getRedirectionPathOnAuth`), since anyone can write it in a link, otherwise to the logs screen.
+
+### `shared/` and `initializers/`
+
+`shared/` holds what the modules share, and imports nothing of the rest of `src/`: the config and the API client, each with its context and the hooks reading it (`useConfig`, `useApi`, `useSendApiRequest`), the navigation (`AppPathNames`, `useGoToAuthScreen`), i18n (English only), the theme, generic layouts, components, hooks and utils.
+
+`initializers/` sets them up: `ConfigProvider` loads the config, `ApiProvider` creates the API client, `queryClient` is the TanStack Query client, `AppProviders` nests them in the theme, and `AppRouter` holds the routes. With `App.tsx`, the one file importing them, they are the composition root, which only `main.tsx` imports.
+
+**Navigation.** The app only navigates inside itself, with React Router, whose `basename` is the path of `APP_URL`. When the API answers a 401, the user is not authenticated: `useSendApiRequest` navigates to the auth screen, whatever the request, with the page it was on as the `redirect` query param. It does not on the auth screen itself, where a 401 is the answer the auth endpoints give.
+
+**Configuration.** The app reads its variables from `env.<mode>.json`, fetched when it loads, and where it is reached from the `<base>` of its page (`parseAppUrls`). See [Frontend variables](configuration.md#frontend-variables).
+
+## Serving the frontend at any path
+
+In production, the backend serves the build of the frontend under `/app`, with `@fastify/static`. Any unknown path under `/app` answers `index.html`, for the router of the app to handle it, and any other unknown path a 404 `EchoError`, a path that only starts like `/app` (`/application`) included.
+
+Echo can be reached at any path behind a reverse proxy, `BASE_PATH`, which the proxy may forward or strip:
+
+- **The requests.** The Fastify app is built with a `rewriteUrl` (`removeBasePath`) taking the base path off the requests that carry it, so the routes stay under `/api`, `/app` and `/documentation`.
+- **The redirections.** An `onSend` hook puts the `Location` of a redirection to a path of the server below the base path (`addBasePath`), where the browser reaches it.
+- **The page.** The frontend is built with relative URLs, and the backend never serves `index.html` as it is: it answers it with a `<base href="<BASE_PATH>/app/">`, which the assets and `env.production.json` resolve against, and which the app reads its own address from.
+- **The documentation.** Swagger UI is given the base path as the prefix of its files, and the OpenAPI document as its server.
+
+In development, the Vite dev server serves the app under `/app`, adds the `<base>` itself, and proxies `/api` and `/documentation` to the backend.
 
 ## Enforcing the architecture
 
-The conventions above are checked automatically with [dependency-cruiser](https://github.com/sverweij/dependency-cruiser):
+The conventions above are checked with [dependency-cruiser](https://github.com/sverweij/dependency-cruiser):
 
 ```bash
-npm run arch:check
+npm run arch:check                            # every workspace
+npm run arch:check --workspace=echo_backend   # one of them
 ```
 
-The script runs `arch:check` in every workspace. Each one has its own rules, with paths relative to the workspace: [echo_backend/.dependency-cruiser.mts](../echo_backend/.dependency-cruiser.mts), [echo_frontend/.dependency-cruiser.mts](../echo_frontend/.dependency-cruiser.mts) and [echo_utilities/.dependency-cruiser.mts](../echo_utilities/.dependency-cruiser.mts). To check a single workspace, run `npm run arch:check --workspace=echo_backend`. They fail on:
+Each workspace has its own rules, with paths relative to it: [echo_backend/.dependency-cruiser.mts](../echo_backend/.dependency-cruiser.mts), [echo_frontend/.dependency-cruiser.mts](../echo_frontend/.dependency-cruiser.mts) and [echo_utilities/.dependency-cruiser.mts](../echo_utilities/.dependency-cruiser.mts). Each rule says why it exists in its `comment`, which the check prints when it fails.
 
-| Rule                                                                                                                                                                                                                                                                                                                                    | What it prevents                                                                                                                                                                                                                                                                                         |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `no-circular`                                                                                                                                                                                                                                                                                                                           | Any circular dependency                                                                                                                                                                                                                                                                                  |
-| `not-to-unresolvable`                                                                                                                                                                                                                                                                                                                   | An import that resolves to no file or package: a typo or a missing dependency, which no other rule could check                                                                                                                                                                                           |
-| `backend-shared-is-self-contained`, `frontend-shared-is-self-contained`, `utilities-shared-is-self-contained`                                                                                                                                                                                                                           | `shared/` importing anything of `src/` but itself                                                                                                                                                                                                                                                        |
-| `utilities-not-to-node`                                                                                                                                                                                                                                                                                                                 | `@echo/utilities` importing a built-in module of Node.js (`fs`, `path`, `crypto`, …): the frontend runs it in the browser                                                                                                                                                                                |
-| `backend-fs-only-through-files-service`                                                                                                                                                                                                                                                                                                 | Anything but the `FilesService` and its tests importing `fs`: the files are read and written through it                                                                                                                                                                                                  |
-| `backend-initializers-only-from-server`, `backend-server-only-from-entry-point`                                                                                                                                                                                                                                                         | Anything but `server.ts` importing `initializers/`, and anything but `main.ts` importing `server.ts`: the composition root reaches every layer, so a module importing it would too                                                                                                                       |
-| `backend-initializers-not-to-application`                                                                                                                                                                                                                                                                                               | `initializers/` importing an `application/`: it builds the `infra/` of the modules and hands it to their `presentation/`, which calls their `application/` itself                                                                                                                                        |
-| `frontend-initializers-only-from-app`, `frontend-app-only-from-entry-point`, `frontend-entry-point-imported-by-nothing`                                                                                                                                                                                                                 | Anything but `App.tsx` (and the test setup) importing `initializers/`, anything but `main.tsx` importing `App.tsx`, and anything importing `main.tsx`                                                                                                                                                    |
-| `backend-src-files-in-known-places`, `frontend-src-files-in-known-places` (and their `-when-imported` and `-when-orphan` forms)                                                                                                                                                                                                         | A file directly under `src/` other than its entry points (`main.ts` and `server.ts` in the backend; `main.tsx`, `App.tsx`, `setupTests.ts` and `vite-env.d.ts` in the frontend), or in a folder other than `modules/`, `initializers/`, `shared/` and `test/`: the other rules know a file by its folder |
-| `backend-module-files-in-a-layer`, `frontend-module-files-in-a-layer` (and their `-when-imported` and `-when-orphan` forms: a rule is about a dependency, so the first catches a file by what it imports, `-when-imported` a file importing nothing by what imports it, and `-when-orphan` a file that neither imports nor is imported) | A file of `modules/` outside the `domain/`, `application/`, `infra/` and `presentation/` folders of a module or of a backend submodule: the rules about the layers know a file by its folder                                                                                                             |
-| `backend-modules-isolated`, `backend-parent-not-to-submodule-internals`, `backend-submodules-isolated`                                                                                                                                                                                                                                  | A module or a submodule importing anything but the `domain/` and the `infra/` of another one, whether it is another module, one of its submodules or a submodule next to it                                                                                                                              |
-| `backend-submodule-not-to-parent-internals`                                                                                                                                                                                                                                                                                             | A submodule importing its parent, except its `domain/` and `infra/`, and its `application/` from the `application/` of the submodule                                                                                                                                                                     |
-| `frontend-modules-isolated`                                                                                                                                                                                                                                                                                                             | A frontend module importing another module                                                                                                                                                                                                                                                               |
-| `backend-domain-is-independent`, `backend-application-not-to-outer-layers`, `backend-infra-not-to-upper-layers`, `backend-presentation-not-to-infra`                                                                                                                                                                                    | Any import other than `presentation → application → domain ← infra`, within a module and across modules: only an `infra/` may import the `infra/` of another module or submodule                                                                                                                         |
-| `backend-domain-and-application-not-to-node`, `backend-domain-and-application-not-to-fastify`                                                                                                                                                                                                                                           | A backend `domain/` or `application/` importing a built-in module of Node.js (`fs`, `path`, `crypto`, …), Fastify or one of its plugins                                                                                                                                                                  |
-| `frontend-domain-is-independent`, `frontend-infra-only-to-domain`, `frontend-application-not-to-presentation`, `frontend-presentation-not-to-infra`                                                                                                                                                                                     | Within a frontend module, `domain/` importing another layer, `infra/` importing `application/` or `presentation/`, `application/` importing `presentation/`, and `presentation/` importing `infra/`                                                                                                      |
-| `frontend-domain-not-to-packages`, `frontend-ui-packages-only-in-presentation`                                                                                                                                                                                                                                                          | A frontend `domain/` importing a package (React, axios, TanStack Query, …), and a layer other than `presentation/` importing MUI or React Router                                                                                                                                                         |
-| `no-relative-import-outside-package`                                                                                                                                                                                                                                                                                                    | A relative import leaving its package, whatever it reaches: what is outside is either a package, imported by its name, or a file read when the app runs, whose path is in the config                                                                                                                     |
-| `utilities-not-to-apps`, `backend-frontend-independent`, `frontend-not-to-backend`                                                                                                                                                                                                                                                      | Cross-package imports; apps share code only through `@echo/utilities`                                                                                                                                                                                                                                    |
-| `utilities-only-through-barrel`                                                                                                                                                                                                                                                                                                         | Reaching into `echo_utilities` other than through its barrel                                                                                                                                                                                                                                             |
-| `prod-not-to-tests`                                                                                                                                                                                                                                                                                                                     | Production code importing test files or helpers                                                                                                                                                                                                                                                          |
+### Everywhere
 
-The package boundary rules (`no-relative-import-outside-package`, `utilities-not-to-apps`, `backend-frontend-independent`, `frontend-not-to-backend` and `utilities-only-through-barrel`) apply to the test files too, which the rules about the layers leave alone. The files outside the package are in the graph without being cruised themselves, so an import of one is seen whatever it resolves to.
+| Rule                                 | Refuses                                                                                                                                                          |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `no-circular`                        | A circular dependency.                                                                                                                                           |
+| `not-to-unresolvable`                | An import that resolves to no file or package: a typo, a missing dependency.                                                                                     |
+| `no-relative-import-outside-package` | A relative import leaving its package. What is outside is either a package, imported by its name, or a file read when the app runs, whose path is in the config. |
+| `prod-not-to-tests`                  | Production code importing a test or a test helper.                                                                                                               |
+
+### Between packages
+
+| Rule                                                      | Refuses                                                                                        |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `backend-frontend-independent`, `frontend-not-to-backend` | The backend and the frontend importing each other.                                             |
+| `utilities-not-to-apps`                                   | `@echo/utilities` importing one of the apps.                                                   |
+| `utilities-only-through-barrel`                           | Reaching into `echo_utilities` other than through its barrel.                                  |
+| `utilities-not-to-node`                                   | `@echo/utilities` importing a built-in module of Node.js: the frontend runs it in the browser. |
+
+### Where a file may be
+
+| Rule                                                                      | Refuses                                                                                                                                                          |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend-src-files-in-known-places`, `frontend-src-files-in-known-places` | A file directly under `src/` other than the entry points and the composition root, or in a folder other than `modules/`, `initializers/`, `shared/` and `test/`. |
+| `backend-module-files-in-a-layer`, `frontend-module-files-in-a-layer`     | A file of `modules/` outside the `domain/`, `application/`, `infra/` and `presentation/` folders of a module, or of a backend submodule.                         |
+
+The other rules know a file by its folder, hence these two. A rule is about a dependency, so each comes in three forms: the rule itself catches a file by what it imports, `-when-imported` a file importing nothing by what imports it, and `-when-orphan` a file that neither imports nor is imported.
+
+### The composition root and `shared/`
+
+| Rule                                                                                                                    | Refuses                                                                                                                           |
+| ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `backend-shared-is-self-contained`, `frontend-shared-is-self-contained`, `utilities-shared-is-self-contained`           | `shared/` importing anything of `src/` but itself.                                                                                |
+| `backend-initializers-only-from-server`, `backend-server-only-from-entry-point`                                         | Anything but `server.ts` importing `initializers/`, and anything but `main.ts` importing `server.ts`.                             |
+| `backend-initializers-not-to-application`                                                                               | `initializers/` importing an `application/`.                                                                                      |
+| `frontend-initializers-only-from-app`, `frontend-app-only-from-entry-point`, `frontend-entry-point-imported-by-nothing` | Anything but `App.tsx` importing `initializers/`, anything but `main.tsx` importing `App.tsx`, and anything importing `main.tsx`. |
+| `backend-fs-only-through-files-service`                                                                                 | Anything but the `FilesService` and its tests importing `fs`.                                                                     |
+
+### Layers and modules
+
+| Rule                                                                                                                                                 | Refuses                                                                                                                                                                                          |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `backend-domain-is-independent`, `backend-application-not-to-outer-layers`, `backend-infra-not-to-upper-layers`, `backend-presentation-not-to-infra` | A backend import other than `presentation → application → domain ← infra`, within a module and across modules.                                                                                   |
+| `backend-domain-and-application-not-to-node`, `backend-domain-and-application-not-to-fastify`                                                        | A backend `domain/` or `application/` importing a built-in module of Node.js, Fastify or one of its plugins.                                                                                     |
+| `backend-modules-isolated`, `backend-parent-not-to-submodule-internals`, `backend-submodules-isolated`                                               | A backend module or submodule importing anything but the `domain/` and the `infra/` of another one.                                                                                              |
+| `backend-submodule-not-to-parent-internals`                                                                                                          | A submodule importing its parent, except its `domain/` and `infra/`, and its `application/` from the `application/` of the submodule.                                                            |
+| `frontend-domain-is-independent`, `frontend-infra-only-to-domain`, `frontend-application-not-to-presentation`, `frontend-presentation-not-to-infra`  | Within a frontend module: `domain/` importing another layer, `infra/` importing `application/` or `presentation/`, `application/` importing `presentation/`, `presentation/` importing `infra/`. |
+| `frontend-domain-not-to-packages`, `frontend-ui-packages-only-in-presentation`                                                                       | A frontend `domain/` importing a package, and a layer other than `presentation/` importing MUI or React Router.                                                                                  |
+| `frontend-modules-isolated`                                                                                                                          | A frontend module importing another module.                                                                                                                                                      |
+
+### What the check covers
+
+The rules about the packages apply to the test files too, which the rules about the layers leave alone. Type-only imports are checked like the others.
+
+Two conventions are out of its reach, and are checked in review: reading `process.env` anywhere but in `loadBackConfig`, and a package talking about another one in its documentation.
 
 dependency-cruiser reads the sources with the `typescript` package, of which it supports the versions below 7, as `typescript-eslint` supports those below 6.1: the three workspaces therefore declare `typescript` `~6.0.3`, the one version the build, the lint and this check all run on.
 
-The check covers type-only imports too. To add or relax a rule, edit the config of the workspace it applies to and explain why in the PR. Note that import-graph tooling cannot detect `process.env` reads; that convention is enforced in review.
+To add or relax a rule, edit the config of the workspace it applies to, and say why in the pull request.
