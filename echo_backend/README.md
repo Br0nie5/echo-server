@@ -1,6 +1,6 @@
 # echo_backend
 
-Fastify API server for Echo. It reads `.jsonl` logs from disk, exposes them under `/api`, serves the built frontend under `/app` and Swagger docs under `/documentation`.
+Fastify API server for Echo. It reads `.jsonl` logs from disk, exposes them under `/api`, serves the built frontend under `/app` and, when `HAS_DOCUMENTATION_ROUTE=true`, Swagger docs under `/documentation`.
 
 ## Commands
 

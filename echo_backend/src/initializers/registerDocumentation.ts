@@ -7,7 +7,8 @@ import type { EchoServer } from './types/echoServer.js'
 
 /**
  * Registers Swagger, which builds the OpenAPI document from the routes, and its UI, served under
- * `documentationRoutePrefix`.
+ * `documentationRoutePrefix`, when `hasDocumentationRoute` of the config is `true`. Registers
+ * nothing otherwise: the server then has neither the document nor its UI.
  *
  * Both say where Echo is really reached, `basePath` included: the document gives the routes below
  * it, on the origin the document is loaded from, and the UI loads its files below it.
@@ -16,6 +17,10 @@ export const registerDocumentation = async (
   server: EchoServer,
   serverConfig: ServerConfig
 ): Promise<void> => {
+  if (!serverConfig.hasDocumentationRoute) {
+    return
+  }
+
   await server.register(swagger, {
     openapi: {
       info: {

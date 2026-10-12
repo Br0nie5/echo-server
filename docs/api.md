@@ -1,6 +1,6 @@
 # API reference
 
-Live, interactive documentation is served at `/documentation` (Swagger UI) by every running instance. The machine-readable spec is served at `/documentation/json`. All routes below are under `/api`.
+Live, interactive documentation is served at `/documentation` (Swagger UI), and the machine-readable spec at `/documentation/json`, by an instance whose `HAS_DOCUMENTATION_ROUTE` is `true`, which a container is not by default. All routes below are under `/api`.
 
 ## Authentication routes
 

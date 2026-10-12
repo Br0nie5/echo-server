@@ -18,7 +18,7 @@ npm run dev
 - Utilities: built first, then rebuilt on every change (`tsc --watch`), which restarts the backend.
 - Backend: `http://localhost:4000` (tsx watch)
 - Frontend: `http://localhost:5173` (Vite). **Use this URL.** Vite proxies `/api` and `/documentation` to the backend, forwarding the `Host` header as it is, so the app and the API share one origin.
-- Config: `echo_backend/.env.development` (see [configuration](configuration.md)). Development is HTTP only: the Vite dev server serves the app and proxies the API over HTTP, so the backend refuses to start there when `TLS_CERT_PATH` or `TLS_KEY_PATH` is set. Try HTTPS with `npm start` or `npm run start:docker`.
+- Config: `echo_backend/.env.development` (see [configuration](configuration.md)). Development is HTTP only: the Vite dev server serves the app and proxies the API over HTTP, so leave `TLS_CERT_PATH` and `TLS_KEY_PATH` unset there: with them, the backend serves HTTPS and the proxy no longer reaches it. Try HTTPS with `npm start` or `npm run start:docker`.
 - `data/` is created on first run and holds the dev SQLite database. It is git-ignored.
 
 Backend and frontend import `echo_utilities` from its build, `echo_utilities/dist/`. `npm run dev` and `npm run build` build it first: on a fresh clone, run one of them before `npm run lint`, `npm run test:coverage` or `npm run arch:check`.

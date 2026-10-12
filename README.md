@@ -43,7 +43,7 @@ Pulling `ghcr.io/br0nie5/echo:latest` retrieves the right image for your platfor
 
 ## Application setup
 
-The web UI is available under `/app` of the address you reach Echo at (for example `http://localhost:4000/app`). The REST API lives under `/api` and interactive API docs under `/documentation`.
+The web UI is available under `/app` of the address you reach Echo at (for example `http://localhost:4000/app`). The REST API lives under `/api`. Interactive API docs are served under `/documentation` when `HAS_DOCUMENTATION_ROUTE=true`.
 
 1. Mount the directory that holds your `.jsonl` logs at `/watched_logs`.
 2. Open `/app`. With authentication enabled (the default), the first visit asks you to create the admin account. See [Authentication](#authentication).
@@ -110,9 +110,9 @@ Container parameters are given as `<external>:<internal>` for ports and volumes.
 
 ### Ports
 
-| Parameter | Function                                                       |
-| :-------: | -------------------------------------------------------------- |
-|  `4000`   | Web UI (`/app`), API (`/api`) and API docs (`/documentation`). |
+| Parameter | Function                                                                      |
+| :-------: | ----------------------------------------------------------------------------- |
+|  `4000`   | Web UI (`/app`), API (`/api`) and, when enabled, API docs (`/documentation`). |
 
 ### Environment variables
 
@@ -133,8 +133,9 @@ Container parameters are given as `<external>:<internal>` for ports and volumes.
 | `SELF_REPORTS_RETENTION_DAYS`       | `10`            | Self-report lines older than this many days are pruned once at each server start.                                                                                                                                                                                                                                                                                                                   |
 | `BASE_PATH`                         | _(empty)_       | Path a reverse proxy serves Echo under, when it is not at the root of its domain (`/echo` for `https://example.com/echo`). See [Reverse proxy](#reverse-proxy).                                                                                                                                                                                                                                     |
 | `TRUSTED_PROXIES`                   | _(empty)_       | Optional hardening. By default, Echo believes the `X-Forwarded-*` headers of whatever sends a request, so it works behind any reverse proxy. Set it to the addresses of your proxy to believe only that one: a list, separated by `;`, of IP addresses, CIDR ranges (`172.16.0.0/12`) and `loopback`, `linklocal`, `uniquelocal`. A host name is not resolved. See [Reverse proxy](#reverse-proxy). |
+| `HAS_DOCUMENTATION_ROUTE`           | `false`         | When `true`, the interactive documentation of the API (Swagger UI) is served under `/documentation`, and its OpenAPI document under `/documentation/json`. Neither asks for a login.                                                                                                                                                                                                                |
 
-The Telegram job only starts when `LOGS_NOTIFIER_SCHEDULE`, `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS`, `TELEGRAM_CHAT_ID` and `TELEGRAM_BOT_TOKEN` are all set. Otherwise it is disabled. Once they are, an invalid `LOGS_NOTIFIER_SCHEDULE` or `LOGS_NOTIFIER_TIMEZONE` stops the server at startup.
+The Telegram job only starts when `TELEGRAM_CHAT_ID` and `TELEGRAM_BOT_TOKEN` are both set. Otherwise it is disabled. Once they are, an invalid `LOGS_NOTIFIER_SCHEDULE` or `LOGS_NOTIFIER_TIMEZONE`, or a `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` naming no valid level, stops the server at startup.
 
 #### Advanced
 

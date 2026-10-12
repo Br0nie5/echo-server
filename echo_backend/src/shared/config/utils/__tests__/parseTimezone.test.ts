@@ -3,14 +3,6 @@ import { describe, it, expect } from 'vitest'
 import { parseTimezone } from '../parseTimezone.js'
 
 describe('parseTimezone', () => {
-  it('Should default to UTC when unset', () => {
-    expect(parseTimezone(undefined)).toBe('UTC')
-  })
-
-  it('Should default to UTC when empty', () => {
-    expect(parseTimezone('')).toBe('UTC')
-  })
-
   it('Should use the given IANA zone', () => {
     expect(parseTimezone('Europe/Paris')).toBe('Europe/Paris')
   })
@@ -27,7 +19,7 @@ describe('parseTimezone', () => {
     expect(parseTimezone(' Europe/Paris ')).toBe('Europe/Paris')
   })
 
-  it('Should throw if the timezone is not a known one', () => {
-    expect(() => parseTimezone('Mars/Olympus')).toThrow('Invalid timezone: Mars/Olympus')
+  it.each(['Mars/Olympus', ''])('Should throw if the timezone is not a known one ("%s")', (raw) => {
+    expect(() => parseTimezone(raw)).toThrow(`Invalid timezone: ${raw}`)
   })
 })

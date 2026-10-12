@@ -8,13 +8,14 @@ import type {
   ServerConfig
 } from '../../shared/config/backConfig.js'
 
-/** A `ServerConfig` without TLS, trusting any proxy, for the tests, with `overrides` on top of its defaults. */
+/** A `ServerConfig` without TLS, trusting any proxy and serving the documentation, for the tests, with `overrides` on top of its defaults. */
 export const getMockServerConfig = (overrides: Partial<ServerConfig> = {}): ServerConfig => ({
   serverName: 'test-device',
   basePath: '',
   apiRoutePrefix: '/api',
   appRoutePrefix: '/app',
   documentationRoutePrefix: '/documentation',
+  hasDocumentationRoute: true,
   host: '127.0.0.1',
   port: 4000,
   frontendDistDirPath: '/fake/echo_frontend/dist',

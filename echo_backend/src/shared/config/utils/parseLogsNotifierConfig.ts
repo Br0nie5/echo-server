@@ -1,20 +1,37 @@
-import { isLogLevel } from '@echo/utilities'
+import { isLogLevel, parseRequiredEnv, type LogLevel } from '@echo/utilities'
 import cron from 'node-cron'
 
 import type { LogsNotifierConfig } from '../backConfig.js'
 
-import { addEnvNameToError } from './addEnvNameToError.js'
 import { parseTimezone } from './parseTimezone.js'
+
+const parseSchedule = (raw: string): string => {
+  if (!cron.validate(raw)) {
+    throw new Error(`Invalid cron expression: ${raw}`)
+  }
+  return raw
+}
+
+const parseWatchedLogsLevels = (raw: string): LogLevel[] => {
+  const watchedLogsLevels = raw
+    .split(',')
+    .map((level) => level.trim())
+    .filter((level) => isLogLevel(level))
+
+  if (watchedLogsLevels.length === 0) {
+    throw new Error(`No known log level in: ${raw}`)
+  }
+  return watchedLogsLevels
+}
 
 /**
  * Parses the `LOGS_NOTIFIER_*` variables of `processEnv` into the config of the cron notifying the
  * problem logs, completed with `serverName` and `lastLogsCheckFilePath`.
  *
- * It is `undefined`, which disables the cron, unless `LOGS_NOTIFIER_SCHEDULE` is set and
- * `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` names at least one log level (it is a comma-separated
- * list, whose unknown levels are ignored). When the cron is enabled, throws when
- * `LOGS_NOTIFIER_SCHEDULE` is not a cron expression or `LOGS_NOTIFIER_TIMEZONE` is not a
- * known zone.
+ * The three variables are required. Throws when one is missing, when `LOGS_NOTIFIER_SCHEDULE` is
+ * not a cron expression, when `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` names no log level (it is a
+ * comma-separated list, whose unknown levels are ignored) or when `LOGS_NOTIFIER_TIMEZONE` is not
+ * a known zone.
  */
 export const parseLogsNotifierConfig = (
   processEnv: NodeJS.ProcessEnv,
@@ -22,28 +39,14 @@ export const parseLogsNotifierConfig = (
     serverName,
     lastLogsCheckFilePath
   }: Pick<LogsNotifierConfig, 'serverName' | 'lastLogsCheckFilePath'>
-): LogsNotifierConfig | undefined => {
-  const schedule = processEnv.LOGS_NOTIFIER_SCHEDULE
-
-  const watchedLogsLevels = processEnv.LOGS_NOTIFIER_WATCHED_LOGS_LEVELS?.split(',')
-    .map((level) => level.trim())
-    .filter((level) => isLogLevel(level))
-
-  if (!schedule || !watchedLogsLevels || watchedLogsLevels.length === 0) {
-    return undefined
-  }
-
-  if (!cron.validate(schedule)) {
-    throw new Error(`LOGS_NOTIFIER_SCHEDULE: Invalid cron expression: ${schedule}`)
-  }
-
-  return {
-    schedule,
-    watchedLogsLevels,
-    notifierTimezone: addEnvNameToError('LOGS_NOTIFIER_TIMEZONE', () =>
-      parseTimezone(processEnv.LOGS_NOTIFIER_TIMEZONE)
-    ),
-    serverName,
-    lastLogsCheckFilePath
-  }
-}
+): LogsNotifierConfig => ({
+  schedule: parseRequiredEnv(processEnv, 'LOGS_NOTIFIER_SCHEDULE', parseSchedule),
+  watchedLogsLevels: parseRequiredEnv(
+    processEnv,
+    'LOGS_NOTIFIER_WATCHED_LOGS_LEVELS',
+    parseWatchedLogsLevels
+  ),
+  notifierTimezone: parseRequiredEnv(processEnv, 'LOGS_NOTIFIER_TIMEZONE', parseTimezone),
+  serverName,
+  lastLogsCheckFilePath
+})

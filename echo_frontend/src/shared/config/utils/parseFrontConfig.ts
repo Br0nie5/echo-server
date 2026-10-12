@@ -1,19 +1,19 @@
-import { parseConfig } from '@echo/utilities'
+import { parseConfig, parseRequiredEnv } from '@echo/utilities'
 
 import type { FrontConfig } from '../frontConfig'
 
 import { parseAppUrls } from './parseAppUrls'
-import { parseDaysAgo } from './parseDaysAgo'
+import { parseDaysAgoNumber } from './parseDaysAgoNumber'
 
 /**
  * Builds the `FrontConfig` from `rawConfig`, the content of `env.<mode>.json`, and `baseUri`, the
  * URL the page resolves its links against, which says where the app and the API are reached (see
  * `parseAppUrls`).
  *
- * The variables common to the backend and the frontend are read by `parseConfig`. It throws when
- * one of them, `LOGS_INITIAL_DATE_DAYS_AGO` or `LOGS_MINIMAL_DATE_DAYS_AGO` is missing or invalid,
- * and when `LOGS_INITIAL_DATE_DAYS_AGO` is further back than `LOGS_MINIMAL_DATE_DAYS_AGO`: the
- * logs would start before the oldest date the user can pick.
+ * The variables common to the backend and the frontend are read by `parseConfig`, the two others
+ * by `parseDaysAgoNumber`, each written as text or as a number. It throws when one of them is missing or
+ * invalid, and when `LOGS_INITIAL_DATE_DAYS_AGO` is further back than
+ * `LOGS_MINIMAL_DATE_DAYS_AGO`: the logs would start before the oldest date the user can pick.
  *
  * ```ts
  * const response = await fetch(configJsonUrl)
@@ -25,13 +25,15 @@ export const parseFrontConfig = (
   rawConfig: Record<string, unknown>,
   baseUri: string
 ): FrontConfig => {
-  const LOGS_INITIAL_DATE_DAYS_AGO = parseDaysAgo(
-    rawConfig.LOGS_INITIAL_DATE_DAYS_AGO,
-    'LOGS_INITIAL_DATE_DAYS_AGO'
+  const LOGS_INITIAL_DATE_DAYS_AGO = parseRequiredEnv(
+    rawConfig,
+    'LOGS_INITIAL_DATE_DAYS_AGO',
+    parseDaysAgoNumber
   )
-  const LOGS_MINIMAL_DATE_DAYS_AGO = parseDaysAgo(
-    rawConfig.LOGS_MINIMAL_DATE_DAYS_AGO,
-    'LOGS_MINIMAL_DATE_DAYS_AGO'
+  const LOGS_MINIMAL_DATE_DAYS_AGO = parseRequiredEnv(
+    rawConfig,
+    'LOGS_MINIMAL_DATE_DAYS_AGO',
+    parseDaysAgoNumber
   )
 
   if (LOGS_INITIAL_DATE_DAYS_AGO > LOGS_MINIMAL_DATE_DAYS_AGO) {

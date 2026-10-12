@@ -25,6 +25,8 @@ export type ServerConfig = {
   appRoutePrefix: string
   /** Path the documentation of the API is served under, below `basePath`. */
   documentationRoutePrefix: string
+  /** Whether the documentation of the API is served (`HAS_DOCUMENTATION_ROUTE`). */
+  hasDocumentationRoute: boolean
   host: string
   /** Port the server listens on (`HTTP_PORT`). */
   port: number

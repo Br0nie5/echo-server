@@ -23,6 +23,12 @@ describe('parseFrontConfig', () => {
     })
   })
 
+  test('Should read a number of days ago written as a number', () => {
+    expect(
+      parseFrontConfig({ ...rawConfig, LOGS_INITIAL_DATE_DAYS_AGO: 2 }, BASE_URI)
+    ).toStrictEqual(mockConfig)
+  })
+
   test('Should accept the same initial and minimal number of days ago', () => {
     expect(
       parseFrontConfig({ ...rawConfig, LOGS_INITIAL_DATE_DAYS_AGO: '14' }, BASE_URI)
@@ -47,7 +53,7 @@ describe('parseFrontConfig', () => {
   test('Should throw if LOGS_MINIMAL_DATE_DAYS_AGO is invalid', () => {
     expect(() =>
       parseFrontConfig({ ...rawConfig, LOGS_MINIMAL_DATE_DAYS_AGO: 'two' }, BASE_URI)
-    ).toThrow('Invalid LOGS_MINIMAL_DATE_DAYS_AGO: two is not a positive integer or zero')
+    ).toThrow('LOGS_MINIMAL_DATE_DAYS_AGO: Invalid integer: two is not an integer')
   })
 
   test('Should throw if the logs start further back than the oldest date allowed', () => {

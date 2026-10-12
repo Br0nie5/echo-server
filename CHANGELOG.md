@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking:** the documentation of the API (`/documentation`) is no longer served by the container unless `HAS_DOCUMENTATION_ROUTE=true` is set.
+
+- **Breaking:** once `TELEGRAM_CHAT_ID` and `TELEGRAM_BOT_TOKEN` are set, a `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` naming no valid level stops the container, instead of disabling the notifications.
+
 - **Breaking:** `SERVER_URL` is removed. Echo reads the address it is reached at from each request, so remove the variable from the environment of your container. What it carried is now given as follows:
   - its path, when a reverse proxy serves Echo under one, by `BASE_PATH` (`/echo`);
   - its scheme, by the request: the session cookie is `secure` when Echo serves HTTPS itself, or when a reverse proxy sends `X-Forwarded-Proto: https`;

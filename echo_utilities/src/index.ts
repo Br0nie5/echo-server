@@ -3,6 +3,11 @@ export * from './shared/schemas/echoError.schema.js'
 export * from './shared/config/config.js'
 export * from './shared/config/parseConfig.js'
 export * from './shared/config/routePrefixes.js'
+export * from './shared/config/utils/addEnvNameToError.js'
+export * from './shared/config/utils/parseBoolean.js'
+export * from './shared/config/utils/parseInteger.js'
+export * from './shared/config/utils/parseRequiredEnv.js'
+export * from './shared/config/utils/requireEnv.js'
 
 export * from './modules/auth/consts.js'
 

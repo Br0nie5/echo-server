@@ -1,13 +1,20 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-import { apiRoutePrefix, appRoutePrefix, parseConfig } from '@echo/utilities'
+import {
+  addEnvNameToError,
+  apiRoutePrefix,
+  appRoutePrefix,
+  parseBoolean,
+  parseConfig,
+  parseRequiredEnv,
+  requireEnv
+} from '@echo/utilities'
 import dotenv from 'dotenv'
 
 import type { FilesService } from '../services/files.service.js'
 
 import type { BackConfig } from './backConfig.js'
-import { addEnvNameToError } from './utils/addEnvNameToError.js'
 import { createCookieSerializeOptions } from './utils/createCookieSerializeOptions.js'
 import { createSelfReportsDirPath } from './utils/createSelfReportsDirPath.js'
 import { createSelfReportsGroupName } from './utils/createSelfReportsGroupName.js'
@@ -17,10 +24,8 @@ import { parseDaysNumber } from './utils/parseDaysNumber.js'
 import { parseHttpPort } from './utils/parseHttpPort.js'
 import { parseLogsNotifierConfig } from './utils/parseLogsNotifierConfig.js'
 import { parseNotificationConfig } from './utils/parseNotificationConfig.js'
-import { parseOptionalBoolean } from './utils/parseOptionalBoolean.js'
 import { parseTlsConfig } from './utils/parseTlsConfig.js'
 import { parseTrustedProxies } from './utils/parseTrustedProxies.js'
-import { requireEnv } from './utils/requireEnv.js'
 
 /** ESM has no `__dirname`, so it is rebuilt from the module URL. */
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -58,15 +63,19 @@ const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
  * `.env.<mode>` is loaded into `processEnv` first, without overriding the variables already set;
  * `<mode>` is `production` when `NODE_ENV` is, `development` otherwise. Each variable is then read
  * by its parser (`utils/`). Throws as soon as one of them does, that is on the first required
- * variable that is missing or invalid, so a misconfigured server never starts. In development, it
- * also throws when the TLS variables are set, since the Vite dev server in front of the backend
- * serves HTTP only. The notifications
- * and the cron notifying the problem logs are the exception: each is left out of the config, hence
- * disabled, when one of its required variables is, and the cron is left out too when the
- * notifications are, since it would have no channel to notify through. The self reports are left
- * out unless `SAVE_SELF_REPORTS_TO_FILE` is `true`: they are then stored under `SERVER_LOGS_DIR_PATH`,
- * which is always required, and the logs are read from it too, next to `LOGS_DIR_PATH`. The
- * authentication is left out unless `HAS_AUTHENTICATION` is `true`.
+ * variable that is missing or invalid, so a misconfigured server never starts. The variables of a
+ * part of the backend that is disabled are not read, so they stop nothing.
+ *
+ * Three required booleans switch a part of the backend on. The authentication is left out unless
+ * `HAS_AUTHENTICATION` is `true`. The self reports are left out unless `SAVE_SELF_REPORTS_TO_FILE`
+ * is `true`: `SELF_REPORTS_RETENTION_DAYS` is then required, they are stored under
+ * `SERVER_LOGS_DIR_PATH`, and the logs are read from it too, next to `LOGS_DIR_PATH`. The
+ * documentation of the API is served only when `HAS_DOCUMENTATION_ROUTE` is `true`.
+ *
+ * The notifications have no switch: they are left out, hence disabled, unless `TELEGRAM_CHAT_ID`
+ * and `TELEGRAM_BOT_TOKEN` are both set. The cron notifying the problem logs is left out with
+ * them, since it would have no channel to notify through, and its three `LOGS_NOTIFIER_*`
+ * variables are required only when they are set.
  *
  * It is meant to be called once, when the server starts, the config then being handed down:
  *
@@ -95,8 +104,10 @@ export const loadBackConfig = async (
   const logsDirPath = requireEnv(processEnv, 'LOGS_DIR_PATH')
   const serverLogsRootDirPath = requireEnv(processEnv, 'SERVER_LOGS_DIR_PATH')
 
-  const areSelfReportsEnabled = addEnvNameToError('SAVE_SELF_REPORTS_TO_FILE', () =>
-    parseOptionalBoolean(processEnv.SAVE_SELF_REPORTS_TO_FILE)
+  const areSelfReportsEnabled = parseRequiredEnv(
+    processEnv,
+    'SAVE_SELF_REPORTS_TO_FILE',
+    parseBoolean
   )
 
   const selfReportsGroupName = createSelfReportsGroupName(config.SERVER_NAME)
@@ -113,16 +124,13 @@ export const loadBackConfig = async (
       apiRoutePrefix,
       appRoutePrefix,
       documentationRoutePrefix: DOCUMENTATION_ROUTE_PREFIX,
+      hasDocumentationRoute: parseRequiredEnv(processEnv, 'HAS_DOCUMENTATION_ROUTE', parseBoolean),
       host: '0.0.0.0',
-      port: parseHttpPort(requireEnv(processEnv, 'HTTP_PORT')),
+      port: parseRequiredEnv(processEnv, 'HTTP_PORT', parseHttpPort),
       trustedProxies: addEnvNameToError('TRUSTED_PROXIES', () =>
         parseTrustedProxies(processEnv.TRUSTED_PROXIES)
       ),
-      tls: await parseTlsConfig(
-        processEnv,
-        { isDevelopment: mode === 'development' },
-        filesService
-      ),
+      tls: await parseTlsConfig(processEnv, filesService),
       frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
     },
     auth: config.HAS_AUTHENTICATION
@@ -147,8 +155,10 @@ export const loadBackConfig = async (
     },
     selfReports: areSelfReportsEnabled
       ? {
-          retentionDays: addEnvNameToError('SELF_REPORTS_RETENTION_DAYS', () =>
-            parseDaysNumber(processEnv.SELF_REPORTS_RETENTION_DAYS, 10)
+          retentionDays: parseRequiredEnv(
+            processEnv,
+            'SELF_REPORTS_RETENTION_DAYS',
+            parseDaysNumber
           ),
           selfReportsGroupName,
           selfReportsDirPath: createSelfReportsDirPath(

@@ -50,6 +50,17 @@ describe('registerDocumentation', () => {
     expect(uiResponse.headers['content-type']).toContain('text/html')
   })
 
+  it('Should serve neither the OpenAPI document nor its UI when the documentation is disabled', async () => {
+    await registerDocumentation(server, getMockServerConfig({ hasDocumentationRoute: false }))
+
+    const jsonResponse = await server.inject({ method: 'GET', url: '/documentation/json' })
+    const uiResponse = await server.inject({ method: 'GET', url: '/documentation/' })
+
+    expect(jsonResponse.statusCode).toBe(404)
+    expect(uiResponse.statusCode).toBe(404)
+    expect(server.hasPlugin('@fastify/swagger')).toBe(false)
+  })
+
   it('Should make the UI load its files below the base path', async () => {
     await registerDocumentation(server, getMockServerConfig({ basePath: '/tools/echo' }))
 

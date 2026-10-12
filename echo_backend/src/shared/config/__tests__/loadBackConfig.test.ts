@@ -22,9 +22,22 @@ const DATA_DIR_PATH = path.join(REPOSITORY_ROOT_PATH, 'data')
 
 const filesService = getMockFilesService()
 
+/** The variables of the self reports and of the notifications, each one enabled. */
+const ENABLED_PARTS_ENV: NodeJS.ProcessEnv = {
+  SAVE_SELF_REPORTS_TO_FILE: 'true',
+  SELF_REPORTS_RETENTION_DAYS: '10',
+  TELEGRAM_CHAT_ID: '123456789',
+  TELEGRAM_BOT_TOKEN: '123456:ABC-DEF',
+  LOGS_NOTIFIER_SCHEDULE: '*/30 * * * *',
+  LOGS_NOTIFIER_WATCHED_LOGS_LEVELS: 'ERROR,WARNING',
+  LOGS_NOTIFIER_TIMEZONE: 'UTC'
+}
+
 const REQUIRED_ENV: NodeJS.ProcessEnv = {
   SERVER_NAME: 'Echo',
   HAS_AUTHENTICATION: 'false',
+  HAS_DOCUMENTATION_ROUTE: 'false',
+  SAVE_SELF_REPORTS_TO_FILE: 'false',
   HTTP_PORT: '4000',
   LOGS_DIR_PATH: '/some/path',
   SERVER_LOGS_DIR_PATH: '/server/logs/path'
@@ -90,33 +103,33 @@ describe('loadBackConfig', () => {
     { variable: 'BASE_PATH', value: '/api' },
     { variable: 'TRUSTED_PROXIES', value: 'not-an-address' },
     { variable: 'HAS_AUTHENTICATION', value: 'maybe' },
+    { variable: 'HAS_DOCUMENTATION_ROUTE', value: '' },
+    { variable: 'HAS_DOCUMENTATION_ROUTE', value: 'maybe' },
     { variable: 'HTTP_PORT', value: 'not-a-number' },
     { variable: 'LOGS_DIR_PATH', value: '' },
     { variable: 'SERVER_LOGS_DIR_PATH', value: '' },
+    { variable: 'SAVE_SELF_REPORTS_TO_FILE', value: '' },
     { variable: 'SAVE_SELF_REPORTS_TO_FILE', value: 'maybe' },
-    { variable: 'SELF_REPORTS_RETENTION_DAYS', value: '0' }
+    { variable: 'SELF_REPORTS_RETENTION_DAYS', value: '' },
+    { variable: 'SELF_REPORTS_RETENTION_DAYS', value: '0' },
+    { variable: 'LOGS_NOTIFIER_SCHEDULE', value: '' },
+    { variable: 'LOGS_NOTIFIER_SCHEDULE', value: 'not-a-cron-expression' },
+    { variable: 'LOGS_NOTIFIER_WATCHED_LOGS_LEVELS', value: '' },
+    { variable: 'LOGS_NOTIFIER_WATCHED_LOGS_LEVELS', value: 'UNKNOWN' },
+    { variable: 'LOGS_NOTIFIER_TIMEZONE', value: '' },
+    { variable: 'LOGS_NOTIFIER_TIMEZONE', value: 'Mars/Olympus' }
   ])(
     'Should throw when the parser of $variable throws on "$value"',
     async ({ variable, value }) => {
       await expect(
         loadBackConfig(filesService, {
           ...REQUIRED_ENV,
-          SAVE_SELF_REPORTS_TO_FILE: 'true',
+          ...ENABLED_PARTS_ENV,
           [variable]: value
         })
       ).rejects.toThrow()
     }
   )
-
-  it('Should throw in development when the TLS variables are set', async () => {
-    await expect(
-      loadBackConfig(filesService, {
-        ...REQUIRED_ENV,
-        TLS_CERT_PATH,
-        TLS_KEY_PATH
-      })
-    ).rejects.toThrow('TLS_CERT_PATH and TLS_KEY_PATH cannot be set in development')
-  })
 
   it('Should build the whole config, with its defaults, from the required variables alone', async () => {
     expect(await loadBackConfig(filesService, { ...REQUIRED_ENV })).toStrictEqual({
@@ -126,6 +139,7 @@ describe('loadBackConfig', () => {
         apiRoutePrefix: '/api',
         appRoutePrefix: '/app',
         documentationRoutePrefix: '/documentation',
+        hasDocumentationRoute: false,
         host: '0.0.0.0',
         port: 4000,
         trustedProxies: undefined,
@@ -151,6 +165,7 @@ describe('loadBackConfig', () => {
       BASE_PATH: '/tools/echo',
       TRUSTED_PROXIES: '10.0.0.1; uniquelocal',
       HAS_AUTHENTICATION: 'true',
+      HAS_DOCUMENTATION_ROUTE: 'true',
       HTTP_PORT: '3700',
       LOGS_DIR_PATH: '/watched_logs',
       TLS_CERT_PATH,
@@ -172,6 +187,7 @@ describe('loadBackConfig', () => {
         apiRoutePrefix: '/api',
         appRoutePrefix: '/app',
         documentationRoutePrefix: '/documentation',
+        hasDocumentationRoute: true,
         host: '0.0.0.0',
         port: 3700,
         trustedProxies: ['10.0.0.1', 'uniquelocal'],
@@ -220,7 +236,7 @@ describe('loadBackConfig', () => {
     })
   })
 
-  it('Should leave the self reports out when they are disabled, whatever their other variables', async () => {
+  it('Should leave the self reports out when they are disabled, without reading their other variables', async () => {
     const config = await loadBackConfig(filesService, {
       ...REQUIRED_ENV,
       SAVE_SELF_REPORTS_TO_FILE: 'false',
@@ -234,8 +250,7 @@ describe('loadBackConfig', () => {
   it('Should leave the logs notifier out when there is no notification config', async () => {
     const config = await loadBackConfig(filesService, {
       ...REQUIRED_ENV,
-      LOGS_NOTIFIER_SCHEDULE: '*/30 * * * *',
-      LOGS_NOTIFIER_WATCHED_LOGS_LEVELS: 'WARNING,ERROR',
+      LOGS_NOTIFIER_SCHEDULE: 'not-a-cron-expression',
       LOGS_NOTIFIER_TIMEZONE: 'Mars/Olympus'
     })
 
