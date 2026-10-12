@@ -14,9 +14,6 @@ import { getMockAuthConfig } from '../../../../test/mocks/mockConfigs.js'
 import { getMockFilesService } from '../../../../test/mocks/mockFilesService.js'
 import { createUsersDb } from '../users.db.js'
 
-const { default: InMemoryDatabase } = await vi.importActual<{ default: typeof Database }>(
-  'better-sqlite3'
-)
 const filesService = getMockFilesService()
 const usersDbFilePath = '/data/nested/users.db'
 
@@ -38,30 +35,5 @@ describe('createUsersDb', () => {
     expect(filesService.createDirectory).toHaveBeenCalledExactlyOnceWith('/data/nested')
     expect(Database).toHaveBeenCalledExactlyOnceWith(usersDbFilePath)
     expect(filesService.restrictFileAccessToOwner).toHaveBeenCalledExactlyOnceWith(usersDbFilePath)
-  })
-
-  it('Should create the users table with a unique username', async () => {
-    usersDb = await createUsersDb(getMockAuthConfig({ usersDbFilePath }), filesService)
-    const insert = usersDb.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)')
-
-    insert.run('admin', 'hash')
-
-    expect(() => insert.run('admin', 'other')).toThrow(/UNIQUE/)
-    expect(usersDb.prepare('SELECT is_admin FROM users').get()).toEqual({ is_admin: 0 })
-  })
-
-  it('Should keep the users of an existing database', async () => {
-    const existingDb = new InMemoryDatabase(':memory:')
-    existingDb.exec(
-      'CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, is_admin INTEGER NOT NULL DEFAULT 0)'
-    )
-    existingDb.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run('a', 'h')
-    vi.mocked(Database).mockImplementationOnce(function () {
-      return existingDb
-    })
-
-    usersDb = await createUsersDb(getMockAuthConfig({ usersDbFilePath }), filesService)
-
-    expect(usersDb.prepare('SELECT username FROM users').get()).toEqual({ username: 'a' })
   })
 })

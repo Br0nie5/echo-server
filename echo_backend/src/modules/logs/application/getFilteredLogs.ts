@@ -23,8 +23,8 @@ interface LogsFilters {
  *
  * A log matches when it was logged at `fromDate` or later, before `toDate` when it is given, is in
  * one of the `levels` and passes every one of the `searchFilters`. Two lookups where the
- * `toDate` of the first is the `fromDate` of the second therefore never give the same log. The filtering is done in memory, with the same
- * functions the frontend uses.
+ * `toDate` of the first is the `fromDate` of the second therefore never give the same log. The
+ * filtering is done in memory, with `filterLogByLevels` and `filterLogBySearch`.
  *
  * The self reports `logsRepository` gives along with its logs, about the stored entries that hold
  * no valid log, are saved to `selfReportRepository`, all in a single save.

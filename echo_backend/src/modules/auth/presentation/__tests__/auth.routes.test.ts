@@ -1,201 +1,190 @@
-import type { FastifyInstance } from 'fastify'
-import type { Mock } from 'vitest'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { needsSignupMessage } from '@echo/utilities'
+import type { LightMyRequestResponse } from 'fastify'
+import { describe, expect, test } from 'vitest'
 
-import { getMockAuthConfig } from '../../../../test/mocks/mockConfigs.js'
-import type { AuthController } from '../auth.controller.js'
-import { authRoutes } from '../auth.routes.js'
-import {
-  AuthTokenJsonSchema,
-  LoginRequestJsonSchema,
-  SignUpRequestJsonSchema
-} from '../auth.schemas.js'
+import type { EchoServer } from '../../../../initializers/types/echoServer.js'
+import { createCookieSerializeOptions } from '../../../../shared/config/utils/createCookieSerializeOptions.js'
+import { buildTestServer } from '../../../../test/buildTestServer.js'
+import { getMockAuthConfig, getMockServerConfig } from '../../../../test/mocks/mockConfigs.js'
 
-// Schemas are mocked to ensure the test only validates route registration
-vi.mock('../auth.schemas.js', () => ({
-  AuthTokenJsonSchema: {
-    $id: 'AuthToken',
-    type: 'object',
-    properties: { success: { type: 'boolean' } }
-  },
-  LoginRequestJsonSchema: {
-    $id: 'LoginRequest',
-    type: 'object',
-    properties: { username: { type: 'string' } }
-  },
-  SignUpRequestJsonSchema: {
-    $id: 'SignUpRequest',
-    type: 'object',
-    properties: { username: { type: 'string' } }
-  }
-}))
+const IN_MEMORY_DATABASE_PATH = ':memory:'
 
-const authConfig = getMockAuthConfig({
-  credentialsAttemptsLimit: { maxAttempts: 5, timeWindowMilliseconds: 60 * 1000 }
-})
+const credentials = { username: 'admin', password: 'secret' }
 
-const controller = {
-  signUp: vi.fn(),
-  login: vi.fn(),
-  check: vi.fn(),
-  logout: vi.fn()
-} as unknown as AuthController
+const postCredentials = (
+  server: EchoServer,
+  route: 'signup' | 'login',
+  payload: object = credentials,
+  headers: Record<string, string> = {}
+): Promise<LightMyRequestResponse> =>
+  server.inject({ method: 'POST', url: `/api/auth/${route}`, payload, headers })
 
-describe('authRoutes', () => {
-  interface MockServerType {
-    addSchema: Mock
-    route: Mock
-  }
-  let mockServer: MockServerType
+const checkAuthentication = (
+  server: EchoServer,
+  cookies: Record<string, string> = {}
+): Promise<LightMyRequestResponse> =>
+  server.inject({ method: 'GET', url: '/api/auth/check', cookies })
 
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockServer = {
-      addSchema: vi.fn(),
-      route: vi.fn()
+describe('auth routes', () => {
+  test('Should let the first user sign up, which logs them in, and nobody after them', async () => {
+    const { server, config } = await buildTestServer()
+    const cookieName = config.auth!.cookieName
+
+    const checkBeforeSignUpResponse = await checkAuthentication(server)
+
+    expect(checkBeforeSignUpResponse.statusCode).toBe(401)
+    expect(checkBeforeSignUpResponse.json()).toEqual({
+      success: false,
+      message: needsSignupMessage
+    })
+
+    const signUpResponse = await postCredentials(server, 'signup')
+    const sessionCookie = signUpResponse.cookies.find(({ name }) => name === cookieName)
+
+    expect(signUpResponse.statusCode).toBe(200)
+    expect(signUpResponse.json()).toEqual({ success: true, message: 'Sign up successful.' })
+    expect(sessionCookie).toMatchObject({ httpOnly: true, path: '/' })
+
+    const checkAfterSignUpResponse = await checkAuthentication(server, {
+      [cookieName]: sessionCookie!.value
+    })
+
+    expect(checkAfterSignUpResponse.statusCode).toBe(200)
+
+    const secondSignUpResponse = await postCredentials(server, 'signup', {
+      username: 'intruder',
+      password: 'secret'
+    })
+
+    expect(secondSignUpResponse.statusCode).toBe(403)
+    expect(secondSignUpResponse.json()).toEqual({ success: false, message: 'Unauthorized.' })
+    expect(secondSignUpResponse.cookies).toEqual([])
+  })
+
+  test('Should log a user in with the credentials of the account only, and out', async () => {
+    const { server, config } = await buildTestServer()
+    const cookieName = config.auth!.cookieName
+    await postCredentials(server, 'signup')
+
+    const wrongPasswordResponse = await postCredentials(server, 'login', {
+      ...credentials,
+      password: 'guess'
+    })
+
+    expect(wrongPasswordResponse.statusCode).toBe(401)
+    expect(wrongPasswordResponse.json()).toEqual({
+      success: false,
+      message: 'Invalid credentials.'
+    })
+    expect(wrongPasswordResponse.cookies).toEqual([])
+
+    const loginResponse = await postCredentials(server, 'login')
+    const sessionCookie = loginResponse.cookies.find(({ name }) => name === cookieName)
+
+    expect(loginResponse.statusCode).toBe(200)
+    expect(loginResponse.json()).toEqual({ success: true, message: 'Login successful.' })
+
+    const loggedInCheckResponse = await checkAuthentication(server, {
+      [cookieName]: sessionCookie!.value
+    })
+    const anonymousCheckResponse = await checkAuthentication(server)
+
+    expect(loggedInCheckResponse.statusCode).toBe(200)
+    expect(anonymousCheckResponse.statusCode).toBe(401)
+    expect(anonymousCheckResponse.json()).toEqual({ success: false, message: 'Invalid token.' })
+
+    const logoutResponse = await server.inject({ method: 'POST', url: '/api/auth/logout' })
+    const clearedCookie = logoutResponse.cookies.find(({ name }) => name === cookieName)
+
+    expect(logoutResponse.statusCode).toBe(200)
+    expect(clearedCookie).toMatchObject({ value: '', expires: new Date(0) })
+  })
+
+  test('Should refuse credentials that are not a username and a password', async () => {
+    const { server } = await buildTestServer()
+
+    const signUpResponse = await postCredentials(server, 'signup', { username: 'admin' })
+    expect(signUpResponse.statusCode).toBe(400)
+
+    const loginResponse = await postCredentials(server, 'login', { password: 'secret' })
+    expect(loginResponse.statusCode).toBe(400)
+
+    expect((await checkAuthentication(server)).json()).toEqual({
+      success: false,
+      message: needsSignupMessage
+    })
+  })
+
+  describe('Session cookie', () => {
+    test('Should only be sent back over HTTPS when the user reached the server over HTTPS', async () => {
+      const { server, config } = await buildTestServer({
+        config: {
+          auth: getMockAuthConfig({
+            usersDbFilePath: IN_MEMORY_DATABASE_PATH,
+            cookieSerializeOptions: createCookieSerializeOptions('/echo', 24 * 60 * 60)
+          })
+        }
+      })
+      const cookieName = config.auth!.cookieName
+
+      const httpResponse = await postCredentials(server, 'signup')
+      const httpsResponse = await postCredentials(server, 'login', credentials, {
+        'x-forwarded-proto': 'https'
+      })
+
+      expect(httpResponse.cookies.find(({ name }) => name === cookieName)).toMatchObject({
+        httpOnly: true,
+        path: '/echo'
+      })
+      expect(httpResponse.cookies.find(({ name }) => name === cookieName)).not.toHaveProperty(
+        'secure'
+      )
+      expect(httpsResponse.cookies.find(({ name }) => name === cookieName)).toMatchObject({
+        secure: true
+      })
+    })
+  })
+
+  describe('Attempts limit', () => {
+    const limitedAuthConfig = getMockAuthConfig({
+      usersDbFilePath: IN_MEMORY_DATABASE_PATH,
+      credentialsAttemptsLimit: { maxAttempts: 2, timeWindowMilliseconds: 60 * 1000 }
+    })
+
+    const sendThreeLoginsFromThreeForwardedAddresses = async (
+      server: EchoServer
+    ): Promise<number[]> => {
+      const statusCodes: number[] = []
+
+      for (const forwardedAddress of ['203.0.113.1', '203.0.113.2', '203.0.113.3']) {
+        const response = await postCredentials(server, 'login', credentials, {
+          'x-forwarded-for': forwardedAddress
+        })
+        statusCodes.push(response.statusCode)
+      }
+
+      return statusCodes
     }
-  })
 
-  it('Should register schemas and all auth routes correctly', async () => {
-    await authRoutes(mockServer as unknown as FastifyInstance, {
-      controller,
-      authConfig
+    test('Should stop answering the address that sent too many credentials', async () => {
+      const { server } = await buildTestServer({ config: { auth: limitedAuthConfig } })
+
+      const statusCodes = await sendThreeLoginsFromThreeForwardedAddresses(server)
+
+      expect(statusCodes).toEqual([401, 401, 429])
     })
 
-    // Check schemas were added
-    expect(mockServer.addSchema).toHaveBeenCalledWith(AuthTokenJsonSchema)
-    expect(mockServer.addSchema).toHaveBeenCalledWith(LoginRequestJsonSchema)
-    expect(mockServer.addSchema).toHaveBeenCalledWith(SignUpRequestJsonSchema)
-    expect(mockServer.addSchema).toHaveBeenCalledTimes(3)
+    test('Should count the attempts per forwarded address once the proxies to believe are listed', async () => {
+      const { server } = await buildTestServer({
+        config: {
+          auth: limitedAuthConfig,
+          server: getMockServerConfig({ trustedProxies: ['127.0.0.1'] })
+        }
+      })
 
-    // Check that all routes were registered
-    expect(mockServer.route).toHaveBeenCalledTimes(4)
-  })
+      const statusCodes = await sendThreeLoginsFromThreeForwardedAddresses(server)
 
-  it('Should limit the attempts of the routes receiving credentials only', async () => {
-    await authRoutes(mockServer as unknown as FastifyInstance, {
-      controller,
-      authConfig
+      expect(statusCodes).toEqual([401, 401, 401])
     })
-
-    const rateLimitByUrl = Object.fromEntries(
-      mockServer.route.mock.calls.map(([route]) => [route.url, route.config?.rateLimit])
-    )
-
-    expect(rateLimitByUrl).toEqual({
-      '/auth/signup': { max: 5, timeWindow: 60000 },
-      '/auth/login': { max: 5, timeWindow: 60000 },
-      '/auth/check': undefined,
-      '/auth/logout': undefined
-    })
-  })
-
-  // --- /auth/signup route tests ---
-  it('Should register the /auth/signup route with correct schema and handler', async () => {
-    await authRoutes(mockServer as unknown as FastifyInstance, {
-      controller,
-      authConfig
-    })
-
-    // Find the signup route call
-    const signUpRouteConfig = mockServer.route.mock.calls.find(
-      (call: unknown[]) => (call[0] as { url: string }).url === '/auth/signup'
-    )?.[0]
-
-    expect(signUpRouteConfig).toBeDefined()
-    expect(signUpRouteConfig.method).toBe('POST')
-    expect(signUpRouteConfig.url).toBe('/auth/signup')
-    expect(signUpRouteConfig.handler).toBe(controller.signUp)
-
-    // Check schema properties
-    expect(signUpRouteConfig.schema.operationId).toBe('signUp')
-    expect(signUpRouteConfig.schema.body).toEqual({ $ref: 'SignUpRequest#' })
-    expect(signUpRouteConfig.schema.tags).toEqual(['Authentication'])
-    expect(signUpRouteConfig.schema.summary).toBe('Sign up and set session cookie.')
-
-    // Check response schemas
-    expect(signUpRouteConfig.schema.response[200]).toEqual({ $ref: 'AuthToken#' })
-    expect(signUpRouteConfig.schema.response[403]).toEqual({ $ref: 'AuthToken#' })
-  })
-
-  // --- /auth/login route tests ---
-  it('Should register the /auth/login route with correct schema and handler', async () => {
-    await authRoutes(mockServer as unknown as FastifyInstance, {
-      controller,
-      authConfig
-    })
-
-    // Find the login route call
-    const loginRouteConfig = mockServer.route.mock.calls.find(
-      (call: unknown[]) => (call[0] as { url: string }).url === '/auth/login'
-    )?.[0]
-
-    expect(loginRouteConfig).toBeDefined()
-    expect(loginRouteConfig.method).toBe('POST')
-    expect(loginRouteConfig.url).toBe('/auth/login')
-    expect(loginRouteConfig.handler).toBe(controller.login)
-
-    // Check schema properties
-    expect(loginRouteConfig.schema.operationId).toBe('login')
-    expect(loginRouteConfig.schema.body).toEqual({ $ref: 'LoginRequest#' })
-    expect(loginRouteConfig.schema.tags).toEqual(['Authentication'])
-    expect(loginRouteConfig.schema.summary).toBe('Authenticate and set session cookie.')
-
-    // Check response schemas
-    expect(loginRouteConfig.schema.response[200]).toEqual({ $ref: 'AuthToken#' })
-    expect(loginRouteConfig.schema.response[401]).toEqual({ $ref: 'AuthToken#' })
-  })
-
-  // --- /auth/check route tests ---
-  it('Should register the /auth/check route with correct schema and handler', async () => {
-    await authRoutes(mockServer as unknown as FastifyInstance, {
-      controller,
-      authConfig
-    })
-
-    // Find the check route call
-    const checkRouteConfig = mockServer.route.mock.calls.find(
-      (call: unknown[]) => (call[0] as { url: string }).url === '/auth/check'
-    )?.[0]
-
-    expect(checkRouteConfig).toBeDefined()
-    expect(checkRouteConfig.method).toBe('GET')
-    expect(checkRouteConfig.url).toBe('/auth/check')
-    expect(checkRouteConfig.handler).toBe(controller.check)
-
-    // Check schema properties
-    expect(checkRouteConfig.schema.operationId).toBe('checkAuthStatus')
-    expect(checkRouteConfig.schema.tags).toEqual(['Authentication'])
-    expect(checkRouteConfig.schema.summary).toBe('Check if authenticated or not.')
-
-    // Check response schemas
-    expect(checkRouteConfig.schema.response[200]).toEqual({ $ref: 'AuthToken#' })
-    expect(checkRouteConfig.schema.response[401]).toEqual({ $ref: 'AuthToken#' })
-  })
-
-  // --- /auth/logout route tests ---
-  it('Should register the /auth/logout route with correct schema and handler', async () => {
-    await authRoutes(mockServer as unknown as FastifyInstance, {
-      controller,
-      authConfig
-    })
-
-    // Find the logout route call
-    const logoutRouteConfig = mockServer.route.mock.calls.find(
-      (call: unknown[]) => (call[0] as { url: string }).url === '/auth/logout'
-    )?.[0]
-
-    expect(logoutRouteConfig).toBeDefined()
-    expect(logoutRouteConfig.method).toBe('POST')
-    expect(logoutRouteConfig.url).toBe('/auth/logout')
-    expect(logoutRouteConfig.handler).toBe(controller.logout)
-
-    // Check schema properties
-    expect(logoutRouteConfig.schema.operationId).toBe('logout')
-    expect(logoutRouteConfig.schema.tags).toEqual(['Authentication'])
-    expect(logoutRouteConfig.schema.summary).toBe('Clear the session cookie.')
-
-    // Check response schemas
-    expect(logoutRouteConfig.schema.response[200]).toEqual({ $ref: 'AuthToken#' })
   })
 })

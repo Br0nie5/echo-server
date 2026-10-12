@@ -47,7 +47,8 @@ export interface CreateSelfLogReportRepositoryOptions {
  * the location is one the logs are read from, it shows up in the app like any other log.
  *
  * Storing always goes the same way: the logs stored at the location are read, some of them are
- * filtered out, the new ones are added after those that remain, and the whole is stored again.
+ * filtered out, the new ones are added to those that remain, and the whole is stored again, from
+ * the oldest to the newest: those with the same date keep their order, the stored ones first.
  * When nothing remains, the logs of the location are deleted. What is stored at the location that
  * is not a valid log is not read, so it is gone once the location is stored again.
  *
@@ -79,7 +80,13 @@ export const createSelfLogReportRepository = async ({
     newLogs: Log[] = []
   ): Promise<void> => {
     const { logs: storedLogs } = await logsRepository.getLogs(selfReportsLocation)
-    const logs = [...storedLogs.filter((storedLog) => !shouldFilterLogOut(storedLog)), ...newLogs]
+    const logs = [
+      ...storedLogs.filter((storedLog) => !shouldFilterLogOut(storedLog)),
+      ...newLogs
+    ].sort(
+      (firstLog, secondLog) =>
+        new Date(firstLog.date).getTime() - new Date(secondLog.date).getTime()
+    )
 
     if (logs.length > 0) {
       await logsRepository.saveLogs(logs)

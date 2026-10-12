@@ -161,10 +161,10 @@ describe('FilesService', () => {
       '/logs': [
         entry('root.jsonl', 'file'),
         entry('notes.txt', 'file'),
-        entry('docker', 'directory')
+        entry('shop', 'directory')
       ],
-      [path.join('/logs', 'docker')]: [entry('compose.jsonl', 'file'), entry('utils', 'directory')],
-      [path.join('/logs', 'docker', 'utils')]: [entry('backup.jsonl', 'file')]
+      [path.join('/logs', 'shop')]: [entry('open_shop.jsonl', 'file'), entry('stock', 'directory')],
+      [path.join('/logs', 'shop', 'stock')]: [entry('export_orders.jsonl', 'file')]
     }
 
     it('Should give the files of the directory at any depth', async () => {
@@ -173,8 +173,8 @@ describe('FilesService', () => {
       expect(await filesService.getFilesPaths('/logs', () => true)).toEqual([
         '/logs/root.jsonl',
         '/logs/notes.txt',
-        '/logs/docker/compose.jsonl',
-        '/logs/docker/utils/backup.jsonl'
+        '/logs/shop/open_shop.jsonl',
+        '/logs/shop/stock/export_orders.jsonl'
       ])
     })
 

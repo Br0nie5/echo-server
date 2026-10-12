@@ -32,7 +32,7 @@ const ParsedGetLogsParamsSchema = GetLogsParamsSchema.extend({
 /**
  * Validates the query of `GET /logs` and turns it into what `getFilteredLogs` needs.
  *
- * The validation is the one of `GetLogsParamsSchema`, shared with the frontend; on top of it,
+ * The validation is the one of `GetLogsParamsSchema`; on top of it,
  * `fromDate`, and `toDate` when it is given, have to be real ISO dates. On success, `data` holds
  * the query with `fromDate` and `toDate` as `Date`s and `logLevels` as an array, empty when the
  * client sent none. On failure, the

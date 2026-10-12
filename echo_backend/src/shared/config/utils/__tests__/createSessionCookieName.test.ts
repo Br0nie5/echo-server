@@ -8,7 +8,7 @@ describe('createSessionCookieName', () => {
   })
 
   it.each([
-    ['Docker Production', 'Docker_Production_echo_access_token'],
+    ['Shop Production', 'Shop_Production_echo_access_token'],
     ['echo.domain.com', 'echo_domain_com_echo_access_token'],
     ['Écho; "prod"=1', '_cho___prod__1_echo_access_token']
   ])('Should replace what the name of a cookie cannot hold in %s', (serverName, cookieName) => {

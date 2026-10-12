@@ -11,7 +11,7 @@ describe('RawJsonLogLineSchema', () => {
       timestamp: '2024-05-12T14:30:00.386Z',
       level: 'WARNING',
       message: 'Ok',
-      origin: '/server/docker_utils/check_logs.sh:4'
+      origin: '/server/billing/count_stock.sh:4'
     }
 
     expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeTruthy()
@@ -52,7 +52,7 @@ describe('RawJsonLogLineSchema', () => {
       timestamp: '2024-05-12T14:30:00.386Z',
       level: 'INFO',
       message: 'Ok',
-      origin: '/server/docker_utils/check_logs.sh:4'
+      origin: '/server/billing/count_stock.sh:4'
     }
 
     expect(RawJsonLogLineSchema.safeParse(rawLine).success).toBeFalsy()
@@ -66,14 +66,14 @@ describe('RawJsonLogLineSchema', () => {
 describe('convertLogToRawJsonLogLine', () => {
   const log: Log = createLogWithIds(
     {
-      location: '/server/docker_utils/logs/check_logs.jsonl',
-      locationName: 'check_logs',
-      groupName: 'docker_utils',
+      location: '/server/billing/logs/count_stock.jsonl',
+      locationName: 'count_stock',
+      groupName: 'billing',
       date: '2024-05-12T14:30:00.386Z',
       jobId: 123,
       level: 'INFO',
       message: 'Something happened',
-      origin: '/server/docker_utils/check_logs.sh:4'
+      origin: '/server/billing/count_stock.sh:4'
     },
     0
   )
@@ -84,7 +84,7 @@ describe('convertLogToRawJsonLogLine', () => {
       timestamp: '2024-05-12T14:30:00.386Z',
       level: 'INFO',
       message: 'Something happened',
-      origin: '/server/docker_utils/check_logs.sh:4'
+      origin: '/server/billing/count_stock.sh:4'
     })
   })
 
@@ -94,9 +94,9 @@ describe('convertLogToRawJsonLogLine', () => {
     expect(
       convertRawLogLineToLog({
         logFile: {
-          path: '/server/docker_utils/logs/check_logs.jsonl',
-          fileName: 'check_logs',
-          groupName: 'docker_utils'
+          path: '/server/billing/logs/count_stock.jsonl',
+          fileName: 'count_stock',
+          groupName: 'billing'
         },
         index: 0,
         content

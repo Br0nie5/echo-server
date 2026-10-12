@@ -108,8 +108,8 @@ const config: IConfiguration = {
       name: 'backend-initializers-only-from-server',
       severity: 'error',
       comment:
-        'src/initializers wires the infra/ and the presentation/ of the modules: only server.ts, the composition root, imports it. Anything else importing it would reach every layer through it.',
-      from: { pathNot: [INITIALIZERS, SERVER, TESTS] },
+        'src/initializers wires the infra/ and the presentation/ of the modules: only server.ts, the composition root, imports it, besides the test helpers. Anything else importing it would reach every layer through it.',
+      from: { pathNot: [INITIALIZERS, SERVER, TESTS, TEST_HELPERS] },
       to: { path: INITIALIZERS }
     },
     {
@@ -123,8 +123,9 @@ const config: IConfiguration = {
     {
       name: 'backend-server-only-from-entry-point',
       severity: 'error',
-      comment: 'server.ts is the composition root: only main.ts, the entry point, imports it.',
-      from: { pathNot: [ENTRY_POINT, TESTS] },
+      comment:
+        'server.ts is the composition root: only main.ts, the entry point, imports it, besides the test helpers.',
+      from: { pathNot: [ENTRY_POINT, TESTS, TEST_HELPERS] },
       to: { path: SERVER }
     },
 

@@ -40,8 +40,8 @@ export interface LogsRepository {
    * Stores each of `logs` at its own `location`.
    *
    * At every location one of them has, they become everything that is stored there, replacing
-   * what was there, in the order the storage keeps its logs in: a location none of them has is left untouched, so
-   * emptying one is what `deleteLogs` is for. A location changes in one step: whoever reads it
+   * what was there, in the order they are given in: a location none of them has is left untouched,
+   * so emptying one is what `deleteLogs` is for. A location changes in one step: whoever reads it
    * meanwhile gets either its previous logs or the new ones. Throws when a location cannot be
    * written.
    */

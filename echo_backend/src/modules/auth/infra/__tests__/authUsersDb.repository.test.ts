@@ -3,13 +3,15 @@ import type { Database } from 'better-sqlite3'
 import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { createAuthUsersDbRepository } from '../authUsersDb.repository.js'
-import type { UserDto } from '../dto/user.dto.js'
 
 const get = vi.fn()
 const run = vi.fn()
 const usersDb = { prepare: vi.fn(() => ({ get, run })) }
 const AuthRepository = createAuthUsersDbRepository(usersDb as unknown as Database)
 
+// The accounts are tested through the server (`auth.routes.test.ts`). Here is what no request shows:
+// a user who is not an admin, which the sign up never creates, and an unknown user costing as much
+// to check as a known one.
 describe('createAuthUsersDbRepository', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -19,74 +21,17 @@ describe('createAuthUsersDbRepository', () => {
     vi.restoreAllMocks()
   })
 
-  describe('hasAnyUser', () => {
-    it('Should be false when there is no user', async () => {
-      get.mockReturnValueOnce(undefined)
-
-      expect(await AuthRepository.hasAnyUser()).toBe(false)
-      expect(usersDb.prepare).toHaveBeenCalledWith('SELECT id FROM users LIMIT 1')
-    })
-
-    it('Should be true when a user exists', async () => {
-      get.mockReturnValueOnce({ id: 1 })
-
-      expect(await AuthRepository.hasAnyUser()).toBe(true)
-    })
-  })
-
   describe('createUser', () => {
-    it.each([
-      { isAdmin: true, isAdminColumn: 1 },
-      { isAdmin: false, isAdminColumn: 0 }
-    ])(
-      'Should insert the user with a hashed password and is_admin $isAdminColumn when isAdmin is $isAdmin',
-      async ({ isAdmin, isAdminColumn }) => {
-        await AuthRepository.createUser({ username: 'admin', password: 'secret', isAdmin })
+    it('Should store a user who is not an admin as such', async () => {
+      await AuthRepository.createUser({ username: 'reader', password: 'secret', isAdmin: false })
 
-        expect(usersDb.prepare).toHaveBeenCalledWith(
-          'INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)'
-        )
-        const [username, passwordHash, storedIsAdmin] = run.mock.calls[0]
-        expect(username).toBe('admin')
-        expect(passwordHash).not.toBe('secret')
-        expect(await bcrypt.compare('secret', passwordHash)).toBe(true)
-        expect(storedIsAdmin).toBe(isAdminColumn)
-      }
-    )
-
-    it('Should throw the error of the database when the user cannot be inserted', async () => {
-      run.mockImplementationOnce(() => {
-        throw new Error('UNIQUE constraint failed: users.username')
-      })
-
-      await expect(
-        AuthRepository.createUser({ username: 'admin', password: 'secret', isAdmin: true })
-      ).rejects.toThrow('UNIQUE constraint failed')
+      const [username, , isAdminColumn] = run.mock.calls[0]
+      expect(username).toBe('reader')
+      expect(isAdminColumn).toBe(0)
     })
   })
 
   describe('areCredentialsValid', () => {
-    const user: UserDto = {
-      id: 1,
-      username: 'admin',
-      password_hash: bcrypt.hashSync('secret', 1),
-      is_admin: 1
-    }
-
-    it('Should be true for a matching username and password', async () => {
-      get.mockReturnValueOnce(user)
-
-      expect(await AuthRepository.areCredentialsValid('admin', 'secret')).toBe(true)
-      expect(usersDb.prepare).toHaveBeenCalledWith('SELECT * FROM users WHERE username = ?')
-      expect(get).toHaveBeenCalledWith('admin')
-    })
-
-    it('Should be false for a wrong password', async () => {
-      get.mockReturnValueOnce(user)
-
-      expect(await AuthRepository.areCredentialsValid('admin', 'nope')).toBe(false)
-    })
-
     it('Should be false for an unknown user, after comparing the password to a hash of the same cost', async () => {
       const compare = vi.spyOn(bcrypt, 'compare')
       get.mockReturnValueOnce(undefined)

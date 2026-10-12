@@ -161,7 +161,7 @@ describe('loadBackConfig', () => {
   it('Should build the whole config from every possible variables', async () => {
     const config = await loadBackConfig(filesService, {
       NODE_ENV: 'production',
-      SERVER_NAME: 'Docker Prod',
+      SERVER_NAME: 'Shop Prod',
       BASE_PATH: '/tools/echo',
       TRUSTED_PROXIES: '10.0.0.1; uniquelocal',
       HAS_AUTHENTICATION: 'true',
@@ -182,7 +182,7 @@ describe('loadBackConfig', () => {
 
     expect(config).toStrictEqual({
       server: {
-        serverName: 'Docker Prod',
+        serverName: 'Shop Prod',
         basePath: '/tools/echo',
         apiRoutePrefix: '/api',
         appRoutePrefix: '/app',
@@ -197,7 +197,7 @@ describe('loadBackConfig', () => {
       auth: {
         sessionDurationSeconds: 86400,
         credentialsAttemptsLimit: { maxAttempts: 5, timeWindowMilliseconds: 60 * 1000 },
-        cookieName: 'Docker_Prod_echo_access_token',
+        cookieName: 'Shop_Prod_echo_access_token',
         cookieSerializeOptions: {
           path: '/tools/echo',
           secure: 'auto',
@@ -215,14 +215,14 @@ describe('loadBackConfig', () => {
           schedule: '*/30 * * * *',
           watchedLogsLevels: ['WARNING', 'ERROR'],
           notifierTimezone: 'Europe/Paris',
-          serverName: 'Docker Prod',
+          serverName: 'Shop Prod',
           lastLogsCheckFilePath: path.join(DATA_DIR_PATH, 'last_logs_check.json')
         }
       },
       selfReports: {
         retentionDays: 30,
-        selfReportsGroupName: 'Docker Prod',
-        selfReportsDirPath: '/server_logs/self_reports/Docker Prod/logs',
+        selfReportsGroupName: 'Shop Prod',
+        selfReportsDirPath: '/server_logs/self_reports/Shop Prod/logs',
         parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
         logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
         sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')

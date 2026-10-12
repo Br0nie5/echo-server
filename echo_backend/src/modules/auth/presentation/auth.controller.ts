@@ -75,7 +75,7 @@ export const createAuthController = (
       return reply.status(200).send({ success: true, message: 'Login successful.' })
     },
 
-    /** Answers 401 with `needsSignupMessage` while no account exists, so the frontend can show the sign up form. */
+    /** Answers 401 with `needsSignupMessage` while no account exists, so the client knows to offer the sign up. */
     check: async (request: FastifyRequest, reply: AuthReply): Promise<void> => {
       if (await canSignUp(authRepository)) {
         return reply.status(401).send({ success: false, message: needsSignupMessage })

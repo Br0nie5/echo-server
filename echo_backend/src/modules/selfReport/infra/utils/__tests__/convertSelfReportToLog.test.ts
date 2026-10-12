@@ -9,7 +9,7 @@ const selfReport = (overrides: Partial<SelfReport> = {}): SelfReport => ({
   date: new Date('2026-09-19T14:41:09.669Z'),
   message: 'bad line',
   level: 'WARNING',
-  origin: '/server/docker_utils/logs/prune_images.jsonl:4',
+  origin: '/server/billing/logs/send_invoices.jsonl:4',
   ...overrides
 })
 
@@ -32,7 +32,7 @@ describe('convertSelfReportToLog', () => {
           jobId: 5,
           level: 'WARNING',
           message: 'bad line',
-          origin: '/server/docker_utils/logs/prune_images.jsonl:4'
+          origin: '/server/billing/logs/send_invoices.jsonl:4'
         },
         2
       )

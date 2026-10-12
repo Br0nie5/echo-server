@@ -1,79 +1,251 @@
-import type { FastifyInstance } from 'fastify'
-import type { Mock } from 'vitest'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import type { Log } from '@echo/utilities'
+import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest'
 
-import type { LogsController } from '../logs.controller.js'
-import { logsRoutes } from '../logs.routes.js'
-import { GetLogsParamsJsonSchema, LogJsonSchema, LogLevelJsonSchema } from '../logs.schemas.js'
+import { buildTestServer } from '../../../../test/buildTestServer.js'
+import {
+  getMockAuthConfig,
+  getMockLogsConfig,
+  getMockSelfReportsConfig
+} from '../../../../test/mocks/mockConfigs.js'
 
-const controller = { getLogs: vi.fn() } as unknown as LogsController
+/** The instant the tests run at, which the lines that hold no log are reported at. */
+const NOW = new Date('2026-04-28T10:00:00.000Z')
 
-describe('logsRoutes', () => {
-  interface MockServerType {
-    addSchema: Mock
-    route: Mock
-  }
-  let mockServer: MockServerType
+const sendInvoicesLogFilePath = '/logs/server/billing/logs/send_invoices.jsonl'
+const pingLogFilePath = '/logs/ping.jsonl'
 
-  beforeEach(() => {
-    mockServer = {
-      addSchema: vi.fn(),
-      route: vi.fn()
+const toLogFileContent = (lines: object[]): string =>
+  lines.map((line) => `${JSON.stringify(line)}\n`).join('')
+
+/** Two log files: one of a script of the `billing` group, over two days, and one without group. */
+const logFiles = {
+  [sendInvoicesLogFilePath]: toLogFileContent([
+    {
+      jobId: 11,
+      timestamp: '2026-04-27T09:40:00.000Z',
+      level: 'INFO',
+      message: 'Nothing to send.',
+      origin: 'send_invoices.sh:12'
+    },
+    {
+      jobId: 12,
+      timestamp: '2026-04-28T09:42:01.000Z',
+      level: 'WARNING',
+      message: 'Invoice 41 sent on attempt 2.'
+    },
+    {
+      jobId: 12,
+      timestamp: '2026-04-28T09:42:09.000Z',
+      level: 'INFO',
+      message: 'Invoices sent.'
     }
+  ]),
+  [pingLogFilePath]: toLogFileContent([
+    {
+      jobId: 3,
+      timestamp: '2026-04-28T07:00:00.000Z',
+      level: 'ERROR',
+      message: 'Ping not answered.'
+    }
+  ])
+}
+
+const getMessages = (logs: Log[]): string[] => logs.map((log) => log.message)
+
+beforeAll(() => {
+  vi.useFakeTimers({ now: NOW, toFake: ['Date'] })
+})
+
+afterAll(() => {
+  vi.useRealTimers()
+})
+
+describe('GET /logs', () => {
+  test('Should answer the logs of every log file, from the newest to the oldest', async () => {
+    const { server } = await buildTestServer({ config: { auth: undefined }, files: logFiles })
+
+    const response = await server.inject({
+      method: 'GET',
+      url: '/api/logs',
+      query: { fromDate: '2026-04-26T00:00:00.000Z' }
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toMatchSnapshot()
   })
 
-  it('Should run the given authenticate as the onRequest hook of the route', async () => {
-    const authenticate = vi.fn()
+  describe('Filtering the logs', () => {
+    test('Should only answer the logs of the period, its start included and its end left out', async () => {
+      const yesterdayLogMessage = 'Nothing to send.'
+      const todayMorningLogMessage = 'Ping not answered.'
 
-    await logsRoutes(mockServer as unknown as FastifyInstance, { controller, authenticate })
+      const { server } = await buildTestServer({ config: { auth: undefined }, files: logFiles })
 
-    expect(mockServer.route.mock.calls[0][0].onRequest).toBe(authenticate)
+      const fromDateResponse = await server.inject({
+        method: 'GET',
+        url: '/api/logs',
+        query: { fromDate: '2026-04-28T00:00:00.000Z' }
+      })
+
+      expect(getMessages(fromDateResponse.json())).not.toContain(yesterdayLogMessage)
+      expect(getMessages(fromDateResponse.json())).toHaveLength(3)
+
+      const periodResponse = await server.inject({
+        method: 'GET',
+        url: '/api/logs',
+        query: { fromDate: '2026-04-27T00:00:00.000Z', toDate: '2026-04-28T09:00:00.000Z' }
+      })
+
+      expect(getMessages(periodResponse.json())).toEqual([
+        todayMorningLogMessage,
+        yesterdayLogMessage
+      ])
+
+      const yesterdayLogDate = '2026-04-27T09:40:00.000Z'
+      const todayMorningLogDate = '2026-04-28T07:00:00.000Z'
+
+      const exactPeriodResponse = await server.inject({
+        method: 'GET',
+        url: '/api/logs',
+        query: { fromDate: yesterdayLogDate, toDate: todayMorningLogDate }
+      })
+
+      expect(getMessages(exactPeriodResponse.json())).toEqual([yesterdayLogMessage])
+    })
+
+    test('Should only answer the logs of the levels', async () => {
+      const warningLogMessage = 'Invoice 41 sent on attempt 2.'
+      const errorLogMessage = 'Ping not answered.'
+
+      const { server } = await buildTestServer({ config: { auth: undefined }, files: logFiles })
+
+      const oneLevelResponse = await server.inject({
+        method: 'GET',
+        url: '/api/logs?fromDate=2026-04-26T00:00:00.000Z&logLevels=WARNING'
+      })
+
+      expect(getMessages(oneLevelResponse.json())).toEqual([warningLogMessage])
+
+      const twoLevelsResponse = await server.inject({
+        method: 'GET',
+        url: '/api/logs?fromDate=2026-04-26T00:00:00.000Z&logLevels=WARNING&logLevels=ERROR'
+      })
+
+      expect(getMessages(twoLevelsResponse.json())).toEqual([warningLogMessage, errorLogMessage])
+    })
+
+    test('Should only answer the logs matching the search', async () => {
+      const billingGroupLogMessage = 'Invoices sent.'
+      const billingGroupWarningLogMessage = 'Invoice 41 sent on attempt 2.'
+
+      const { server } = await buildTestServer({ config: { auth: undefined }, files: logFiles })
+
+      const response = await server.inject({
+        method: 'GET',
+        url: '/api/logs',
+        query: {
+          fromDate: '2026-04-28T00:00:00.000Z',
+          logSearch: 'groupName:billing -message:"attempt 2"'
+        }
+      })
+
+      expect(getMessages(response.json())).toEqual([billingGroupLogMessage])
+      expect(getMessages(response.json())).not.toContain(billingGroupWarningLogMessage)
+    })
+
+    test.each<{ reason: string; query: Record<string, string>; wrongField: string }>([
+      { reason: 'without fromDate', query: {}, wrongField: 'fromDate' },
+      {
+        reason: 'with a fromDate that is not a date',
+        query: { fromDate: 'yesterday' },
+        wrongField: 'fromDate'
+      },
+      {
+        reason: 'with a fromDate that is a date, but not an ISO one',
+        query: { fromDate: '2026-04-26 00:00:00Z' },
+        wrongField: 'fromDate'
+      },
+      {
+        reason: 'with a level that is not one',
+        query: { fromDate: '2026-04-26T00:00:00.000Z', logLevels: 'DEBUG' },
+        wrongField: 'logLevels'
+      }
+    ])('Should refuse a query $reason, and name the field', async ({ query, wrongField }) => {
+      const { server } = await buildTestServer({ config: { auth: undefined }, files: logFiles })
+
+      const response = await server.inject({ method: 'GET', url: '/api/logs', query })
+
+      expect(response.statusCode).toBe(400)
+      expect(response.json()).toEqual({
+        statusCode: 400,
+        message: expect.stringContaining(wrongField)
+      })
+    })
   })
 
-  it('Should set no onRequest hook when no authenticate is given', async () => {
-    await logsRoutes(mockServer as unknown as FastifyInstance, { controller })
+  test('Should only answer a logged in user when the server has authentication', async () => {
+    const { server, config } = await buildTestServer({
+      config: { auth: getMockAuthConfig({ usersDbFilePath: ':memory:' }) },
+      files: logFiles
+    })
+    const query = { fromDate: '2026-04-26T00:00:00.000Z' }
 
-    expect(mockServer.route.mock.calls[0][0]).not.toHaveProperty('onRequest')
+    const anonymousResponse = await server.inject({ method: 'GET', url: '/api/logs', query })
+
+    expect(anonymousResponse.statusCode).toBe(401)
+    expect(anonymousResponse.json()).toEqual({ statusCode: 401, message: 'Invalid token.' })
+
+    const loggedInResponse = await server.inject({
+      method: 'GET',
+      url: '/api/logs',
+      query,
+      cookies: { [config.auth!.cookieName]: server.jwt.sign({ user: 'admin' }) }
+    })
+
+    expect(loggedInResponse.statusCode).toBe(200)
+    expect(loggedInResponse.json()).toHaveLength(4)
   })
 
-  it('Should register schemas and /logs route correctly', async () => {
-    await logsRoutes(mockServer as unknown as FastifyInstance, { controller })
+  test('Should save the lines that hold no log as self reports, and answer them as logs', async () => {
+    const notALogLine = 'Invoices sent, but this line is no JSON.'
+    const selfReportsConfig = getMockSelfReportsConfig()
+    const { selfReportsDirPath, parseLogFileSelfReportFileName } = selfReportsConfig
+    const selfReportsFilePath = `${selfReportsDirPath}/${parseLogFileSelfReportFileName}`
 
-    // Check schemas were added
-    expect(mockServer.addSchema).toHaveBeenCalledWith(LogLevelJsonSchema)
-    expect(mockServer.addSchema).toHaveBeenCalledWith(LogJsonSchema)
-
-    // Check route registration
-    expect(mockServer.route).toHaveBeenCalledTimes(1)
-    const routeConfig = mockServer.route.mock.calls[0][0]
-
-    expect(routeConfig.method).toBe('GET')
-    expect(routeConfig.url).toBe('/logs')
-    expect(routeConfig.handler).toBe(controller.getLogs)
-
-    // Check querystring schema
-    expect(routeConfig.schema.querystring).toBe(GetLogsParamsJsonSchema)
-
-    // Check response schemas
-    expect(routeConfig.schema.response[200]).toEqual({
-      type: 'array',
-      description: 'Returned Logs successfully.',
-      items: { $ref: 'Log#' }
+    const { server, fileSystem } = await buildTestServer({
+      config: {
+        auth: undefined,
+        logs: getMockLogsConfig({ logsDirsPaths: ['/logs', '/server_logs'] }),
+        selfReports: selfReportsConfig
+      },
+      files: { [sendInvoicesLogFilePath]: `${notALogLine}\n` }
     })
-    expect(routeConfig.schema.response[400]).toEqual({
-      $ref: 'EchoError#',
-      description: 'Request is invalid and cannot be processed.'
-    })
-    expect(routeConfig.schema.response[401]).toEqual({
-      $ref: 'EchoError#',
-      description: 'Unauthorized, user needs to be authenticated.'
-    })
-    expect(routeConfig.schema.response[500]).toEqual({
-      $ref: 'EchoError#',
-      description: 'An internal server error occurred while handling the request.'
-    })
+    const query = { fromDate: '2026-04-26T00:00:00.000Z' }
 
-    // Check tags
-    expect(routeConfig.schema.tags).toContain('Logs')
+    const firstResponse = await server.inject({ method: 'GET', url: '/api/logs', query })
+
+    expect(firstResponse.json()).toEqual([])
+    expect(fileSystem.getFile(selfReportsFilePath)).toBe(
+      toLogFileContent([
+        {
+          jobId: 1,
+          timestamp: NOW.toISOString(),
+          level: 'WARNING',
+          message: notALogLine,
+          origin: `${sendInvoicesLogFilePath}:1`
+        }
+      ])
+    )
+
+    const secondResponse = await server.inject({ method: 'GET', url: '/api/logs', query })
+
+    expect(secondResponse.json()).toMatchObject([
+      {
+        groupName: selfReportsConfig.selfReportsGroupName,
+        locationName: 'parseLogFile',
+        level: 'WARNING',
+        message: notALogLine
+      }
+    ])
   })
 })

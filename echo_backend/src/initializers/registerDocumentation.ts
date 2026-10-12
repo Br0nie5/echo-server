@@ -4,6 +4,7 @@ import swaggerUI from '@fastify/swagger-ui'
 import type { ServerConfig } from '../shared/config/backConfig.js'
 
 import type { EchoServer } from './types/echoServer.js'
+import { getSchemaReference } from './utils/getSchemaReference.js'
 
 /**
  * Registers Swagger, which builds the OpenAPI document from the routes, and its UI, served under
@@ -41,12 +42,8 @@ export const registerDocumentation = async (
         }
       ]
     },
-    // The schemas keep the name they are registered with, which @fastify/swagger would otherwise
-    // replace with `def-<index>`.
     refResolver: {
-      buildLocalReference(json, _baseUri, _fragment, index) {
-        return json.$id?.toString() || `def-${index}`
-      }
+      buildLocalReference: (json, _baseUri, _fragment, index) => getSchemaReference(json, index)
     }
   })
 

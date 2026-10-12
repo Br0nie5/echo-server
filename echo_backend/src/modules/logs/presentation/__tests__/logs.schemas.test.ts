@@ -44,13 +44,13 @@ describe('LogJsonSchema', () => {
   const validLog = createLogWithIds(
     {
       date: LOG_DATE,
-      groupName: 'docker_utils',
-      location: '/server/docker_utils/logs/prune_images.jsonl',
-      locationName: 'prune_images',
+      groupName: 'billing',
+      location: '/server/billing/logs/send_invoices.jsonl',
+      locationName: 'send_invoices',
       jobId: 123,
       level: 'INFO',
       message: 'Something happened',
-      origin: '/server/docker_utils/prune_images.sh:12'
+      origin: '/server/billing/send_invoices.sh:12'
     },
     0
   )

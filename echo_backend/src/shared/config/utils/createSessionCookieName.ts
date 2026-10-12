@@ -7,7 +7,7 @@
  * they are named differently.
  *
  * ```ts
- * createSessionCookieName('Docker Production') // 'Docker_Production_echo_access_token'
+ * createSessionCookieName('Shop Production') // 'Shop_Production_echo_access_token'
  * ```
  */
 export const createSessionCookieName = (serverName: string): string =>

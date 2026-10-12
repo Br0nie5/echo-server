@@ -5,9 +5,9 @@ import { convertRawLogLineToLog, type RawLogLineDto } from '../rawLogLine.dto.js
 
 const rawLogLine = (content: string): RawLogLineDto => ({
   logFile: {
-    path: '/server/docker_utils/logs/check_logs.jsonl',
-    fileName: 'check_logs',
-    groupName: 'docker_utils'
+    path: '/server/billing/logs/count_stock.jsonl',
+    fileName: 'count_stock',
+    groupName: 'billing'
   },
   index: 0,
   content
@@ -16,19 +16,19 @@ const rawLogLine = (content: string): RawLogLineDto => ({
 /** What the valid line of the tests holds, in the log file of `rawLogLine`. */
 const noIdsLog: Omit<Log, 'id' | 'contentId'> = {
   date: '2024-05-12T14:30:00.386Z',
-  groupName: 'docker_utils',
-  location: '/server/docker_utils/logs/check_logs.jsonl',
-  locationName: 'check_logs',
+  groupName: 'billing',
+  location: '/server/billing/logs/count_stock.jsonl',
+  locationName: 'count_stock',
   jobId: 123,
   level: LogLevel.INFO,
   message: 'Something happened',
-  origin: '/server/docker_utils/check_logs.sh:4'
+  origin: '/server/billing/count_stock.sh:4'
 }
 
 describe('convertRawLogLineToLog', () => {
   it('Should convert a valid line to a log', () => {
     const content =
-      '{"jobId":123,"timestamp":"2024-05-12T14:30:00.386Z","level":"INFO","message":"Something happened","origin":"/server/docker_utils/check_logs.sh:4"}'
+      '{"jobId":123,"timestamp":"2024-05-12T14:30:00.386Z","level":"INFO","message":"Something happened","origin":"/server/billing/count_stock.sh:4"}'
 
     expect(convertRawLogLineToLog(rawLogLine(content))).toEqual(
       createLogWithIds(noIdsLog, rawLogLine(content).index)
@@ -57,14 +57,14 @@ describe('convertRawLogLineToLog', () => {
 
   it('Should return undefined for an invalid level', () => {
     const content =
-      '{"jobId":1,"timestamp":"2024-05-12T14:30:00.012Z","level":"INVALID","message":"Bad level","origin":"/server/docker_utils/check_logs.sh:1"}'
+      '{"jobId":1,"timestamp":"2024-05-12T14:30:00.012Z","level":"INVALID","message":"Bad level","origin":"/server/billing/count_stock.sh:1"}'
 
     expect(convertRawLogLineToLog(rawLogLine(content))).toBeUndefined()
   })
 
   it('Should return undefined for an invalid date', () => {
     const content =
-      '{"jobId":1,"timestamp":"9999-99-99T25:61:61.999Z","level":"INFO","message":"Impossible date","origin":"/server/docker_utils/check_logs.sh:1"}'
+      '{"jobId":1,"timestamp":"9999-99-99T25:61:61.999Z","level":"INFO","message":"Impossible date","origin":"/server/billing/count_stock.sh:1"}'
 
     expect(convertRawLogLineToLog(rawLogLine(content))).toBeUndefined()
   })

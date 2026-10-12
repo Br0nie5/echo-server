@@ -94,7 +94,7 @@ const DEFAULT_WRITE_WAIT_TIMEOUT_MILLISECONDS = 10_000
  *
  * ```ts
  * const filesService = createFilesService()
- * const lines = await filesService.getFileLines('/logs/backup/nightly.jsonl')
+ * const lines = await filesService.getFileLines('/logs/export_orders/nightly.jsonl')
  * ```
  */
 export const createFilesService = (

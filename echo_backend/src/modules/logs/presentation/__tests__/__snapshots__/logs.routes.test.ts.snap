@@ -1,0 +1,50 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`GET /logs > Should answer the logs of every log file, from the newest to the oldest 1`] = `
+[
+  {
+    "contentId": "{"location":"/logs/server/billing/logs/send_invoices.jsonl","level":"INFO","message":"Invoices sent."}",
+    "date": "2026-04-28T09:42:09.000Z",
+    "groupName": "billing",
+    "id": "{"idNumber":2,"date":"2026-04-28T09:42:09.000Z","jobId":12,"location":"/logs/server/billing/logs/send_invoices.jsonl","level":"INFO","message":"Invoices sent."}",
+    "jobId": 12,
+    "level": "INFO",
+    "location": "/logs/server/billing/logs/send_invoices.jsonl",
+    "locationName": "send_invoices",
+    "message": "Invoices sent.",
+  },
+  {
+    "contentId": "{"location":"/logs/server/billing/logs/send_invoices.jsonl","level":"WARNING","message":"Invoice 41 sent on attempt 2."}",
+    "date": "2026-04-28T09:42:01.000Z",
+    "groupName": "billing",
+    "id": "{"idNumber":1,"date":"2026-04-28T09:42:01.000Z","jobId":12,"location":"/logs/server/billing/logs/send_invoices.jsonl","level":"WARNING","message":"Invoice 41 sent on attempt 2."}",
+    "jobId": 12,
+    "level": "WARNING",
+    "location": "/logs/server/billing/logs/send_invoices.jsonl",
+    "locationName": "send_invoices",
+    "message": "Invoice 41 sent on attempt 2.",
+  },
+  {
+    "contentId": "{"location":"/logs/ping.jsonl","level":"ERROR","message":"Ping not answered."}",
+    "date": "2026-04-28T07:00:00.000Z",
+    "id": "{"idNumber":0,"date":"2026-04-28T07:00:00.000Z","jobId":3,"location":"/logs/ping.jsonl","level":"ERROR","message":"Ping not answered."}",
+    "jobId": 3,
+    "level": "ERROR",
+    "location": "/logs/ping.jsonl",
+    "locationName": "ping",
+    "message": "Ping not answered.",
+  },
+  {
+    "contentId": "{"location":"/logs/server/billing/logs/send_invoices.jsonl","level":"INFO","message":"Nothing to send.","origin":"send_invoices.sh:12"}",
+    "date": "2026-04-27T09:40:00.000Z",
+    "groupName": "billing",
+    "id": "{"idNumber":0,"date":"2026-04-27T09:40:00.000Z","jobId":11,"location":"/logs/server/billing/logs/send_invoices.jsonl","level":"INFO","message":"Nothing to send.","origin":"send_invoices.sh:12"}",
+    "jobId": 11,
+    "level": "INFO",
+    "location": "/logs/server/billing/logs/send_invoices.jsonl",
+    "locationName": "send_invoices",
+    "message": "Nothing to send.",
+    "origin": "send_invoices.sh:12",
+  },
+]
+`;

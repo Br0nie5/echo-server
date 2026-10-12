@@ -14,13 +14,12 @@ import type { LogsFilesApi } from './logsFiles.api.js'
  * A location is the path of a log file, and the locations it watches are the log files of the logs
  * directories. Each log is one line of its file, which holds neither its `id`, its `locationName`
  * nor its `groupName`: those of a log that is saved are not stored, and come from the path of the
- * file when it is read back. The logs that are saved are written from the oldest to the newest,
- * as if each had been added at the end of its file when it was logged; those with the same date
- * keep the order they are given in. A location with nothing stored at is an empty file.
+ * file when it is read back. The logs that are saved are written in the order they are given in.
+ * A location with nothing stored at is an empty file.
  *
  * The lines that hold no valid log are left out of the logs, and given as warning self reports:
  * the message is the line itself, and the `origin` the path of its file followed by its position
- * among the non-blank lines of that file, starting at 1 (`/watched_logs/backup.jsonl:3`). Each is
+ * among the non-blank lines of that file, starting at 1 (`/watched_logs/export_orders.jsonl:3`). Each is
  * dated from when its line was found to hold no log, and its `id` is made of all the rest.
  */
 export const createLogsFilesRepository = (logsFilesApi: LogsFilesApi): LogsRepository => {
@@ -82,16 +81,11 @@ export const createLogsFilesRepository = (logsFilesApi: LogsFilesApi): LogsRepos
 
           return logsFilesApi.saveRawLogLines(
             logFile,
-            locationLogs
-              .sort(
-                (firstLog, secondLog) =>
-                  new Date(firstLog.date).getTime() - new Date(secondLog.date).getTime()
-              )
-              .map((log, index) => ({
-                logFile,
-                index,
-                content: JSON.stringify(convertLogToRawJsonLogLine(log))
-              }))
+            locationLogs.map((log, index) => ({
+              logFile,
+              index,
+              content: JSON.stringify(convertLogToRawJsonLogLine(log))
+            }))
           )
         })
       )

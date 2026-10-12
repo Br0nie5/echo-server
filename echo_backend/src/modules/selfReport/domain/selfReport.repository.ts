@@ -10,11 +10,11 @@ import type { SelfReport } from './selfReport.js'
  * ```ts
  * await selfReportRepository.saveSelfReports([
  *   {
- *     id: 'backup.jsonl:3 at 2026-09-19T14:41:09.669Z',
+ *     id: 'export_orders.jsonl:3 at 2026-09-19T14:41:09.669Z',
  *     date: new Date('2026-09-19T14:41:09.669Z'),
  *     message: 'not a log',
  *     level: 'WARNING',
- *     origin: '/watched_logs/backup.jsonl:3'
+ *     origin: '/watched_logs/export_orders.jsonl:3'
  *   }
  * ])
  * ```

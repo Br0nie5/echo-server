@@ -1,102 +1,189 @@
-import type { FastifyInstance } from 'fastify'
-import type { ScheduledTask } from 'node-cron'
-import cron from 'node-cron'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-vi.mock('node-cron')
-vi.mock('../../application/checkProblemLogsAndNotify.js')
+import type { BackConfig } from '../../../../../../shared/config/backConfig.js'
+import { buildTestServer, type TestServer } from '../../../../../../test/buildTestServer.js'
+import {
+  getMockLogsConfig,
+  getMockLogsNotifierConfig,
+  getMockNotificationConfig,
+  getMockSelfReportsConfig
+} from '../../../../../../test/mocks/mockConfigs.js'
 
-import { getMockLogsNotifierConfig } from '../../../../../../test/mocks/mockConfigs.js'
-import { checkProblemLogsAndNotify as actualCheckProblemLogsAndNotify } from '../../application/checkProblemLogsAndNotify.js'
-import { logsNotifier, type LogsNotifierPluginOptions } from '../logs.notifier.js'
+/** The instant the server starts at: the cron checks the logs at each minute after it. */
+const SERVER_START = new Date('2026-04-28T10:00:30.000Z')
+const PREVIOUS_CHECK = new Date('2026-04-28T09:30:00.000Z')
+const FIRST_CHECK = new Date('2026-04-28T10:01:00.000Z')
+const SECOND_CHECK = new Date('2026-04-28T10:02:00.000Z')
 
-const checkProblemLogsAndNotify = vi.mocked(actualCheckProblemLogsAndNotify)
-const logsNotifierConfig = getMockLogsNotifierConfig()
+const ONE_MINUTE_MILLISECONDS = 60 * 1000
 
-const pluginOptions: LogsNotifierPluginOptions = {
-  logsNotifierConfig,
-  logsRepository: { getAllLogs: vi.fn(), getLogs: vi.fn(), saveLogs: vi.fn(), deleteLogs: vi.fn() },
-  logsSelfReportRepository: { saveSelfReports: vi.fn() },
-  notifierService: { getMessageSizeLimit: vi.fn(), notify: vi.fn() },
-  checkDateRepository: { getLastCheckDate: vi.fn(), saveLastCheckDate: vi.fn() },
-  selfReportRepository: { saveSelfReports: vi.fn() }
-}
+const logsNotifierConfig = getMockLogsNotifierConfig({ schedule: '* * * * *' })
+const notificationConfig = getMockNotificationConfig()
 
-function mockFastify(): FastifyInstance {
-  return {
-    log: {
-      info: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn()
+const logFilePath = '/logs/server/billing/logs/send_invoices.jsonl'
+const { telegramBaseUrl, telegramBotToken } = notificationConfig
+const telegramUrl = `${telegramBaseUrl}/bot${telegramBotToken}/sendMessage`
+
+const toLogFileContent = (lines: object[]): string =>
+  lines.map((line) => `${JSON.stringify(line)}\n`).join('')
+
+const toLastCheckFileContent = (lastCheck: Date): string =>
+  JSON.stringify({ lastCheck: lastCheck.toISOString() }, null, 2)
+
+/** A log file with a problem log before the previous check, and two logs after it, one a problem. */
+const logFileContent = toLogFileContent([
+  {
+    jobId: 11,
+    timestamp: '2026-04-28T09:00:00.000Z',
+    level: 'ERROR',
+    message: 'Invoices not sent.'
+  },
+  {
+    jobId: 12,
+    timestamp: '2026-04-28T09:42:01.000Z',
+    level: 'WARNING',
+    message: 'Invoice 41 sent on attempt 2.'
+  },
+  { jobId: 12, timestamp: '2026-04-28T09:42:09.000Z', level: 'INFO', message: 'Invoices sent.' }
+])
+
+const fetchMock = vi.fn<typeof fetch>()
+
+const buildServerWithLogsNotifier = (
+  files: Record<string, string>,
+  config: Partial<BackConfig> = {}
+): Promise<TestServer> =>
+  buildTestServer({
+    config: {
+      logs: getMockLogsConfig({ logsNotifier: logsNotifierConfig }),
+      notification: notificationConfig,
+      ...config
     },
-    addHook: vi.fn()
-  } as unknown as FastifyInstance
-}
+    files
+  })
 
-/** Registers the plugin on `fastify` and returns the callback it scheduled. */
-const registerAndGetCronCallback = async (
-  fastify: FastifyInstance
-): Promise<() => Promise<void>> => {
-  vi.mocked(cron.schedule).mockReturnValueOnce({ stop: vi.fn() } as unknown as ScheduledTask)
-
-  await logsNotifier(fastify, pluginOptions)
-
-  return vi.mocked(cron.schedule).mock.calls[0][1] as () => Promise<void>
-}
+const getSentMessages = (): string[] =>
+  fetchMock.mock.calls.map(
+    ([, request]) => (JSON.parse(String(request?.body)) as { text: string }).text
+  )
 
 beforeEach(() => {
-  vi.clearAllMocks()
+  vi.useFakeTimers({ now: SERVER_START })
+  fetchMock.mockResolvedValue(new Response('{}', { status: 200 }))
+  vi.stubGlobal('fetch', fetchMock)
 })
 
-describe('logsNotifier plugin', () => {
-  it('Should register the cron task and onClose hook when it is configured', async () => {
-    const stopMock = vi.fn()
-    vi.mocked(cron.schedule).mockReturnValueOnce({
-      stop: stopMock
-    } as unknown as ScheduledTask)
+afterEach(() => {
+  vi.useRealTimers()
+  vi.unstubAllGlobals()
+  fetchMock.mockReset()
+})
 
-    const fastify = mockFastify()
-    await logsNotifier(fastify, pluginOptions)
+describe('logs notifier', () => {
+  test('Should only save the date of its first check, and notify nothing', async () => {
+    const { fileSystem } = await buildServerWithLogsNotifier({ [logFilePath]: logFileContent })
 
-    expect(fastify.log.info).toHaveBeenCalledWith('Registering logs notifier')
-    expect(cron.schedule).toHaveBeenCalledWith(logsNotifierConfig.schedule, expect.any(Function), {
-      noOverlap: true
-    })
-    expect(fastify.addHook).toHaveBeenCalledWith('onClose', expect.any(Function))
+    await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
 
-    // Simulate Fastify calling the onClose hook
-    const onCloseCallback = vi.mocked(fastify.addHook).mock.calls[0][1] as () => Promise<void>
-    await onCloseCallback()
-    expect(stopMock).toHaveBeenCalledTimes(1)
+    expect(fileSystem.getFile(logsNotifierConfig.lastLogsCheckFilePath)).toBe(
+      toLastCheckFileContent(FIRST_CHECK)
+    )
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('Should check the problem logs of the watched levels at each run', async () => {
-    const fastify = mockFastify()
-    const cronCallback = await registerAndGetCronCallback(fastify)
-
-    await cronCallback()
-
-    expect(checkProblemLogsAndNotify).toHaveBeenCalledWith({
-      watchedLogsLevels: logsNotifierConfig.watchedLogsLevels,
-      serverName: logsNotifierConfig.serverName,
-      timezone: logsNotifierConfig.notifierTimezone,
-      logsRepository: pluginOptions.logsRepository,
-      logsSelfReportRepository: pluginOptions.logsSelfReportRepository,
-      notifierService: pluginOptions.notifierService,
-      checkDateRepository: pluginOptions.checkDateRepository,
-      selfReportRepository: pluginOptions.selfReportRepository
+  test('Should notify the problem logs logged since the previous check, once', async () => {
+    const { fileSystem } = await buildServerWithLogsNotifier({
+      [logFilePath]: logFileContent,
+      [logsNotifierConfig.lastLogsCheckFilePath]: toLastCheckFileContent(PREVIOUS_CHECK)
     })
-    expect(fastify.log.error).not.toHaveBeenCalled()
+
+    await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
+
+    expect(fetchMock).toHaveBeenCalledExactlyOnceWith(telegramUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: expect.stringContaining(`"chat_id":"${notificationConfig.telegramChatId}"`)
+    })
+    expect(getSentMessages()).toMatchSnapshot()
+    expect(fileSystem.getFile(logsNotifierConfig.lastLogsCheckFilePath)).toBe(
+      toLastCheckFileContent(FIRST_CHECK)
+    )
+
+    await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
+
+    expect(fetchMock).toHaveBeenCalledOnce()
+    expect(fileSystem.getFile(logsNotifierConfig.lastLogsCheckFilePath)).toBe(
+      toLastCheckFileContent(SECOND_CHECK)
+    )
   })
 
-  it('Should log an error when a run throws', async () => {
-    checkProblemLogsAndNotify.mockRejectedValueOnce(new Error('DB down'))
+  test('Should notify the same logs at the next check when the notification could not be sent', async () => {
+    fetchMock.mockResolvedValueOnce(new Response('{}', { status: 500 }))
+    const { fileSystem } = await buildServerWithLogsNotifier({
+      [logFilePath]: logFileContent,
+      [logsNotifierConfig.lastLogsCheckFilePath]: toLastCheckFileContent(PREVIOUS_CHECK)
+    })
 
-    const fastify = mockFastify()
-    const cronCallback = await registerAndGetCronCallback(fastify)
+    await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
 
-    await cronCallback()
+    expect(fetchMock).toHaveBeenCalledOnce()
+    expect(fileSystem.getFile(logsNotifierConfig.lastLogsCheckFilePath)).toBe(
+      toLastCheckFileContent(PREVIOUS_CHECK)
+    )
 
-    expect(fastify.log.error).toHaveBeenCalledWith({ err: expect.any(Error) }, 'Cron job failed')
+    await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
+
+    const [firstMessage, secondMessage] = getSentMessages()
+    expect(secondMessage).toBe(firstMessage)
+    expect(fileSystem.getFile(logsNotifierConfig.lastLogsCheckFilePath)).toBe(
+      toLastCheckFileContent(SECOND_CHECK)
+    )
+  })
+
+  test('Should save a self report in place of a notification that is too long for the channel', async () => {
+    const selfReportsConfig = getMockSelfReportsConfig()
+    const { selfReportsDirPath, logsNotifierSelfReportFileName } = selfReportsConfig
+    const selfReportsFilePath = `${selfReportsDirPath}/${logsNotifierSelfReportFileName}`
+
+    const { fileSystem } = await buildServerWithLogsNotifier(
+      {
+        [logFilePath]: logFileContent,
+        [logsNotifierConfig.lastLogsCheckFilePath]: toLastCheckFileContent(PREVIOUS_CHECK)
+      },
+      {
+        notification: getMockNotificationConfig({ telegramMessageSizeLimit: 10 }),
+        selfReports: selfReportsConfig
+      }
+    )
+
+    await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
+
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(fileSystem.getFile(selfReportsFilePath)).toBe(
+      toLogFileContent([
+        {
+          jobId: 2,
+          timestamp: FIRST_CHECK.toISOString(),
+          level: 'WARNING',
+          message:
+            'The problem logs were not notified: the notifier takes messages of 10 characters at most, which is not enough for any message',
+          origin: 'checkProblemLogsAndNotify'
+        }
+      ])
+    )
+    expect(fileSystem.getFile(logsNotifierConfig.lastLogsCheckFilePath)).toBe(
+      toLastCheckFileContent(FIRST_CHECK)
+    )
+  })
+
+  test('Should stop checking the logs once the server is closed', async () => {
+    const { server, fileSystem } = await buildServerWithLogsNotifier({
+      [logFilePath]: logFileContent
+    })
+
+    await server.close()
+    await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
+
+    expect(fileSystem.getFile(logsNotifierConfig.lastLogsCheckFilePath)).toBeUndefined()
   })
 })

@@ -30,20 +30,25 @@ import { createFilesService, type FilesService } from './shared/services/files.s
  * the browser reaches it. The protocol, the host and the address of a request are those its
  * `X-Forwarded-*` headers give when it comes from one of the `trustedProxies` of the config, or
  * from anything when the config has none.
+ *
+ * The server logs to the output of the process, unless `hasLogger` is `false`.
  */
 export const buildServer = async (
   config: BackConfig,
-  filesService: FilesService
+  filesService: FilesService,
+  hasLogger: boolean = true
 ): Promise<EchoServer> => {
   // Fastify's https/http overloads produce distinct FastifyInstance generics, which would
   // make `server` a union type unusable for the .register() calls below. The raw server type
   // is never introspected past this point, so the options are built once and typed as the
   // plain-http shape Fastify's default overload expects; `https` still drives TLS at runtime.
   const serverOptions = {
-    logger: true,
+    logger: hasLogger,
     trustProxy: config.server.trustedProxies ?? true,
+    // Node.js only leaves the `url` of a message undefined for a response a client received: a
+    // request a server received always has one.
     rewriteUrl: (request: IncomingMessage) =>
-      removeBasePath(request.url ?? '/', config.server.basePath),
+      removeBasePath(request.url as string, config.server.basePath),
     ...(config.server.tls && { https: config.server.tls })
   } as FastifyServerOptions<Server<typeof IncomingMessage, typeof ServerResponse>>
 

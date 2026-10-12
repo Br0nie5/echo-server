@@ -33,11 +33,11 @@ const options = {
 }
 
 const selfReport = (overrides: Partial<SelfReport> = {}): SelfReport => ({
-  id: '2026-09-19T14:41:09.669Z bad line WARNING /server/docker_utils/logs/prune_images.jsonl:3',
-  date: new Date('2026-09-19T14:41:09.669Z'),
+  id: '2026-10-01T08:00:00.000Z bad line WARNING /server/billing/logs/send_invoices.jsonl:3',
+  date: new Date('2026-10-01T08:00:00.000Z'),
   message: 'bad line',
   level: 'WARNING',
-  origin: '/server/docker_utils/logs/prune_images.jsonl:3',
+  origin: '/server/billing/logs/send_invoices.jsonl:3',
   ...overrides
 })
 
@@ -60,7 +60,7 @@ const storedLog = (overrides: Partial<Omit<Log, 'id' | 'contentId'>> = {}): Log 
     jobId: 1,
     level: 'WARNING',
     message: 'bad line',
-    origin: '/server/docker_utils/logs/prune_images.jsonl:3',
+    origin: '/server/billing/logs/send_invoices.jsonl:3',
     ...overrides
   }
 
@@ -222,13 +222,13 @@ describe('createSelfLogReportRepository', () => {
       await selfReportRepository.saveSelfReports([
         selfReport({
           message: 'bad line 1',
-          origin: '/server/docker_utils/logs/prune_images.jsonl:1'
+          origin: '/server/billing/logs/send_invoices.jsonl:1'
         }),
         selfReport({
-          date: new Date('2026-09-20T08:00:00.000Z'),
+          date: new Date('2026-10-01T09:00:00.000Z'),
           message: 'bad line 2',
           level: 'ERROR',
-          origin: '/server/docker_utils/logs/prune_images.jsonl'
+          origin: '/server/billing/logs/send_invoices.jsonl'
         })
       ])
 
@@ -243,23 +243,42 @@ describe('createSelfLogReportRepository', () => {
         createLogWithIds(
           {
             ...whereItIsStored,
-            date: '2026-09-19T14:41:09.669Z',
+            date: '2026-10-01T08:00:00.000Z',
             level: 'WARNING',
             message: 'bad line 1',
-            origin: '/server/docker_utils/logs/prune_images.jsonl:1'
+            origin: '/server/billing/logs/send_invoices.jsonl:1'
           },
           0
         ),
         createLogWithIds(
           {
             ...whereItIsStored,
-            date: '2026-09-20T08:00:00.000Z',
+            date: '2026-10-01T09:00:00.000Z',
             level: 'ERROR',
             message: 'bad line 2',
-            origin: '/server/docker_utils/logs/prune_images.jsonl'
+            origin: '/server/billing/logs/send_invoices.jsonl'
           },
           1
         )
+      ])
+    })
+
+    it('Should store the logs from the oldest to the newest, whatever the order they are reported in', async () => {
+      const selfReportRepository = await createSelfLogReportRepository(options)
+      const alreadyStoredLog = storedLog({ message: 'stored a day ago' })
+      mockStoredLogs([alreadyStoredLog])
+
+      await selfReportRepository.saveSelfReports([
+        selfReport({ date: new Date(daysAgo(0)), message: 'reported now' }),
+        selfReport({ date: new Date(daysAgo(2)), message: 'reported two days ago' }),
+        selfReport({ date: new Date(daysAgo(1)), message: 'reported a day ago' })
+      ])
+
+      expect(lastSavedLogs().map(({ message }) => message)).toEqual([
+        'reported two days ago',
+        'stored a day ago',
+        'reported a day ago',
+        'reported now'
       ])
     })
 
@@ -267,8 +286,8 @@ describe('createSelfLogReportRepository', () => {
       const selfReportRepository = await createSelfLogReportRepository(options)
       const otherMessageLog = storedLog({ message: 'other' })
       const otherLevelLog = storedLog({ level: 'ERROR' })
-      const otherLineLog = storedLog({ origin: '/server/docker_utils/logs/prune_images.jsonl:9' })
-      const otherFileLog = storedLog({ origin: '/server/logs/backup.jsonl:3' })
+      const otherLineLog = storedLog({ origin: '/server/billing/logs/send_invoices.jsonl:9' })
+      const otherFileLog = storedLog({ origin: '/server/logs/export_orders.jsonl:3' })
       const withoutOriginLog = storedLog({ origin: undefined })
       mockStoredLogs([
         storedLog(),
@@ -278,19 +297,19 @@ describe('createSelfLogReportRepository', () => {
         otherLineLog,
         otherFileLog,
         withoutOriginLog,
-        storedLog({ message: 'second', origin: '/server/docker_utils/logs/prune_images.jsonl:7' }),
+        storedLog({ message: 'second', origin: '/server/billing/logs/send_invoices.jsonl:7' }),
         storedLog({
           message: 'without line',
-          origin: '/server/docker_utils/logs/prune_images.jsonl'
+          origin: '/server/billing/logs/send_invoices.jsonl'
         })
       ])
 
       await selfReportRepository.saveSelfReports([
         selfReport(),
-        selfReport({ message: 'second', origin: '/server/docker_utils/logs/prune_images.jsonl:7' }),
+        selfReport({ message: 'second', origin: '/server/billing/logs/send_invoices.jsonl:7' }),
         selfReport({
           message: 'without line',
-          origin: '/server/docker_utils/logs/prune_images.jsonl'
+          origin: '/server/billing/logs/send_invoices.jsonl'
         })
       ])
 
