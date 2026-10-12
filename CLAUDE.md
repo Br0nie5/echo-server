@@ -40,7 +40,7 @@ Docker:
 npm run start:docker     # builds the workspaces and the `echo:dev` image, asks which deployment of examples/ to run with it (or `-- <example>`), on ./test_logs, ./server_logs and ./data
 npm run dns:enable         # makes testing.cc and local.testing.cc, the hosts of the examples, resolve to this machine (/etc/hosts, sudo); dns:disable undoes it
 npm run certs:generate      # creates the self-signed testing.cc certificate of ./certs again, which the examples mount
-npm run deploy:server      # multi-arch build & push to ghcr.io/br0nie5/echo:<tag> (and :latest for the highest stable version)
+npm run deploy:server      # multi-arch build & push to ghcr.io/br0nie5/echo:<tag>, any tag but `latest` (a version is refused when already published, any other tag is replaced), and :latest for the highest stable version
 ```
 
 `examples/` holds one deployment per directory (`compose.yaml`, and the `Caddyfile` of its reverse proxy when it has one): `no-proxy-http`, `proxy-http`, `proxy-https`, `proxy-https-server-https`, `proxy-https-subdomain` and `proxy-https-base-path`. The header of each `compose.yaml` gives its address (`# URL: …`), which `scripts/start_docker.sh` prints, and its image is `ECHO_IMAGE`, the published one by default.
