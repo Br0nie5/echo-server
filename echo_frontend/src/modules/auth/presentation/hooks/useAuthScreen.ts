@@ -14,7 +14,7 @@ interface UseAuthScreenReturnType {
   refetchAuthResultCheck: () => void
 }
 
-/** Data of the auth screen: the auth check deciding which form to show, and its refetch. */
+/** Gives the data of the auth screen: the auth check deciding what it displays, and its refetch. */
 export const useAuthScreen = (): UseAuthScreenReturnType => {
   const translation = useAppTranslation()
   const config = useConfig()

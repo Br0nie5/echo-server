@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
 
-/** Size of the window, in pixels. */
+/** The size of the window, in pixels. */
 export interface WindowSize {
   width: number
   height: number
 }
 
-/** The window size, kept up to date on resize. A window taller than it is wide counts as a small screen. */
+/**
+ * Gives the size of the window, kept up to date when it is resized.
+ *
+ * A window taller than it is wide counts as a small screen.
+ */
 export const useWindowSize = (): {
   windowSize: WindowSize
   isSmallScreen: boolean

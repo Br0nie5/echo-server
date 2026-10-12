@@ -17,7 +17,11 @@ type TranslationKeyPaths = FlattenKeys<TranslationKeys>
 /** Translates a key, which is type-checked against the locale keys. */
 export type AppTranslation = (key: TranslationKeyPaths) => string
 
-/** Type-safe `t` function: an unknown translation key is a compile error. It stays the same function as long as the language does. */
+/**
+ * Gives the function translating a key, an unknown key being a compile error.
+ *
+ * It stays the same function as long as the language does.
+ */
 export const useAppTranslation = (): AppTranslation => {
   const { t: translate } = useTranslation()
   return useCallback((key: TranslationKeyPaths) => translate(key), [translate])

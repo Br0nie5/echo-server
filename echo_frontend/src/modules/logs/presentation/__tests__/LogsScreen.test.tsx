@@ -1,384 +1,310 @@
-import { LogLevel, type GetLogsParams, type Log, type LogSearchFilter } from '@echo/utilities'
-import { waitFor, waitForElementToBeRemoved, type RenderResult } from '@testing-library/react'
+import type { Log } from '@echo/utilities'
+import { waitFor, type RenderResult } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import nock from 'nock'
-import type { Location } from 'react-router-dom'
-import { vi, vitest } from 'vitest'
 
-import i18n from '../../../../shared/i18n/i18n'
-import type { AppTranslation } from '../../../../shared/i18n/useAppTranslation'
-import { AppPathNames } from '../../../../shared/navigation/pathNames'
-import { formatDate } from '../../../../shared/utils/formatDate'
-import { getDateFromDaysAgo } from '../../../../shared/utils/getDateFromDaysAgo'
-import { renderApp } from '../../../../test/renderApp'
+import { mockConfig } from '../../../../test/mocks/mockConfig'
+import { stubFilterWorker } from '../../../../test/mocks/stubFilterWorker'
+import { renderFakeRouterApp, renderRealRouterApp } from '../../../../test/renderApp'
+import { appTranslation } from '../../../../test/utils/appTranslation'
 import { expectDateToBeSelected, getDateSection } from '../../../../test/utils/dateSelector'
-import { mockConfig } from '../../../../test/utils/mockConfig'
+import { getAppPath } from '../../../../test/utils/getAppPath'
+import { getRouteTestId } from '../../../../test/utils/getRouteTestId'
 import { resizeWindow } from '../../../../test/utils/resizeWindow'
-import { LogsScreen } from '../LogsScreen'
 
-import { getLogsMock } from './logs.mock'
+import { logsMock } from './logs.mock'
 
-vi.mock('../../infra/workers/filterLogs.ts', async () => {
-  const { filterLogByLevels, filterLogBySearch } = await vi.importActual<{
-    filterLogByLevels: (log: Log, levels: LogLevel[]) => boolean
-    filterLogBySearch: (log: Log, searchFilters: LogSearchFilter[]) => boolean
-  }>('@echo/utilities')
+/** The instant the tests run at: the day of the newest logs of `logsMock`. */
+const NOW = new Date('2026-04-28T10:00:00.000Z')
+const TODAY = '2026-04-28T00:00:00.000Z'
+const YESTERDAY = '2026-04-27T00:00:00.000Z'
+/** Where the logs start by default: `LOGS_INITIAL_DATE_DAYS_AGO` days before `NOW`. */
+const TWO_DAYS_AGO = '2026-04-26T00:00:00.000Z'
+const TWO_DAYS_AGO_TITLE = 'Sunday, 26 April 2026'
 
-  return {
-    filterLogs: vi.fn(
-      (logs: Log[], logLevelsFilters: LogLevel[], logSearchFilters: LogSearchFilter[]) => {
-        return new Promise((resolve) =>
-          setTimeout(
-            () =>
-              resolve(
-                logs
-                  .filter((log) => filterLogByLevels(log, logLevelsFilters))
-                  .filter((log) => filterLogBySearch(log, logSearchFilters))
-              ),
-            100
-          )
-        )
-      }
-    )
-  }
-})
+const mockLogsRequest = (fromDate: string): nock.Interceptor =>
+  nock(mockConfig.API_URL).get('/logs').query({ fromDate })
 
-vi.mock('use-debounce', () => {
-  return {
-    useDebounce: (value: unknown): unknown[] => [value]
-  }
-})
+const getLogsFrom = (fromDate: string): Log[] => logsMock.filter((log) => log.date >= fromDate)
 
-const mockTodayDate = new Date('2026-04-28T10:00:00.000Z')
+/** The path of the logs screen with `query`, its query params in the order the screen writes them. */
+const getLogsPath = (query: string[][]): string => `/logs?${new URLSearchParams(query)}`
 
-vitest.setSystemTime(mockTodayDate)
-
-const logsMock = getLogsMock(mockTodayDate)
-
-const appTranslation: AppTranslation = (key) => i18n.t(key)
-
-beforeEach(() => {
-  vi.clearAllMocks()
-
-  vi.resetModules()
-})
-
-const buildRequestMockScope = (): nock.Scope => {
-  return nock(mockConfig.API_URL)
-}
-
-const buildLogsRequestMock = (params: GetLogsParams): nock.Interceptor => {
-  return buildRequestMockScope().get('/logs').query(params)
-}
-
-const buildLogsSuccessRequestMock = (params: GetLogsParams): void => {
-  const logsFilteredByParams = logsMock.filter(
-    (log) => new Date(log.date).getTime() > new Date(params.fromDate).getTime()
-  )
-  buildLogsRequestMock(params).reply(200, logsFilteredByParams)
-}
-
-const buildLogsErrorRequestMock = (params: GetLogsParams, statusCode: number = 400): void => {
-  buildLogsRequestMock(params).reply(statusCode, { statusCode, message: 'random error' })
-}
-
-type RenderLogsScreenMode = { status: 'success' } | { status: 'error'; statusCode?: number }
-type RenderLogsScreenParams = {
-  pathname?: string
-  logsInitialDateOverride?: string
-  onLocationChange?: (location: Location) => void
-}
-
+/**
+ * Opens the logs screen at `path`, on the logs of the last days, and waits for them to be
+ * displayed and filtered.
+ *
+ * `messageToWaitFor` is the message of one of the logs the screen displays at `path`. Only the logs
+ * screen is real, unless `isRealRouter` is true.
+ */
 const renderLogsScreen = async (
-  mode: RenderLogsScreenMode,
-  params?: RenderLogsScreenParams
+  path: string,
+  { messageToWaitFor, isRealRouter = false }: { messageToWaitFor: string; isRealRouter?: boolean }
 ): Promise<RenderResult> => {
-  const fromDate =
-    params?.logsInitialDateOverride ??
-    getDateFromDaysAgo(mockConfig.LOGS_INITIAL_DATE_DAYS_AGO).toISOString()
+  mockLogsRequest(TWO_DAYS_AGO).reply(200, logsMock)
 
-  let textToFind: string
+  const screen = isRealRouter ? renderRealRouterApp(path) : renderFakeRouterApp(path)
 
-  switch (mode.status) {
-    case 'success':
-      textToFind = logsMock[0].message
-      buildLogsSuccessRequestMock({ fromDate })
-      break
-    case 'error':
-      textToFind = appTranslation('query.error')
-      buildLogsErrorRequestMock({ fromDate }, mode.statusCode)
-      break
-  }
+  await screen.findByText(messageToWaitFor)
 
-  const screen = await renderApp(AppPathNames.logs, <LogsScreen />, params?.pathname, {
-    onLocationChange: params?.onLocationChange
-  })
-
-  await screen.findAllByText(textToFind)
+  // The logs are first displayed all, under a progress bar, while they are being filtered: the
+  // bar goes once the screen only displays the ones matching the filters.
+  await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument())
 
   return screen
 }
 
+beforeAll(() => {
+  // Only the date is set, and it goes on from there: the timers of the app are the real ones, and
+  // the debounce of the filters measures the time that passes with the date.
+  vi.useFakeTimers({ now: NOW, toFake: ['Date'], shouldAdvanceTime: true })
+  stubFilterWorker()
+})
+
+afterAll(() => {
+  vi.useRealTimers()
+  vi.unstubAllGlobals()
+})
+
+beforeEach(() => {
+  resizeWindow(1200, 600)
+})
+
 describe('LogsScreen', () => {
-  test('Should render all the logs on a big screen', async () => {
-    resizeWindow(1200, 600)
+  describe('Displaying the logs', () => {
+    test('Should display the logs of the last days on a wide screen', async () => {
+      const todayLogMessage = 'Invoices sent.'
 
-    const screen = await renderLogsScreen({ status: 'success' })
-
-    expect(screen.asFragment()).toMatchSnapshot()
-  })
-
-  test('Should render all the logs on a small screen', async () => {
-    resizeWindow(600, 1200)
-
-    const screen = await renderLogsScreen({ status: 'success' })
-
-    expect(screen.asFragment()).toMatchSnapshot()
-  })
-
-  describe('Filters', () => {
-    describe('From query parameters', () => {
-      test('Should directly filter all logs unrelated to the wanted level if it is present as a query parameter', async () => {
-        const screen = await renderLogsScreen(
-          { status: 'success' },
-          { pathname: '?logLevels=WARNING' }
-        )
-
-        await waitForElementToBeRemoved(screen.getAllByText(logsMock[0].message))
-
-        const warningLog = logsMock.find((log) => log.level === LogLevel.WARNING)
-        expect(warningLog).not.toBeUndefined()
-
-        screen.getByText(warningLog!.message)
-
-        expect(warningLog).not.toBeNull()
-        expect(screen.queryAllByText(/SUCCESS/i).length).toBe(1)
-        expect(screen.queryAllByText(/INFO/i).length).toBe(1)
-        expect(screen.queryAllByText(/WARNING/i).length).toBeGreaterThan(1)
-        expect(screen.queryAllByText(/ERROR/i).length).toBe(1)
+      const screen = await renderLogsScreen('/logs', {
+        messageToWaitFor: todayLogMessage,
+        isRealRouter: true
       })
 
-      test('Should directly filter all logs unrelated to the search query if it is present as a query parameter', async () => {
-        const filterLog = logsMock[15]
-
-        const filterLogSearchQuery =
-          `jobId:${filterLog.jobId} ` +
-          `locationName:${filterLog.locationName} ` +
-          `groupName:${filterLog.groupName} ` +
-          `message:${filterLog.message}`
-
-        const screen = await renderLogsScreen(
-          { status: 'success' },
-          {
-            pathname: `?logSearch=${filterLogSearchQuery}`
-          }
-        )
-
-        await waitForElementToBeRemoved(screen.getAllByText(logsMock[1].message))
-        expect(screen.queryByText(logsMock[5].message)).not.toBeInTheDocument()
-        expect(screen.queryByText(logsMock[20].message)).not.toBeInTheDocument()
-
-        expect(screen.queryByText(filterLog.message)).toBeInTheDocument()
-      })
-
-      test('Should directly filter all the logs older that fromDate if it is present as a query parameter', async () => {
-        const lastLogsSeenDate = getDateFromDaysAgo(mockConfig.LOGS_INITIAL_DATE_DAYS_AGO)
-
-        const newLogsFromDate = new Date(lastLogsSeenDate.getTime() + 1 * 24 * 60 * 60 * 1000)
-
-        const screen = await renderLogsScreen(
-          { status: 'success' },
-          {
-            pathname: `?fromDate=${newLogsFromDate.toISOString()}`,
-            logsInitialDateOverride: newLogsFromDate.toISOString()
-          }
-        )
-
-        expect(
-          screen.queryByText(
-            formatDate(lastLogsSeenDate, 'dayName day monthName year', appTranslation)
-          )
-        ).not.toBeInTheDocument()
-      })
-
-      test('Should replace the wrong values of the query parameters and display the logs', async () => {
-        const defaultLogsFromDate = getDateFromDaysAgo(mockConfig.LOGS_INITIAL_DATE_DAYS_AGO)
-        const wrongLogLevel = 'WRONG_LEVEL'
-        const wrongQueryParameters =
-          '?fromDate=not-a-date' + `&logLevels=${wrongLogLevel}` + '&logLevels=WARNING'
-
-        const fixedQueryParameters = new URLSearchParams({
-          fromDate: defaultLogsFromDate.toISOString(),
-          logLevels: 'WARNING'
-        })
-        const onLocationChange = vi.fn<(location: Location) => void>()
-
-        const screen = await renderLogsScreen(
-          { status: 'success' },
-          { pathname: wrongQueryParameters, onLocationChange }
-        )
-
-        await waitForElementToBeRemoved(screen.getAllByText(logsMock[0].message))
-
-        expect(onLocationChange.mock.lastCall?.[0].search).toBe(`?${fixedQueryParameters}`)
-
-        expectDateToBeSelected(screen, defaultLogsFromDate)
-
-        expect(screen.queryByText(wrongLogLevel)).not.toBeInTheDocument()
-
-        const warningLog = logsMock.find((log) => log.level === LogLevel.WARNING)
-        expect(warningLog).not.toBeUndefined()
-
-        expect(screen.getByText(warningLog!.message)).toBeInTheDocument()
-      })
+      expect(screen.asFragment()).toMatchSnapshot()
     })
 
-    describe('From user interaction', () => {
-      test('Should filter all logs unrelated to the wanted level', async () => {
-        const user = userEvent.setup()
+    test('Should display the logs of the last days on a phone screen', async () => {
+      resizeWindow(600, 1200)
 
-        const screen = await renderLogsScreen({ status: 'success' })
+      const todayLogMessage = 'Invoices sent.'
 
-        const warnings = screen.getAllByText('WARNING')
-
-        await user.click(warnings[0])
-
-        await waitForElementToBeRemoved(screen.getAllByText(logsMock[0].message))
-
-        const warningLog = logsMock.find((log) => log.level === LogLevel.WARNING)
-        expect(warningLog).not.toBeNull()
-        expect(screen.getByText(warningLog!.message)).toBeInTheDocument()
+      const screen = await renderLogsScreen('/logs', {
+        messageToWaitFor: todayLogMessage,
+        isRealRouter: true
       })
 
-      test('Should filter all logs unrelated to the search query', async () => {
-        const user = userEvent.setup()
-
-        const screen = await renderLogsScreen({ status: 'success' })
-
-        const searchInput = screen.getByPlaceholderText(appTranslation('logs.searchPlaceholder'))
-
-        const filterLog = logsMock[15]
-
-        const filterLogSearchQuery =
-          `jobId:${filterLog.jobId} ` +
-          `locationName:${filterLog.locationName} ` +
-          `groupName:${filterLog.groupName} ` +
-          `message:${filterLog.message}`
-
-        await user.type(searchInput, filterLogSearchQuery)
-        await user.keyboard('{Enter}')
-
-        await waitForElementToBeRemoved(screen.getAllByText(logsMock[1].message))
-        expect(screen.queryByText(logsMock[5].message)).not.toBeInTheDocument()
-        expect(screen.queryByText(logsMock[20].message)).not.toBeInTheDocument()
-
-        expect(screen.queryByText(filterLog.message)).toBeInTheDocument()
-      })
-
-      test('Should filter out all logs unrelated to the search query', async () => {
-        const user = userEvent.setup()
-
-        const screen = await renderLogsScreen({ status: 'success' })
-
-        const searchInput = screen.getByPlaceholderText(appTranslation('logs.searchPlaceholder'))
-
-        const filterLog = logsMock[15]
-
-        const filterLogSearchQuery = `-"${filterLog.message}"`
-
-        await user.type(searchInput, filterLogSearchQuery)
-        await user.keyboard('{Enter}')
-
-        await waitForElementToBeRemoved(screen.getAllByText(filterLog.message))
-
-        screen.getAllByText(logsMock[1].message)
-        screen.getAllByText(logsMock[5].message)
-        screen.getAllByText(logsMock[20].message)
-      })
-
-      test('Should filter the logs older than fromDate param when clicking on another date in the DatePicker', async () => {
-        const user = userEvent.setup()
-
-        const screen = await renderLogsScreen({ status: 'success' })
-
-        const lastLogsSeenDate = getDateFromDaysAgo(mockConfig.LOGS_INITIAL_DATE_DAYS_AGO)
-
-        expect(
-          screen.getByText(
-            formatDate(lastLogsSeenDate, 'dayName day monthName year', appTranslation)
-          )
-        ).toBeInTheDocument()
-
-        const newLogsFromDate = new Date(lastLogsSeenDate.getTime() + 1 * 24 * 60 * 60 * 1000)
-
-        buildLogsSuccessRequestMock({ fromDate: newLogsFromDate.toISOString() })
-
-        await user.click(screen.getByLabelText(/Choose date/))
-
-        await userEvent.click(getDateSection(screen, 'Day'))
-        await userEvent.keyboard('{ArrowUp}')
-
-        await screen.findAllByText(logsMock[0].message)
-
-        expect(
-          screen.queryByText(
-            formatDate(lastLogsSeenDate, 'dayName day monthName year', appTranslation)
-          )
-        ).not.toBeInTheDocument()
-      })
+      expect(screen.asFragment()).toMatchSnapshot()
     })
   })
 
-  test('Should show logs when opening a day section', async () => {
-    const user = userEvent.setup()
+  describe('Filtering the logs', () => {
+    test('Should filter the logs by the levels', async () => {
+      const user = userEvent.setup()
 
-    const screen = await renderLogsScreen({ status: 'success' })
+      const warningTestLogMessage = 'Stock file is older than a day.'
+      const errorTestLogMessage = 'Stock could not be read.'
+      const infoTestLogMessage = 'Invoices sent.'
 
-    const elements = screen.getAllByText(logsMock[0].message)
-    expect(elements).toHaveLength(2)
+      const screen = await renderLogsScreen('/logs?logLevels=WARNING', {
+        messageToWaitFor: warningTestLogMessage
+      })
 
-    const yesterday = screen.getByText('Yesterday')
+      expect(screen.queryByText(infoTestLogMessage)).not.toBeInTheDocument()
+      expect(screen.queryByText(errorTestLogMessage)).not.toBeInTheDocument()
 
-    await user.click(yesterday)
+      await user.click(screen.getByText('ERROR'))
 
-    const filteredElements = await screen.findAllByText(logsMock[0].message)
-    expect(filteredElements).toHaveLength(3)
+      expect(await screen.findByText(errorTestLogMessage)).toBeInTheDocument()
+
+      expect(screen.getByText(warningTestLogMessage)).toBeInTheDocument()
+      expect(screen.queryByText(infoTestLogMessage)).not.toBeInTheDocument()
+
+      await user.click(screen.getByText('WARNING'))
+
+      await waitFor(() => expect(screen.queryByText(warningTestLogMessage)).not.toBeInTheDocument())
+
+      expect(screen.getByText(errorTestLogMessage)).toBeInTheDocument()
+      expect(getAppPath()).toBe(
+        getLogsPath([
+          ['fromDate', TWO_DAYS_AGO],
+          ['logLevels', 'ERROR']
+        ])
+      )
+    })
+
+    test('Should filter the logs by the search', async () => {
+      const user = userEvent.setup()
+
+      const shopGroupSearch = 'groupName:shop'
+      const withoutCouldNotSearch = '-message:"could not"'
+
+      const shopGroupTestLogMessage = 'Stock file is older than a day.'
+      const shopGroupCouldNotTestLogMessage = 'Stock could not be read.'
+      const billingGroupTestLogMessage = 'Invoices sent.'
+      const noGroupTestLogMessage = 'Ping answered.'
+
+      const screen = await renderLogsScreen(`/logs?logSearch=${shopGroupSearch}`, {
+        messageToWaitFor: shopGroupTestLogMessage
+      })
+
+      expect(screen.queryByText(billingGroupTestLogMessage)).not.toBeInTheDocument()
+      expect(screen.queryByText(noGroupTestLogMessage)).not.toBeInTheDocument()
+      expect(screen.getByText(shopGroupCouldNotTestLogMessage)).toBeInTheDocument()
+
+      await user.type(screen.getByDisplayValue(shopGroupSearch), ` ${withoutCouldNotSearch}`)
+      await user.keyboard('{Enter}')
+
+      await waitFor(() =>
+        expect(screen.queryByText(shopGroupCouldNotTestLogMessage)).not.toBeInTheDocument()
+      )
+
+      expect(screen.getByText(shopGroupTestLogMessage)).toBeInTheDocument()
+
+      expect(getAppPath()).toBe(
+        getLogsPath([
+          ['fromDate', TWO_DAYS_AGO],
+          ['logSearch', `${shopGroupSearch} ${withoutCouldNotSearch}`]
+        ])
+      )
+    })
+
+    test('Should filter the logs by the date', async () => {
+      const user = userEvent.setup()
+
+      const todayTestLogMessage = 'Invoices sent.'
+
+      mockLogsRequest(YESTERDAY).reply(200, getLogsFrom(YESTERDAY))
+
+      const screen = renderFakeRouterApp(getLogsPath([['fromDate', YESTERDAY]]))
+
+      expect(await screen.findByText(todayTestLogMessage)).toBeInTheDocument()
+
+      expectDateToBeSelected(screen, new Date(YESTERDAY))
+
+      expect(screen.getByText(appTranslation('utils.yesterday'))).toBeInTheDocument()
+      expect(screen.queryByText(TWO_DAYS_AGO_TITLE)).not.toBeInTheDocument()
+
+      mockLogsRequest(TODAY).reply(200, [])
+
+      await user.click(getDateSection(screen, 'Day'))
+      await user.keyboard('{ArrowUp}')
+
+      expect(await screen.findByText(appTranslation('query.noData'))).toBeInTheDocument()
+
+      expectDateToBeSelected(screen, new Date(TODAY))
+      expect(getAppPath()).toBe(getLogsPath([['fromDate', TODAY]]))
+
+      expect(screen.queryByText(todayTestLogMessage)).not.toBeInTheDocument()
+      expect(screen.queryByText(appTranslation('utils.yesterday'))).not.toBeInTheDocument()
+    })
+  })
+
+  describe('Opening and hiding the logs', () => {
+    test('Should only open the newest day, and let the user open and close the days', async () => {
+      const user = userEvent.setup()
+
+      const todayLogMessage = 'Invoices sent.'
+      const otherTodayLogMessage = 'Ping answered.'
+      const yesterdayLogMessage = 'Nothing to send.'
+
+      const screen = await renderLogsScreen('/logs', { messageToWaitFor: todayLogMessage })
+
+      expect(screen.queryByText(yesterdayLogMessage)).not.toBeInTheDocument()
+
+      await user.click(screen.getByText(appTranslation('utils.yesterday')))
+
+      expect(screen.getByText(yesterdayLogMessage)).toBeInTheDocument()
+
+      await user.click(screen.getByText(appTranslation('utils.today')))
+
+      expect(screen.queryByText(todayLogMessage)).not.toBeInTheDocument()
+      expect(screen.queryByText(otherTodayLogMessage)).not.toBeInTheDocument()
+
+      expect(screen.getByText(yesterdayLogMessage)).toBeInTheDocument()
+    })
+
+    test('Should let the user close a group, and open it again', async () => {
+      const user = userEvent.setup()
+
+      const billingGroupName = 'billing'
+      const billingGroupJobTitle = '[send_invoices] > [12]'
+      const billingGroupLogMessage = 'Invoices sent.'
+      const shopGroupLogMessage = 'Stock could not be read.'
+      const noGroupLogMessage = 'Ping answered.'
+
+      const screen = await renderLogsScreen('/logs', { messageToWaitFor: billingGroupLogMessage })
+
+      await user.click(screen.getByText(billingGroupName))
+
+      expect(screen.queryByText(billingGroupLogMessage)).not.toBeInTheDocument()
+      expect(screen.queryByText(billingGroupJobTitle)).not.toBeInTheDocument()
+
+      expect(screen.getByText(shopGroupLogMessage)).toBeInTheDocument()
+      expect(screen.getByText(noGroupLogMessage)).toBeInTheDocument()
+
+      await user.click(screen.getByText(billingGroupName))
+
+      expect(screen.getByText(billingGroupLogMessage)).toBeInTheDocument()
+    })
+
+    test('Should let the user close a job, and open it again', async () => {
+      const user = userEvent.setup()
+
+      const syncStockJobTitle = '[sync_stock] > [7]'
+      const syncStockJobLogMessage = 'Stock could not be read.'
+      const otherSyncStockJobLogMessage = 'Stock file is older than a day.'
+      const sendInvoicesJobLogMessage = 'Invoices sent.'
+      const pingJobLogMessage = 'Ping answered.'
+
+      const screen = await renderLogsScreen('/logs', { messageToWaitFor: syncStockJobLogMessage })
+
+      await user.click(screen.getByText(syncStockJobTitle))
+
+      expect(screen.queryByText(syncStockJobLogMessage)).not.toBeInTheDocument()
+      expect(screen.queryByText(otherSyncStockJobLogMessage)).not.toBeInTheDocument()
+
+      expect(screen.getByText(sendInvoicesJobLogMessage)).toBeInTheDocument()
+      expect(screen.getByText(pingJobLogMessage)).toBeInTheDocument()
+
+      await user.click(screen.getByText(syncStockJobTitle))
+
+      expect(screen.getByText(syncStockJobLogMessage)).toBeInTheDocument()
+    })
   })
 
   describe('Error cases', () => {
-    test('Should refetch logs if clicking on refetch button on error page', async () => {
+    test('Should let the user try to fetch the logs again after an error', async () => {
       const user = userEvent.setup()
 
-      const screen = await renderLogsScreen({ status: 'error' })
+      const todayLogMessage = 'Invoices sent.'
 
-      const refetchButton = screen.getByText(appTranslation('query.refetchButton'))
+      mockLogsRequest(TWO_DAYS_AGO).reply(500, { statusCode: 500, message: 'Some error.' })
 
-      buildLogsSuccessRequestMock({
-        fromDate: getDateFromDaysAgo(mockConfig.LOGS_INITIAL_DATE_DAYS_AGO).toISOString()
-      })
+      const screen = renderFakeRouterApp('/logs')
 
-      await user.click(refetchButton)
+      expect(await screen.findByText(appTranslation('query.error'))).toBeInTheDocument()
 
-      await screen.findAllByText(logsMock[0].message)
+      mockLogsRequest(TWO_DAYS_AGO).reply(200, logsMock)
+
+      await user.click(screen.getByText(appTranslation('query.refetchButton')))
+
+      expect(await screen.findByText(todayLogMessage)).toBeInTheDocument()
     })
 
-    test('Should go to the auth screen with the correct redirect, when getting an error 401 (unauthorized)', async () => {
-      const fromDate = getDateFromDaysAgo(mockConfig.LOGS_INITIAL_DATE_DAYS_AGO).toISOString()
-      const logsPath = `${AppPathNames.logs}?${new URLSearchParams({ fromDate })}`
-      const onLocationChange = vi.fn<(location: Location) => void>()
+    test('Should send an unauthenticated user to the auth screen', async () => {
+      const logsPath = getLogsPath([
+        ['fromDate', TWO_DAYS_AGO],
+        ['logSearch', 'stock']
+      ])
+      mockLogsRequest(TWO_DAYS_AGO).reply(401, { statusCode: 401, message: 'Unauthorized.' })
 
-      buildLogsErrorRequestMock({ fromDate }, 401)
+      const screen = renderFakeRouterApp(logsPath)
 
-      await renderApp(AppPathNames.logs, <LogsScreen />, `?${new URLSearchParams({ fromDate })}`, {
-        onLocationChange
-      })
-
-      await waitFor(() =>
-        expect(onLocationChange.mock.lastCall?.[0]).toMatchObject({
-          pathname: AppPathNames.auth,
-          search: `?${new URLSearchParams({ redirect: logsPath })}`
-        })
-      )
+      expect(
+        await screen.findByTestId(
+          getRouteTestId(`/auth?${new URLSearchParams({ redirect: logsPath })}`)
+        )
+      ).toBeInTheDocument()
     })
   })
 })

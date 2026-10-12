@@ -44,5 +44,10 @@ const QueryFallbackLayoutComponent: React.FC<QueryFallbackLayoutProps> = ({ stat
   )
 }
 
-/** What to show instead of the data of a query: a spinner while pending, a no-data message once successful, an error with a refetch button otherwise. */
+/**
+ * What to display in place of the data of a query that has none.
+ *
+ * A spinner while it is pending, a message saying there is no data once it succeeded, an error
+ * with a button calling `refetch` otherwise.
+ */
 export const QueryFallbackLayout = memo(QueryFallbackLayoutComponent)

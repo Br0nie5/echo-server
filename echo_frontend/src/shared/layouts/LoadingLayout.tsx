@@ -19,5 +19,5 @@ const LoadingLayoutComponent: React.FC = () => {
   )
 }
 
-/** Centered loading spinner. */
+/** A centered loading spinner. */
 export const LoadingLayout = memo(LoadingLayoutComponent)

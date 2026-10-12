@@ -1,49 +1,88 @@
-import type { RenderResult } from '@testing-library/react'
-import { Route, Routes, type Location } from 'react-router-dom'
+import { render, type RenderResult } from '@testing-library/react'
+import nock from 'nock'
+import { matchPath } from 'react-router-dom'
 
-import type { FrontConfig } from '../shared/config/frontConfig.ts'
+import '../shared/i18n/i18n.ts'
 
-import { renderComponent } from './renderComponent.tsx'
-import { AppRouterWrapper } from './utils/AppRouterWrapper.tsx'
-import { mockConfig } from './utils/mockConfig.ts'
+import { App } from '../App.tsx'
+import { AppProviders } from '../initializers/AppProviders.tsx'
+import { configJsonUrl } from '../initializers/config/ConfigProvider.tsx'
+import { AppRouter } from '../initializers/navigation/AppRouter.tsx'
+
+import { RoutePlaceholder } from './components/RoutePlaceholder.tsx'
+import { mockConfig, mockRawConfig } from './mocks/mockConfig.ts'
+import { mockUrl } from './mocks/mockUrl.ts'
+
+interface RenderAppParams {
+  /** The content of `env.<mode>.json` the app loads: `mockRawConfig` when left out. */
+  rawConfig?: Record<string, unknown>
+  /** The HTTP status `env.<mode>.json` is answered with: 200 when left out. */
+  configStatus?: number
+}
+
+/** Answers the config the app starts by loading, and puts the page of the tests at `path`. */
+const openPage = (path: string, params?: RenderAppParams): void => {
+  nock(mockUrl)
+    .get(configJsonUrl)
+    .reply(params?.configStatus ?? 200, params?.rawConfig ?? mockRawConfig)
+
+  window.history.replaceState(null, '', `${new URL(mockConfig.APP_URL).pathname}${path}`)
+}
 
 /**
- * Renders `child` as the screen of `testPath`, inside the providers of the app and a router whose
- * `basename` is the path of `APP_URL`, as `AppRouter` does.
+ * Renders the whole app, as the page does, opened at `path`.
  *
- * `pathParams` is the query string the screen is opened with (`'?fromDate=…'`). Only `testPath`
- * renders `child`: a screen navigating elsewhere renders nothing.
+ * `path` is a path below `APP_URL`, with its query string (`'/logs?logSearch=text'`). Everything
+ * is real, the screens the app navigates to included: only the network is mocked, so mock the
+ * requests of every screen it goes through. It is for what must look like the real app, such as a
+ * snapshot: to test what a screen does, use `renderFakeRouterApp`.
  *
- * The router keeps its location in memory, so the address bar cannot be read. To check the URL a
- * screen navigates to, give `params.onLocationChange`: it is called with the location, below
- * `APP_URL`, at first and each time it changes.
+ * The app starts by loading its config, which is answered here: wait for what the screen displays
+ * with a `findBy…` query.
  *
  * ```tsx
- * const onLocationChange = vi.fn<(location: Location) => void>()
+ * nock(mockConfig.API_URL).get('/logs').query(true).reply(200, logs)
  *
- * await renderApp(AppPathNames.logs, <LogsScreen />, '?logSearch=text', { onLocationChange })
+ * const screen = renderRealRouterApp('/logs')
  *
- * expect(onLocationChange.mock.lastCall?.[0].search).toBe('?logSearch=text')
+ * await screen.findByText(logs[0].message)
+ * expect(screen.asFragment()).toMatchSnapshot()
  * ```
  */
-export const renderApp = async (
-  testPath: string,
-  child: React.ReactElement,
-  pathParams?: string,
-  params?: { configOverride?: FrontConfig; onLocationChange?: (location: Location) => void }
-): Promise<RenderResult> => {
-  const config = params?.configOverride ?? mockConfig
+export const renderRealRouterApp = (path: string, params?: RenderAppParams): RenderResult => {
+  openPage(path, params)
 
-  return renderComponent(
-    <AppRouterWrapper
-      initialPath={`${testPath}${pathParams ?? ''}`}
-      config={config}
-      onLocationChange={params?.onLocationChange}
-    >
-      <Routes>
-        <Route path={testPath} element={child} />
-      </Routes>
-    </AppRouterWrapper>,
-    { configOverride: config }
+  return render(<App />)
+}
+
+/**
+ * Renders the app opened at `path`, with the screen of that path as the only real one.
+ *
+ * It is the app of `renderRealRouterApp`, its providers and its router included, but any other
+ * screen is replaced by an empty box with the test id `getRouteTestId` gives. The test of a screen
+ * therefore never renders the screens it navigates to, nor mocks their requests: it checks where
+ * the app went. Read the path the app is at with `getAppPath`.
+ *
+ * ```tsx
+ * nock(mockConfig.API_URL).get('/auth/check').reply(200, { success: true })
+ *
+ * const screen = renderFakeRouterApp('/auth')
+ *
+ * expect(await screen.findByTestId(getRouteTestId('/logs'))).toBeInTheDocument()
+ * ```
+ */
+export const renderFakeRouterApp = (path: string, params?: RenderAppParams): RenderResult => {
+  openPage(path, params)
+
+  const testedPathname = new URL(path, mockUrl).pathname
+
+  return render(
+    <AppProviders>
+      <AppRouter
+        buildRouteElement={(route) =>
+          matchPath(route.path, testedPathname) !== null ? route.screen : <RoutePlaceholder />
+        }
+      />
+    </AppProviders>
   )
 }

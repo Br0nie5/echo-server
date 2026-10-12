@@ -47,5 +47,10 @@ const AuthScreenComponent: React.FC = () => {
   )
 }
 
-/** Auth page: checks the authentication, then shows the login form, the sign up form (no account yet) or redirects (already authenticated). */
+/**
+ * The auth screen.
+ *
+ * It checks the authentication, then displays the login form, the sign up form when no account
+ * exists yet, or redirects when the user is already authenticated.
+ */
 export const AuthScreen = memo(AuthScreenComponent)

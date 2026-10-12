@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AuthScreen > Should render correctly 1`] = `
+exports[`AuthScreen > Should display the login form to the user who is not logged in 1`] = `
 <DocumentFragment>
   <div
     class="MuiBox-root css-5aboy8"

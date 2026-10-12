@@ -3,7 +3,11 @@ import { useContext } from 'react'
 
 import { ApiContext } from './ApiContext'
 
-/** The shared axios instance. Throws outside of `ApiProvider`. */
+/**
+ * Gives the axios instance of the app, which targets the API.
+ *
+ * Throws outside of `ApiProvider`.
+ */
 export const useApi = (): AxiosInstance => {
   const context = useContext(ApiContext)
   if (!context) {

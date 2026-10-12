@@ -1,4 +1,4 @@
-import { mockConfig } from '../../../../test/utils/mockConfig'
+import { mockConfig } from '../../../../test/mocks/mockConfig'
 import { parseFrontConfig } from '../parseFrontConfig'
 
 const BASE_URI = `${mockConfig.APP_URL}/`

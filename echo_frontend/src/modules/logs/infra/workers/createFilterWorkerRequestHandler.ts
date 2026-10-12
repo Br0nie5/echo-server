@@ -8,7 +8,8 @@ type FilterWorkerRequestHandler = (request: FilterWorkerRequest) => FilterWorker
 /**
  * Creates what the filter worker does with its requests, keeping the logs it was last given.
  *
- * The logs are filtered with the same functions as the backend, so results are identical.
+ * A `setLogs` request has no answer. A `filterLogs` one is answered with the positions of the logs
+ * matching both the levels and the search (`filterLogByLevels`, `filterLogBySearch`).
  *
  * ```ts
  * const handleFilterWorkerRequest = createFilterWorkerRequestHandler()

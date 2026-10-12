@@ -1,8 +1,8 @@
 import nock from 'nock'
 import { describe, expect, test } from 'vitest'
 
+import { mockConfig } from '../../../../test/mocks/mockConfig'
 import { renderAppHook } from '../../../../test/renderAppHook'
-import { mockConfig } from '../../../../test/utils/mockConfig'
 import { InvalidCredentialsError } from '../../domain/auth.repository'
 import { useAuthRepository } from '../useAuthRepository'
 
@@ -36,7 +36,7 @@ describe('useAuthRepository', () => {
   })
 
   describe('login', () => {
-    test('Should throw an InvalidCredentialsError if the backend refuses the credentials', async () => {
+    test('Should throw an InvalidCredentialsError if the API refuses the credentials', async () => {
       buildRequestMockScope()
         .post('/auth/login')
         .reply(401, { success: false, message: 'Invalid credentials.' })

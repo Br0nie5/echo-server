@@ -2,11 +2,15 @@ import type { AlertColor } from '@mui/material'
 
 import type { AuthCheckResult } from '../../domain/auth.repository'
 
-/** Message shown above the auth form. */
+/** A message displayed above the auth form. */
 export interface AuthAlert {
   severity: AlertColor
   message: string
 }
 
-/** How the user authenticates: `login` into an account, or `signUp` of the first one. These are the auth check results that ask for credentials. */
+/**
+ * How the user authenticates: `login` into an account, or `signUp` of the first one.
+ *
+ * These are the results of the auth check that ask for credentials.
+ */
 export type AuthenticationMode = Exclude<AuthCheckResult, 'redirect'>

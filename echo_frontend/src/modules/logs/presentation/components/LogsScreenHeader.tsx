@@ -78,5 +78,11 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
   )
 }
 
-/** Header of the logs page: the start date picker (limited to the last `LOGS_MINIMAL_DATE_DAYS_AGO` days of the config), the server name and, once levels are available, the level chips and the search bar. */
+/**
+ * The header of the logs screen.
+ *
+ * It displays the picker of the date the logs start at, limited to the last
+ * `LOGS_MINIMAL_DATE_DAYS_AGO` days, the name of the server and, once levels are available, the
+ * level chips and the search bar.
+ */
 export const LogsScreenHeader = memo(LogsScreenHeaderComponent)

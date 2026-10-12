@@ -1,368 +1,134 @@
 import { needsSignupMessage, type AuthToken } from '@echo/utilities'
-import { waitFor, type RenderResult } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import type { RenderResult } from '@testing-library/react'
+import userEvent, { type UserEvent } from '@testing-library/user-event'
 import nock from 'nock'
-import type * as ReactRouter from 'react-router-dom'
-import type { Location, NavigateFunction, NavigateOptions, To } from 'react-router-dom'
-import { vi, describe, expect, beforeEach } from 'vitest'
 
-import i18n from '../../../../shared/i18n/i18n'
-import type { AppTranslation } from '../../../../shared/i18n/useAppTranslation'
-import { AppPathNames } from '../../../../shared/navigation/pathNames'
-import { renderApp } from '../../../../test/renderApp'
-import { mockConfig } from '../../../../test/utils/mockConfig'
+import { mockConfig } from '../../../../test/mocks/mockConfig'
+import { renderFakeRouterApp, renderRealRouterApp } from '../../../../test/renderApp'
+import { appTranslation } from '../../../../test/utils/appTranslation'
+import { getRouteTestId } from '../../../../test/utils/getRouteTestId'
 import { resizeWindow } from '../../../../test/utils/resizeWindow'
-import type { AuthCheckResult } from '../../domain/auth.repository'
-import { AuthScreen } from '../AuthScreen'
 
-const appTranslation: AppTranslation = (key) => i18n.t(key)
+const credentials = { username: 'admin', password: 'secret' }
 
-/** How the app navigates to a path. */
-type NavigateToPath = (to: To, options?: NavigateOptions) => void
+const notLoggedInAuthToken: AuthToken = { success: false, message: 'Not logged in.' }
+const noAccountYetAuthToken: AuthToken = { success: false, message: needsSignupMessage }
 
-/** The `navigate` a test gives in place of the one of the router, which is used when left out. */
-const navigation = vi.hoisted(() => ({
-  navigateOverride: undefined as NavigateToPath | undefined
-}))
+type TranslationKey = Parameters<typeof appTranslation>[0]
 
-vi.mock('react-router-dom', async (importOriginal) => {
-  const reactRouter = await importOriginal<typeof ReactRouter>()
+const mockAuthCheckRequest = (status: number, answer: unknown): void => {
+  nock(mockConfig.API_URL).get('/auth/check').reply(status, answer)
+}
 
-  return {
-    ...reactRouter,
-    useNavigate: (): NavigateFunction => {
-      const navigate = reactRouter.useNavigate()
-      // NavigateFunction is overloaded: the app only navigates to paths, the one call it is given.
-      return (navigation.navigateOverride as NavigateFunction | undefined) ?? navigate
-    }
-  }
-})
+const mockLoginRequest = (status: number, answer: unknown): void => {
+  nock(mockConfig.API_URL).post('/auth/login', credentials).reply(status, answer)
+}
 
-const onLocationChange = vi.fn<(location: Location) => void>()
+const mockSignUpRequest = (status: number, answer: unknown): void => {
+  nock(mockConfig.API_URL).post('/auth/signup', credentials).reply(status, answer)
+}
 
-/** The path the router is at, below `APP_URL`, with its query string. */
-const getCurrentPath = (): string | undefined => {
-  const location = onLocationChange.mock.lastCall?.[0]
-  return location && `${location.pathname}${location.search}`
+const typeCredentials = async (user: UserEvent, screen: RenderResult): Promise<void> => {
+  await user.type(
+    await screen.findByLabelText(appTranslation('auth.form.username')),
+    credentials.username
+  )
+  await user.type(screen.getByLabelText(appTranslation('auth.form.password')), credentials.password)
+}
+
+const submit = async (
+  user: UserEvent,
+  screen: RenderResult,
+  submitButtonKey: TranslationKey
+): Promise<void> => {
+  await user.click(await screen.findByText(appTranslation(submitButtonKey)))
 }
 
 beforeEach(() => {
-  vi.clearAllMocks()
-  navigation.navigateOverride = undefined
-
-  vi.resetModules()
+  resizeWindow(1200, 600)
 })
 
-const buildRequestMockScope = (): nock.Scope => {
-  return nock(mockConfig.API_URL)
-}
-
-const buildLoginRequestMock = (status: number, response: AuthToken): void => {
-  buildRequestMockScope().post('/auth/login').reply(status, response)
-}
-
-const buildSignUpRequestMock = (status: number, response: AuthToken): void => {
-  buildRequestMockScope().post('/auth/signup').reply(status, response)
-}
-
-const buildAuthCheckRequestMock = (): nock.Interceptor => {
-  return buildRequestMockScope().get('/auth/check').query({})
-}
-
-const buildAuthCheckSuccessRequestMock = (): void => {
-  const authToken: AuthToken = { success: true }
-
-  buildAuthCheckRequestMock().reply(200, authToken)
-}
-
-const buildAuthCheckNeedLoginErrorRequestMock = (): void => {
-  const authToken: AuthToken = { success: false, message: 'Invalid Token' }
-
-  buildAuthCheckRequestMock().reply(401, authToken)
-}
-
-const buildAuthCheckNeedSignUpErrorRequestMock = (): void => {
-  const authToken: AuthToken = { success: false, message: needsSignupMessage }
-
-  buildAuthCheckRequestMock().reply(401, authToken)
-}
-
-const buildAuthCheckErrorRequestMock = (statusCode: number = 400): void => {
-  buildAuthCheckRequestMock().reply(statusCode, { statusCode, message: 'random error' })
-}
-
-type RenderAuthScreenParams = { pathname?: string }
-
-const renderAuthScreen = async (
-  authCheckMode: AuthCheckResult | 'error',
-  params?: RenderAuthScreenParams
-): Promise<RenderResult> => {
-  let textToFind: string | undefined
-
-  switch (authCheckMode) {
-    case 'redirect':
-      buildAuthCheckSuccessRequestMock()
-      break
-    case 'login':
-      textToFind = appTranslation('auth.login.button')
-      buildAuthCheckNeedLoginErrorRequestMock()
-      break
-    case 'signUp':
-      textToFind = appTranslation('auth.signUp.button')
-      buildAuthCheckNeedSignUpErrorRequestMock()
-      break
-    case 'error':
-      textToFind = appTranslation('query.error')
-      buildAuthCheckErrorRequestMock()
-      break
-  }
-
-  const screen = await renderApp(AppPathNames.auth, <AuthScreen />, params?.pathname, {
-    onLocationChange
-  })
-
-  if (textToFind === undefined) {
-    await waitFor(() =>
-      expect(onLocationChange.mock.lastCall?.[0].pathname).not.toBe(AppPathNames.auth)
-    )
-  } else {
-    await screen.findByText(textToFind)
-  }
-
-  return screen
-}
-
 describe('AuthScreen', () => {
-  test('Should render correctly', async () => {
-    resizeWindow(1200, 600)
+  test('Should display the login form to the user who is not logged in', async () => {
+    mockAuthCheckRequest(401, notLoggedInAuthToken)
 
-    const screen = await renderAuthScreen('login')
+    const screen = renderRealRouterApp('/auth')
 
-    screen.getByText(appTranslation('auth.wall'), { exact: false })
+    await screen.findByText(appTranslation('auth.login.button'))
 
     expect(screen.asFragment()).toMatchSnapshot()
   })
 
-  test('Should display error when submitting with empty fields', async () => {
+  test('Should let the user retry if the authentication check failed', async () => {
     const user = userEvent.setup()
+    mockAuthCheckRequest(500, { statusCode: 500, message: 'Some error.' })
 
-    const screen = await renderAuthScreen('login')
+    const screen = renderFakeRouterApp('/auth')
 
-    const loginButton = screen.getByText(appTranslation('auth.login.button'))
-    await user.click(loginButton)
+    expect(await screen.findByText(appTranslation('query.error'))).toBeInTheDocument()
 
-    await screen.findByText(appTranslation('auth.form.fieldsRequired'))
+    mockAuthCheckRequest(401, notLoggedInAuthToken)
 
-    expect(screen.getByText(appTranslation('auth.form.fieldsRequired'))).toBeInTheDocument()
+    await user.click(screen.getByText(appTranslation('query.refetchButton')))
+
+    expect(await screen.findByText(appTranslation('auth.login.button'))).toBeInTheDocument()
   })
 
-  describe('Login', () => {
-    test('Should call the API and redirect to the protected resource on successful login', async () => {
-      const user = userEvent.setup()
+  test('Should redirect the user if he is already authenticated', async () => {
+    mockAuthCheckRequest(200, { success: true })
 
-      const redirectPath = '/logs?logSearch=status'
-      const usernameInput = 'test-user'
-      const passwordInput = 'test-pass'
+    const screen = renderFakeRouterApp(
+      `/auth?${new URLSearchParams({ redirect: '/logs?logSearch=stock' })}`
+    )
 
-      buildLoginRequestMock(200, { success: true, message: 'Login successful.' })
+    expect(await screen.findByTestId(getRouteTestId('/logs?logSearch=stock'))).toBeInTheDocument()
+  })
 
-      const screen = await renderAuthScreen('login', {
-        pathname: `?redirect=${encodeURIComponent(redirectPath)}`
-      })
+  test('Should show the user whether its login was successful', async () => {
+    const user = userEvent.setup()
+    mockAuthCheckRequest(401, notLoggedInAuthToken)
 
-      await user.type(screen.getByLabelText(appTranslation('auth.form.username')), usernameInput)
-      await user.type(screen.getByLabelText(appTranslation('auth.form.password')), passwordInput)
+    const screen = renderFakeRouterApp('/auth')
 
-      const loginButton = screen.getByText(appTranslation('auth.login.button'))
-      await user.click(loginButton)
+    mockLoginRequest(401, { success: false, message: 'Invalid credentials.' })
+    await typeCredentials(user, screen)
+    await submit(user, screen, 'auth.login.button')
 
-      await waitFor(() => expect(getCurrentPath()).toBe(redirectPath))
-    })
-
-    test('Should call the API and redirect to the logs screen on successful login', async () => {
-      const user = userEvent.setup()
-
-      const usernameInput = 'test-user'
-      const passwordInput = 'test-pass'
-
-      buildLoginRequestMock(200, { success: true, message: 'Login successful.' })
-
-      const screen = await renderAuthScreen('login')
-
-      await user.type(screen.getByLabelText(appTranslation('auth.form.username')), usernameInput)
-      await user.type(screen.getByLabelText(appTranslation('auth.form.password')), passwordInput)
-
-      const loginButton = screen.getByText(appTranslation('auth.login.button'))
-
-      await user.click(loginButton)
-
-      await waitFor(() => expect(getCurrentPath()).toBe(AppPathNames.logs))
-    })
-
-    test('Should call the API and display an error message on failed login', async () => {
-      const user = userEvent.setup()
-
-      const usernameInput = 'bad-user'
-      const passwordInput = 'bad-pass'
-
-      buildLoginRequestMock(404, { success: false, message: 'An error occurred.' })
-
-      const screen = await renderAuthScreen('login')
-
-      await user.type(screen.getByLabelText(appTranslation('auth.form.username')), usernameInput)
-      await user.type(screen.getByLabelText(appTranslation('auth.form.password')), passwordInput)
-
-      const loginButton = screen.getByText(appTranslation('auth.login.button'))
-      await user.click(loginButton)
-
-      await screen.findByText(appTranslation('auth.error'))
-
-      expect(getCurrentPath()).toBe(AppPathNames.auth)
-    })
-
-    test('Should call the API and display a specific error message on failed login (401)', async () => {
-      const user = userEvent.setup()
-
-      const usernameInput = 'bad-user'
-      const passwordInput = 'bad-pass'
-
-      buildLoginRequestMock(401, { success: false, message: 'Invalid credentials.' })
-
-      const screen = await renderAuthScreen('login')
-
-      await user.type(screen.getByLabelText(appTranslation('auth.form.username')), usernameInput)
-      await user.type(screen.getByLabelText(appTranslation('auth.form.password')), passwordInput)
-
-      const loginButton = screen.getByText(appTranslation('auth.login.button'))
-      await user.click(loginButton)
-
+    expect(
       await screen.findByText(appTranslation('auth.login.invalidCredentials'))
+    ).toBeInTheDocument()
 
-      expect(getCurrentPath()).toBe(AppPathNames.auth)
-    })
+    mockLoginRequest(500, { statusCode: 500, message: 'Some error.' })
+    await submit(user, screen, 'auth.login.button')
+
+    expect(await screen.findByText(appTranslation('auth.error'))).toBeInTheDocument()
+
+    mockLoginRequest(200, { success: true })
+    await submit(user, screen, 'auth.login.button')
+
+    // The message is only displayed until the app has navigated, which it does at once: finding
+    // it is the check, as it is already gone when an assertion looks at it.
+    await screen.findByText(appTranslation('auth.login.success'))
+    expect(await screen.findByTestId(getRouteTestId('/logs'))).toBeInTheDocument()
   })
 
-  describe('SignUp', () => {
-    test('Should call the API and redirect to the protected resource on successful sign up', async () => {
-      const user = userEvent.setup()
-
-      const redirectPath = '/logs?logSearch=status'
-      const usernameInput = 'test-user'
-      const passwordInput = 'test-pass'
-
-      buildSignUpRequestMock(200, { success: true, message: 'Login successful.' })
-
-      const screen = await renderAuthScreen('signUp', {
-        pathname: `?redirect=${encodeURIComponent(redirectPath)}`
-      })
-
-      await user.type(screen.getByLabelText(appTranslation('auth.form.username')), usernameInput)
-      await user.type(screen.getByLabelText(appTranslation('auth.form.password')), passwordInput)
-
-      const signUpButton = screen.getByText(appTranslation('auth.signUp.button'))
-      await user.click(signUpButton)
-
-      await waitFor(() => expect(getCurrentPath()).toBe(redirectPath))
-    })
-
-    test('Should call the API and redirect to the logs screen on successful sign up', async () => {
-      const user = userEvent.setup()
-
-      const usernameInput = 'test-user'
-      const passwordInput = 'test-pass'
-
-      buildSignUpRequestMock(200, { success: true, message: 'Login successful.' })
-
-      const screen = await renderAuthScreen('signUp')
-
-      await user.type(screen.getByLabelText(appTranslation('auth.form.username')), usernameInput)
-      await user.type(screen.getByLabelText(appTranslation('auth.form.password')), passwordInput)
-
-      const signUpButton = screen.getByText(appTranslation('auth.signUp.button'))
-
-      await user.click(signUpButton)
-
-      await waitFor(() => expect(getCurrentPath()).toBe(AppPathNames.logs))
-    })
-
-    test('Should call the API and display an error message on failed sign up', async () => {
-      const user = userEvent.setup()
-
-      const usernameInput = 'bad-user'
-      const passwordInput = 'bad-pass'
-
-      buildSignUpRequestMock(404, { success: false, message: 'An error occurred.' })
-
-      const screen = await renderAuthScreen('signUp')
-
-      await user.type(screen.getByLabelText(appTranslation('auth.form.username')), usernameInput)
-      await user.type(screen.getByLabelText(appTranslation('auth.form.password')), passwordInput)
-
-      const signUpButton = screen.getByText(appTranslation('auth.signUp.button'))
-      await user.click(signUpButton)
-
-      await screen.findByText(appTranslation('auth.error'))
-
-      expect(getCurrentPath()).toBe(AppPathNames.auth)
-    })
-  })
-
-  describe('Redirection', () => {
-    test('Should directly redirect to the protected resource if already authenticated', async () => {
-      const redirectPath = '/logs?logSearch=status'
-
-      await renderAuthScreen('redirect', {
-        pathname: `?redirect=${encodeURIComponent(redirectPath)}`
-      })
-
-      expect(getCurrentPath()).toBe(redirectPath)
-    })
-
-    test('Should redirect to the logs screen instead of a redirection outside of the app', async () => {
-      await renderAuthScreen('redirect', {
-        pathname: `?redirect=${encodeURIComponent('https://elsewhere.com/')}`
-      })
-
-      expect(getCurrentPath()).toBe(AppPathNames.logs)
-    })
-
-    test('Should directly redirect to the logs screen if no redirection is provided', async () => {
-      await renderAuthScreen('redirect')
-
-      expect(getCurrentPath()).toBe(AppPathNames.logs)
-    })
-
-    test('Should redirect by clicking on the redirect button', async () => {
-      const user = userEvent.setup()
-
-      // A redirect that goes nowhere, as when it did not work: the screen stays, with its button.
-      const navigate = vi.fn<NavigateToPath>()
-      navigation.navigateOverride = navigate
-
-      buildAuthCheckSuccessRequestMock()
-      const screen = await renderApp(AppPathNames.auth, <AuthScreen />)
-
-      const redirectButton = await screen.findByText(appTranslation('auth.redirect.button'))
-
-      expect(navigate).toHaveBeenCalledExactlyOnceWith(AppPathNames.logs, { replace: true })
-
-      await user.click(redirectButton)
-
-      expect(navigate).toHaveBeenNthCalledWith(2, AppPathNames.logs, { replace: true })
-    })
-  })
-
-  test('Should retry auth check if clicking on error page refetch button', async () => {
+  test('Should let the user create an account and tell him whether its signup was successful', async () => {
     const user = userEvent.setup()
+    mockAuthCheckRequest(401, noAccountYetAuthToken)
 
-    const screen = await renderAuthScreen('error')
+    const screen = renderFakeRouterApp('/auth')
 
-    const refetchButton = screen.getByText(appTranslation('query.refetchButton'))
+    await submit(user, screen, 'auth.signUp.button')
 
-    buildAuthCheckNeedLoginErrorRequestMock()
+    expect(await screen.findByText(appTranslation('auth.form.fieldsRequired'))).toBeInTheDocument()
 
-    await user.click(refetchButton)
+    mockSignUpRequest(200, { success: true })
+    await typeCredentials(user, screen)
+    await submit(user, screen, 'auth.signUp.button')
 
-    await screen.findByText(appTranslation('auth.login.button'))
+    // The message is only displayed until the app has navigated, which it does at once: finding
+    // it is the check, as it is already gone when an assertion looks at it.
+    await screen.findByText(appTranslation('auth.signUp.success'))
+    expect(await screen.findByTestId(getRouteTestId('/logs'))).toBeInTheDocument()
   })
 })

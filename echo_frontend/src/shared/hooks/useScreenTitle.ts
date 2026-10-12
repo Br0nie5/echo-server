@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-/** Sets the browser tab title. */
+/** Sets the title of the browser tab to `title`. */
 export const useScreenTitle = (title: string): void => {
   useEffect(() => {
     document.title = title

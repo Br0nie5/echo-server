@@ -1,6 +1,10 @@
 import { createTheme } from '@mui/material'
 
-/** Dark theme. The log level colors are translucent so the cards stay readable on it. */
+/**
+ * The dark theme of the app.
+ *
+ * The colors of the log levels are translucent, so the cards stay readable on it.
+ */
 export const theme = createTheme({
   palette: {
     mode: 'dark',

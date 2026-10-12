@@ -1,10 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import i18n from '../../i18n/i18n'
-import type { AppTranslation } from '../../i18n/useAppTranslation'
+import { appTranslation } from '../../../test/utils/appTranslation'
 import { formatDate } from '../formatDate'
-
-const appTranslation: AppTranslation = (key) => i18n.t(key)
 
 const NOW = new Date(2026, 3, 28, 10, 0, 0)
 

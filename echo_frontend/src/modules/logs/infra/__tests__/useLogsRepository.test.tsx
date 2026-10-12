@@ -2,8 +2,8 @@ import { createLogWithIds, LogLevel, type GetLogsParams, type Log } from '@echo/
 import nock from 'nock'
 import { describe, expect, test } from 'vitest'
 
+import { mockConfig } from '../../../../test/mocks/mockConfig'
 import { renderAppHook } from '../../../../test/renderAppHook'
-import { mockConfig } from '../../../../test/utils/mockConfig'
 import { useLogsRepository } from '../useLogsRepository'
 
 const buildLogsRequestMock = (params: GetLogsParams): nock.Interceptor => {
@@ -13,13 +13,13 @@ const buildLogsRequestMock = (params: GetLogsParams): nock.Interceptor => {
 const logMock: Log = createLogWithIds(
   {
     date: '2026-04-27T10:00:00.000Z',
-    location: '/server/docker_utils/logs/prune_images.jsonl',
-    locationName: 'prune_images',
+    location: '/storage/billing/send_invoices',
+    locationName: 'send_invoices',
     jobId: 1,
     level: LogLevel.INFO,
     message: 'some message',
-    groupName: 'docker_utils',
-    origin: '/server/docker_utils/prune_images.sh:12'
+    groupName: 'billing',
+    origin: 'send_invoices.sh:12'
   },
   0
 )

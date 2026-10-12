@@ -1,51 +1,19 @@
-import { QueryClientProvider } from '@tanstack/react-query'
 import type { RenderResult } from '@testing-library/react'
-import { render, waitForElementToBeRemoved } from '@testing-library/react'
-import nock from 'nock'
+import { render } from '@testing-library/react'
 
 import '../shared/i18n/i18n.ts'
 
-import { ApiProvider } from '../initializers/api/ApiProvider.tsx'
-import { queryClient } from '../initializers/api/queryClient.ts'
-import {
-  configJsonUrl,
-  configPageTestId,
-  ConfigProvider
-} from '../initializers/config/ConfigProvider.tsx'
-import type { FrontConfig } from '../shared/config/frontConfig.ts'
-
-import { AppThemeWrapper } from './utils/AppThemeWrapper.tsx'
-import { mockConfig } from './utils/mockConfig.ts'
-import { mockUrl } from './utils/mockUrl.ts'
+import { AppThemeWrapper } from './components/AppThemeWrapper.tsx'
 
 /**
- * Renders `child` inside the providers of the app, once its config is loaded.
+ * Renders `child` alone, with the look and the translations of the app.
  *
- * The config is served as `env.<mode>.json`: `mockConfig`, or `params.configOverride`.
+ * It is for a component that needs neither the config, the API nor the router, such as those of
+ * `shared/`: a screen is rendered by `renderFakeRouterApp` or `renderRealRouterApp`.
  *
  * ```tsx
- * const screen = await renderComponent(<AppRouter />)
+ * const component = renderComponent(<SearchBar placeholder="Search a log..." />)
  * ```
  */
-export const renderComponent = async (
-  child: React.ReactElement,
-  params?: { configOverride?: FrontConfig }
-): Promise<RenderResult> => {
-  nock(mockUrl)
-    .get(configJsonUrl)
-    .reply(200, params?.configOverride ?? mockConfig)
-
-  const screen = render(
-    <AppThemeWrapper>
-      <QueryClientProvider client={queryClient}>
-        <ConfigProvider>
-          <ApiProvider>{child}</ApiProvider>
-        </ConfigProvider>
-      </QueryClientProvider>
-    </AppThemeWrapper>
-  )
-
-  await waitForElementToBeRemoved(screen.getByTestId(configPageTestId))
-
-  return screen
-}
+export const renderComponent = (child: React.ReactElement): RenderResult =>
+  render(<AppThemeWrapper>{child}</AppThemeWrapper>)

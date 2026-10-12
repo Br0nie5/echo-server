@@ -15,11 +15,8 @@ describe('useWindowSize', () => {
       resizeWindow(400, 800)
       const { result } = renderHook(() => useWindowSize())
 
-      // Resize window
       act(() => {
-        window.innerWidth = 500
-        window.innerHeight = 900
-        window.dispatchEvent(new Event('resize'))
+        resizeWindow(500, 900)
       })
 
       expect(result.current.windowSize).toStrictEqual({ width: 500, height: 900 })

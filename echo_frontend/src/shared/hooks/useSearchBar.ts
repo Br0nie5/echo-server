@@ -33,8 +33,8 @@ interface UseSearchBarReturnType {
 }
 
 /**
- * State and keyboard handling of the search bar: the input, the suggestions list (arrows to move,
- * Enter to apply, Escape to close), and submit.
+ * Gives the state and the keyboard handling of the search bar: the input, the list of suggestions
+ * (arrows to move, Enter to apply, Escape to close), and the submit.
  *
  * The input holds the text being typed. `controlledState` is the submitted search: submitting gives
  * it the text of the input, and the input takes its value back whenever it changes.

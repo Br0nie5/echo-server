@@ -37,5 +37,5 @@ const LogsByDaysLayoutComponent: React.FC<LogsByDaysLayoutProps> = ({ filteredLo
   )
 }
 
-/** One box per day, only the most recent one opened. */
+/** The logs, one box per day, only the most recent one open. */
 export const LogsByDaysLayout = memo(LogsByDaysLayoutComponent)

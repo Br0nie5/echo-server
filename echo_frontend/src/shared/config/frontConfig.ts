@@ -3,12 +3,11 @@ import type { Config } from '@echo/utilities'
 import type { AppUrls } from './utils/parseAppUrls'
 
 /**
- * The configuration of the frontend.
+ * The configuration of the app.
  *
- * It is the `Config` common to the backend and the frontend, plus what only the frontend needs: the
- * `AppUrls`, read from the page, and the variables of the frontend. It is built by
- * `parseFrontConfig`, from the content of `env.<mode>.json` and the URL of the page, and read
- * through `useConfig`.
+ * It is the shared `Config` of `@echo/utilities`, plus what only the app needs: the `AppUrls`, read
+ * from the page, and its own variables. It is built by `parseFrontConfig`, from the content of
+ * `env.<mode>.json` and the URL of the page, and read through `useConfig`.
  */
 export type FrontConfig = Config &
   AppUrls & {

@@ -19,7 +19,12 @@ interface UseLogsScreenReturnType {
   logSearchFilters: LogSearchFilter[]
 }
 
-/** Data and filters of the logs screen. Only the date is applied by the backend; levels and search are applied client-side (see `useFilteredLogs`), and the available levels are those found in the fetched logs plus the selected ones. */
+/**
+ * Gives the data and the filters of the logs screen.
+ *
+ * Only the date is given to the API: the levels and the search are applied in the app (see
+ * `useFilteredLogs`). The available levels are those of the fetched logs, plus the selected ones.
+ */
 export const useLogsScreen = (): UseLogsScreenReturnType => {
   const { logsFromDateState, logLevelsFiltersState, logSearchState } = useLogsFilters()
 

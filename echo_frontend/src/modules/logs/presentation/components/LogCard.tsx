@@ -59,5 +59,5 @@ const LogCardComponent: React.FC<LogCardProps> = ({ log }) => {
   )
 }
 
-/** One log: its date and level, colored by level, and its message. */
+/** One log: its date, its level and its message, colored by level. */
 export const LogCard = memo(LogCardComponent)

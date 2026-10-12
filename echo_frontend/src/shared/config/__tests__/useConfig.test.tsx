@@ -1,7 +1,7 @@
 import { Box, Typography } from '@mui/material'
 import { render } from '@testing-library/react'
 
-import { mockConfig } from '../../../test/utils/mockConfig'
+import { mockConfig } from '../../../test/mocks/mockConfig'
 import { ConfigContext } from '../ConfigContext'
 import { useConfig } from '../useConfig'
 

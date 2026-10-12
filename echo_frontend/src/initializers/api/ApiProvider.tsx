@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { ApiContext, type ApiContextValue } from '../../shared/api/ApiContext'
 import { useConfig } from '../../shared/config/useConfig'
 
-/** Provides an axios instance targeting `API_URL`, sending cookies with each request. */
+/** Provides its children with an axios instance targeting `API_URL`, sending the cookies with each request. */
 export const ApiProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { API_URL } = useConfig()
 

@@ -5,7 +5,7 @@ import { renderComponent } from '../../../test/renderComponent'
 import { toggleTagFromList } from '../../utils/toggleTagFromList'
 import { FilterChips } from '../FilterChips'
 
-type RenderedComponent = Awaited<ReturnType<typeof renderComponent>>
+type RenderedComponent = ReturnType<typeof renderComponent>
 
 const getTagChip = (component: RenderedComponent, tag: string): HTMLElement | null =>
   component.getByText(tag).closest('div')
@@ -19,13 +19,13 @@ const expectTagNotToBeSelected = (component: RenderedComponent, tag: string): vo
 }
 
 describe('FilterChips', () => {
-  test('Should display the tags', async () => {
+  test('Should display the tags', () => {
     const tags = ['First Tag', 'Second Tag', 'Third Tag']
 
-    const component = await renderComponent(<FilterChips tags={tags} mode="multi-select" />)
+    const component = renderComponent(<FilterChips tags={tags} mode="multi-select" />)
 
     tags.forEach((tag) => {
-      expect(component.getByText(tag))
+      expect(component.getByText(tag)).toBeInTheDocument()
     })
   })
 
@@ -40,7 +40,7 @@ describe('FilterChips', () => {
       expect(selectedTags.length > 1).toBeTruthy()
       expect(unselectedTags.length > 1).toBeTruthy()
 
-      const component = await renderComponent(<FilterChips tags={tags} mode="multi-select" />)
+      const component = renderComponent(<FilterChips tags={tags} mode="multi-select" />)
 
       for (const selectedTag of selectedTags) {
         await user.click(component.getByText(selectedTag))
@@ -86,7 +86,7 @@ describe('FilterChips', () => {
         )
       }
 
-      const component = await renderComponent(<Parent />)
+      const component = renderComponent(<Parent />)
 
       expectTagNotToBeSelected(component, tags[0])
       expectTagToBeSelected(component, tags[1])
@@ -118,7 +118,7 @@ describe('FilterChips', () => {
 
       expect(unselectedTags.length === tags.length - 1).toBeTruthy()
 
-      const component = await renderComponent(<FilterChips tags={tags} mode="single-select" />)
+      const component = renderComponent(<FilterChips tags={tags} mode="single-select" />)
 
       await user.click(component.getByText(tags[0]))
       await user.click(component.getByText(selectedTag))
@@ -162,7 +162,7 @@ describe('FilterChips', () => {
         )
       }
 
-      const component = await renderComponent(<Parent />)
+      const component = renderComponent(<Parent />)
 
       expectTagNotToBeSelected(component, tags[0])
       expectTagToBeSelected(component, tags[1])

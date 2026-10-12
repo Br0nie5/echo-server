@@ -8,12 +8,12 @@ import { filterLogs } from './workers/filterLogs'
 const logsUrl = '/logs'
 
 /**
- * The `LogsRepository` on top of the logs endpoint of the backend and of the filter worker of the app.
+ * Gives the `LogsRepository` on top of the logs endpoint of the API and of the filter worker of the
+ * app.
  *
- * The logs are fetched from the backend, through `useSendApiRequest` (which sends the user to the
- * auth screen when they are not authenticated), and the answer is validated against
- * `LogArraySchema`. They are filtered away from the main thread, with the same functions as the
- * backend.
+ * The logs are fetched through `useSendApiRequest`, which sends the user to the auth screen when
+ * they are not authenticated, and the answer is validated against `LogArraySchema`. They are
+ * filtered away from the main thread.
  *
  * ```ts
  * const logsRepository = useLogsRepository()

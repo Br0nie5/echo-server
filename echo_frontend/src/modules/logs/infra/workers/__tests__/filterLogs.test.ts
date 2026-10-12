@@ -10,10 +10,10 @@ const buildLog = (idNumber: number): Log =>
       date: '2026-01-02T10:00:00.000Z',
       jobId: 1,
       level: 'INFO',
-      location: '/server/logs/prune_images.jsonl',
-      locationName: 'prune_images',
+      location: '/storage/send_invoices',
+      locationName: 'send_invoices',
       message: 'message',
-      origin: '/server/prune_images.sh:12'
+      origin: 'send_invoices.sh:12'
     },
     idNumber
   )

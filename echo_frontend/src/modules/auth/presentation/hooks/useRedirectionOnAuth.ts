@@ -9,7 +9,12 @@ interface UseRedirectionOnAuthReturnType {
   redirectOnAuth: () => void
 }
 
-/** Where to go after authenticating: the `redirect` query param (set when a 401 sent the user here) when it is a path of the app, otherwise the logs screen. */
+/**
+ * Gives the function leaving the auth screen once authenticated.
+ *
+ * It goes to the `redirect` query param, set when a 401 sent the user here, when it is a path of
+ * the app, otherwise to the logs screen.
+ */
 export const useRedirectionOnAuth = (): UseRedirectionOnAuthReturnType => {
   const { APP_URL } = useConfig()
   const navigate = useNavigate()

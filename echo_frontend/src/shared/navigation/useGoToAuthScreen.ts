@@ -4,8 +4,8 @@ import { createSearchParams, matchPath, useLocation, useNavigate } from 'react-r
 import { AppPathNames } from './pathNames'
 
 /**
- * A function navigating to the auth screen, in place of the current page, unless the auth screen is
- * the current page.
+ * Gives the function navigating to the auth screen, in place of the current page, unless the auth
+ * screen is the current page.
  *
  * The current page, when the function is called, is passed as the `redirect` query param, as a
  * path below `APP_URL`, where the auth screen sends the user back once authenticated.

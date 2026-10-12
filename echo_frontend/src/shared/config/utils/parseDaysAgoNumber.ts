@@ -3,7 +3,7 @@ import { parseInteger } from '@echo/utilities'
 /**
  * Parses `raw` into a number of days ago.
  *
- * It throws when `raw` is not an integer, or is negative.
+ * Throws when `raw` is not an integer, or is negative.
  *
  * ```ts
  * parseDaysAgoNumber('14') // 14

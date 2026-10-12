@@ -19,11 +19,11 @@ const loginUrl = '/auth/login'
 const signUpUrl = '/auth/signup'
 
 /**
- * The `AuthRepository` on top of the auth endpoints of the backend.
+ * Gives the `AuthRepository` on top of the auth endpoints of the API.
  *
- * Every answer is validated against `AuthTokenSchema`. A 401 is how the backend refuses, and no
- * caller gets to see it: the auth check reads it as a result (`signUp` when the backend says no
- * account exists yet, `login` otherwise), and the login throws an `InvalidCredentialsError`.
+ * Every answer is validated against `AuthTokenSchema`. A 401 is how the API refuses, and no caller
+ * gets to see it: the auth check reads it as a result (`signUp` when its message is
+ * `needsSignupMessage`, `login` otherwise), and the login throws an `InvalidCredentialsError`.
  *
  * ```ts
  * const authRepository = useAuthRepository()

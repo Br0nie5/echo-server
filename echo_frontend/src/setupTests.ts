@@ -2,10 +2,10 @@ import '@testing-library/jest-dom/vitest'
 import nock from 'nock'
 
 import { queryClient } from './initializers/api/queryClient'
-import { mockConfig } from './test/utils/mockConfig'
+import { mockConfig } from './test/mocks/mockConfig'
 
-// The backend gives index.html the <base> the app reads where it is reached from: the page of the
-// tests gets the one of the test config.
+// Whatever serves index.html gives it the <base> the app reads where it is reached from: the page
+// of the tests gets the one of the test config.
 const base = document.createElement('base')
 base.href = `${mockConfig.APP_URL}/`
 document.head.append(base)

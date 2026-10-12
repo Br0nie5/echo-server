@@ -21,7 +21,7 @@ interface ApiRequest<TParams = unknown, TBody = unknown> {
 }
 
 /**
- * A function sending a request to the API through the axios instance of `ApiProvider`.
+ * Gives the function sending a request to the API, through the axios instance of `ApiProvider`.
  *
  * The function returns the body of the response, and throws the axios error when the request fails.
  * When the API answers a 401, the user is not authenticated: it also navigates to the auth screen

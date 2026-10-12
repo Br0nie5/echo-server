@@ -53,5 +53,10 @@ const LogsScreenComponent: React.FC = () => {
   )
 }
 
-/** Logs page: the filters header, and the logs once fetched (or a loading, empty or error state). */
+/**
+ * The logs screen.
+ *
+ * It displays the header with the filters, and the logs once fetched: a spinner, a message or an
+ * error otherwise.
+ */
 export const LogsScreen = memo(LogsScreenComponent)

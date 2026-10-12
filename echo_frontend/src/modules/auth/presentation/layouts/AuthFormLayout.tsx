@@ -69,5 +69,5 @@ const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({ formMode }) =>
   )
 }
 
-/** Credentials form of the login or of the sign up of the first account, depending on `formMode`. */
+/** The credentials form, of the login or of the sign up of the first account depending on `formMode`. */
 export const AuthFormLayout = memo(AuthFormLayoutComponent)

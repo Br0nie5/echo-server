@@ -124,7 +124,11 @@ export const createFilterLogs = (
 
 let filterLogsWithWorker: FilterLogs | undefined
 
-/** Filters the logs in the app-wide filter worker, which is only started the first time logs need to be filtered. */
+/**
+ * Filters the logs in the filter worker of the app.
+ *
+ * The app has one worker, which is only started the first time logs need to be filtered.
+ */
 export const filterLogs: FilterLogs = (...filterArguments) => {
   filterLogsWithWorker ??= createFilterLogs(new FilterWorker())
   return filterLogsWithWorker(...filterArguments)

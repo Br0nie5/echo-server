@@ -1,4 +1,4 @@
-/** Shape every locale must implement. It also defines the valid translation keys. */
+/** The shape every locale implements, which also defines the valid translation keys. */
 export interface TranslationKeys {
   auth: {
     wall: string

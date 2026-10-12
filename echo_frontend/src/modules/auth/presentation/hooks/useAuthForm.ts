@@ -28,7 +28,8 @@ interface UseAuthFormReturnType {
 }
 
 /**
- * State and submit of the credentials form, for the login or the sign up depending on `formMode`.
+ * Gives the state and the submit of the credentials form, of the login or of the sign up depending
+ * on `formMode`.
  *
  * The submit requires both fields, then sends the credentials with the mutation of `formMode` and
  * alerts the outcome. Once authenticated (`isAuthenticated`), it redirects.

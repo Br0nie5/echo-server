@@ -28,5 +28,5 @@ const PageLayoutComponent: React.FC<PageLayoutProps> = ({ header, children }) =>
   )
 }
 
-/** Full-screen page frame with an optional `header` above the content. */
+/** The frame of a page, as large as the screen, with an optional `header` above its content. */
 export const PageLayout = memo(PageLayoutComponent)

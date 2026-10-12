@@ -7,12 +7,15 @@ import { queryClient } from '../initializers/api/queryClient'
 import type { FrontConfig } from '../shared/config/frontConfig'
 import { AppPathNames } from '../shared/navigation/pathNames'
 
-import { AppContextsWrapper } from './utils/AppContextsWrapper'
-import { AppRouterWrapper } from './utils/AppRouterWrapper'
+import { AppContextsWrapper } from './components/AppContextsWrapper'
+import { AppRouterWrapper } from './components/AppRouterWrapper'
 
 /**
  * Renders `hook` inside the contexts of the app and a router whose `basename` is the path of
  * `APP_URL`, as `AppRouter` does.
+ *
+ * It is for a hook that needs the config, the API or the router, tested on its own: the config is
+ * `mockConfig`, or `params.configOverride`, given at once, without being loaded.
  *
  * `params.path` is the path, below `APP_URL`, the router starts at: the logs screen when left out.
  * To check where the hook navigates, give `params.onLocationChange`: it is called with the location

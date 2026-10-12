@@ -1,9 +1,9 @@
 import { MemoryRouter, type Location } from 'react-router-dom'
 
 import type { FrontConfig } from '../../shared/config/frontConfig'
-import { LocationObserver } from '../LocationObserver'
+import { mockConfig } from '../mocks/mockConfig'
 
-import { mockConfig } from './mockConfig'
+import { LocationObserver } from './LocationObserver'
 
 interface AppRouterWrapperProps {
   /** The path, below `APP_URL`, with its query string, the router starts at. */
@@ -23,7 +23,7 @@ interface AppRouterWrapperProps {
  *
  * ```tsx
  * <AppRouterWrapper initialPath="/logs?logSearch=text" onLocationChange={onLocationChange}>
- *   <LogsScreen />
+ *   {children}
  * </AppRouterWrapper>
  * ```
  */

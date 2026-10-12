@@ -12,9 +12,9 @@ export type AppUrls = {
  * Parses where the app and the API are reached from `baseUri`, the URL the page resolves its links
  * against.
  *
- * The page is given a `<base>` saying where the app is served: by the backend, which knows the path
- * a reverse proxy serves Echo under, and by the Vite dev server. The app is that URL, and the API is
- * next to it, under `apiRoutePrefix`: both are on the host the user reached, whatever it is.
+ * Whatever serves the page gives it a `<base>` saying where the app is served, the path a reverse
+ * proxy serves it under included. The app is that URL, and the API is next to it, under
+ * `apiRoutePrefix`: both are on the host the user reached, whatever it is.
  *
  * ```ts
  * parseAppUrls('https://example.com/echo/app/')

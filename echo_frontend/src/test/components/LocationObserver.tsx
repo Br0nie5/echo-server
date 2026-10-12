@@ -9,7 +9,7 @@ type LocationObserverProps = {
  * Tells a test the location of the router it is rendered in.
  *
  * It displays nothing, and calls `onLocationChange` with the location at first and each time it
- * changes. `renderApp` renders it when it is given an `onLocationChange`.
+ * changes. `AppRouterWrapper` renders it when it is given an `onLocationChange`.
  */
 export const LocationObserver = ({ onLocationChange }: LocationObserverProps): null => {
   const location = useLocation()

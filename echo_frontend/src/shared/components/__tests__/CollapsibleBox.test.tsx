@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { renderComponent } from '../../../test/renderComponent'
 import { CollapsibleBox } from '../CollapsibleBox'
 
-type RenderedComponent = Awaited<ReturnType<typeof renderComponent>>
+type RenderedComponent = ReturnType<typeof renderComponent>
 
 const title = 'Title'
 const content = 'Content'
@@ -20,8 +20,8 @@ const expectBoxToBeClosed = (component: RenderedComponent): void => {
 }
 
 describe('CollapsibleBox', () => {
-  test('Should be closed at first, without its content, when isOpenedAtStart is false', async () => {
-    const component = await renderComponent(
+  test('Should be closed at first, without its content, when isOpenedAtStart is false', () => {
+    const component = renderComponent(
       <CollapsibleBox id="1" title={<span>{title}</span>} isOpenedAtStart={false}>
         {content}
       </CollapsibleBox>
@@ -31,8 +31,8 @@ describe('CollapsibleBox', () => {
     expectBoxToBeClosed(component)
   })
 
-  test('Should be open at first, with its content, when isOpenedAtStart is true', async () => {
-    const component = await renderComponent(
+  test('Should be open at first, with its content, when isOpenedAtStart is true', () => {
+    const component = renderComponent(
       <CollapsibleBox id="1" title={<span>{title}</span>} isOpenedAtStart={true}>
         {content}
       </CollapsibleBox>
@@ -45,7 +45,7 @@ describe('CollapsibleBox', () => {
   test('Should open then close when clicking on its title', async () => {
     const user = userEvent.setup()
 
-    const component = await renderComponent(
+    const component = renderComponent(
       <CollapsibleBox id="1" title={<span>{title}</span>} isOpenedAtStart={false}>
         {content}
       </CollapsibleBox>

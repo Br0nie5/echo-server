@@ -5,7 +5,7 @@ import { renderComponent } from '../../../test/renderComponent'
 import { expectDateToBeSelected, getDateSection } from '../../../test/utils/dateSelector'
 import { DateSelector } from '../DateSelector'
 
-type RenderedComponent = Awaited<ReturnType<typeof renderComponent>>
+type RenderedComponent = ReturnType<typeof renderComponent>
 
 const label = 'From'
 const resetDateButtonLabel = 'Reset date'
@@ -19,8 +19,8 @@ const expectDateNotToBeAllowed = (component: RenderedComponent): void => {
 }
 
 describe('DateSelector', () => {
-  test('Should display the label', async () => {
-    const component = await renderComponent(<DateSelector label={label} />)
+  test('Should display the label', () => {
+    const component = renderComponent(<DateSelector label={label} />)
 
     expect(component.getByRole('group', { name: label })).toBeInTheDocument()
   })
@@ -29,7 +29,7 @@ describe('DateSelector', () => {
     const user = userEvent.setup()
     const selectedDate = new Date(2026, 2, 10)
 
-    const component = await renderComponent(<DateSelector />)
+    const component = renderComponent(<DateSelector />)
 
     await user.click(getDateSection(component, 'Month'))
     await user.keyboard('03102026')
@@ -63,7 +63,7 @@ describe('DateSelector', () => {
       )
     }
 
-    const component = await renderComponent(<Parent />)
+    const component = renderComponent(<Parent />)
 
     expectDateToBeSelected(component, initialSelectedDate)
 
@@ -83,7 +83,7 @@ describe('DateSelector', () => {
     const user = userEvent.setup()
     const setValue = vi.fn()
 
-    const component = await renderComponent(
+    const component = renderComponent(
       <DateSelector controlledState={{ value: new Date(2026, 2, 10), setValue }} />
     )
 
@@ -100,7 +100,7 @@ describe('DateSelector', () => {
   test('Should only allow the dates between minimalDate and maximalDate', async () => {
     const user = userEvent.setup()
 
-    const component = await renderComponent(
+    const component = renderComponent(
       <DateSelector
         label={label}
         minimalDate={new Date(2026, 2, 5)}

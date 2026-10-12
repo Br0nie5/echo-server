@@ -32,5 +32,5 @@ const RedirectLayoutComponent: React.FC = () => {
   )
 }
 
-/** Redirects at once, with a button to retry if the browser did not follow. */
+/** A message redirecting at once, with a button to do it again if the browser did not follow. */
 export const RedirectLayout = memo(RedirectLayoutComponent)

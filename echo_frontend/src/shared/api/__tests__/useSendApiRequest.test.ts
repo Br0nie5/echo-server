@@ -2,8 +2,8 @@ import nock from 'nock'
 import type { Location } from 'react-router-dom'
 import { describe, expect, test, vi } from 'vitest'
 
+import { mockConfig } from '../../../test/mocks/mockConfig'
 import { renderAppHook } from '../../../test/renderAppHook'
-import { mockConfig } from '../../../test/utils/mockConfig'
 import { AppPathNames } from '../../navigation/pathNames'
 import { useSendApiRequest } from '../useSendApiRequest'
 

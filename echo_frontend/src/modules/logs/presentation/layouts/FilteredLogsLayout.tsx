@@ -43,5 +43,9 @@ const FilteredLogsLayoutComponent: React.FC<FilteredLogsLayoutProps> = ({
   )
 }
 
-/** Logs filtered by levels and search, with a progress bar while filtering. Shows every log until the first result is ready. */
+/**
+ * The logs matching the level and search filters, with a progress bar while they are filtered.
+ *
+ * Every log is displayed until the first result is ready.
+ */
 export const FilteredLogsLayout = memo(FilteredLogsLayoutComponent)

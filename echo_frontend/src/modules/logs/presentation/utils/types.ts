@@ -1,13 +1,13 @@
 import type { Log } from '@echo/utilities'
 
-/** Logs of one day. `date` is that day at noon local time. */
+/** The logs of one day. `date` is that day at noon, local time. */
 export interface LogsByDay {
   id: string
   date: Date
   logs: Log[]
 }
 
-/** Logs of one group (directory). */
+/** The logs of one group. */
 export interface LogsByGroup {
   id: string
   /** Undefined for the logs that do not belong to any group. */
@@ -15,7 +15,7 @@ export interface LogsByGroup {
   logs: Log[]
 }
 
-/** Consecutive logs of one job, in one file. */
+/** Consecutive logs of one job, at one location. */
 export interface LogsByJob {
   id: string
   locationName: string

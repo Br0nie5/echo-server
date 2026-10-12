@@ -1,4 +1,13 @@
-/** Suggestions matching the `key:` the user is typing in the last word of the search input. */
+/**
+ * Gives the suggestions to offer for the last word of `inputValue`, the text of a search input.
+ *
+ * None before the last word holds a `:`. After it, those of `suggestions` starting with what
+ * follows the `:`, whatever the case.
+ *
+ * ```ts
+ * getSearchSuggestions('error :co', ['color', 'count', 'size']) // ['color', 'count']
+ * ```
+ */
 export const getSearchSuggestions = (inputValue: string, suggestions: string[]): string[] => {
   const lastWord = inputValue.split(' ').pop() || ''
 
@@ -13,7 +22,14 @@ export const getSearchSuggestions = (inputValue: string, suggestions: string[]):
   )
 }
 
-/** Replaces the last word of the search input by the chosen suggestion, keeping its `-` prefix. */
+/**
+ * Replaces the last word of `inputValue`, the text of a search input, with `suggestion` followed
+ * by `:`, keeping the `-` the word starts with.
+ *
+ * ```ts
+ * applySearchSuggestion('error -:co', 'color') // 'error -color:'
+ * ```
+ */
 export const applySearchSuggestion = (inputValue: string, suggestion: string): string => {
   const words = inputValue.split(' ')
   const lastWord = words.pop()

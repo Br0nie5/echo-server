@@ -1,33 +1,26 @@
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 import { renderComponent } from '../../../test/renderComponent'
-import i18n from '../../i18n/i18n'
-import type { AppTranslation } from '../../i18n/useAppTranslation'
+import { appTranslation } from '../../../test/utils/appTranslation'
 import { QueryFallbackLayout } from '../QueryFallbackLayout'
 
-const appTranslation: AppTranslation = (key) => i18n.t(key)
-
 describe('QueryFallbackLayout', () => {
-  it('Should render a CircularProgress when status is pending', async () => {
-    const screen = await renderComponent(
-      <QueryFallbackLayout status="pending" refetch={() => {}} />
-    )
+  it('Should render a CircularProgress when status is pending', () => {
+    const screen = renderComponent(<QueryFallbackLayout status="pending" refetch={() => {}} />)
 
     const spinner = screen.getByRole('progressbar')
     expect(spinner).toBeInTheDocument()
   })
 
-  it('Should render a no data layout when status is success', async () => {
-    const screen = await renderComponent(
-      <QueryFallbackLayout status="success" refetch={() => {}} />
-    )
+  it('Should render a no data layout when status is success', () => {
+    const screen = renderComponent(<QueryFallbackLayout status="success" refetch={() => {}} />)
 
     expect(screen.getByText(appTranslation('query.noData'))).toBeInTheDocument()
   })
 
-  it('Should render an error message when status is error', async () => {
-    const screen = await renderComponent(<QueryFallbackLayout status="error" refetch={() => {}} />)
+  it('Should render an error message when status is error', () => {
+    const screen = renderComponent(<QueryFallbackLayout status="error" refetch={() => {}} />)
 
     expect(screen.getByText(appTranslation('query.error'))).toBeInTheDocument()
     expect(screen.getByText(appTranslation('query.refetchButton'))).toBeInTheDocument()
@@ -36,22 +29,12 @@ describe('QueryFallbackLayout', () => {
   it('Should execute the refetch callback if the error button is clicked on', async () => {
     const user = userEvent.setup()
 
-    let hasExecuteRefetchCallback = false
+    const refetch = vi.fn()
 
-    const screen = await renderComponent(
-      <QueryFallbackLayout
-        status="error"
-        refetch={() => {
-          hasExecuteRefetchCallback = true
-        }}
-      />
-    )
+    const screen = renderComponent(<QueryFallbackLayout status="error" refetch={refetch} />)
 
-    const refetchButton = screen.getByText(appTranslation('query.refetchButton'))
-    expect(refetchButton).toBeInTheDocument()
+    await user.click(screen.getByText(appTranslation('query.refetchButton')))
 
-    await user.click(refetchButton)
-
-    expect(hasExecuteRefetchCallback).toBeTruthy()
+    expect(refetch).toHaveBeenCalledOnce()
   })
 })

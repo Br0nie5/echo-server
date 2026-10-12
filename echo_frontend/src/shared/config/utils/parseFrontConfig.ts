@@ -10,8 +10,8 @@ import { parseDaysAgoNumber } from './parseDaysAgoNumber'
  * URL the page resolves its links against, which says where the app and the API are reached (see
  * `parseAppUrls`).
  *
- * The variables common to the backend and the frontend are read by `parseConfig`, the two others
- * by `parseDaysAgoNumber`, each written as text or as a number. It throws when one of them is missing or
+ * The variables of the shared `Config` are read by `parseConfig`, the two others by
+ * `parseDaysAgoNumber`, each written as text or as a number. Throws when one of them is missing or
  * invalid, and when `LOGS_INITIAL_DATE_DAYS_AGO` is further back than
  * `LOGS_MINIMAL_DATE_DAYS_AGO`: the logs would start before the oldest date the user can pick.
  *

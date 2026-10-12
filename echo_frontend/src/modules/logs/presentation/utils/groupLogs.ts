@@ -48,7 +48,12 @@ export const groupLogsByDay = (logs: Log[]): LogsByDay[] =>
     )
   )
 
-/** Groups the logs by group (directory), newest first. `parentId` keeps the group ids unique across the parent boxes (e.g. the day) they are shown in. */
+/**
+ * Groups the logs by group name, newest first.
+ *
+ * `parentId` keeps the ids of the groups unique across the boxes they are displayed in, the days
+ * for example. The logs without group name make one group, whose `name` is `undefined`.
+ */
 export const groupLogsByGroup = (logs: Log[], parentId: string): LogsByGroup[] =>
   sortGroupsByNewestFirstLog(
     groupLogs<LogsByGroup>(
@@ -58,7 +63,11 @@ export const groupLogsByGroup = (logs: Log[], parentId: string): LogsByGroup[] =
     )
   )
 
-/** Groups the logs by job, newest first. A job is a run of consecutive logs of the same job id in the same file. */
+/**
+ * Groups the logs by job, newest first.
+ *
+ * A job is a run of consecutive logs with the same job id and the same location name.
+ */
 export const groupLogsByJob = (logs: Log[]): LogsByJob[] => {
   const logsByJobs: LogsByJob[] = []
 

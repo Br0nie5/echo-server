@@ -13,7 +13,13 @@ interface UseLogsFiltersReturnType {
   logSearchState: ControlledState<string>
 }
 
-/** The logs filters chosen by the user, initialized from and mirrored to the URL query params. Without a `fromDate` param, or with one that is not a date, the logs start `LOGS_INITIAL_DATE_DAYS_AGO` days ago, as the config says. */
+/**
+ * Gives the filters of the logs chosen by the user, read from the query params of the URL at first
+ * and written back to them at each change.
+ *
+ * Without a `fromDate` param, or with one that is not a date, the logs start
+ * `LOGS_INITIAL_DATE_DAYS_AGO` days ago. A `logLevels` param that is not a level is left out.
+ */
 export const useLogsFilters = (): UseLogsFiltersReturnType => {
   const { LOGS_INITIAL_DATE_DAYS_AGO } = useConfig()
   const [searchParams, setSearchParams] = useSearchParams()

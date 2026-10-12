@@ -9,19 +9,19 @@ const buildLog = (overrides: Partial<Omit<Log, 'id' | 'contentId'>>): Log =>
       date: '2026-01-02T10:00:00.000Z',
       jobId: 1,
       level: 'INFO',
-      location: '/server/logs/prune_images.jsonl',
-      locationName: 'prune_images',
+      location: '/storage/send_invoices',
+      locationName: 'send_invoices',
       message: 'message',
-      origin: '/server/prune_images.sh:12',
+      origin: 'send_invoices.sh:12',
       ...overrides
     },
     0
   )
 
 const logs = [
-  buildLog({ level: 'ERROR', message: 'disk is full' }),
-  buildLog({ level: 'INFO', message: 'disk checked' }),
-  buildLog({ level: 'ERROR', message: 'network is down' })
+  buildLog({ level: 'ERROR', message: 'quota is reached' }),
+  buildLog({ level: 'INFO', message: 'quota checked' }),
+  buildLog({ level: 'ERROR', message: 'mail server is down' })
 ]
 
 describe('createFilterWorkerRequestHandler', () => {
@@ -47,7 +47,7 @@ describe('createFilterWorkerRequestHandler', () => {
       handleFilterWorkerRequest({
         type: 'filterLogs',
         logLevelsFilters: ['ERROR'],
-        logSearchFilters: [{ mode: 'find', search: 'disk' }]
+        logSearchFilters: [{ mode: 'find', search: 'quota' }]
       })
     ).toEqual({ matchingLogIndexes: [0] })
   })

@@ -1,7 +1,6 @@
 import type { QueryClientConfig } from '@tanstack/react-query'
 import { QueryClient } from '@tanstack/react-query'
 
-/** Query results are considered fresh for 5 minutes. */
 const queryClientConfig: QueryClientConfig = {
   defaultOptions: {
     queries: {
@@ -10,4 +9,5 @@ const queryClientConfig: QueryClientConfig = {
   }
 }
 
+/** The query client of the app, which considers the result of a query fresh for 5 minutes. */
 export const queryClient = new QueryClient(queryClientConfig)
