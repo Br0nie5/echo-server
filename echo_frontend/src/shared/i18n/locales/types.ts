@@ -10,12 +10,10 @@ export interface TranslationKeys {
     }
     login: {
       button: string
-      success: string
       invalidCredentials: string
     }
     signUp: {
       button: string
-      success: string
     }
     redirect: {
       message: string

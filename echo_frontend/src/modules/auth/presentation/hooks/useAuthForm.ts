@@ -8,13 +8,6 @@ import type { AuthAlert, AuthenticationMode } from '../utils/types'
 
 import { useRedirectionOnAuth } from './useRedirectionOnAuth'
 
-type TranslationKey = Parameters<AppTranslation>[0]
-
-const successMessageKeys: Record<AuthenticationMode, TranslationKey> = {
-  login: 'auth.login.success',
-  signUp: 'auth.signUp.success'
-}
-
 interface UseAuthFormReturnType {
   translation: AppTranslation
   onSubmit: (event: SubmitEvent<Element>) => void
@@ -31,8 +24,10 @@ interface UseAuthFormReturnType {
  * Gives the state and the submit of the credentials form, of the login or of the sign up depending
  * on `formMode`.
  *
- * The submit requires both fields, then sends the credentials with the mutation of `formMode` and
- * alerts the outcome. Once authenticated (`isAuthenticated`), it redirects.
+ * The submit sends the credentials with the mutation of `formMode`, and redirects once they are
+ * accepted (`isAuthenticated`). `alert` holds the reason of a submit that did not authenticate: a
+ * field left empty, in which case nothing is sent, credentials that are those of no account, or a
+ * request that failed. It is emptied by the next submit.
  */
 export const useAuthForm = (formMode: AuthenticationMode): UseAuthFormReturnType => {
   const translation = useAppTranslation()
@@ -64,10 +59,7 @@ export const useAuthForm = (formMode: AuthenticationMode): UseAuthFormReturnType
       sendCredentials(
         { username, password },
         {
-          onSuccess: () => {
-            setAlert({ severity: 'success', message: translation(successMessageKeys[formMode]) })
-            redirectOnAuth()
-          },
+          onSuccess: redirectOnAuth,
           onError: (error) => {
             const errorMessageKey =
               error instanceof InvalidCredentialsError
@@ -78,7 +70,7 @@ export const useAuthForm = (formMode: AuthenticationMode): UseAuthFormReturnType
         }
       )
     },
-    [username, password, translation, formMode, sendCredentials, redirectOnAuth]
+    [username, password, translation, sendCredentials, redirectOnAuth]
   )
 
   return {

@@ -11,12 +11,10 @@ export const english: TranslationKeys = {
     },
     login: {
       button: 'Login',
-      success: 'Success login!',
       invalidCredentials: 'Either `username` or/and `password` are incorrect'
     },
     signUp: {
-      button: 'Sign up',
-      success: 'Success sign up!'
+      button: 'Sign up'
     },
     redirect: {
       message: 'You are already logged, you can go on!',
