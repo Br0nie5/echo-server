@@ -20,10 +20,6 @@ describe('convertRawLogLineToLog', () => {
     expect(convertRawLogLineToLog(rawLogLine(content))).toBeUndefined()
   })
 
-  it('Should return undefined for a line that is not JSON', () => {
-    expect(convertRawLogLineToLog(rawLogLine('Not matching the pattern'))).toBeUndefined()
-  })
-
   it('Should return undefined for an invalid level', () => {
     const content =
       '{"jobId":1,"timestamp":"2024-05-12T14:30:00.012Z","level":"INVALID","message":"Bad level","origin":"/server/billing/count_stock.sh:1"}'

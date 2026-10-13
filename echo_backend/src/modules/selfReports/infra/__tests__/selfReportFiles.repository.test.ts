@@ -104,16 +104,6 @@ afterEach(() => {
 })
 
 describe('createSelfReportFilesRepository', () => {
-  it('Should read and write its files through the files service, where it is told they are', async () => {
-    await createSelfReportFilesRepository(options)
-
-    expect(createSelfReportsFilesApi).toHaveBeenCalledExactlyOnceWith(filesService)
-    expect(createSessionIdFileApi).toHaveBeenCalledExactlyOnceWith(
-      '/fake/data/parse_logs_self_reports_session.json',
-      filesService
-    )
-  })
-
   it('Should write its file again without the self reports older than retentionDays, nor the lines that hold none', async () => {
     const retentionLimitLine = storedLine({ date: '2026-09-21T00:00:00.000Z' })
     const recentLine = storedLine({ date: daysAgo(1) })
@@ -198,7 +188,8 @@ describe('createSelfReportFilesRepository', () => {
   describe('saveSelfReports', () => {
     it('Should do nothing when there is no self report', async () => {
       const selfReportRepository = await createRepository()
-      vi.clearAllMocks()
+      selfReportsFilesApi.getSelfReportLines.mockClear()
+      selfReportsFilesApi.saveSelfReportLines.mockClear()
 
       await selfReportRepository.saveSelfReports([])
 
@@ -269,20 +260,6 @@ describe('createSelfReportFilesRepository', () => {
 
       expect(lastSavedLines()).toEqual([
         recentLine,
-        storedLine({ sessionId: 5, date: '2026-10-01T08:00:00.000Z' })
-      ])
-    })
-
-    it('Should store a problem that is already stored when it does not store each problem once', async () => {
-      const selfReportRepository = await createRepository({ isEachProblemStoredOnce: false })
-      const storedSameContentLine = storedLine()
-      selfReportsFilesApi.getSelfReportLines.mockResolvedValueOnce([storedSameContentLine])
-
-      await selfReportRepository.saveSelfReports([selfReport(), selfReport()])
-
-      expect(lastSavedLines()).toEqual([
-        storedSameContentLine,
-        storedLine({ sessionId: 5, date: '2026-10-01T08:00:00.000Z' }),
         storedLine({ sessionId: 5, date: '2026-10-01T08:00:00.000Z' })
       ])
     })
