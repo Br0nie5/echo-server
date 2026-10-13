@@ -1,7 +1,7 @@
 import type { Log } from '@echo/utilities'
 
-import type { SelfReport } from '../../selfReport/domain/selfReport.js'
-import type { SelfReportRepository } from '../../selfReport/domain/selfReport.repository.js'
+import type { SelfReport } from '../../selfReports/domain/selfReport.js'
+import type { SelfReportRepository } from '../../selfReports/domain/selfReport.repository.js'
 import type { LogsRepository } from '../domain/logs.repository.js'
 
 import type { LogFileDto } from './dto/logFile.dto.js'

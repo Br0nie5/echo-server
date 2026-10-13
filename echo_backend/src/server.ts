@@ -16,7 +16,7 @@ import { addBasePath } from './initializers/utils/addBasePath.js'
 import { normalizeToEchoError } from './initializers/utils/normalizeToEchoError.js'
 import { removeBasePath } from './initializers/utils/removeBasePath.js'
 import { createLogsRepository } from './modules/logs/infra/logs.repository.js'
-import { createSelfReportFilesRepository } from './modules/selfReport/infra/selfReportFiles.repository.js'
+import { createSelfReportFilesRepository } from './modules/selfReports/infra/selfReportFiles.repository.js'
 import { EchoErrorJsonSchema } from './shared/schemas/errors.schemas.js'
 import { createFilesService, type FilesService } from './shared/services/files.service.js'
 

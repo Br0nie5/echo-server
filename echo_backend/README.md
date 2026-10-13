@@ -60,7 +60,7 @@ src/
     logs/            the logs API and the log files
       modules/logsNotifier/   the cron notifying the problem logs
     notifications/   the NotificationsService, how a message is sent to the outside, and its Telegram implementation
-    selfReport/      the diagnostics the server reports about itself, stored in files of their own
+    selfReports/     the diagnostics the server reports about itself, stored in files of their own
   shared/            the types of the configs, the FilesService, the error schema, the Logger type
   test/              the helpers of the tests: buildTestServer and mocks/
 ```

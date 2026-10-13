@@ -80,7 +80,7 @@ echo_backend/src/
     logs/
       modules/logsNotifier/
     notifications/
-    selfReport/
+    selfReports/
   shared/            the types of the configs, the files service, what the modules share
   test/              the helpers of the tests
 ```
@@ -184,16 +184,16 @@ It sends its message through the `NotificationsService` of the `notifications` m
 
 Another channel is another implementation of the contract, chosen in `registerLogsNotifier`, without changing whoever notifies.
 
-### The `selfReport` module
+### The `selfReports` module
 
-`modules/selfReport/` is how the backend reports its own diagnostics. It has no route and no business rule, so it has two layers.
+`modules/selfReports/` is how the backend reports its own diagnostics. It has no route and no business rule, so it has two layers.
 
 | Folder    | Content                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `domain/` | `SelfReport`, a diagnostic: its `date`, `message`, `level` (`'WARNING'` or `'ERROR'`) and `origin`, what it is about, written `path:line:column`, `path:line` or `path`, `SelfReportsSession`, what a storage knows about a self report it holds: its `sessionId`, its `location`, its `locationName` and its optional `groupName`. `SelfReportRepository`, the contract the rest of the backend reports through, with plain `SelfReport`s, and reads the self reports back from, each with its session. |
 | `infra/`  | `selfReportFiles.repository.ts` (`createSelfReportFilesRepository`) creates the repository a part of the backend reports through: it implements the contract by storing each self report as a line of a self-report file, which `selfReportsFiles.api.ts` lists, reads and writes and `dto/selfReportLine.dto.ts` describes. `SessionIdApi` (`sessionIdFile.api.ts`) reads and writes the session file.                                                                                                  |
 
-A `SelfReport` is a model of its own, not a `Log`, and it is stored on its own too: in the files of `SELF_REPORTS_DIR_PATH/<server name>/`, one line each, through the `FilesService`. `selfReport` knows nothing of the logs: turning a self report into a log is up to `logs`.
+A `SelfReport` is a model of its own, not a `Log`, and it is stored on its own too: in the files of `SELF_REPORTS_DIR_PATH/<server name>/`, one line each, through the `FilesService`. `selfReports` knows nothing of the logs: turning a self report into a log is up to `logs`.
 
 - **One repository per reporter.** Whoever reports is given its own `SelfReportRepository`, created for one file, and never names it: the logs files repository reports the lines that hold no log (`parseLogFile.jsonl`), the logs notifier the problem logs it could not notify (`logsNotifier.jsonl`).
 - **Without self reports**, that is without the `SelfReportsSettings` of a reporter, the composition root creates no repository: whoever reports is given `undefined`, and reports nothing. They are enabled when something uses them: today, when they are included in the logs.
@@ -203,7 +203,7 @@ A `SelfReport` is a model of its own, not a `Log`, and it is stored on its own t
 - **Reading** gives the self reports of every self-report file, whichever repository is asked, each with the session it was reported during.
 - **It never throws.** What cannot be stored or read goes to the `Logger` of `shared/types/logger.ts`: a diagnostic must not break what was being diagnosed.
 
-`logs` depends on `selfReport` through its contract only: its `infra/` imports its `domain/`, to report and to read the self reports back. `selfReport` imports nothing of `logs`.
+`logs` depends on `selfReports` through its contract only: its `infra/` imports its `domain/`, to report and to read the self reports back. `selfReports` imports nothing of `logs`.
 
 ### The `auth` module
 

@@ -1,6 +1,6 @@
 import { createLogId, type Log } from '@echo/utilities'
 
-import type { SelfReportRepository } from '../../selfReport/domain/selfReport.repository.js'
+import type { SelfReportRepository } from '../../selfReports/domain/selfReport.repository.js'
 import type { LogsRepository } from '../domain/logs.repository.js'
 
 /**

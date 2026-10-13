@@ -4,7 +4,7 @@ import cron from 'node-cron'
 
 import type { LogsNotifierConfig } from '../../../../../shared/config/logsNotifierConfig.js'
 import type { NotificationsService } from '../../../../notifications/domain/notifications.service.js'
-import type { SelfReportRepository } from '../../../../selfReport/domain/selfReport.repository.js'
+import type { SelfReportRepository } from '../../../../selfReports/domain/selfReport.repository.js'
 import type { LogsRepository } from '../../../domain/logs.repository.js'
 import { checkProblemLogsAndNotify } from '../application/checkProblemLogsAndNotify.js'
 import type { CheckDateRepository } from '../domain/checkDate.repository.js'

@@ -1,7 +1,7 @@
 import type { Log } from '@echo/utilities'
 
 import type { FilesService } from '../../../shared/services/files.service.js'
-import type { SelfReportRepository } from '../../selfReport/domain/selfReport.repository.js'
+import type { SelfReportRepository } from '../../selfReports/domain/selfReport.repository.js'
 import type { LogsRepository } from '../domain/logs.repository.js'
 
 import { createLogsFilesApi, type LogsFilesLocation } from './logsFiles.api.js'

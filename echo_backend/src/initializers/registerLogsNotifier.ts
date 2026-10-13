@@ -3,7 +3,7 @@ import { createCheckDateFileApi } from '../modules/logs/modules/logsNotifier/inf
 import { createCheckDateFileRepository } from '../modules/logs/modules/logsNotifier/infra/checkDateFile.repository.js'
 import { logsNotifier } from '../modules/logs/modules/logsNotifier/presentation/logs.notifier.js'
 import { createNotificationsTelegramService } from '../modules/notifications/infra/notificationsTelegram.service.js'
-import { createSelfReportFilesRepository } from '../modules/selfReport/infra/selfReportFiles.repository.js'
+import { createSelfReportFilesRepository } from '../modules/selfReports/infra/selfReportFiles.repository.js'
 import type { FilesService } from '../shared/services/files.service.js'
 
 import type { Settings } from './settings/settings.js'
