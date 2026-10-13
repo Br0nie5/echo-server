@@ -156,6 +156,60 @@ describe('FilesService', () => {
     })
   })
 
+  describe('getRelativeFilePath', () => {
+    it.each([
+      {
+        reason: 'a file directly in the root directory',
+        filePath: '/storage/ping.jsonl',
+        rootDirPath: '/storage',
+        relativeFilePath: 'ping.jsonl'
+      },
+      {
+        reason: 'a file in directories of the root directory',
+        filePath: '/storage/shop/stock/sync_stock.jsonl',
+        rootDirPath: '/storage',
+        relativeFilePath: 'shop/stock/sync_stock.jsonl'
+      },
+      {
+        reason: 'paths that are not normalized',
+        filePath: '/var/storage/./shop//sync_stock.jsonl',
+        rootDirPath: '/var/storage/',
+        relativeFilePath: 'shop/sync_stock.jsonl'
+      },
+      {
+        reason: 'a file in a directory whose name starts with two dots',
+        filePath: '/storage/..shop/sync_stock.jsonl',
+        rootDirPath: '/storage',
+        relativeFilePath: '..shop/sync_stock.jsonl'
+      },
+      {
+        reason: 'no root directory, from the root of the file system',
+        filePath: '/storage/shop/sync_stock.jsonl',
+        rootDirPath: undefined,
+        relativeFilePath: 'storage/shop/sync_stock.jsonl'
+      }
+    ])(
+      'Should give $relativeFilePath for $reason',
+      ({ filePath, rootDirPath, relativeFilePath }) => {
+        expect(createFilesService().getRelativeFilePath(filePath, rootDirPath)).toBe(
+          relativeFilePath
+        )
+      }
+    )
+
+    it.each([
+      {
+        reason: 'is in another directory',
+        filePath: '/elsewhere/shop/sync_stock.jsonl',
+        rootDirPath: '/storage'
+      },
+      { reason: 'is above the root directory', filePath: '/storage', rootDirPath: '/storage/shop' },
+      { reason: 'is the root directory itself', filePath: '/storage', rootDirPath: '/storage' }
+    ])('Should give undefined for a path that $reason', ({ filePath, rootDirPath }) => {
+      expect(createFilesService().getRelativeFilePath(filePath, rootDirPath)).toBeUndefined()
+    })
+  })
+
   describe('getFilesPaths', () => {
     const directories = {
       '/logs': [

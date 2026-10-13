@@ -1,4 +1,4 @@
-import { createLogWithIds, LogLevel, type GetLogsParams, type Log } from '@echo/utilities'
+import { LogLevel, type GetLogsParams, type Log } from '@echo/utilities'
 import nock from 'nock'
 import { describe, expect, test } from 'vitest'
 
@@ -10,19 +10,17 @@ const buildLogsRequestMock = (params: GetLogsParams): nock.Interceptor => {
   return nock(mockConfig.API_URL).get('/logs').query(params)
 }
 
-const logMock: Log = createLogWithIds(
-  {
-    date: '2026-04-27T10:00:00.000Z',
-    location: '/storage/billing/send_invoices',
-    locationName: 'send_invoices',
-    jobId: 1,
-    level: LogLevel.INFO,
-    message: 'some message',
-    groupName: 'billing',
-    origin: 'send_invoices.sh:12'
-  },
-  0
-)
+const logMock: Log = {
+  id: 'log-id',
+  date: '2026-04-27T10:00:00.000Z',
+  location: '/storage/billing/send_invoices',
+  locationName: 'send_invoices',
+  jobId: 1,
+  level: LogLevel.INFO,
+  message: 'some message',
+  groupName: 'billing',
+  origin: 'send_invoices.sh:12'
+}
 
 describe('useLogsRepository', () => {
   describe('findLogs', () => {

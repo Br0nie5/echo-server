@@ -11,7 +11,7 @@ export type MockFilesService = { [Method in keyof FilesService]: Mock<FilesServi
  *
  * ```ts
  * const filesService = getMockFilesService()
- * filesService.getFileContent.mockResolvedValue('{"lastJobId":7}')
+ * filesService.getFileContent.mockResolvedValue('{"lastSessionId":7}')
  * ```
  */
 export const getMockFilesService = (): MockFilesService => ({
@@ -19,6 +19,7 @@ export const getMockFilesService = (): MockFilesService => ({
   getFileContent: vi.fn(),
   getFileLines: vi.fn(),
   getFilesPaths: vi.fn(),
+  getRelativeFilePath: vi.fn(),
   replaceFileContent: vi.fn(),
   replaceFileLines: vi.fn(),
   restrictFileAccessToOwner: vi.fn()

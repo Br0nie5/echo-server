@@ -29,18 +29,18 @@ COPY docker-health-check.ts /usr/local/bin/docker-health-check.ts
 
 # Defaults set in the environment of the container rather than by the entrypoint: the health check,
 # which Docker starts apart from the server, reads the port too, and the directories below are
-# created from these paths. The host directories of the logs are chosen by the volumes mounted on
-# them, so the paths themselves never need to change: the entrypoint refuses any other one, so
-# change them there too.
+# created from these paths. The host directories of the logs and of the self reports are chosen by
+# the volumes mounted on them, so the paths themselves never need to change: the entrypoint refuses
+# any other one, so change them there too.
 ENV HTTP_PORT=4000 \
   LOGS_DIR_PATH=/watched_logs \
-  SERVER_LOGS_DIR_PATH=/server_logs
+  SELF_REPORTS_DIR_PATH=/self_reports
 
 # The server runs as the unprivileged `node` user of the base image. It writes to the data and
-# server logs directories, owned by it here, as is a new named volume mounted on one of them, and
+# self reports directories, owned by it here, as is a new named volume mounted on one of them, and
 # the entrypoint writes the runtime env file of the frontend in its dist.
-RUN mkdir -p /app/data "$LOGS_DIR_PATH" "$SERVER_LOGS_DIR_PATH" \
-  && chown node:node /app/data "$SERVER_LOGS_DIR_PATH" /app/echo_frontend/dist
+RUN mkdir -p /app/data "$LOGS_DIR_PATH" "$SELF_REPORTS_DIR_PATH" \
+  && chown node:node /app/data "$SELF_REPORTS_DIR_PATH" /app/echo_frontend/dist
 
 USER node
 

@@ -16,7 +16,7 @@ In all of them:
 - the authentication and the self reports are enabled, and the Telegram notifications are not;
 - `TRUSTED_PROXIES` is left unset, so Echo believes whatever proxy sends it a request. A proxy has a fixed address on the network of its example, which the commented `TRUSTED_PROXIES` line names;
 - the image is the published one, `ghcr.io/br0nie5/echo:latest`, unless `ECHO_IMAGE` names another;
-- the volumes are the `test_logs/`, `server_logs/` and `data/` directories at the root of this repository.
+- the volumes are the `test_logs/`, `self_reports/` and `data/` directories at the root of this repository.
 
 Each `compose.yaml` holds the lines to uncomment to change these settings, and its `Caddyfile` says what the proxy forwards.
 
@@ -35,7 +35,7 @@ To run one with the published image instead, start it yourself:
 docker compose -f examples/proxy-https/compose.yaml up
 ```
 
-Either way, put some `.jsonl` files in `test_logs/`, at the root of the repository, to have logs to look at. On Linux, `server_logs/` and `data/` must be writable by the user of the container, uid `1000`.
+Either way, put some `.jsonl` files in `test_logs/`, at the root of the repository, to have logs to look at. On Linux, `self_reports/` and `data/` must be writable by the user of the container, uid `1000`.
 
 ## The hosts
 

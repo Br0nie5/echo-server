@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { createFileCheckDateRepository } from '../fileCheckDate.repository.js'
+import { createCheckDateFileRepository } from '../checkDateFile.repository.js'
 
 const checkDateApi = {
   getRawLastCheckDate: vi.fn(),
   saveRawLastCheckDate: vi.fn()
 }
-const checkDateRepository = createFileCheckDateRepository(checkDateApi)
+const checkDateRepository = createCheckDateFileRepository(checkDateApi)
 
 beforeEach(() => {
   vi.resetAllMocks()
 })
 
-describe('FileCheckDateRepository', () => {
+describe('CheckDateFileRepository', () => {
   describe('getLastCheckDate', () => {
     it('Should return the date the file holds', async () => {
       checkDateApi.getRawLastCheckDate.mockResolvedValueOnce(

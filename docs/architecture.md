@@ -16,7 +16,7 @@ The backend and the frontend never import each other. Both import `@echo/utiliti
          ──► /documentation    Swagger UI (optional)
 
  echo_backend ──reads────────► LOGS_DIR_PATH/**/*.jsonl
-              ──reads/writes─► SERVER_LOGS_DIR_PATH/self_reports/**/*.jsonl   (optional)
+              ──reads/writes─► SELF_REPORTS_DIR_PATH/<SERVER_NAME>/*.jsonl    (optional)
               ──reads/writes─► data/users.db, data/*.json
               ──POST─────────► Telegram bot API                               (optional)
 ```
@@ -34,8 +34,9 @@ The backend and the frontend never import each other. Both import `@echo/utiliti
 2. `presentation/logs.routes.ts` runs the authentication hook first, when there is one, then validates the query against its JSON schema.
 3. `presentation/logs.controller.ts` turns the query into dates and filters (`safeParseGetLogsParams`), and calls the use case, `application/getFilteredLogs.ts`.
 4. `getFilteredLogs` asks the `LogsRepository` for every log. `infra/logsFiles.repository.ts` lists the log files, reads their lines and converts each one to a log; a line that holds none becomes a self report.
-5. `getFilteredLogs` saves those self reports, then filters the logs and sorts them from the newest to the oldest, in memory.
-6. The app filters what it received by level and by search, in a Web Worker, each time the user changes a filter, without asking the API again.
+5. `getFilteredLogs` saves those self reports to its `SelfReportRepository`. When the self reports are included in the logs (`INCLUDE_SELF_REPORTS_IN_LOGS`), it then reads every self report back from it and converts each one to a log.
+6. It filters the logs and sorts them from the newest to the oldest, in memory.
+7. The app filters what it received by level and by search, in a Web Worker, each time the user changes a filter, without asking the API again.
 
 There is no database of logs: every request reads the files again.
 
@@ -133,14 +134,16 @@ A function is given the config of its domain (`createLogsFilesApi(config.logs, f
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `domain/`       | `LogsRepository`: it reads the logs of every location it watches (`getAllLogs`) or of one (`getLogs`), stores logs, each at its own `location`, where they replace what was stored (`saveLogs`), and empties a location (`deleteLogs`). |
 | `application/`  | `getFilteredLogs`, the one use case.                                                                                                                                                                                                    |
-| `infra/`        | `logsFiles.api.ts` lists the log files, reads the lines of one and replaces them. `logsFiles.repository.ts` implements `LogsRepository` on top of it, with the DTOs of `dto/`.                                                          |
+| `infra/`        | `logsFiles.api.ts` lists the log files and reads the lines of one. `logsFiles.repository.ts` implements `LogsRepository` on top of it, with the DTOs of `dto/`.                                                                         |
 | `presentation/` | `GET /logs`.                                                                                                                                                                                                                            |
 
 The models, `Log` and `LogLevel`, come from `@echo/utilities`, since the frontend shares them.
 
 A **location** is an opaque string saying where some logs are stored. Only the implementation gives it a meaning: here the path of a file, elsewhere it could be the address of another server. A `Log` carries its `location` and its `locationName`, the short name shown to the user.
 
-A line of a log file holds neither the `id`, the `contentId`, the `locationName` nor the `groupName` of its log: they are worked out again each time it is read. `createLogWithIds` of `@echo/utilities` creates the two ids. The `contentId` is made of the `location`, the `level`, the `message` and the `origin`, so two logs saying the same thing share it, whatever their date and their job. The `id` adds the date, the job and the position of the line.
+A line of a log file holds neither the `id`, the `locationName` nor the `groupName` of its log: they are worked out again each time it is read. `createLogId` of `@echo/utilities` makes the `id` of the date, the job, the `location`, the `level`, the `message`, the `origin` and the position of the line. `logsFiles.api.ts` makes the `groupName` of the path of the file below the logs directory, which the `FilesService` gives it (`getRelativeFilePath`): its directories, without those named `logs` nor the first of the others.
+
+The logs are only read from `LOGS_DIR_PATH`. The self reports are not stored among them: when `INCLUDE_SELF_REPORTS_IN_LOGS` is `true`, `getFilteredLogs` reads them from the `SelfReportRepository` and converts each one to a log, whose job is the session it was reported during and whose group is the one the self report carries: `selfReportFiles.repository.ts` makes it of every directory of its file, from the root of the file system, which gives `self_reports_<server name>` in a container, where `SELF_REPORTS_DIR_PATH` is `/self_reports`.
 
 ### The `logsNotifier` submodule
 
@@ -150,7 +153,7 @@ A line of a log file holds neither the `id`, the `contentId`, the `locationName`
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `domain/`       | `LastCheckDate`, when the logs were last checked, and `CheckDateRepository`, the contract it is stored through.                                                           |
 | `application/`  | `checkProblemLogsAndNotify`, one check. `utils/buildNotifierMessage.ts` writes the message, never longer than the size limit it is given.                                 |
-| `infra/`        | `CheckDateApi` reads and writes the last-check file, `fileCheckDate.repository.ts` implements the contract on top of it.                                                  |
+| `infra/`        | `CheckDateApi` reads and writes the last-check file, `checkDateFile.repository.ts` implements the contract on top of it.                                                  |
 | `presentation/` | `logs.notifier.ts`, the Fastify plugin running the check on the schedule of the config. A cron is the entry point of the submodule, the way a route is the one of `logs`. |
 
 A check builds on `getFilteredLogs`, the use case of its parent:
@@ -159,8 +162,8 @@ A check builds on `getFilteredLogs`, the use case of its parent:
 - The very first check only saves its date, so the logs that predate it are never notified.
 - A check whose notification fails does not save its date: the next one sends the same logs again.
 - A run that is due while the previous one is still going is skipped.
-- The self reports are logs too, notified when their level is watched. A line that holds no valid log is reported with a new date each time the logs are read, so it is notified at every check until its file is fixed. That is on purpose: dating it from when it was first seen would hide a new problem found on the same line.
-- When the size limit of the channel is too small for any message, nothing is sent, and the check reports it as a warning to a `SelfReportRepository` of its own.
+- When the self reports are included in the logs, they are notified like any other log when their level is watched. A line that holds no valid log is reported each time the logs are read, but stored once, with the date it was first read at: it is notified once too.
+- When the size limit of the channel is too small for any message, nothing is sent, and the check reports it as a warning to a `SelfReportRepository` of its own, when the self reports are enabled.
 
 It sends its message through the `NotifierService` of `shared/services/`.
 
@@ -168,20 +171,22 @@ It sends its message through the `NotifierService` of `shared/services/`.
 
 `modules/selfReport/` is how the backend reports its own diagnostics. It has no route and no business rule, so it has two layers.
 
-| Folder    | Content                                                                                                                                                                                                                                                                                                                 |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `domain/` | `SelfReport`, a diagnostic: its `id`, `date`, `message`, `level` (`'WARNING'` or `'ERROR'`) and `origin`, what it is about, written `path:line:column`, `path:line` or `path`. `SelfReportRepository`, the contract the rest of the backend reports through.                                                            |
-| `infra/`  | `selfReport.repository.ts` (`createSelfReportRepository`) creates the repository a part of the backend reports through. `selfLogReport.repository.ts` implements the contract by storing each self report as a log. `noopSelfReport.repository.ts` stores nothing. `SessionJobIdApi` reads and writes the session file. |
+| Folder    | Content                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain/` | `SelfReport`, a diagnostic: its `date`, `message`, `level` (`'WARNING'` or `'ERROR'`) and `origin`, what it is about, written `path:line:column`, `path:line` or `path`, `SelfReportsSession`, what a storage knows about a self report it holds: its `sessionId`, its `location`, its `locationName` and its optional `groupName`. `SelfReportRepository`, the contract the rest of the backend reports through, with plain `SelfReport`s, and reads the self reports back from, each with its session. |
+| `infra/`  | `selfReportFiles.repository.ts` (`createSelfReportFilesRepository`) creates the repository a part of the backend reports through: it implements the contract by storing each self report as a line of a self-report file, which `selfReportsFiles.api.ts` lists, reads and writes and `dto/selfReportLine.dto.ts` describes. `SessionIdApi` (`sessionIdFile.api.ts`) reads and writes the session file.                                                                                                  |
 
-A `SelfReport` is a model of its own, not a `Log`. It is **stored** as one, through the `LogsRepository` of `logs`, at a location the logs are read from: that is how it shows up in the app like any other log. `selfReport` therefore knows neither files nor the format of a log line, which `logs/infra` alone describes.
+A `SelfReport` is a model of its own, not a `Log`, and it is stored on its own too: in the files of `SELF_REPORTS_DIR_PATH/<server name>/`, one line each, through the `FilesService`. `selfReport` knows nothing of the logs: turning a self report into a log is up to `logs`.
 
-- **One repository per reporter.** Whoever reports is given its own `SelfReportRepository`, created for one location, and never names a file: `getFilteredLogs` reports the lines that hold no log (`parseLogFile.jsonl`), the logs notifier the problem logs it could not notify (`logsNotifier.jsonl`).
-- **Without self reports**, that is without a `SelfReportsConfig`, the repository stores nothing, so nobody checks whether they are enabled before reporting.
-- **When it is created**, the repository takes the next `jobId` of the session file and stores its location again without the logs older than the retention, which also tells whether the location can be written. Should that fail, the error is logged and the repository stores nothing: an optional feature never stops the server from starting.
-- **A self report saved again**, with the `contentId` of a stored one, replaces it: a problem that lasts is stored once, with the date it was last seen at.
-- **It never throws.** What cannot be stored goes to the `Logger` of `shared/types/logger.ts`: a diagnostic must not break what was being diagnosed.
+- **One repository per reporter.** Whoever reports is given its own `SelfReportRepository`, created for one file, and never names it: `getFilteredLogs` reports the lines that hold no log (`parseLogFile.jsonl`), the logs notifier the problem logs it could not notify (`logsNotifier.jsonl`).
+- **Without self reports**, that is without a `SelfReportsConfig`, there is no repository: whoever reports is given `undefined`, and reports nothing. They are enabled when something uses them: today, when they are included in the logs.
+- **The session is the repository's business.** Whoever reports saves plain self reports, which the repository stores with the id of its session. Reading gives each self report with its session: the id of the run it was reported during, and the location, the location name and the group name of its file.
+- **When it is created**, the repository takes the next session id of the session file and writes its file again without the self reports older than the retention, which also tells whether the file can be written. Should that fail, the error is logged and no repository is created: an optional feature never stops the server from starting.
+- **A self report is stored after the stored ones**, unless one of them has its `level`, its `message` and its `origin`: a problem that lasts is stored once, with the date it was first seen at.
+- **Reading** gives the self reports of every self-report file, whichever repository is asked, each with the session it was reported during.
+- **It never throws.** What cannot be stored or read goes to the `Logger` of `shared/types/logger.ts`: a diagnostic must not break what was being diagnosed.
 
-`logs` and `selfReport` depend on each other, through contracts only: `logs` imports the `domain/` of `selfReport`, to say what it reports, and `selfReport/infra` the `domain/` of `logs`, to store. The feature itself is circular, the self reports being logs about the reading of the logs.
+`logs` depends on `selfReport` through its contract only: it imports its `domain/`, to say what it reports and to read the self reports back. `selfReport` imports nothing of `logs`.
 
 ### The `auth` module
 
@@ -203,7 +208,7 @@ A `SelfReport` is a model of its own, not a `Log`. It is **stored** as one, thro
 What several modules use. It imports nothing of the backend but itself.
 
 - **`config/`**: the `BackConfig`, `loadBackConfig`, and in `utils/` the parser of each variable.
-- **`services/files.service.ts`**: the `FilesService`, the one access of the backend's own code to the file system. Nothing else imports `fs`, the tests included, but its own tests. It creates a directory, reads a file as a whole or as lines (throwing a `FileDoesNotExistError` when it is missing), lists the files of a directory, replaces the content of a file and restricts a file to its owner. A write goes through a temporary file, so a reader never sees a file half written, and the writes of one file are done one after the other. It knows nothing of what the files hold nor of how they are named. `startServer` builds it once and hands it down. Only libraries given a path by the config reach the disk on their own: `better-sqlite3`, `dotenv` and `@fastify/static`.
+- **`services/files.service.ts`**: the `FilesService`, the one access of the backend's own code to the file system. Nothing else imports `fs`, the tests included, but its own tests. It creates a directory, reads a file as a whole or as lines (throwing a `FileDoesNotExistError` when it is missing), lists the files of a directory, gives the path of a file relative to a directory, replaces the content of a file and restricts a file to its owner. A write goes through a temporary file, so a reader never sees a file half written, and the writes of one file are done one after the other. It knows nothing of what the files hold nor of how they are named. `startServer` builds it once and hands it down. Only libraries given a path by the config reach the disk on their own: `better-sqlite3`, `dotenv` and `@fastify/static`.
 - **`services/notifier.service.ts`**: the `NotifierService`, how the backend sends a message to the outside. It gives the size limit of its messages and sends one, through the Telegram bot API. It knows nothing of what the messages say: another channel would be chosen inside `createNotifierService`, without changing whoever notifies.
 - **`types/logger.ts`**: the `Logger` a part of the backend writes its errors to, so that none depends on the logger of Fastify for it.
 - **`schemas/errors.schemas.ts`**: the JSON schema of `EchoError`, which every route may answer.

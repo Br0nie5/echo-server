@@ -14,26 +14,26 @@ Echo is configured with environment variables only. They are read and validated 
 
 ## Where the variables come from
 
-| Context       | Source                                                                                                                                                                                                                      |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Docker        | The environment of the container. The [Dockerfile](../Dockerfile) sets `HTTP_PORT`, `LOGS_DIR_PATH` and `SERVER_LOGS_DIR_PATH`, and [docker-entrypoint.sh](../docker-entrypoint.sh) gives every other variable its default. |
-| `npm run dev` | `echo_backend/.env.development` for the backend, `echo_frontend/public/env.development.json` for the frontend.                                                                                                              |
-| `npm start`   | `echo_backend/.env.production` for the backend, `echo_frontend/public/env.production.json`, copied into the build, for the frontend.                                                                                        |
+| Context       | Source                                                                                                                                                                                                                       |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Docker        | The environment of the container. The [Dockerfile](../Dockerfile) sets `HTTP_PORT`, `LOGS_DIR_PATH` and `SELF_REPORTS_DIR_PATH`, and [docker-entrypoint.sh](../docker-entrypoint.sh) gives every other variable its default. |
+| `npm run dev` | `echo_backend/.env.development` for the backend, `echo_frontend/public/env.development.json` for the frontend.                                                                                                               |
+| `npm start`   | `echo_backend/.env.production` for the backend, `echo_frontend/public/env.production.json`, copied into the build, for the frontend.                                                                                         |
 
 The backend loads `.env.production` when `NODE_ENV` is `production`, `.env.development` otherwise, from its working directory, `echo_backend/`, where npm runs its scripts. A variable already set in the environment wins over the file. `NODE_ENV` only chooses that file: no variable is read differently in development.
 
 **The code holds no default.** A variable is required unless being unset means something (`BASE_PATH`, `TRUSTED_PROXIES`, the TLS and the Telegram variables). The "Docker default" columns below are the values the image gives, which is why nothing is required in a container.
 
-The variables of a part that is disabled are not read, so a wrong value there stops nothing: `SELF_REPORTS_RETENTION_DAYS` without the self reports, the `LOGS_NOTIFIER_*` variables without Telegram.
+The variables of a part that is disabled are not read, so a wrong value there stops nothing: `SELF_REPORTS_RETENTION_DAYS` and `SELF_REPORTS_DIR_PATH` without the self reports, the `LOGS_NOTIFIER_*` variables without Telegram.
 
 ## Shared variables
 
 Read by the backend and by the frontend, with `parseConfig` of [echo_utilities](../echo_utilities/src/shared/config/parseConfig.ts).
 
-| Variable             | Required | Docker default | Description                                                                                                                                           |
-| -------------------- | :------: | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SERVER_NAME`        |   yes    | `Echo`         | Name of the instance, never blank. Shown in the app and in the Telegram messages, it also names the session cookie and the group of the self reports. |
-| `HAS_AUTHENTICATION` |   yes    | `true`         | `true` or `false`. Whether a user must log in to read the logs. `false` leaves out the auth routes, the cookie and the JWT.                           |
+| Variable             | Required | Docker default | Description                                                                                                                                                              |
+| -------------------- | :------: | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `SERVER_NAME`        |   yes    | `Echo`         | Name of the instance, never blank. Shown in the app and in the Telegram messages, it also names the session cookie, and the directory and the group of the self reports. |
+| `HAS_AUTHENTICATION` |   yes    | `true`         | `true` or `false`. Whether a user must log in to read the logs. `false` leaves out the auth routes, the cookie and the JWT.                                              |
 
 ## Backend variables
 
@@ -52,14 +52,14 @@ Read by [loadBackConfig.ts](../echo_backend/src/shared/config/loadBackConfig.ts)
 
 ### Logs
 
-| Variable                      | Required | Docker default  | Description                                                                                                                                                                                                                                                                                                                               |
-| ----------------------------- | :------: | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LOGS_DIR_PATH`               |   yes    | `/watched_logs` | Directory the `.jsonl` log files are read from, at any depth. A relative path resolves from the working directory of the backend. In a container, leave it: the entrypoint refuses any other value, mount your logs there instead.                                                                                                        |
-| `SAVE_SELF_REPORTS_TO_FILE`   |   yes    | `false`         | `true` or `false`. Whether the backend stores its self reports, which makes it read the log files of `SERVER_LOGS_DIR_PATH` too, so they show up in the app like any other log.                                                                                                                                                           |
-| `SERVER_LOGS_DIR_PATH`        |   yes    | `/server_logs`  | Directory the backend writes its own log files under: the self reports go in `self_reports/<group>/logs/`, the group being `SERVER_NAME` made safe for a path. Always required, but only used with the self reports. Keep it outside `LOGS_DIR_PATH`, otherwise its files are read twice. In a container, leave it, like `LOGS_DIR_PATH`. |
-| `SELF_REPORTS_RETENTION_DAYS` |  yes\*   | `10`            | How many days a self report is kept, a strictly positive integer. The older ones are removed when the server starts.                                                                                                                                                                                                                      |
+| Variable                       | Required | Docker default  | Description                                                                                                                                                                                                                                                    |
+| ------------------------------ | :------: | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LOGS_DIR_PATH`                |   yes    | `/watched_logs` | Directory the `.jsonl` log files are read from, at any depth. A relative path resolves from the working directory of the backend. In a container, leave it: the entrypoint refuses any other value, mount your logs there instead.                             |
+| `INCLUDE_SELF_REPORTS_IN_LOGS` |   yes    | `false`         | `true` or `false`. Whether the self reports are added to the logs, so they show up in the app like any other log. The backend stores its self reports only when something uses them, that is when this is `true`.                                              |
+| `SELF_REPORTS_DIR_PATH`        |  yes\*   | `/self_reports` | Directory the self reports are stored in, in a directory named after `SERVER_NAME`, made safe for a path. Their group is named from every directory of that path: `self_reports_<server name>` in a container. In a container, leave it, like `LOGS_DIR_PATH`. |
+| `SELF_REPORTS_RETENTION_DAYS`  |  yes\*   | `10`            | How many days a self report is kept, a strictly positive integer. The older ones are removed when the server starts.                                                                                                                                           |
 
-\* Only with `SAVE_SELF_REPORTS_TO_FILE=true`. Not read otherwise.
+\* Only with `INCLUDE_SELF_REPORTS_IN_LOGS=true`. Not read otherwise.
 
 ### Notifications
 
@@ -103,11 +103,12 @@ Paths, file names and limits are constants of `loadBackConfig`, part of the `Bac
 | ------------------------------------------------- | ------------------------------------------- |
 | Users database                                    | `data/users.db`                             |
 | Date of the last check of the logs notifier       | `data/last_logs_check.json`                 |
-| Last `jobId` of the self reports                  | `data/self_reports_session.json`            |
+| Id of the last session of the self reports        | `data/self_reports_session.json`            |
 | Built frontend                                    | `echo_frontend/dist`                        |
 | Extension of a log file                           | `.jsonl`                                    |
 | Directory name left out of the group names        | `logs`                                      |
 | Self-report files                                 | `parseLogFile.jsonl`, `logsNotifier.jsonl`  |
+| Extension of a self-report file                   | `.jsonl`                                    |
 | Route prefixes, below `BASE_PATH`                 | `/api`, `/app`, `/documentation`            |
 | Length of a session                               | 24 hours                                    |
 | Login and sign-up attempts                        | 5 a minute per address                      |

@@ -40,7 +40,7 @@ Then read the [development guide](docs/development.md), to run the project, and 
 
 - A piece (a util, a parser, a schema, an adapter) has thorough unit tests. A screen, a route or the cron has a few integration tests, one per feature. See [Testing](docs/development.md#testing).
 - No test reaches the network, writes a file or depends on the clock.
-- Invent the data of your tests, mocks and examples: never copy a name, a path or a message from real logs, such as those you put in `test_logs/` or `server_logs/`.
+- Invent the data of your tests, mocks and examples: never copy a name, a path or a message from real logs, such as those you put in `test_logs/` or `self_reports/`.
 
 ### Documentation
 

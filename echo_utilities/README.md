@@ -72,7 +72,7 @@ A parser of a single value (`parseBoolean`, `parseInteger`) takes its text and k
 
 In `src/modules/logs/`:
 
-- **Ids.** `createLogWithIds` gives a log its two ids. Its `contentId` (`createLogContentId`) is made of its `location`, `level`, `message` and `origin`: two logs saying the same thing share it, whatever their date and their job. Its `id` (`createLogId`) adds the date, the job and a number telling apart the logs that have all of those in common.
+- **Id.** `createLogId` creates the `id` of a log, from its date, its job, its `location`, `level`, `message` and `origin`, and a number telling apart the logs that have all of those in common.
 - **Filtering.** `filterLogByLevels` and `filterLogBySearch` tell whether a log is kept. `parseLogSearchInput` turns what a user typed into the `LogSearchFilter`s the second one applies, and `logSearchableKeys` lists the fields a search can target.
 
 The search syntax `parseLogSearchInput` reads:

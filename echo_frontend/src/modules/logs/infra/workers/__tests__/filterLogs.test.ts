@@ -1,22 +1,20 @@
-import { createLogWithIds, type Log } from '@echo/utilities'
+import { createLogId, type Log } from '@echo/utilities'
 import { afterEach, describe, expect, test, vi, type Mock } from 'vitest'
 
 import { createFilterLogs } from '../filterLogs'
 import type { FilterWorkerAnswer, FilterWorkerRequest } from '../filterWorkerMessages'
 
-const buildLog = (idNumber: number): Log =>
-  createLogWithIds(
-    {
-      date: '2026-01-02T10:00:00.000Z',
-      jobId: 1,
-      level: 'INFO',
-      location: '/storage/send_invoices',
-      locationName: 'send_invoices',
-      message: 'message',
-      origin: 'send_invoices.sh:12'
-    },
-    idNumber
-  )
+const noIdLog: Omit<Log, 'id'> = {
+  date: '2026-01-02T10:00:00.000Z',
+  jobId: 1,
+  level: 'INFO',
+  location: '/storage/send_invoices',
+  locationName: 'send_invoices',
+  message: 'message',
+  origin: 'send_invoices.sh:12'
+}
+
+const buildLog = (idNumber: number): Log => ({ ...noIdLog, id: createLogId(noIdLog, idNumber) })
 
 const logs = [buildLog(0), buildLog(1), buildLog(2)]
 

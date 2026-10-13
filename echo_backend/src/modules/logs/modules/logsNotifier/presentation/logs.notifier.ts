@@ -13,11 +13,18 @@ import type { CheckDateRepository } from '../domain/checkDate.repository.js'
 export interface LogsNotifierPluginOptions extends FastifyPluginOptions {
   logsNotifierConfig: LogsNotifierConfig
   logsRepository: LogsRepository
-  /** Where the stored entries that hold no valid log are reported. */
-  logsSelfReportRepository: SelfReportRepository
+  /**
+   * Where the stored entries that hold no valid log are reported, and where the self reports that
+   * are checked among the logs are read from. Missing when the self reports are disabled.
+   */
+  logsSelfReportRepository?: SelfReportRepository
   notifierService: NotifierService
   checkDateRepository: CheckDateRepository
-  selfReportRepository: SelfReportRepository
+  /**
+   * Where a check reports the problem logs it could not notify. Missing when the self reports are
+   * disabled.
+   */
+  logsNotifierSelfReportRepository?: SelfReportRepository
 }
 
 const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = async (
@@ -28,7 +35,7 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
     logsSelfReportRepository,
     notifierService,
     checkDateRepository,
-    selfReportRepository
+    logsNotifierSelfReportRepository
   }
 ) => {
   fastify.log.info('Registering logs notifier')
@@ -45,7 +52,7 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
           logsSelfReportRepository,
           notifierService,
           checkDateRepository,
-          selfReportRepository
+          logsNotifierSelfReportRepository
         })
       } catch (error) {
         fastify.log.error({ err: error }, 'Cron job failed')

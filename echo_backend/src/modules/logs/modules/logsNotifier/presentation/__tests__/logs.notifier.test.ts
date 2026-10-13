@@ -162,8 +162,8 @@ describe('logs notifier', () => {
     expect(fileSystem.getFile(selfReportsFilePath)).toBe(
       toLogFileContent([
         {
-          jobId: 2,
-          timestamp: FIRST_CHECK.toISOString(),
+          sessionId: 2,
+          date: FIRST_CHECK.toISOString(),
           level: 'WARNING',
           message:
             'The problem logs were not notified: the notifier takes messages of 10 characters at most, which is not enough for any message',

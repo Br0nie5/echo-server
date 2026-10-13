@@ -36,13 +36,13 @@ Environment variables, read and validated once, when the server starts, by `load
 
 `BackConfig` is split by what uses it:
 
-| Part           | Holds                                                                                                                | Missing when                                             |
-| -------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `server`       | The port, the base path, the route prefixes, the trusted proxies, the TLS certificate, the directory of the web app. | Never.                                                   |
-| `logs`         | The directories the logs are read from, the extension of a log file, and `logsNotifier`, the config of the cron.     | Never. `logsNotifier` is missing without `notification`. |
-| `auth`         | The length of a session, its cookie, the limit of the login attempts, the file of the users database.                | `HAS_AUTHENTICATION` is `false`.                         |
-| `selfReports`  | The retention, the directory and the files of the self reports.                                                      | `SAVE_SELF_REPORTS_TO_FILE` is `false`.                  |
-| `notification` | The Telegram chat and bot.                                                                                           | `TELEGRAM_CHAT_ID` or `TELEGRAM_BOT_TOKEN` is unset.     |
+| Part           | Holds                                                                                                                | Missing when                                                              |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `server`       | The port, the base path, the route prefixes, the trusted proxies, the TLS certificate, the directory of the web app. | Never.                                                                    |
+| `logs`         | The directory the logs are read from, the extension of a log file, and `logsNotifier`, the config of the cron.       | Never. `logsNotifier` is missing without `notification`.                  |
+| `auth`         | The length of a session, its cookie, the limit of the login attempts, the file of the users database.                | `HAS_AUTHENTICATION` is `false`.                                          |
+| `selfReports`  | The retention, the root directory, the directory and the files of the self reports.                                  | Nothing uses the self reports: `INCLUDE_SELF_REPORTS_IN_LOGS` is `false`. |
+| `notification` | The Telegram chat and bot.                                                                                           | `TELEGRAM_CHAT_ID` or `TELEGRAM_BOT_TOKEN` is unset.                      |
 
 A part that is missing is disabled, and its variables are not read: without `auth`, the server has no auth route and the logs are open.
 
@@ -57,7 +57,7 @@ src/
     auth/            sign-up, login, check and logout, the SQLite users, the JWT of the session
     logs/            the logs API and the log files
       modules/logsNotifier/   the cron notifying the problem logs
-    selfReport/      the diagnostics the server reports about itself, stored as logs
+    selfReport/      the diagnostics the server reports about itself, stored in files of their own
   shared/            the config, the services (FilesService, NotifierService), the error schema, the Logger type
   test/              the helpers of the tests: buildTestServer and mocks/
 ```
@@ -77,17 +77,17 @@ Three rules shape the code:
 
 - **One access to the file system.** `FilesService` (`src/shared/services/files.service.ts`) is the only code that imports `fs`. `startServer` builds it once and hands it down. A write goes through a temporary file, so a reader never sees a file half written.
 - **The JSON schemas of the routes are not written by hand.** They are converted from the zod schemas of `@echo/utilities`, in the `*.schemas.ts` files, and drive both the validation of the requests and the Swagger docs. Keep the `schema` of a route accurate, its `operationId` and its answers above all.
-- **A self report never breaks what it reports about.** Whoever reports a diagnostic is given a `SelfReportRepository`, which stores it as a log, or stores nothing when the self reports are disabled, and never throws.
+- **A self report never breaks what it reports about.** Whoever reports a diagnostic is given a `SelfReportRepository`, which stores it in a self-report file and never throws, or none when the self reports are disabled.
 
 ## How the logs are read
 
 There is no database of logs: `GET /logs` reads the files at each request.
 
-1. `infra/logsFiles.api.ts` lists the files with the log extension under the logs directories, at any depth, and reads their non-blank lines.
+1. `infra/logsFiles.api.ts` lists the files with the log extension under the logs directory, at any depth, and reads their non-blank lines.
 2. `infra/logsFiles.repository.ts` converts each line to a `Log`. A line that holds none, because it is not JSON, misses a field or has an unknown level or a date that is not one, becomes a warning self report instead.
-3. `application/getFilteredLogs.ts` saves those self reports, then filters the logs by date, level and search, and sorts them from the newest to the oldest.
+3. `application/getFilteredLogs.ts` saves those self reports and adds every stored self report to the logs, each converted to a log, when the self reports are enabled, then filters the logs by date, level and search, and sorts them from the newest to the oldest.
 
-The group of a log is made of the directories of its file, and its ids are worked out from its content and its position: a line stores neither.
+The group of a log is made of the directories of its file, and its id is worked out from its content and its position: a line stores neither.
 
 ## Tests
 

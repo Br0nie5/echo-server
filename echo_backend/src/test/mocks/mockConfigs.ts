@@ -37,8 +37,8 @@ export const getMockSelfReportsConfig = (
   overrides: Partial<SelfReportsConfig> = {}
 ): SelfReportsConfig => ({
   retentionDays: 10,
-  selfReportsGroupName: 'Echo',
-  selfReportsDirPath: '/server_logs/self_reports/Echo/logs',
+  selfReportsDirPath: '/self_reports/Echo',
+  selfReportFileExtension: '.jsonl',
   parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
   logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
   sessionFilePath: '/fake/data/self_reports_session.json',
@@ -68,9 +68,9 @@ export const getMockNotificationConfig = (
   ...overrides
 })
 
-/** A `LogsConfig` without logs notifier for the tests, with `overrides` on top of its defaults. */
+/** A `LogsConfig` without logs notifier, for the tests, with `overrides` on top of its defaults. */
 export const getMockLogsConfig = (overrides: Partial<LogsConfig> = {}): LogsConfig => ({
-  logsDirsPaths: ['/logs'],
+  logsDirPath: '/logs',
   logFileExtension: '.jsonl',
   logFilesDirName: 'logs',
   ...overrides

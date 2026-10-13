@@ -2,11 +2,7 @@ import type { Log } from '@echo/utilities'
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest'
 
 import { buildTestServer } from '../../../../test/buildTestServer.js'
-import {
-  getMockAuthConfig,
-  getMockLogsConfig,
-  getMockSelfReportsConfig
-} from '../../../../test/mocks/mockConfigs.js'
+import { getMockAuthConfig, getMockSelfReportsConfig } from '../../../../test/mocks/mockConfigs.js'
 
 /** The instant the tests run at, which the lines that hold no log are reported at. */
 const NOW = new Date('2026-04-28T10:00:00.000Z')
@@ -213,38 +209,34 @@ describe('GET /logs', () => {
     const selfReportsFilePath = `${selfReportsDirPath}/${parseLogFileSelfReportFileName}`
 
     const { server, fileSystem } = await buildTestServer({
-      config: {
-        auth: undefined,
-        logs: getMockLogsConfig({ logsDirsPaths: ['/logs', '/server_logs'] }),
-        selfReports: selfReportsConfig
-      },
+      config: { auth: undefined, selfReports: selfReportsConfig },
       files: { [sendInvoicesLogFilePath]: `${notALogLine}\n` }
     })
     const query = { fromDate: '2026-04-26T00:00:00.000Z' }
 
-    const firstResponse = await server.inject({ method: 'GET', url: '/api/logs', query })
+    await server.inject({ method: 'GET', url: '/api/logs', query })
+    const secondResponse = await server.inject({ method: 'GET', url: '/api/logs', query })
 
-    expect(firstResponse.json()).toEqual([])
     expect(fileSystem.getFile(selfReportsFilePath)).toBe(
       toLogFileContent([
         {
-          jobId: 1,
-          timestamp: NOW.toISOString(),
+          sessionId: 1,
+          date: NOW.toISOString(),
           level: 'WARNING',
           message: notALogLine,
           origin: `${sendInvoicesLogFilePath}:1`
         }
       ])
     )
-
-    const secondResponse = await server.inject({ method: 'GET', url: '/api/logs', query })
-
     expect(secondResponse.json()).toMatchObject([
       {
-        groupName: selfReportsConfig.selfReportsGroupName,
+        groupName: 'self_reports_Echo',
+        location: selfReportsFilePath,
         locationName: 'parseLogFile',
+        jobId: 1,
         level: 'WARNING',
-        message: notALogLine
+        message: notALogLine,
+        origin: `${sendInvoicesLogFilePath}:1`
       }
     ])
   })

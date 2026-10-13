@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { getMockLogsNotifierConfig } from '../../../../../../test/mocks/mockConfigs.js'
 import { getMockFilesService } from '../../../../../../test/mocks/mockFilesService.js'
-import { createFileCheckDateApi } from '../fileCheckDate.api.js'
+import { createCheckDateFileApi } from '../checkDateFile.api.js'
 
 const logsNotifierConfig = getMockLogsNotifierConfig({
   lastLogsCheckFilePath: '/fake/data/nested/last_logs_check.json'
@@ -19,7 +19,7 @@ describe('CheckDateApi', () => {
     it('Should return the content of the last-check file', async () => {
       filesService.getFileContent.mockResolvedValue('{"lastCheck":"2026-01-01T00:00:00.000Z"}')
 
-      const rawLastCheckDate = await createFileCheckDateApi(
+      const rawLastCheckDate = await createCheckDateFileApi(
         logsNotifierConfig,
         filesService
       ).getRawLastCheckDate()
@@ -34,7 +34,7 @@ describe('CheckDateApi', () => {
       filesService.getFileContent.mockRejectedValue(new Error('ENOENT'))
 
       await expect(
-        createFileCheckDateApi(logsNotifierConfig, filesService).getRawLastCheckDate()
+        createCheckDateFileApi(logsNotifierConfig, filesService).getRawLastCheckDate()
       ).rejects.toThrow('ENOENT')
     })
   })
@@ -49,7 +49,7 @@ describe('CheckDateApi', () => {
         steps.push('replaceFileContent')
       })
 
-      await createFileCheckDateApi(logsNotifierConfig, filesService).saveRawLastCheckDate('content')
+      await createCheckDateFileApi(logsNotifierConfig, filesService).saveRawLastCheckDate('content')
 
       expect(filesService.createDirectory).toHaveBeenCalledWith('/fake/data/nested')
       expect(filesService.replaceFileContent).toHaveBeenCalledWith(

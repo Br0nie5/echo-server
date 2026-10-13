@@ -17,12 +17,13 @@ export interface LogsController {
 }
 
 /**
- * Builds the logs handlers, which read the logs from `logsRepository` and report the stored entries
- * that hold no valid log to `selfReportRepository`.
+ * Builds the logs handlers, which read the logs from `logsRepository` and, when the self reports
+ * are enabled, report the stored entries that hold no valid log to `logsSelfReportRepository` and
+ * answer its self reports among the logs (see `getFilteredLogs`).
  */
 export const createLogsController = (
   logsRepository: LogsRepository,
-  selfReportRepository: SelfReportRepository
+  logsSelfReportRepository: SelfReportRepository | undefined
 ): LogsController => ({
   getLogs: async (
     request: FastifyRequest<{ Querystring: GetLogsParams }>,
@@ -42,7 +43,7 @@ export const createLogsController = (
 
     const logSearchFilters = parseLogSearchInput(logSearch ?? '')
 
-    const logs = await getFilteredLogs(logsRepository, selfReportRepository, {
+    const logs = await getFilteredLogs(logsRepository, logsSelfReportRepository, {
       fromDate,
       toDate,
       levels: logLevels,

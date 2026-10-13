@@ -97,7 +97,6 @@ curl --cookie cookies.txt \
 ```json
 {
   "id": "{\"idNumber\":0,\"date\":\"2026-09-19T14:41:09.669Z\",\"jobId\":1,\"location\":\"/watched_logs/scripts/docker/utils/logs/prune.log.jsonl\",\"level\":\"INFO\",\"message\":\"Pruning the unused Docker images.\",\"origin\":\"prune.sh:12\"}",
-  "contentId": "{\"location\":\"/watched_logs/scripts/docker/utils/logs/prune.log.jsonl\",\"level\":\"INFO\",\"message\":\"Pruning the unused Docker images.\",\"origin\":\"prune.sh:12\"}",
   "date": "2026-09-19T14:41:09.669Z",
   "groupName": "docker_utils",
   "location": "/watched_logs/scripts/docker/utils/logs/prune.log.jsonl",
@@ -109,18 +108,17 @@ curl --cookie cookies.txt \
 }
 ```
 
-| Field          | Description                                                                                                                                             |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`           | Identifies the log among all of them. Treat it as an opaque string.                                                                                     |
-| `contentId`    | Identifies what the log says: two logs share it when they have the same `location`, `level`, `message` and `origin`, whatever their date and their job. |
-| `date`         | When the log was emitted, as an ISO 8601 date-time in UTC.                                                                                              |
-| `groupName`    | The group of the log, made of the directories of its file. Left out when it has none.                                                                   |
-| `location`     | Where the log is stored: the path of its file on the server.                                                                                            |
-| `locationName` | The short name of `location`, the one the app shows: the name of the file without its last extension.                                                   |
-| `jobId`        | The run of the script that emitted the log, an integer.                                                                                                 |
-| `level`        | `SUCCESS`, `INFO`, `WARNING` or `ERROR`.                                                                                                                |
-| `message`      | What the script wrote.                                                                                                                                  |
-| `origin`       | Where the log was emitted from, as the script wrote it, never empty. Left out when it wrote none.                                                       |
+| Field          | Description                                                                                           |
+| -------------- | ----------------------------------------------------------------------------------------------------- |
+| `id`           | Identifies the log among all of them. Treat it as an opaque string.                                   |
+| `date`         | When the log was emitted, as an ISO 8601 date-time in UTC.                                            |
+| `groupName`    | The group of the log, made of the directories of its file. Left out when it has none.                 |
+| `location`     | Where the log is stored: the path of its file on the server.                                          |
+| `locationName` | The short name of `location`, the one the app shows: the name of the file without its last extension. |
+| `jobId`        | The run of the script that emitted the log, an integer.                                               |
+| `level`        | `SUCCESS`, `INFO`, `WARNING` or `ERROR`.                                                              |
+| `message`      | What the script wrote.                                                                                |
+| `origin`       | Where the log was emitted from, as the script wrote it, never empty. Left out when it wrote none.     |
 
 The [README](../README.md#log-file-format) says how a line of a log file becomes a log, and how its group is made.
 

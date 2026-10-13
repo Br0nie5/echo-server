@@ -1,4 +1,4 @@
-import { createLogWithIds } from '@echo/utilities'
+import type { Log } from '@echo/utilities'
 import type { ValidateFunction } from 'ajv'
 import { Ajv } from 'ajv'
 import addFormats from 'ajv-formats'
@@ -41,19 +41,17 @@ describe('LogJsonSchema', () => {
     validateLog = ajv.compile(LogJsonSchema)
   })
 
-  const validLog = createLogWithIds(
-    {
-      date: LOG_DATE,
-      groupName: 'billing',
-      location: '/server/billing/logs/send_invoices.jsonl',
-      locationName: 'send_invoices',
-      jobId: 123,
-      level: 'INFO',
-      message: 'Something happened',
-      origin: '/server/billing/send_invoices.sh:12'
-    },
-    0
-  )
+  const validLog: Log = {
+    id: 'log-id',
+    date: LOG_DATE,
+    groupName: 'billing',
+    location: '/server/billing/logs/send_invoices.jsonl',
+    locationName: 'send_invoices',
+    jobId: 123,
+    level: 'INFO',
+    message: 'Something happened',
+    origin: '/server/billing/send_invoices.sh:12'
+  }
 
   it('Should accept a valid log object', () => {
     expect(validateLog(validLog)).toBe(true)

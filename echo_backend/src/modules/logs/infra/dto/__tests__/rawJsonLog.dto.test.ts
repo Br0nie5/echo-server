@@ -1,8 +1,6 @@
-import { createLogWithIds, type Log } from '@echo/utilities'
 import { describe, it, expect } from 'vitest'
 
-import { convertLogToRawJsonLogLine, RawJsonLogLineSchema } from '../rawJsonLog.dto.js'
-import { convertRawLogLineToLog } from '../rawLogLine.dto.js'
+import { RawJsonLogLineSchema } from '../rawJsonLog.dto.js'
 
 describe('RawJsonLogLineSchema', () => {
   it('Should accept a valid raw JSON log line', () => {
@@ -60,55 +58,5 @@ describe('RawJsonLogLineSchema', () => {
 
   it('Should reject a non-object value', () => {
     expect(RawJsonLogLineSchema.safeParse('not an object').success).toBeFalsy()
-  })
-})
-
-describe('convertLogToRawJsonLogLine', () => {
-  const log: Log = createLogWithIds(
-    {
-      location: '/server/billing/logs/count_stock.jsonl',
-      locationName: 'count_stock',
-      groupName: 'billing',
-      date: '2024-05-12T14:30:00.386Z',
-      jobId: 123,
-      level: 'INFO',
-      message: 'Something happened',
-      origin: '/server/billing/count_stock.sh:4'
-    },
-    0
-  )
-
-  it('Should give the JSON of the line of the log, without its ids nor what says where it is stored', () => {
-    expect(convertLogToRawJsonLogLine(log)).toEqual({
-      jobId: 123,
-      timestamp: '2024-05-12T14:30:00.386Z',
-      level: 'INFO',
-      message: 'Something happened',
-      origin: '/server/billing/count_stock.sh:4'
-    })
-  })
-
-  it('Should give a line that is read back as the same log, when it is at the position of its id', () => {
-    const content = JSON.stringify(convertLogToRawJsonLogLine(log))
-
-    expect(
-      convertRawLogLineToLog({
-        logFile: {
-          path: '/server/billing/logs/count_stock.jsonl',
-          fileName: 'count_stock',
-          groupName: 'billing'
-        },
-        index: 0,
-        content
-      })
-    ).toEqual(log)
-  })
-
-  it('Should give a line without origin for a log that has none', () => {
-    const logWithoutOrigin: Log = { ...log, origin: undefined }
-
-    expect(JSON.stringify(convertLogToRawJsonLogLine(logWithoutOrigin))).toBe(
-      '{"jobId":123,"timestamp":"2024-05-12T14:30:00.386Z","level":"INFO","message":"Something happened"}'
-    )
   })
 })

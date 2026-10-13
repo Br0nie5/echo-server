@@ -1,7 +1,7 @@
-import { createLogWithIds, LogLevel, type Log } from '@echo/utilities'
+import { createLogId, LogLevel, type Log } from '@echo/utilities'
 
-type NoIdsLog = Omit<Log, 'id' | 'contentId'>
-type LogSource = Pick<NoIdsLog, 'groupName' | 'location' | 'locationName' | 'origin'>
+type NoIdLog = Omit<Log, 'id'>
+type LogSource = Pick<NoIdLog, 'groupName' | 'location' | 'locationName' | 'origin'>
 
 const sendInvoices: LogSource = {
   groupName: 'billing',
@@ -22,7 +22,7 @@ const ping: LogSource = {
   locationName: 'ping'
 }
 
-const noIdsLogs: NoIdsLog[] = [
+const noIdLogs: NoIdLog[] = [
   {
     ...sendInvoices,
     jobId: 12,
@@ -80,4 +80,7 @@ const noIdsLogs: NoIdsLog[] = [
  * The newest day, 28 April 2026, has every level, two groups (`billing`, `shop`) and a log without
  * group. The two days before have one log each.
  */
-export const logsMock: Log[] = noIdsLogs.map((noIdsLog, index) => createLogWithIds(noIdsLog, index))
+export const logsMock: Log[] = noIdLogs.map((noIdLog, index) => ({
+  ...noIdLog,
+  id: createLogId(noIdLog, index)
+}))

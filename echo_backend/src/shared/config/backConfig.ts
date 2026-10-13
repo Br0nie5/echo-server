@@ -70,15 +70,15 @@ export type AuthConfig = {
 export type SelfReportsConfig = {
   /** Number of days a stored self report is kept (`SELF_REPORTS_RETENTION_DAYS`). */
   retentionDays: number
-  /** Group the self reports are shown under in the app, among the other logs: the name of the server (`SERVER_NAME`), made safe for a path. */
-  selfReportsGroupName: string
-  /** Directory holding the self-report files, inside `SERVER_LOGS_DIR_PATH`, which the logs are read from too, so they are read back like any other log. */
+  /** Directory holding the self-report files, inside `SELF_REPORTS_DIR_PATH` and named after the server (`SERVER_NAME`). */
   selfReportsDirPath: string
+  /** Extension, with its dot, a file of `selfReportsDirPath` must have to be read as a self-report file. */
+  selfReportFileExtension: string
   /** Name of the self-report file the lines of the log files that hold no log are reported to, with its extension. */
   parseLogFileSelfReportFileName: string
   /** Name of the self-report file the problem logs that could not be notified are reported to, with its extension. */
   logsNotifierSelfReportFileName: string
-  /** File remembering the last `jobId` the self reports were written with. */
+  /** File remembering the id of the last session the self reports were written during. */
   sessionFilePath: string
 }
 
@@ -98,11 +98,8 @@ export type LogsNotifierConfig = {
 
 /** What reading the logs needs, with the settings of the features built on top of them. */
 export type LogsConfig = {
-  /**
-   * Directories the log files are read from, at any depth: the watched one (`LOGS_DIR_PATH`), then
-   * the one the self reports are stored under (`SERVER_LOGS_DIR_PATH`) when they are enabled.
-   */
-  logsDirsPaths: string[]
+  /** Directory the log files are read from, at any depth (`LOGS_DIR_PATH`). */
+  logsDirPath: string
   /** Extension, with its dot, a file of a logs directory must have to be read as a log file. */
   logFileExtension: string
   /**
@@ -153,7 +150,11 @@ export type BackConfig = {
   /** Missing when the authentication is disabled (`HAS_AUTHENTICATION`): the routes are then open to anyone. */
   auth?: AuthConfig
   logs: LogsConfig
-  /** Missing when the self reports are disabled (`SAVE_SELF_REPORTS_TO_FILE`): the backend then stores none. */
+  /**
+   * Missing when the self reports are disabled, that is when nothing uses them: they are stored
+   * only when they are shown among the logs (`INCLUDE_SELF_REPORTS_IN_LOGS`), as logs of their
+   * own.
+   */
   selfReports?: SelfReportsConfig
   /** Missing when Telegram is not configured: the backend then has no channel to notify through. */
   notification?: NotificationConfig

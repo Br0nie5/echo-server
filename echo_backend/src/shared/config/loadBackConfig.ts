@@ -17,7 +17,6 @@ import type { FilesService } from '../services/files.service.js'
 import type { BackConfig } from './backConfig.js'
 import { createCookieSerializeOptions } from './utils/createCookieSerializeOptions.js'
 import { createSelfReportsDirPath } from './utils/createSelfReportsDirPath.js'
-import { createSelfReportsGroupName } from './utils/createSelfReportsGroupName.js'
 import { createSessionCookieName } from './utils/createSessionCookieName.js'
 import { parseBasePath } from './utils/parseBasePath.js'
 import { parseDaysNumber } from './utils/parseDaysNumber.js'
@@ -37,7 +36,7 @@ const DATA_DIR_PATH = path.join(REPOSITORY_ROOT_PATH, 'data')
 /** Extension of the files the logs are read from, and of the files the self reports are written to. */
 const LOG_FILE_EXTENSION = '.jsonl'
 
-/** Name of the directory scripts put their log files in, and the backend its self-report files. */
+/** Name of the directory scripts put their log files in. */
 const LOG_FILES_DIR_NAME = 'logs'
 
 /** Path the documentation of the API is served under, below `BASE_PATH`. */
@@ -67,10 +66,12 @@ const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
  * part of the backend that is disabled are not read, so they stop nothing.
  *
  * Three required booleans switch a part of the backend on. The authentication is left out unless
- * `HAS_AUTHENTICATION` is `true`. The self reports are left out unless `SAVE_SELF_REPORTS_TO_FILE`
- * is `true`: `SELF_REPORTS_RETENTION_DAYS` is then required, they are stored under
- * `SERVER_LOGS_DIR_PATH`, and the logs are read from it too, next to `LOGS_DIR_PATH`. The
- * documentation of the API is served only when `HAS_DOCUMENTATION_ROUTE` is `true`.
+ * `HAS_AUTHENTICATION` is `true`. The self reports are shown among the logs, which are read from
+ * `LOGS_DIR_PATH`, only when `INCLUDE_SELF_REPORTS_IN_LOGS` is `true`. They are stored only when
+ * something uses them, so they are left out unless it is: `SELF_REPORTS_RETENTION_DAYS` and
+ * `SELF_REPORTS_DIR_PATH` are then required, and they are stored in
+ * `<SELF_REPORTS_DIR_PATH>/<SERVER_NAME>`. The documentation of the API is
+ * served only when `HAS_DOCUMENTATION_ROUTE` is `true`.
  *
  * The notifications have no switch: they are left out, hence disabled, unless `TELEGRAM_CHAT_ID`
  * and `TELEGRAM_BOT_TOKEN` are both set. The cron notifying the problem logs is left out with
@@ -102,15 +103,13 @@ export const loadBackConfig = async (
   ])
 
   const logsDirPath = requireEnv(processEnv, 'LOGS_DIR_PATH')
-  const serverLogsRootDirPath = requireEnv(processEnv, 'SERVER_LOGS_DIR_PATH')
 
-  const areSelfReportsEnabled = parseRequiredEnv(
+  const areSelfReportsIncludedInLogs = parseRequiredEnv(
     processEnv,
-    'SAVE_SELF_REPORTS_TO_FILE',
+    'INCLUDE_SELF_REPORTS_IN_LOGS',
     parseBoolean
   )
-
-  const selfReportsGroupName = createSelfReportsGroupName(config.SERVER_NAME)
+  const areSelfReportsEnabled = areSelfReportsIncludedInLogs
 
   const notification = parseNotificationConfig(processEnv, {
     telegramBaseUrl: TELEGRAM_BASE_URL,
@@ -143,7 +142,7 @@ export const loadBackConfig = async (
         }
       : undefined,
     logs: {
-      logsDirsPaths: areSelfReportsEnabled ? [logsDirPath, serverLogsRootDirPath] : [logsDirPath],
+      logsDirPath,
       logFileExtension: LOG_FILE_EXTENSION,
       logFilesDirName: LOG_FILES_DIR_NAME,
       logsNotifier:
@@ -160,12 +159,11 @@ export const loadBackConfig = async (
             'SELF_REPORTS_RETENTION_DAYS',
             parseDaysNumber
           ),
-          selfReportsGroupName,
           selfReportsDirPath: createSelfReportsDirPath(
-            serverLogsRootDirPath,
-            selfReportsGroupName,
-            LOG_FILES_DIR_NAME
+            requireEnv(processEnv, 'SELF_REPORTS_DIR_PATH'),
+            config.SERVER_NAME
           ),
+          selfReportFileExtension: LOG_FILE_EXTENSION,
           parseLogFileSelfReportFileName: `parseLogFile${LOG_FILE_EXTENSION}`,
           logsNotifierSelfReportFileName: `logsNotifier${LOG_FILE_EXTENSION}`,
           sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')

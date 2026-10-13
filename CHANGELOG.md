@@ -28,15 +28,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking:** the session cookie is now named after `SERVER_NAME` (`Echo_echo_access_token` by default) and bound to the host that set it, no longer to its whole domain and its subdomains.
 
-- **Breaking:** `SERVER_NAME` now defaults to `Echo` in the container, instead of `Docker Production`. If you never set it, the self reports are now stored and shown under `Echo`: set `SERVER_NAME=Docker Production` to keep the former name.
+- **Breaking:** `SERVER_NAME` now defaults to `Echo` in the container, instead of `Docker Production`. If you never set it, the self reports are now stored under `Echo`: set `SERVER_NAME=Docker Production` to keep the former name.
 
-- **Breaking:** the container no longer starts when `LOGS_DIR_PATH` or `SERVER_LOGS_DIR_PATH` is set to another path than the directory the image creates for it (`/watched_logs`, `/server_logs`). Remove the variable from the environment of your container and mount your volume on that directory.
+- **Breaking:** the container no longer starts when `LOGS_DIR_PATH` or `SELF_REPORTS_DIR_PATH` is set to another path than the directory the image creates for it (`/watched_logs`, `/self_reports`). Remove the variable from the environment of your container and mount your volume on that directory.
 
-- **Breaking:** the directory scripts put their log files in, which is left out of the group names, is now named `logs` instead of `log`. Rename the `log` directories of your watched logs, otherwise `log` becomes part of the group names (`docker_utils_log`). The self reports are now stored in `/server_logs/self_reports/<SERVER_NAME>/logs`: move the files of the former `log` directory there to keep them in the group of the server.
+- **Breaking:** the directory scripts put their log files in, which is left out of the group names, is now named `logs` instead of `log`. Rename the `log` directories of your watched logs, otherwise `log` becomes part of the group names (`docker_utils_log`).
 
 - **Breaking:** the category of a log is now called its level. In the log files, `status` is replaced by `level`, with the same values (`SUCCESS`, `INFO`, `WARNING`, `ERROR`), and `job_id` by `jobId`. A line that still carries `status` or `job_id` is no longer read, so update the scripts writing your logs and the lines they already wrote. In the `Log` returned by `GET /api/logs`, `category` is replaced by `level`, and the `logCategories` query parameter by `logLevels`.
 
-- **Breaking:** `call_file` and `call_line` of a log line are replaced by `origin`, an optional string saying where the line was emitted from, in any form but an empty one (`rotate_logs.sh:12`). A line that still carries `call_file` and `call_line` is read, without them. In the `Log` returned by `GET /api/logs`, `callFile` and `callLine` are replaced by the optional `origin`, a required `contentId` is added, which two logs share when they have the same `location`, `level`, `message` and `origin`, and the `id` is now made of the position of the line, its date, its job and those same four. The `origin` of a self report is the path of the log file followed by the position of the failing line (`/watched_logs/backup/logs/nightly.log.jsonl:3`).
+- **Breaking:** `call_file` and `call_line` of a log line are replaced by `origin`, an optional string saying where the line was emitted from, in any form but an empty one (`rotate_logs.sh:12`). A line that still carries `call_file` and `call_line` is read, without them. In the `Log` returned by `GET /api/logs`, `callFile` and `callLine` are replaced by the optional `origin`, and the `id` is now made of the position of the line, its date, its job, its `location`, `level`, `message` and `origin`. The `origin` of a self report is the path of the log file followed by the position of the failing line (`/watched_logs/backup/logs/nightly.log.jsonl:3`).
 
 - **Breaking:** the environment variables of the Telegram notifications are renamed. Update the environment of your container:
 
@@ -51,18 +51,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking:** the self logs are now called self reports, and their environment variables are renamed. Update the environment of your container, otherwise the self reports are disabled and their retention goes back to its default:
 
-  | Before                     | After                         |
-  | -------------------------- | ----------------------------- |
-  | `SELF_LOGS_ENABLED`        | `SAVE_SELF_REPORTS_TO_FILE`   |
-  | `SELF_LOGS_RETENTION_DAYS` | `SELF_REPORTS_RETENTION_DAYS` |
+  | Before                     | After                          |
+  | -------------------------- | ------------------------------ |
+  | `SELF_LOGS_ENABLED`        | `INCLUDE_SELF_REPORTS_IN_LOGS` |
+  | `SELF_LOGS_RETENTION_DAYS` | `SELF_REPORTS_RETENTION_DAYS`  |
 
-- **Breaking:** the self reports are no longer stored inside the watched logs, in `/watched_logs/server/<SERVER_NAME>/log`, but in a directory of their own, `/server_logs/self_reports/<SERVER_NAME>/logs`, which is scanned along with `/watched_logs` when `SAVE_SELF_REPORTS_TO_FILE=true`. Replace the `/watched_logs/server` sub-mount with a writable `/server_logs` volume (to keep the existing self reports, move the content of the former host directory into a `self_reports` directory of the new one); the `server` directory created in your logs for that sub-mount is no longer needed.
+- **Breaking:** the self reports are no longer stored inside the watched logs, in `/watched_logs/server/<SERVER_NAME>/log`, as log lines, but in a directory of their own, `/self_reports/<SERVER_NAME>`, in a format of their own. Echo only reads its logs from `/watched_logs`, and adds the self reports to them when `INCLUDE_SELF_REPORTS_IN_LOGS=true`, in the group `self_reports_<SERVER_NAME>`. Replace the `/watched_logs/server` sub-mount with a writable `/self_reports` volume; the `server` directory created in your logs for that sub-mount is no longer needed. The self reports stored before are not read any more: a problem that is still there is reported again.
 
 - **Breaking:** an unknown path outside `/app` and `/api` now gets the same error body as the API, `{ "statusCode": 404, "message": "Not found." }`, instead of `{ "error": "Not found" }`.
 
-- The file remembering the last `jobId` of the self reports is renamed from `data/self_logs_session.json` to `data/self_reports_session.json`. Rename it in your `data/` volume to keep the `jobId` going on from the last one, otherwise it starts again at `1`. The format of the self reports themselves does not change.
+- The file remembering the last session of the self reports is now `data/self_reports_session.json`, in a format of its own: the sessions are numbered from `1` again, and `data/self_logs_session.json` is no longer read, so you can remove it from your `data/` volume.
 
-- **Breaking:** the container runs as the unprivileged `node` user (uid `1000`, gid `1000`) instead of root. The files it wrote as root are no longer writable by it, and `users.db`, which only its owner can read, no longer readable: before upgrading, give the content of your `/app/data` and `/server_logs` volumes to that user, with `sudo chown -R 1000:1000 /path/to/echo/data /path/to/echo/server-logs` for bind mounts, or `docker run --rm -v <volume>:/volume busybox chown -R 1000:1000 /volume` for each named volume. Make the certificate and key of `TLS_CERT_PATH` and `TLS_KEY_PATH` readable by that user too.
+- **Breaking:** the container runs as the unprivileged `node` user (uid `1000`, gid `1000`) instead of root. The files it wrote as root are no longer writable by it, and `users.db`, which only its owner can read, no longer readable: before upgrading, give the content of your `/app/data` and `/self_reports` volumes to that user, with `sudo chown -R 1000:1000 /path/to/echo/data /path/to/echo/self-reports` for bind mounts, or `docker run --rm -v <volume>:/volume busybox chown -R 1000:1000 /volume` for each named volume. Make the certificate and key of `TLS_CERT_PATH` and `TLS_KEY_PATH` readable by that user too.
 
 ### Fixed
 

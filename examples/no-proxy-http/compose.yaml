@@ -13,8 +13,8 @@ services:
       - SERVER_NAME=Echo No Proxy HTTP
       # Authentication is enabled by default (true): uncomment to disable it.
       # - HAS_AUTHENTICATION=false
-      # Disabled by default (false): enabled here, hence the /server_logs volume.
-      - SAVE_SELF_REPORTS_TO_FILE=true
+      # Disabled by default (false): enabled here, hence the /self_reports volume.
+      - INCLUDE_SELF_REPORTS_IN_LOGS=true
       # Telegram notifications: disabled unless the four are set.
       # - LOGS_NOTIFIER_SCHEDULE=*/30 * * * *
       # - LOGS_NOTIFIER_WATCHED_LOGS_LEVELS=ERROR,WARNING
@@ -26,7 +26,7 @@ services:
     volumes:
       # The directories of this repository: replace them with your own.
       - ../../test_logs:/watched_logs:ro
-      - ../../server_logs:/server_logs
+      - ../../self_reports:/self_reports
       - ../../data:/app/data
     ports:
       - 4000:4000

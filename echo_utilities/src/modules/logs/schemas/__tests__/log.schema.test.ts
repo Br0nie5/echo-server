@@ -6,7 +6,6 @@ import { LogLevel } from '../logLevel.schema.js'
 
 const log: Log = {
   id: 'log-id',
-  contentId: 'log-content-id',
   date: '2026-04-28T10:00:00.000Z',
   groupName: 'billing',
   location: '/storage/send_invoices',
@@ -36,18 +35,12 @@ describe('LogSchema', () => {
     expect(LogSchema.safeParse({ ...log, origin: 'the monthly invoicing' }).success).toBe(true)
   })
 
-  it.each<keyof Log>([
-    'id',
-    'contentId',
-    'date',
-    'location',
-    'locationName',
-    'jobId',
-    'level',
-    'message'
-  ])('Should refuse a log without %s, which is required', (requiredField) => {
-    expect(LogSchema.safeParse(omitField(requiredField)).success).toBe(false)
-  })
+  it.each<keyof Log>(['id', 'date', 'location', 'locationName', 'jobId', 'level', 'message'])(
+    'Should refuse a log without %s, which is required',
+    (requiredField) => {
+      expect(LogSchema.safeParse(omitField(requiredField)).success).toBe(false)
+    }
+  )
 
   it.each([
     { reason: 'with an empty origin', difference: { origin: '' } },

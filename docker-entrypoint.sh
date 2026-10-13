@@ -21,7 +21,7 @@ fi
 export NODE_ENV="production"
 
 refuse_if_not_image_directory LOGS_DIR_PATH "$LOGS_DIR_PATH" /watched_logs
-refuse_if_not_image_directory SERVER_LOGS_DIR_PATH "$SERVER_LOGS_DIR_PATH" /server_logs
+refuse_if_not_image_directory SELF_REPORTS_DIR_PATH "$SELF_REPORTS_DIR_PATH" /self_reports
 
 # Set defaults only if not already defined in the environment
 export SERVER_NAME="${SERVER_NAME:-Echo}"
@@ -30,7 +30,7 @@ export HAS_AUTHENTICATION="${HAS_AUTHENTICATION:-true}"
 
 export HAS_DOCUMENTATION_ROUTE="${HAS_DOCUMENTATION_ROUTE:-false}"
 
-export SAVE_SELF_REPORTS_TO_FILE="${SAVE_SELF_REPORTS_TO_FILE:-false}"
+export INCLUDE_SELF_REPORTS_IN_LOGS="${INCLUDE_SELF_REPORTS_IN_LOGS:-false}"
 export SELF_REPORTS_RETENTION_DAYS="${SELF_REPORTS_RETENTION_DAYS:-10}"
 
 export LOGS_INITIAL_DATE_DAYS_AGO="${LOGS_INITIAL_DATE_DAYS_AGO:-2}"

@@ -1,11 +1,11 @@
 import type { CheckDateRepository } from '../domain/checkDate.repository.js'
 import type { LastCheckDate } from '../domain/lastCheckDate.js'
 
+import type { CheckDateApi } from './checkDateFile.api.js'
 import {
   convertLastCheckDateToRawLastCheckDate,
   convertRawLastCheckDateToLastCheckDate
 } from './dto/lastCheckDate.dto.js'
-import type { CheckDateApi } from './fileCheckDate.api.js'
 
 /**
  * Builds the `CheckDateRepository` that keeps the last check date in the file behind
@@ -15,12 +15,12 @@ import type { CheckDateApi } from './fileCheckDate.api.js'
  * same as when the logs were never checked.
  *
  * ```ts
- * const checkDateRepository = createFileCheckDateRepository(
- *   createFileCheckDateApi(logsNotifierConfig, filesService)
+ * const checkDateRepository = createCheckDateFileRepository(
+ *   createCheckDateFileApi(logsNotifierConfig, filesService)
  * )
  * ```
  */
-export const createFileCheckDateRepository = (checkDateApi: CheckDateApi): CheckDateRepository => ({
+export const createCheckDateFileRepository = (checkDateApi: CheckDateApi): CheckDateRepository => ({
   getLastCheckDate: async (): Promise<LastCheckDate | undefined> => {
     let rawLastCheckDate: string
 

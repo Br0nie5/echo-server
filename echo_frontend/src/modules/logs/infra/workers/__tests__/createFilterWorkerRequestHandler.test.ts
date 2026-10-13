@@ -1,22 +1,22 @@
-import { createLogWithIds, type Log } from '@echo/utilities'
+import { createLogId, type Log } from '@echo/utilities'
 import { describe, expect, test } from 'vitest'
 
 import { createFilterWorkerRequestHandler } from '../createFilterWorkerRequestHandler'
 
-const buildLog = (overrides: Partial<Omit<Log, 'id' | 'contentId'>>): Log =>
-  createLogWithIds(
-    {
-      date: '2026-01-02T10:00:00.000Z',
-      jobId: 1,
-      level: 'INFO',
-      location: '/storage/send_invoices',
-      locationName: 'send_invoices',
-      message: 'message',
-      origin: 'send_invoices.sh:12',
-      ...overrides
-    },
-    0
-  )
+const buildLog = (overrides: Partial<Omit<Log, 'id'>>): Log => {
+  const noIdLog: Omit<Log, 'id'> = {
+    date: '2026-01-02T10:00:00.000Z',
+    jobId: 1,
+    level: 'INFO',
+    location: '/storage/send_invoices',
+    locationName: 'send_invoices',
+    message: 'message',
+    origin: 'send_invoices.sh:12',
+    ...overrides
+  }
+
+  return { ...noIdLog, id: createLogId(noIdLog, 0) }
+}
 
 const logs = [
   buildLog({ level: 'ERROR', message: 'quota is reached' }),

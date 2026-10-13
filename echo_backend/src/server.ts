@@ -15,7 +15,7 @@ import { normalizeToEchoError } from './initializers/utils/normalizeToEchoError.
 import { removeBasePath } from './initializers/utils/removeBasePath.js'
 import { createLogsFilesApi } from './modules/logs/infra/logsFiles.api.js'
 import { createLogsFilesRepository } from './modules/logs/infra/logsFiles.repository.js'
-import { createSelfReportRepository } from './modules/selfReport/infra/selfReport.repository.js'
+import { createSelfReportFilesRepository } from './modules/selfReport/infra/selfReportFiles.repository.js'
 import type { BackConfig } from './shared/config/backConfig.js'
 import { loadBackConfig } from './shared/config/loadBackConfig.js'
 import { EchoErrorJsonSchema } from './shared/schemas/errors.schemas.js'
@@ -77,8 +77,7 @@ export const buildServer = async (
   server.addSchema(EchoErrorJsonSchema)
 
   const logsRepository = createLogsFilesRepository(createLogsFilesApi(config.logs, filesService))
-  const selfReportRepository = await createSelfReportRepository({
-    logsRepository,
+  const logsSelfReportRepository = await createSelfReportFilesRepository({
     filesService,
     selfReportsConfig: config.selfReports,
     getSelfReportFileName: ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName,
@@ -86,13 +85,13 @@ export const buildServer = async (
   })
 
   await registerAuthRoutes(server, config, filesService)
-  await registerLogsRoutes(server, config, logsRepository, selfReportRepository)
+  await registerLogsRoutes(server, config, logsRepository, logsSelfReportRepository)
 
   await registerFrontend(server, config.server, filesService)
 
   await registerLogsNotifier(server, config, {
     logsRepository,
-    selfReportRepository,
+    logsSelfReportRepository,
     filesService
   })
 

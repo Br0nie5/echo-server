@@ -28,7 +28,7 @@ export interface TestServer {
  * Its config is the one of a server with authentication and nothing optional, neither self reports,
  * logs notifier nor notifications, with `config` on top: give the part a test is about. The users
  * database is kept in memory too, unless `config` gives another `auth`. The file system starts with
- * `files`, each path given its content, and with the logs directories of the config, empty.
+ * `files`, each path given its content, and with the logs directory of the config, empty.
  *
  * The server is closed when the test ends.
  *
@@ -63,7 +63,7 @@ export const buildTestServer = async ({
       }),
       ...files
     },
-    directories: config.logs.logsDirsPaths
+    directories: [config.logs.logsDirPath]
   })
 
   const server = await buildServer(config, createFilesService(fileSystem.fileSystem), false)

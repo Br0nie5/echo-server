@@ -6,7 +6,6 @@ import { filterLogByLevels } from '../filterLogByLevels.js'
 
 const infoLog: Log = {
   id: 'log-id',
-  contentId: 'log-content-id',
   date: '2026-04-25T22:00:00.000Z',
   groupName: 'billing',
   location: '/storage/send_invoices',

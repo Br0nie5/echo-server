@@ -10,7 +10,8 @@ import { FileDoesNotExistError } from './fileDoesNotExistError.js'
  * `fs` anywhere else), shared by whatever stores in files. Some libraries reach it on their own,
  * from a path the config gives them: `better-sqlite3` (the users database), `dotenv` (the
  * `.env.<mode>` file) and `@fastify/static` (the built frontend). It knows nothing of what the files hold nor
- * of how they are named: which files to look for is said by whoever asks.
+ * of how they are named: which files to look for, and what to make of their paths, is said by
+ * whoever asks.
  */
 export interface FilesService {
   /** Creates the directory at `directoryPath`, and its parents, when they do not exist yet. */
@@ -50,6 +51,20 @@ export interface FilesService {
     directoryPath: string,
     isFileIncluded: (filePath: string) => boolean
   ) => Promise<string[]>
+  /**
+   * The path of the file at `filePath` from the directory at `rootDirPath`, or from the root of the
+   * file system when none is given: its directories, then its name, separated by `/`.
+   *
+   * Returns `undefined` when the file is not below `rootDirPath`. It only reads the paths: neither
+   * has to exist.
+   *
+   * ```ts
+   * filesService.getRelativeFilePath('/logs/billing/send_invoices.jsonl', '/logs') // 'billing/send_invoices.jsonl'
+   * filesService.getRelativeFilePath('/logs/billing/send_invoices.jsonl') // 'logs/billing/send_invoices.jsonl'
+   * filesService.getRelativeFilePath('/logs/billing/send_invoices.jsonl', '/data') // undefined
+   * ```
+   */
+  getRelativeFilePath: (filePath: string, rootDirPath?: string) => string | undefined
   /**
    * Makes `content` the whole content of the file at `filePath`.
    *
@@ -212,6 +227,16 @@ export const createFilesService = (
 
     getFilesPaths: async (directoryPath, isFileIncluded): Promise<string[]> =>
       (await getAllFilesPaths(directoryPath)).filter(isFileIncluded),
+
+    getRelativeFilePath: (filePath, rootDirPath = path.sep): string | undefined => {
+      const relativeFilePath = path.relative(rootDirPath, filePath)
+      const isBelowRootDir =
+        relativeFilePath !== '' &&
+        relativeFilePath !== '..' &&
+        !relativeFilePath.startsWith(`..${path.sep}`)
+
+      return isBelowRootDir ? relativeFilePath.split(path.sep).join('/') : undefined
+    },
 
     replaceFileContent,
 

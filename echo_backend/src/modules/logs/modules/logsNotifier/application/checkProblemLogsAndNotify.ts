@@ -1,7 +1,6 @@
 import type { LogLevel } from '@echo/utilities'
 
 import type { NotifierService } from '../../../../../shared/services/notifier.service.js'
-import type { SelfReport } from '../../../../selfReport/domain/selfReport.js'
 import type { SelfReportRepository } from '../../../../selfReport/domain/selfReport.repository.js'
 import { getFilteredLogs } from '../../../application/getFilteredLogs.js'
 import type { LogsRepository } from '../../../domain/logs.repository.js'
@@ -18,12 +17,18 @@ export interface ProblemLogsCheck {
   /** Luxon zone the dates of the logs are shown in. */
   timezone: string
   logsRepository: LogsRepository
-  /** Where the stored entries that hold no valid log are reported. */
-  logsSelfReportRepository: SelfReportRepository
+  /**
+   * Where the stored entries that hold no valid log are reported, and where the self reports that
+   * are checked among the logs are read from. Missing when the self reports are disabled.
+   */
+  logsSelfReportRepository?: SelfReportRepository
   notifierService: NotifierService
   checkDateRepository: CheckDateRepository
-  /** Where the check reports the problem logs it could not notify. */
-  selfReportRepository: SelfReportRepository
+  /**
+   * Where the check reports the problem logs it could not notify. Missing when the self reports
+   * are disabled.
+   */
+  logsNotifierSelfReportRepository?: SelfReportRepository
 }
 
 /**
@@ -31,20 +36,19 @@ export interface ProblemLogsCheck {
  *
  * A check looks at the logs logged from the date of the previous check to its own, the latter left
  * out: a log is in the period of one check only, so it is notified once, even when it is written
- * while the logs are being read. The logs are looked up with `getFilteredLogs`, which reports the
- * stored entries that hold no valid log to `logsSelfReportRepository`.
+ * while the logs are being read. The logs are looked up with `getFilteredLogs`, given
+ * `logsSelfReportRepository`.
  *
- * The self reports are logs too, so they are notified when their level is watched. A stored
- * entry that holds no valid log is reported again each time the logs are read, with the date it is
- * read at: as long as it stays in its file, it is therefore notified at every check. That is on
- * purpose, as dating it from when it was first seen would hide a new problem found on the same
- * line.
+ * With a `logsSelfReportRepository`, the self reports are among those logs, so they are notified
+ * when their level is watched. A stored entry that holds no valid log is reported each time the
+ * logs are read, but stored once, with the date it was first read at: it is notified once too, by
+ * the check that follows the one that found it.
  *
  * The notification is one message telling about the logs (see {@link buildNotifierMessage}), built
  * for the size limit of `notifierService`. Nothing is sent when there is no problem log, nor when
- * the size limit is too small for any message: a warning is then saved to `selfReportRepository`,
- * and the date of the check is saved all the same, since notifying the same logs again would fail
- * the same way.
+ * the size limit is too small for any message: a warning is then saved to
+ * `logsNotifierSelfReportRepository`, when there is one, and the date of the check is saved all the
+ * same, since notifying the same logs again would fail the same way.
  *
  * The very first check only saves its date, so the logs that predate it are not notified. The date
  * is not saved when notifying throws, so the same logs are notified again by the next check.
@@ -58,7 +62,7 @@ export interface ProblemLogsCheck {
  *   logsSelfReportRepository,
  *   notifierService,
  *   checkDateRepository,
- *   selfReportRepository
+ *   logsNotifierSelfReportRepository
  * })
  * ```
  */
@@ -70,7 +74,7 @@ export const checkProblemLogsAndNotify = async ({
   logsSelfReportRepository,
   notifierService,
   checkDateRepository,
-  selfReportRepository
+  logsNotifierSelfReportRepository
 }: ProblemLogsCheck): Promise<void> => {
   const previousCheck = await checkDateRepository.getLastCheckDate()
 
@@ -92,27 +96,19 @@ export const checkProblemLogsAndNotify = async ({
     const messageSizeLimit = notifierService.getMessageSizeLimit()
     const message = buildNotifierMessage({ messageSizeLimit, problemLogs, serverName, timezone })
 
-    if (message === undefined) {
-      const noIdSelfReport: Omit<SelfReport, 'id'> = {
-        date: newCheckDate,
-        message:
-          `The problem logs were not notified: the notifier takes messages of ` +
-          `${messageSizeLimit} characters at most, which is not enough for any message`,
-        level: 'WARNING',
-        origin: 'checkProblemLogsAndNotify'
-      }
-
-      await selfReportRepository.saveSelfReports([
+    if (message !== undefined) {
+      await notifierService.notify(message)
+    } else if (logsNotifierSelfReportRepository !== undefined) {
+      await logsNotifierSelfReportRepository.saveSelfReports([
         {
-          id: JSON.stringify(noIdSelfReport),
-          date: noIdSelfReport.date,
-          message: noIdSelfReport.message,
-          level: noIdSelfReport.level,
-          origin: noIdSelfReport.origin
+          date: newCheckDate,
+          message:
+            `The problem logs were not notified: the notifier takes messages of ` +
+            `${messageSizeLimit} characters at most, which is not enough for any message`,
+          level: 'WARNING',
+          origin: 'checkProblemLogsAndNotify'
         }
       ])
-    } else {
-      await notifierService.notify(message)
     }
   }
 

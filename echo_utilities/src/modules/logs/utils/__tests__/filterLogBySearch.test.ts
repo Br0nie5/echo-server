@@ -7,7 +7,6 @@ import { filterLogBySearch } from '../filterLogBySearch.js'
 
 const log: Log = {
   id: 'log-id',
-  contentId: 'log-content-id',
   date: '2026-04-25T22:00:00.000Z',
   groupName: 'billing',
   location: '/storage/first',
@@ -77,7 +76,6 @@ describe('filterLogBySearch', () => {
 
   it.each([
     { field: 'id', search: 'log-id' },
-    { field: 'contentId', search: 'log-content-id' },
     { field: 'date', search: '2026-04-25' },
     { field: 'location', search: '/storage/first' },
     { field: 'level', search: 'INFO' },

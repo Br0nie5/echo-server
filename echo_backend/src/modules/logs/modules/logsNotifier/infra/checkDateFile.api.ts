@@ -23,11 +23,11 @@ export interface CheckDateApi {
  * through `filesService`.
  *
  * ```ts
- * const checkDateApi = createFileCheckDateApi(logsNotifierConfig, filesService)
+ * const checkDateApi = createCheckDateFileApi(logsNotifierConfig, filesService)
  * const rawLastCheckDate = await checkDateApi.getRawLastCheckDate()
  * ```
  */
-export const createFileCheckDateApi = (
+export const createCheckDateFileApi = (
   { lastLogsCheckFilePath }: LogsNotifierConfig,
   filesService: FilesService
 ): CheckDateApi => ({

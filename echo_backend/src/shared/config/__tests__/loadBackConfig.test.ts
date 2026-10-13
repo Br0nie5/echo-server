@@ -24,8 +24,9 @@ const filesService = getMockFilesService()
 
 /** The variables of the self reports and of the notifications, each one enabled. */
 const ENABLED_PARTS_ENV: NodeJS.ProcessEnv = {
-  SAVE_SELF_REPORTS_TO_FILE: 'true',
+  INCLUDE_SELF_REPORTS_IN_LOGS: 'true',
   SELF_REPORTS_RETENTION_DAYS: '10',
+  SELF_REPORTS_DIR_PATH: '/self_reports',
   TELEGRAM_CHAT_ID: '123456789',
   TELEGRAM_BOT_TOKEN: '123456:ABC-DEF',
   LOGS_NOTIFIER_SCHEDULE: '*/30 * * * *',
@@ -37,10 +38,9 @@ const REQUIRED_ENV: NodeJS.ProcessEnv = {
   SERVER_NAME: 'Echo',
   HAS_AUTHENTICATION: 'false',
   HAS_DOCUMENTATION_ROUTE: 'false',
-  SAVE_SELF_REPORTS_TO_FILE: 'false',
+  INCLUDE_SELF_REPORTS_IN_LOGS: 'false',
   HTTP_PORT: '4000',
-  LOGS_DIR_PATH: '/some/path',
-  SERVER_LOGS_DIR_PATH: '/server/logs/path'
+  LOGS_DIR_PATH: '/some/path'
 }
 
 /** Makes `dotenv` load `variables` when it is asked for the env file found at `envFilePath`, and nothing for any other file. */
@@ -107,9 +107,9 @@ describe('loadBackConfig', () => {
     { variable: 'HAS_DOCUMENTATION_ROUTE', value: 'maybe' },
     { variable: 'HTTP_PORT', value: 'not-a-number' },
     { variable: 'LOGS_DIR_PATH', value: '' },
-    { variable: 'SERVER_LOGS_DIR_PATH', value: '' },
-    { variable: 'SAVE_SELF_REPORTS_TO_FILE', value: '' },
-    { variable: 'SAVE_SELF_REPORTS_TO_FILE', value: 'maybe' },
+    { variable: 'INCLUDE_SELF_REPORTS_IN_LOGS', value: '' },
+    { variable: 'INCLUDE_SELF_REPORTS_IN_LOGS', value: 'maybe' },
+    { variable: 'SELF_REPORTS_DIR_PATH', value: '' },
     { variable: 'SELF_REPORTS_RETENTION_DAYS', value: '' },
     { variable: 'SELF_REPORTS_RETENTION_DAYS', value: '0' },
     { variable: 'LOGS_NOTIFIER_SCHEDULE', value: '' },
@@ -148,7 +148,7 @@ describe('loadBackConfig', () => {
       },
       auth: undefined,
       logs: {
-        logsDirsPaths: ['/some/path'],
+        logsDirPath: '/some/path',
         logFileExtension: '.jsonl',
         logFilesDirName: 'logs',
         logsNotifier: undefined
@@ -170,9 +170,9 @@ describe('loadBackConfig', () => {
       LOGS_DIR_PATH: '/watched_logs',
       TLS_CERT_PATH,
       TLS_KEY_PATH,
-      SAVE_SELF_REPORTS_TO_FILE: 'true',
-      SERVER_LOGS_DIR_PATH: '/server_logs',
+      INCLUDE_SELF_REPORTS_IN_LOGS: 'true',
       SELF_REPORTS_RETENTION_DAYS: '30',
+      SELF_REPORTS_DIR_PATH: '/self_reports',
       LOGS_NOTIFIER_SCHEDULE: '*/30 * * * *',
       LOGS_NOTIFIER_WATCHED_LOGS_LEVELS: 'WARNING,ERROR',
       TELEGRAM_CHAT_ID: '123456789',
@@ -208,7 +208,7 @@ describe('loadBackConfig', () => {
         usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')
       },
       logs: {
-        logsDirsPaths: ['/watched_logs', '/server_logs'],
+        logsDirPath: '/watched_logs',
         logFileExtension: '.jsonl',
         logFilesDirName: 'logs',
         logsNotifier: {
@@ -221,8 +221,8 @@ describe('loadBackConfig', () => {
       },
       selfReports: {
         retentionDays: 30,
-        selfReportsGroupName: 'Shop Prod',
-        selfReportsDirPath: '/server_logs/self_reports/Shop Prod/logs',
+        selfReportsDirPath: '/self_reports/Shop Prod',
+        selfReportFileExtension: '.jsonl',
         parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
         logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
         sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')
@@ -236,15 +236,14 @@ describe('loadBackConfig', () => {
     })
   })
 
-  it('Should leave the self reports out when they are disabled, without reading their other variables', async () => {
+  it('Should leave the self reports out when they are not included in the logs, without reading their other variables', async () => {
     const config = await loadBackConfig(filesService, {
       ...REQUIRED_ENV,
-      SAVE_SELF_REPORTS_TO_FILE: 'false',
+      INCLUDE_SELF_REPORTS_IN_LOGS: 'false',
       SELF_REPORTS_RETENTION_DAYS: '0'
     })
 
     expect(config.selfReports).toBeUndefined()
-    expect(config.logs.logsDirsPaths).toEqual(['/some/path'])
   })
 
   it('Should leave the logs notifier out when there is no notification config', async () => {

@@ -1,14 +1,11 @@
 import { beforeEach, describe, it, expect, vi } from 'vitest'
 
+import { FileDoesNotExistError } from '../../../../shared/services/fileDoesNotExistError.js'
 import { getMockLogsConfig } from '../../../../test/mocks/mockConfigs.js'
 import { getMockFilesService } from '../../../../test/mocks/mockFilesService.js'
 import { createLogsFilesApi } from '../logsFiles.api.js'
 
-const logsConfig = getMockLogsConfig({
-  logsDirsPaths: ['/logs'],
-  logFileExtension: '.jsonl',
-  logFilesDirName: 'logs'
-})
+const logsConfig = getMockLogsConfig({ logsDirPath: '/logs' })
 
 const filesService = getMockFilesService()
 
@@ -16,46 +13,12 @@ beforeEach(() => {
   vi.resetAllMocks()
 })
 
-// The log files are tested through the server (`logs.routes.test.ts`). Here are the variants of
-// the group of a file, and the files that cannot be read, which the file system of the tests never
-// makes happen.
+// The log files are tested through the server (`logs.routes.test.ts`). Here are the files that
+// cannot be read, which the file system of the tests never makes happen, the file that is gone
+// once it is read, which no request can make happen, and every case of the group of a log file.
 describe('LogsFilesApi', () => {
   describe('getAllLogFiles', () => {
-    it.each([
-      {
-        reason: 'directly in the logs directory',
-        filePath: '/logs/ping.jsonl',
-        groupName: undefined
-      },
-      {
-        reason: 'in a first directory, which is never part of the group',
-        filePath: '/logs/shop/open_shop.jsonl',
-        groupName: undefined
-      },
-      {
-        reason: 'in a second directory',
-        filePath: '/logs/shop/stock/sync_stock.jsonl',
-        groupName: 'stock'
-      },
-      {
-        reason: 'in a directory named like the one of the log files, which is left out',
-        filePath: '/logs/shop/stock/logs/sync_stock.jsonl',
-        groupName: 'stock'
-      },
-      {
-        reason: 'in several directories, joined',
-        filePath: '/logs/shop/stock/exports/daily.jsonl',
-        groupName: 'stock_exports'
-      }
-    ])('Should give the group $groupName to a file $reason', async ({ filePath, groupName }) => {
-      filesService.getFilesPaths.mockResolvedValue([filePath])
-
-      const [logFile] = await createLogsFilesApi(logsConfig, filesService).getAllLogFiles()
-
-      expect(logFile).toMatchObject({ path: filePath, groupName })
-    })
-
-    it('Should throw the error of the files service when a logs directory cannot be read', async () => {
+    it('Should throw the error of the files service when the logs directory cannot be read', async () => {
       const readError = new Error('EACCES: permission denied')
       filesService.getFilesPaths.mockRejectedValue(readError)
 
@@ -63,16 +26,87 @@ describe('LogsFilesApi', () => {
         readError
       )
     })
+
+    it.each([
+      {
+        reason: 'directly in the logs directory',
+        relativeFilePath: 'ping.jsonl',
+        groupName: undefined
+      },
+      {
+        reason: 'in a first directory, which is never part of the group',
+        relativeFilePath: 'shop/open_shop.jsonl',
+        groupName: undefined
+      },
+      {
+        reason: 'in a second directory',
+        relativeFilePath: 'shop/stock/sync_stock.jsonl',
+        groupName: 'stock'
+      },
+      {
+        reason: 'in a directory named like the one to leave out',
+        relativeFilePath: 'shop/stock/logs/sync_stock.jsonl',
+        groupName: 'stock'
+      },
+      {
+        reason:
+          'in a first directory named like the one to leave out, the next one being the first',
+        relativeFilePath: 'logs/shop/stock/sync_stock.jsonl',
+        groupName: 'stock'
+      },
+      {
+        reason: 'in several directories, joined',
+        relativeFilePath: 'shop/stock/exports/daily.jsonl',
+        groupName: 'stock_exports'
+      },
+      {
+        reason: 'that is not below the logs directory',
+        relativeFilePath: undefined,
+        groupName: undefined
+      }
+    ])(
+      'Should give the group $groupName to a log file $reason',
+      async ({ relativeFilePath, groupName }) => {
+        filesService.getFilesPaths.mockResolvedValue(['/logs/sync_stock.jsonl'])
+        filesService.getRelativeFilePath.mockReturnValue(relativeFilePath)
+
+        const [logFile] = await createLogsFilesApi(
+          getMockLogsConfig({ logsDirPath: '/logs', logFilesDirName: 'logs' }),
+          filesService
+        ).getAllLogFiles()
+
+        expect(logFile.groupName).toBe(groupName)
+        expect(filesService.getRelativeFilePath).toHaveBeenCalledWith(
+          '/logs/sync_stock.jsonl',
+          '/logs'
+        )
+      }
+    )
   })
 
   describe('getRawLogLines', () => {
+    it('Should give no line for a file that does not exist', async () => {
+      filesService.getFileLines.mockRejectedValue(new FileDoesNotExistError('/logs/ping.jsonl'))
+
+      await expect(
+        createLogsFilesApi(logsConfig, filesService).getRawLogLines({
+          path: '/logs/ping.jsonl',
+          fileName: 'ping',
+          groupName: undefined
+        })
+      ).resolves.toEqual([])
+    })
+
     it('Should throw the error of the files service when the file exists but cannot be read', async () => {
       const readError = new Error('EACCES: permission denied')
       filesService.getFileLines.mockRejectedValue(readError)
-      const logsFilesApi = createLogsFilesApi(logsConfig, filesService)
 
       await expect(
-        logsFilesApi.getRawLogLines(logsFilesApi.getLogFile('/logs/ping.jsonl'))
+        createLogsFilesApi(logsConfig, filesService).getRawLogLines({
+          path: '/logs/ping.jsonl',
+          fileName: 'ping',
+          groupName: undefined
+        })
       ).rejects.toBe(readError)
     })
   })

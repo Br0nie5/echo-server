@@ -54,12 +54,12 @@ services:
       # - TELEGRAM_CHAT_ID=123456789
       # - TELEGRAM_BOT_TOKEN=<token>
       # Optional: show the lines Echo cannot read among the logs, see the section below
-      # - SAVE_SELF_REPORTS_TO_FILE=true
+      # - INCLUDE_SELF_REPORTS_IN_LOGS=true
     volumes:
       - /path/to/your/logs:/watched_logs:ro
       - /path/to/echo/data:/app/data
-      # Needed with SAVE_SELF_REPORTS_TO_FILE=true: a writable volume of its own, so /watched_logs stays read-only.
-      # - /path/to/echo/server-logs:/server_logs
+      # Needed with INCLUDE_SELF_REPORTS_IN_LOGS=true: a writable volume of its own, so /watched_logs stays read-only.
+      # - /path/to/echo/self-reports:/self_reports
     ports:
       - 4000:4000
     restart: unless-stopped
@@ -141,14 +141,14 @@ Ports and volumes are given as `<host>:<container>`: `-p 8080:4000` exposes the 
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/watched_logs` | The directory holding your `.jsonl` logs, read at any depth. Read-only (`:ro`) is enough.                                                                                                                                                                     |
 | `/app/data`     | What Echo remembers: `users.db` (the accounts, with hashed passwords), `last_logs_check.json` (when the logs were last checked for Telegram) and `self_reports_session.json`. Without this volume, the admin account is lost when the container is recreated. |
-| `/server_logs`  | Only with `SAVE_SELF_REPORTS_TO_FILE=true`: where Echo writes its [self reports](#self-reports). Writable, and apart from `/watched_logs`, which can stay read-only.                                                                                          |
+| `/self_reports` | Only with `INCLUDE_SELF_REPORTS_IN_LOGS=true`: where Echo writes its [self reports](#self-reports). Writable, and apart from `/watched_logs`, which can stay read-only.                                                                                       |
 
-Choose the host directories with the volumes, and leave these paths as they are. `/watched_logs` and `/server_logs` are the values of `LOGS_DIR_PATH` and `SERVER_LOGS_DIR_PATH` in the image: the container refuses to start when one of them is set to another path, and says which one in its logs.
+Choose the host directories with the volumes, and leave these paths as they are. `/watched_logs` and `/self_reports` are the values of `LOGS_DIR_PATH` and `SELF_REPORTS_DIR_PATH` in the image: the container refuses to start when one of them is set to another path, and says which one in its logs.
 
-The container runs as the unprivileged `node` user (uid `1000`, gid `1000`), not as root. It must be able to read the logs, and to write to `/app/data` and `/server_logs`. With bind mounts, give the host directories to that user:
+The container runs as the unprivileged `node` user (uid `1000`, gid `1000`), not as root. It must be able to read the logs, and to write to `/app/data` and `/self_reports`. With bind mounts, give the host directories to that user:
 
 ```bash
-sudo chown -R 1000:1000 /path/to/echo/data /path/to/echo/server-logs
+sudo chown -R 1000:1000 /path/to/echo/data /path/to/echo/self-reports
 ```
 
 A new named volume needs nothing: Docker gives it the owner the directory has in the image.
@@ -159,11 +159,11 @@ Every variable has a default in the container, so none is required there. A valu
 
 | Variable                            | Default         | Description                                                                                                                                                                                                                  |
 | ----------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SERVER_NAME`                       | `Echo`          | Name of this instance, shown in the app and in the Telegram messages. It also names the session cookie and the group of the self reports.                                                                                    |
+| `SERVER_NAME`                       | `Echo`          | Name of this instance, shown in the app and in the Telegram messages. It also names the session cookie, and the directory and the group of the self reports.                                                                 |
 | `HAS_AUTHENTICATION`                | `true`          | `true` asks for a login. `false` removes it: anyone who can reach the port reads the logs. See [Authentication](#authentication).                                                                                            |
 | `LOGS_INITIAL_DATE_DAYS_AGO`        | `2`             | How many days back the logs shown in the app start by default. A positive integer or zero, at most `LOGS_MINIMAL_DATE_DAYS_AGO`.                                                                                             |
 | `LOGS_MINIMAL_DATE_DAYS_AGO`        | `14`            | How many days back the start date of the logs can be set at most. A positive integer or zero.                                                                                                                                |
-| `SAVE_SELF_REPORTS_TO_FILE`         | `false`         | `true` shows the lines Echo cannot read among the logs. Needs the `/server_logs` volume. See [Self reports](#self-reports).                                                                                                  |
+| `INCLUDE_SELF_REPORTS_IN_LOGS`      | `false`         | `true` shows the lines Echo cannot read among the logs. Needs the `/self_reports` volume. See [Self reports](#self-reports).                                                                                                 |
 | `SELF_REPORTS_RETENTION_DAYS`       | `10`            | How many days a self report is kept. A strictly positive integer. Only read when the self reports are enabled.                                                                                                               |
 | `TELEGRAM_CHAT_ID`                  | _(empty)_       | Telegram chat the notifications are sent to. See [Telegram notifications](#telegram-notifications).                                                                                                                          |
 | `TELEGRAM_BOT_TOKEN`                | _(empty)_       | Token of the Telegram bot sending them, as BotFather gives it (`123456:ABC-DEF…`), without `https://api.telegram.org/bot` in front. A secret.                                                                                |
@@ -217,14 +217,14 @@ So scripts can keep their log files in a `logs` directory next to them without `
 
 ## Self reports
 
-By default, a line Echo cannot read is silently left out. With `SAVE_SELF_REPORTS_TO_FILE=true`, Echo reports it instead, as a log of its own, which shows up in the app like any other:
+By default, a line Echo cannot read is silently left out. With `INCLUDE_SELF_REPORTS_IN_LOGS=true`, Echo reports it instead, and shows the report among the logs, like any other log:
 
 - its level is `WARNING`, its message is the line itself, and its `origin` is the path of the log file followed by the position of the line among its non-blank lines, starting at 1: `/watched_logs/backup/logs/nightly.log.jsonl:3`;
-- it is in the group named after `SERVER_NAME` (every character other than a letter, a digit, `-`, `_` or a space replaced with `_`), in the file `parseLogFile`.
+- it is in the group `self_reports_<server name>`, the server name being `SERVER_NAME` with every character other than a letter, a digit, `-`, `_` or a space replaced with `_`, in the file `parseLogFile`.
 
-The self reports are stored in `/server_logs/self_reports/<group>/logs/`, which Echo then reads along with `/watched_logs`. This needs the writable `/server_logs` volume (see [Volumes](#volumes)). When that directory cannot be written, Echo says so in the logs of the container and starts without the self reports.
+The self reports are stored in `/self_reports/<server name>/`, apart from the logs, which are only read from `/watched_logs`. This needs the writable `/self_reports` volume (see [Volumes](#volumes)). When that directory cannot be written, Echo says so in the logs of the container and starts without the self reports.
 
-A line that is still wrong is reported again each time the logs are read, but stored once: reporting it again only brings its date up to now. So the report of a problem that is still there always has a recent date, and the report of a problem you fixed keeps the date it was last seen at, until it is older than `SELF_REPORTS_RETENTION_DAYS` (10 by default): old reports are removed each time the container starts.
+A line that is still wrong is reported again each time the logs are read, but stored once: its report keeps the date the line was first found wrong at, until it is older than `SELF_REPORTS_RETENTION_DAYS` (10 by default). Old reports are removed each time the container starts, so a line that is still wrong then is reported again, with a new date.
 
 The self reports written between two starts of the container share a `jobId`, and each start takes a new one, so the app shows them as one job per run of Echo.
 

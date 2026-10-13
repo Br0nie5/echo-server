@@ -1,4 +1,4 @@
-import { createLogWithIds, type Log } from '@echo/utilities'
+import type { Log } from '@echo/utilities'
 import { describe, expect, it } from 'vitest'
 
 import { buildNotifierMessage, formatLogLine } from '../buildNotifierMessage.js'
@@ -11,20 +11,18 @@ const buildMessage = (
 ): string | undefined =>
   buildNotifierMessage({ messageSizeLimit, problemLogs, serverName: 'my-device', timezone: 'UTC' })
 
-function mockLog(overrides: Partial<Omit<Log, 'id' | 'contentId'>> = {}): Log {
-  return createLogWithIds(
-    {
-      jobId: 1,
-      date: '2026-01-01T10:00:00.000Z',
-      level: 'ERROR',
-      location: '/server/logs/worker.jsonl',
-      locationName: 'worker',
-      message: 'Something broke',
-      origin: '/server/worker.sh:12',
-      ...overrides
-    },
-    0
-  )
+function mockLog(overrides: Partial<Log> = {}): Log {
+  return {
+    id: 'log-id',
+    jobId: 1,
+    date: '2026-01-01T10:00:00.000Z',
+    level: 'ERROR',
+    location: '/server/logs/worker.jsonl',
+    locationName: 'worker',
+    message: 'Something broke',
+    origin: '/server/worker.sh:12',
+    ...overrides
+  }
 }
 
 describe('formatLogLine', () => {

@@ -35,7 +35,7 @@ The Vite dev server serves the app under `/app` and proxies `/api` and `/documen
 
 That proxy reaches the backend over HTTP only: leave `TLS_CERT_PATH` and `TLS_KEY_PATH` unset in `.env.development`. To try HTTPS, use `npm start` or one of the HTTPS examples of `npm run start:docker`.
 
-`data/`, at the root, is created on the first run and holds the users database of development. It is git-ignored, like `test_logs/` and `server_logs/`.
+`data/`, at the root, is created on the first run and holds the users database of development. It is git-ignored, like `test_logs/` and `self_reports/`.
 
 The backend and the frontend import `echo_utilities` from its build, `echo_utilities/dist/`. `npm run dev` and `npm run build` build it first: on a fresh clone, run one of them before `npm run lint`, `npm run test:coverage` or `npm run arch:check`.
 
@@ -105,7 +105,7 @@ Unit tests only, covering every case of each function and schema.
 
 ### Test data
 
-Invent the data of a test: `billing`, `send_invoices`, `Quota almost reached`. Nothing that is committed takes a name, a path or a message from real logs, such as those of `test_logs/` or `server_logs/`.
+Invent the data of a test: `billing`, `send_invoices`, `Quota almost reached`. Nothing that is committed takes a name, a path or a message from real logs, such as those of `test_logs/` or `self_reports/`.
 
 ## Code quality
 
@@ -133,13 +133,13 @@ npm run start:docker                      # both, then one of the examples with 
 npm run start:docker -- proxy-https       # the same, naming the example
 ```
 
-**The image** ([Dockerfile](../Dockerfile)) is built on `node:24-slim` from the workspaces already built: a first stage installs the production dependencies of the backend, compiling `better-sqlite3`, and the second one copies the result. It runs as the unprivileged `node` user (uid `1000`), creates `/watched_logs`, `/server_logs` and `/app/data`, and starts through the entrypoint.
+**The image** ([Dockerfile](../Dockerfile)) is built on `node:24-slim` from the workspaces already built: a first stage installs the production dependencies of the backend, compiling `better-sqlite3`, and the second one copies the result. It runs as the unprivileged `node` user (uid `1000`), creates `/watched_logs`, `/self_reports` and `/app/data`, and starts through the entrypoint.
 
-**The entrypoint** ([docker-entrypoint.sh](../docker-entrypoint.sh)) forces `NODE_ENV` to `production`, refuses a `LOGS_DIR_PATH` or a `SERVER_LOGS_DIR_PATH` that is not the directory the image creates, gives every other variable its default, and writes `env.production.json`, the variables of the frontend, into its build.
+**The entrypoint** ([docker-entrypoint.sh](../docker-entrypoint.sh)) forces `NODE_ENV` to `production`, refuses a `LOGS_DIR_PATH` or a `SELF_REPORTS_DIR_PATH` that is not the directory the image creates, gives every other variable its default, and writes `env.production.json`, the variables of the frontend, into its build.
 
 **The health check** ([docker-health-check.ts](../docker-health-check.ts)) is run by Node.js as it is, which removes its types itself: it may only use syntax that can be erased (no enum, no namespace). It calls `/api/logs` on `localhost`, at `HTTP_PORT`, over HTTPS only when `TLS_CERT_PATH` is set, without a session nor a date, and takes a `401` (with the authentication) or a `400` (without it, for the missing date) as healthy.
 
-**`npm run start:docker`** ([start_docker.sh](../scripts/start_docker.sh)) lists the directories of [examples/](../examples/), asks which one to run, runs it with the image it just built (`echo:dev`) on `test_logs/`, `server_logs/` and `data/`, and removes its containers on Ctrl+C. An example is a directory holding a `compose.yaml` whose header gives its address (`# URL: …`): add a directory to add one. See the [README of the examples](../examples/README.md) for their hosts and their certificate.
+**`npm run start:docker`** ([start_docker.sh](../scripts/start_docker.sh)) lists the directories of [examples/](../examples/), asks which one to run, runs it with the image it just built (`echo:dev`) on `test_logs/`, `self_reports/` and `data/`, and removes its containers on Ctrl+C. An example is a directory holding a `compose.yaml` whose header gives its address (`# URL: …`): add a directory to add one. See the [README of the examples](../examples/README.md) for their hosts and their certificate.
 
 ## Continuous integration and releases
 

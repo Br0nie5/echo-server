@@ -10,42 +10,28 @@ import type { RawLogLineDto } from './dto/rawLogLine.dto.js'
 /** Access to the log files, the data source the logs are stored in. */
 export interface LogsFilesApi {
   /**
-   * Every log file of the logs directories, at any depth, one directory after the other.
+   * Every log file of the logs directory, at any depth.
    *
-   * Throws when one of the logs directories cannot be read.
+   * The name of a log file is the name of the file without its extension. Its group is made of the
+   * directories between the logs directory and the file, joined with `_`, without those named
+   * `logFilesDirName` nor the first of the others: it has none when no directory is left.
+   *
+   * Throws when the logs directory cannot be read.
    */
   getAllLogFiles: () => Promise<LogFileDto[]>
-  /**
-   * The log file at `filePath`, whether it exists yet or not.
-   *
-   * Its name is the name of the file without its extension. Its group is made of the directories
-   * between the first one under its logs directory and the file, joined with `_` (a directory
-   * named `logFilesDirName` is skipped), and is `undefined` when there is none, or when the file is in none of
-   * the logs directories.
-   */
-  getLogFile: (filePath: string) => LogFileDto
   /**
    * The non-blank lines of `logFile`, in the order they were written, each with its position.
    *
    * A file that does not exist has no line. Throws when the file exists but cannot be read.
    */
   getRawLogLines: (logFile: LogFileDto) => Promise<RawLogLineDto[]>
-  /**
-   * Makes `rawLogLines` the lines of `logFile`, in the order they are given, creating the file and
-   * its directory when they do not exist yet.
-   *
-   * The file changes in one step: whoever reads it meanwhile gets either its previous lines or the
-   * new ones. Throws when the file cannot be written.
-   */
-  saveRawLogLines: (logFile: LogFileDto, rawLogLines: RawLogLineDto[]) => Promise<void>
 }
 
 /**
- * Builds the access to the log files, read and written through `filesService`.
+ * Builds the access to the log files, read through `filesService`.
  *
- * The log files it lists are the files of each directory of `logsDirsPaths` whose name ends with
- * `logFileExtension`. `logFilesDirName` is the name of the directories left out of the group of a
- * log file:
+ * The log files it lists are the files of `logsDirPath` whose name ends with `logFileExtension`.
+ * `logFilesDirName` is the name of the directories left out of the group of a log file:
  *
  * ```ts
  * const logsFilesApi = createLogsFilesApi(config.logs, createFilesService())
@@ -54,51 +40,32 @@ export interface LogsFilesApi {
  * ```
  */
 export const createLogsFilesApi = (
-  { logsDirsPaths, logFileExtension, logFilesDirName }: LogsConfig,
+  { logsDirPath, logFileExtension, logFilesDirName }: LogsConfig,
   filesService: FilesService
 ): LogsFilesApi => {
-  const buildLogFileDto = (filePath: string, logsDirPath: string | undefined): LogFileDto => {
-    const directoriesLinkedName =
-      logsDirPath !== undefined
-        ? path
-            .relative(logsDirPath, filePath)
-            .split(path.sep)
-            .filter((part) => part !== logFilesDirName)
-            .slice(1, -1)
-            .join('_')
-        : ''
+  const createGroupName = (filePath: string): string | undefined => {
+    const groupName = filesService
+      .getRelativeFilePath(filePath, logsDirPath)
+      ?.split('/')
+      .filter((pathPart) => pathPart !== logFilesDirName)
+      .slice(1, -1)
+      .join('_')
 
-    return {
-      path: filePath,
-      fileName: path.basename(filePath, path.extname(filePath)),
-      groupName: directoriesLinkedName !== '' ? directoriesLinkedName : undefined
-    }
+    return groupName === '' ? undefined : groupName
   }
 
   return {
-    getAllLogFiles: async (): Promise<LogFileDto[]> =>
-      (
-        await Promise.all(
-          logsDirsPaths.map(async (logsDirPath: string) => {
-            const logFilesPaths = await filesService.getFilesPaths(logsDirPath, (filePath) =>
-              filePath.endsWith(logFileExtension)
-            )
+    getAllLogFiles: async (): Promise<LogFileDto[]> => {
+      const logFilesPaths = await filesService.getFilesPaths(logsDirPath, (filePath) =>
+        filePath.endsWith(logFileExtension)
+      )
 
-            return logFilesPaths.map((filePath) => buildLogFileDto(filePath, logsDirPath))
-          })
-        )
-      ).flat(),
-
-    getLogFile: (filePath): LogFileDto =>
-      buildLogFileDto(
-        filePath,
-        logsDirsPaths.find((logsDirPath) => {
-          const relativePath = path.relative(logsDirPath, filePath)
-          const isInDirectory = !relativePath.startsWith('..') && !path.isAbsolute(relativePath)
-
-          return isInDirectory
-        })
-      ),
+      return logFilesPaths.map((filePath) => ({
+        path: filePath,
+        fileName: path.basename(filePath, path.extname(filePath)),
+        groupName: createGroupName(filePath)
+      }))
+    },
 
     getRawLogLines: async (logFile): Promise<RawLogLineDto[]> => {
       try {
@@ -110,14 +77,6 @@ export const createLogsFilesApi = (
         }
         throw error
       }
-    },
-
-    saveRawLogLines: async (logFile, rawLogLines): Promise<void> => {
-      await filesService.createDirectory(path.dirname(logFile.path))
-      await filesService.replaceFileLines(
-        logFile.path,
-        rawLogLines.map(({ content }) => content)
-      )
     }
   }
 }

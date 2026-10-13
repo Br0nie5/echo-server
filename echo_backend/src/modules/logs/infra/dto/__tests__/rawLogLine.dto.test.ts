@@ -1,4 +1,4 @@
-import { createLogWithIds, LogLevel, type Log } from '@echo/utilities'
+import { createLogId, LogLevel, type Log } from '@echo/utilities'
 import { describe, it, expect } from 'vitest'
 
 import { convertRawLogLineToLog, type RawLogLineDto } from '../rawLogLine.dto.js'
@@ -14,7 +14,7 @@ const rawLogLine = (content: string): RawLogLineDto => ({
 })
 
 /** What the valid line of the tests holds, in the log file of `rawLogLine`. */
-const noIdsLog: Omit<Log, 'id' | 'contentId'> = {
+const noIdLog: Omit<Log, 'id'> = {
   date: '2024-05-12T14:30:00.386Z',
   groupName: 'billing',
   location: '/server/billing/logs/count_stock.jsonl',
@@ -30,18 +30,22 @@ describe('convertRawLogLineToLog', () => {
     const content =
       '{"jobId":123,"timestamp":"2024-05-12T14:30:00.386Z","level":"INFO","message":"Something happened","origin":"/server/billing/count_stock.sh:4"}'
 
-    expect(convertRawLogLineToLog(rawLogLine(content))).toEqual(
-      createLogWithIds(noIdsLog, rawLogLine(content).index)
-    )
+    expect(convertRawLogLineToLog(rawLogLine(content))).toEqual({
+      ...noIdLog,
+      id: createLogId(noIdLog, rawLogLine(content).index)
+    })
   })
 
   it('Should convert a valid line without origin to a log without origin', () => {
     const content =
       '{"jobId":123,"timestamp":"2024-05-12T14:30:00.386Z","level":"INFO","message":"Something happened"}'
 
-    expect(convertRawLogLineToLog(rawLogLine(content))).toEqual(
-      createLogWithIds({ ...noIdsLog, origin: undefined }, rawLogLine(content).index)
-    )
+    const noOriginLog = { ...noIdLog, origin: undefined }
+
+    expect(convertRawLogLineToLog(rawLogLine(content))).toEqual({
+      ...noOriginLog,
+      id: createLogId(noOriginLog, rawLogLine(content).index)
+    })
   })
 
   it('Should return undefined for an empty origin', () => {
