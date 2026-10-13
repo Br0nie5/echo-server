@@ -11,10 +11,15 @@ import { isOriginAllowed } from './utils/isOriginAllowed.js'
 /** Random secret regenerated at each start, so the sessions do not survive a restart. */
 const DYNAMIC_JWT_SECRET = crypto.randomBytes(256).toString('hex')
 
+/** The error a request sent from another origin is answered with: a 403 `EchoError`. */
+const createForbiddenOriginError = (message: string): Error =>
+  Object.assign(new Error(message), { statusCode: 403 })
+
 /**
  * Registers cookie/JWT support when authentication is enabled, the JWT expiring with the session,
  * and CORS restricted to the origin `isOriginAllowed` accepts: the one the request itself is sent
- * to.
+ * to. A request carrying another origin, or an `Origin` header that is not a URL, is answered a
+ * 403 `EchoError`.
  *
  * That one is the host of the request, which behind a reverse proxy is the one the browser
  * reached only when the proxy forwards it: as the `Host` header, or as `X-Forwarded-Host` when it
@@ -61,9 +66,11 @@ export const registerSecurity = async (
           return callback(null, corsOptions)
         }
 
-        return callback(new Error(`Not allowed by CORS: ${origin} (Allowed: ${request.host})`))
+        return callback(
+          createForbiddenOriginError(`Not allowed by CORS: ${origin} (Allowed: ${request.host})`)
+        )
       } catch {
-        return callback(new Error('Invalid Origin Header'))
+        return callback(createForbiddenOriginError('Invalid Origin Header'))
       }
     }
   })

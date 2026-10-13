@@ -2,9 +2,9 @@
  * A diagnostic the backend reports about itself.
  *
  * `date` is when the problem was noticed and `level` how serious it is. `origin`, never empty, says
- * what the diagnostic is about, such as the line of a log file that could not be read, written
- * `path:line:column`, `path:line` when it points to no column and `path` when it points to no line
- * either.
+ * what the diagnostic is about, in any form: whoever reports chooses it (the line of a log file
+ * that could not be read, as `path:line`, the name of the part of the backend that failed, the
+ * address of another server...), and nothing reads it as more than a text.
  *
  * Two self reports with the same `level`, `message` and `origin` say the same thing, whatever their
  * date: they are the same problem, noticed twice.

@@ -6,12 +6,6 @@ import type { FilesService } from '../../../shared/services/files.service.js'
 /** Access to the self-report files, the data source the self reports are stored in. */
 export interface SelfReportsFilesApi {
   /**
-   * The path of every self-report file of the self-reports directory, at any depth.
-   *
-   * Throws when the directory does not exist or cannot be read.
-   */
-  getAllSelfReportFilesPaths: () => Promise<string[]>
-  /**
    * The path of the self-report file at `filePath` from the root of the file system: its
    * directories, then its name, separated by `/`.
    *
@@ -37,30 +31,12 @@ export interface SelfReportsFilesApi {
 /**
  * Builds the access to the self-report files, read and written through `filesService`.
  *
- * The self-report files it lists are the files of `selfReportsDirPath` whose name ends with
- * `selfReportFileExtension`:
- *
  * ```ts
- * const selfReportsFilesApi = createSelfReportsFilesApi(
- *   { selfReportsDirPath: '/self_reports/Echo', selfReportFileExtension: '.jsonl' },
- *   filesService
- * )
- * const [filePath] = await selfReportsFilesApi.getAllSelfReportFilesPaths()
- * const lines = await selfReportsFilesApi.getSelfReportLines(filePath)
+ * const selfReportsFilesApi = createSelfReportsFilesApi(filesService)
+ * const lines = await selfReportsFilesApi.getSelfReportLines('/self_reports/Echo/parseLogs.jsonl')
  * ```
  */
-export const createSelfReportsFilesApi = (
-  {
-    selfReportsDirPath,
-    selfReportFileExtension
-  }: { selfReportsDirPath: string; selfReportFileExtension: string },
-  filesService: FilesService
-): SelfReportsFilesApi => ({
-  getAllSelfReportFilesPaths: (): Promise<string[]> =>
-    filesService.getFilesPaths(selfReportsDirPath, (filePath) =>
-      filePath.endsWith(selfReportFileExtension)
-    ),
-
+export const createSelfReportsFilesApi = (filesService: FilesService): SelfReportsFilesApi => ({
   getSelfReportFilePathFromRoot: (filePath): string | undefined =>
     filesService.getRelativeFilePath(filePath),
 

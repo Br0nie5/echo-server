@@ -24,6 +24,8 @@ const selfReport: SelfReport & SelfReportsSession = {
 const line =
   '{"sessionId":4,"date":"2026-10-01T08:00:00.000Z","level":"WARNING","message":"bad line","origin":"/server/billing/logs/send_invoices.jsonl:3"}'
 
+// A self report stored and read back is tested through the server (`logs.routes.test.ts`). Here is
+// every line that holds no self report, which the server never writes.
 describe('convertSelfReportLineToSelfReport', () => {
   it('Should convert a valid line to the self report it holds, stored at the storage', () => {
     expect(convertSelfReportLineToSelfReport(line, storage)).toEqual(selfReport)

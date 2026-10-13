@@ -55,23 +55,23 @@ describe('parseLogsNotifierSettings', () => {
       expect(logsNotifierSettings.config.watchedLogsLevels).toStrictEqual(['WARNING', 'ERROR'])
     })
 
-    it('Should ignore the unknown levels', () => {
-      const logsNotifierSettings = parseLogsNotifierSettings(
-        { ...CRON_ENV, LOGS_NOTIFIER_WATCHED_LOGS_LEVELS: 'WARNING,UNKNOWN' },
-        CRON_CONSTANTS
-      )
-
-      expect(logsNotifierSettings.config.watchedLogsLevels).toStrictEqual(['WARNING'])
-    })
-
-    it('Should throw if no level is a known one', () => {
-      expect(() =>
-        parseLogsNotifierSettings(
-          { ...CRON_ENV, LOGS_NOTIFIER_WATCHED_LOGS_LEVELS: 'UNKNOWN' },
-          CRON_CONSTANTS
+    it.each([
+      { rawLevels: 'WARNING,EROR', unknownLevel: 'EROR' },
+      { rawLevels: 'UNKNOWN', unknownLevel: 'UNKNOWN' },
+      { rawLevels: 'WARNING,', unknownLevel: '' }
+    ])(
+      'Should throw if a level is not a known one ("$rawLevels")',
+      ({ rawLevels, unknownLevel }) => {
+        expect(() =>
+          parseLogsNotifierSettings(
+            { ...CRON_ENV, LOGS_NOTIFIER_WATCHED_LOGS_LEVELS: rawLevels },
+            CRON_CONSTANTS
+          )
+        ).toThrow(
+          `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS: Unknown log level: "${unknownLevel}" in: ${rawLevels}`
         )
-      ).toThrow('LOGS_NOTIFIER_WATCHED_LOGS_LEVELS: No known log level in: UNKNOWN')
-    })
+      }
+    )
   })
 
   it('Should throw if LOGS_NOTIFIER_TIMEZONE is not a known timezone', () => {

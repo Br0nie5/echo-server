@@ -11,15 +11,8 @@ const telegramOptions = {
   telegramBaseUrl: 'https://telegram.test',
   telegramMessageSizeLimit: 120
 }
-const notificationsSelfReportRepository = { saveSelfReports: vi.fn(), getAllSelfReports: vi.fn() }
-
-const notificationsService = createNotificationsTelegramService(
-  telegramOptions,
-  notificationsSelfReportRepository
-)
 
 beforeEach(() => {
-  vi.clearAllMocks()
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(NOTIFICATION_DATE)
   vi.stubGlobal('fetch', vi.fn())
@@ -30,64 +23,42 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+// Sending a notification, and reporting the one Telegram refuses or that cannot be written, are
+// tested through the cron (`logs.notifier.test.ts`). Here is what it does not reach: Telegram that
+// cannot be reached at all, and what is thrown not being an `Error`.
 describe('createNotificationsTelegramService', () => {
   describe('notify', () => {
-    it('Should post the message built for its size limit to the chat it was created with', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce({ ok: true } as Response)
-
-      await notificationsService.notify(
-        (messageSizeLimit) => `Hello in ${messageSizeLimit} characters`
-      )
-
-      expect(fetch).toHaveBeenCalledWith('https://telegram.test/botbot-token/sendMessage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: 'chat-123', text: 'Hello in 120 characters' })
-      })
-      expect(notificationsSelfReportRepository.saveSelfReports).not.toHaveBeenCalled()
-    })
-
-    it('Should save an error self report and throw when the Telegram API responds with a non-ok status', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce({ ok: false, status: 500 } as Response)
-
-      await expect(notificationsService.notify(() => 'Hello')).rejects.toThrow(
-        'Telegram API error: 500'
-      )
-
-      expect(notificationsSelfReportRepository.saveSelfReports).toHaveBeenCalledExactlyOnceWith([
-        {
-          date: NOTIFICATION_DATE,
-          message: 'The notification was not sent: Telegram API error: 500',
-          level: 'ERROR',
-          origin: 'notificationsTelegramService'
-        }
-      ])
-    })
-
-    it('Should save an error self report and throw what the message builder throws, without posting', async () => {
-      const buildMessage = (): string => {
-        throw 'Nothing fits'
-      }
-
-      await expect(notificationsService.notify(buildMessage)).rejects.toBe('Nothing fits')
-
-      expect(fetch).not.toHaveBeenCalled()
-      expect(notificationsSelfReportRepository.saveSelfReports).toHaveBeenCalledExactlyOnceWith([
-        {
-          date: NOTIFICATION_DATE,
-          message: 'The notification was not sent: Nothing fits',
-          level: 'ERROR',
-          origin: 'notificationsTelegramService'
-        }
-      ])
-    })
-
-    it('Should throw when Telegram cannot be reached and it was created without a self-report repository', async () => {
-      vi.mocked(fetch).mockRejectedValueOnce(new Error('Network down'))
+    it('Should throw the error of the network when Telegram cannot be reached', async () => {
+      const networkError = new Error('Network down')
+      vi.mocked(fetch).mockRejectedValueOnce(networkError)
 
       await expect(
         createNotificationsTelegramService(telegramOptions).notify(() => 'Hello')
-      ).rejects.toThrow('Network down')
+      ).rejects.toBe(networkError)
+    })
+
+    it('Should save what was thrown as the text of its self report when it is not an error', async () => {
+      const notificationsSelfReportRepository = {
+        saveSelfReports: vi.fn(),
+        getSelfReports: vi.fn()
+      }
+      vi.mocked(fetch).mockRejectedValueOnce('Network down')
+
+      await expect(
+        createNotificationsTelegramService(
+          telegramOptions,
+          notificationsSelfReportRepository
+        ).notify(() => 'Hello')
+      ).rejects.toBe('Network down')
+
+      expect(notificationsSelfReportRepository.saveSelfReports).toHaveBeenCalledExactlyOnceWith([
+        {
+          date: NOTIFICATION_DATE,
+          message: 'The notification was not sent: Network down',
+          level: 'ERROR',
+          origin: 'notificationsTelegramService'
+        }
+      ])
     })
   })
 })

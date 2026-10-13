@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 /** Validates the JSON of the last-check file. */
-export const LastCheckDateDtoSchema = z.object({
+const LastCheckDateDtoSchema = z.object({
   lastCheck: z.string()
 })
 

@@ -12,7 +12,10 @@ export type LogsNotifierConfig = {
   schedule: string
   /** Levels of the logs that are notified (`LOGS_NOTIFIER_WATCHED_LOGS_LEVELS`). */
   watchedLogsLevels: LogLevel[]
-  /** Luxon zone the dates of the messages are shown in (`LOGS_NOTIFIER_TIMEZONE`). */
+  /**
+   * Zone the `schedule` is read in and the dates of the messages are shown in
+   * (`LOGS_NOTIFIER_TIMEZONE`): an IANA zone (`Europe/Paris`), `UTC` or an offset (`+02:00`).
+   */
   timezone: string
   /** Name the messages say the logs come from (`SERVER_NAME`). */
   serverName: string

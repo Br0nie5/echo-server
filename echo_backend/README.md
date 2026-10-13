@@ -37,13 +37,13 @@ Environment variables, read and validated once, when the server starts, by `load
 
 `Settings` are split by what uses them:
 
-| Part                                               | Holds                                                                                                                                                      | Missing when                                                              |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `server`                                           | The port, the base path, the route prefixes, the trusted proxies, the TLS certificate, the directory of the web app.                                       | Never.                                                                    |
-| `logs`                                             | The directory the logs are read from, the extension of a log file, and `logsNotifier`: the config of the cron and its last-check file.                     | Never. `logsNotifier` is missing without `notification`.                  |
-| `auth`                                             | Its config (the length of a session, its cookie, the limit of the login attempts) and the file of the users database.                                      | `HAS_AUTHENTICATION` is `false`.                                          |
-| `parseLogsSelfReports`, `notificationsSelfReports` | Where one part of the server stores its self reports: the retention, the directory and the extension, the same in both, and its own file and session file. | Nothing uses the self reports: `INCLUDE_SELF_REPORTS_IN_LOGS` is `false`. |
-| `notification`                                     | The Telegram chat and bot.                                                                                                                                 | `TELEGRAM_CHAT_ID` or `TELEGRAM_BOT_TOKEN` is unset.                      |
+| Part                                               | Holds                                                                                                                                                                                      | Missing when                                                              |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| `server`                                           | The port, the base path, the route prefixes, the trusted proxies, the TLS certificate, the directory of the web app.                                                                       | Never.                                                                    |
+| `logs`                                             | The directory the logs are read from, the extension of a log file, the name of the directories left out of the groups, and `logsNotifier`: the config of the cron and its last-check file. | Never. `logsNotifier` is missing without `notification`.                  |
+| `auth`                                             | Its config (the length of a session, its cookie, the limit of the login attempts) and the file of the users database.                                                                      | `HAS_AUTHENTICATION` is `false`.                                          |
+| `parseLogsSelfReports`, `notificationsSelfReports` | Where one part of the server stores its self reports: the retention and the directory, the same in both, its own file and session file, and whether a problem is stored once.              | Nothing uses the self reports: `INCLUDE_SELF_REPORTS_IN_LOGS` is `false`. |
+| `notification`                                     | The Telegram chat and bot.                                                                                                                                                                 | `TELEGRAM_CHAT_ID` or `TELEGRAM_BOT_TOKEN` is unset.                      |
 
 A part that is missing is disabled, and its variables are not read: without `auth`, the server has no auth route and the logs are open.
 
@@ -53,16 +53,16 @@ A part that is missing is disabled, and its variables are not read: without `aut
 src/
   main.ts            the entry point: calls startServer
   server.ts          buildServer, the composition root, and startServer, which loads the settings, builds the server and listens
-  initializers/      what buildServer registers, one register* function per file, and their utils/
+  initializers/      what buildServer registers, one register* function per file, their types/ and their utils/
     settings/        the Settings, loadSettings and the parser of each variable
   modules/
-    auth/            sign-up, login, check and logout, the SQLite users, the JWT of the session
+    auth/            sign-up, login, status and logout, the SQLite users, the JWT of the session
     logs/            the logs API and the log files
       modules/logsNotifier/   the cron notifying the watched logs
     notifications/   the NotificationsService, how a message is sent to the outside, and its Telegram implementation
     selfReports/     the diagnostics the server reports about itself, stored in files of their own
-  shared/            the types of the configs, the FilesService, the error schema, the Logger type
-  test/              the helpers of the tests: buildTestServer and mocks/
+  shared/            the types of the configs, the FilesService, the error schema, the Logger type, the date parsing
+  test/              the helpers of the tests: buildTestServer, mocks/ and utils/
 ```
 
 A module is split into the layer folders it needs, and holds nothing outside them:
@@ -88,20 +88,20 @@ There is no database of logs: `GET /logs` reads the files at each request.
 
 1. `infra/logsFiles.api.ts` lists the files with the log extension under the logs directory, at any depth, and reads their non-blank lines.
 2. `infra/logsFiles.repository.ts` converts each line to a `Log`. A line that holds none, because it is not JSON, misses a field or has an unknown level or a date that is not one, becomes a warning self report instead, which the repository saves when the self reports are enabled.
-3. When the self reports are enabled, `infra/logsSelfReports.repository.ts` gives every stored self report as a log too, and `infra/logs.repository.ts` makes one repository of both.
+3. When the self reports are enabled, `infra/logsSelfReports.repository.ts` gives the self reports of every self-report repository as logs too, and `infra/logs.repository.ts` makes one repository of both.
 4. `application/getFilteredLogs.ts` filters the logs by date, level and search, and sorts them from the newest to the oldest.
 
-The group of a log is made of the directories of its file, and its id is worked out from its content and its position: a line stores neither.
+The group of a log is made of the directories of its file, without the first one nor those named `logs`, and its id is worked out from its content and its position: a line stores neither.
 
 ## Tests
 
 The tests live in a `__tests__` directory next to the code they test. They reach neither the disk, the network nor a port, and set the clock when the code reads it.
 
-- **The routes and the cron** are tested on the real server (`logs.routes.test.ts`, `auth.routes.test.ts`, `logs.notifier.test.ts`), with a few tests each, one per feature. `buildTestServer` (`src/test/`) builds it with `buildServer`, from a config with the authentication and nothing optional, which a test completes with the part it is about:
+- **The routes and the cron** are tested on the real server (`logs.routes.test.ts`, `auth.routes.test.ts`, `logs.notifier.test.ts`), with a few tests each, one per feature. `buildTestServer` (`src/test/`) builds it with `buildServer`, from settings with the authentication and nothing optional, which a test completes with the part it is about:
 
   ```ts
   const { server, fileSystem } = await buildTestServer({
-    config: { auth: undefined },
+    settings: { auth: undefined },
     files: { '/logs/billing/logs/send_invoices.jsonl': logLine }
   })
 
@@ -111,6 +111,7 @@ The tests live in a `__tests__` directory next to the code they test. They reach
   Only the outside is replaced: the file system by one kept in memory (`createInMemoryFileSystem`), which the real `FilesService` runs on, the users database by an in-memory SQLite one, and `fetch`, stubbed, for the notifications. A test fills the files, sends requests with `server.inject` and reads the files back. The cron is only registered when a test configures it, and is run by moving the fake clock.
 
 - **The server itself** (`src/__tests__/server.test.ts`) has unit tests of what is its own: the paths it serves, the documentation, the web app, CORS, the proxies, TLS and how it starts. The routes and the cron are mocked there, so a change in a module never changes that file. The initializers have no test of their own.
-- **Everything else** has unit tests, covering every case: `shared/`, the `utils/` folders, the use cases, the `infra/` adapters and the DTOs. They get a `FilesService` whose methods are mocks from `getMockFilesService`, and a config from `src/test/mocks/mockConfigs.ts`. The settings of a test on the real server come from `src/test/mocks/mockSettings.ts`.
+- **What is shared** has unit tests, covering every case: `shared/`, and the `utils/` of the initializers and of the settings.
+- **A piece of a module** (a use case, an `infra/` adapter, a DTO) is tested through its route or its cron first. It has a unit test only for the edge cases they do not reach (two sign ups at once, a storage failing, a stored line that holds nothing valid), which the comment at the top of its test file names. These get a `FilesService` whose methods are mocks from `getMockFilesService`, and a config from `src/test/mocks/mockConfigs.ts`. The settings of a test on the real server come from `src/test/mocks/mockSettings.ts`.
 
 The only files read from the disk are the fixtures of `src/__tests__/fixtures/`, the files `@fastify/static` serves in the tests of the server, as it reads the disk itself.

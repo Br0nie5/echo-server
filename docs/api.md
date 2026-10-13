@@ -25,7 +25,7 @@ Unless a route says otherwise below, an error is answered as an `EchoError`:
 | `429`  | Too many login or sign-up attempts from one address: 5 a minute.                                                                    |
 | `500`  | Anything else, with the message `An unexpected error occurred.`: what went wrong is in the logs of the server, never in the answer. |
 
-A request carrying an `Origin` header other than the host it is sent to is refused with a `500` too (see [CORS](configuration.md#cors)).
+A request carrying an `Origin` header other than the host it is sent to is refused with a `403` (see [CORS](configuration.md#cors)).
 
 ## Authentication routes
 

@@ -344,7 +344,8 @@ describe('buildServer', () => {
           headers: { host: 'logs.example.com', origin }
         })
 
-        expect(response.statusCode).toBe(500)
+        expect(response.statusCode).toBe(403)
+        expect(response.json()).toEqual({ statusCode: 403, message: expect.any(String) })
         expect(response.headers).not.toHaveProperty('access-control-allow-origin')
       }
     )
@@ -388,7 +389,7 @@ describe('buildServer', () => {
       const otherResponse = await server.inject({ ...forwardedRequest, remoteAddress: '10.0.0.2' })
 
       expect(proxyResponse.statusCode).toBe(200)
-      expect(otherResponse.statusCode).toBe(500)
+      expect(otherResponse.statusCode).toBe(403)
     })
   })
 

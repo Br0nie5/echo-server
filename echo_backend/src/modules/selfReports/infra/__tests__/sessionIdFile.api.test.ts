@@ -11,22 +11,10 @@ beforeEach(() => {
   vi.resetAllMocks()
 })
 
+// The session id read and saved is tested through the server (`logs.routes.test.ts`). Here is the
+// session file that cannot be read or holds no session id, which the server never writes.
 describe('SessionIdApi', () => {
   describe('getLastSessionId', () => {
-    it('Should return the session id the session file holds', async () => {
-      filesService.getFileContent.mockResolvedValue('{"lastSessionId":7}')
-
-      const lastSessionId = await createSessionIdFileApi(
-        sessionFilePath,
-        filesService
-      ).getLastSessionId()
-
-      expect(lastSessionId).toBe(7)
-      expect(filesService.getFileContent).toHaveBeenCalledWith(
-        '/fake/data/nested/self_reports_session.json'
-      )
-    })
-
     it('Should throw when the file cannot be read', async () => {
       filesService.getFileContent.mockRejectedValue(new Error('ENOENT'))
 
@@ -46,27 +34,6 @@ describe('SessionIdApi', () => {
       await expect(
         createSessionIdFileApi(sessionFilePath, filesService).getLastSessionId()
       ).rejects.toThrow()
-    })
-  })
-
-  describe('saveLastSessionId', () => {
-    it('Should create the directory of the file, then replace its content with the session id', async () => {
-      const steps: string[] = []
-      filesService.createDirectory.mockImplementation(async () => {
-        steps.push('createDirectory')
-      })
-      filesService.replaceFileContent.mockImplementation(async () => {
-        steps.push('replaceFileContent')
-      })
-
-      await createSessionIdFileApi(sessionFilePath, filesService).saveLastSessionId(8)
-
-      expect(filesService.createDirectory).toHaveBeenCalledWith('/fake/data/nested')
-      expect(filesService.replaceFileContent).toHaveBeenCalledWith(
-        '/fake/data/nested/self_reports_session.json',
-        JSON.stringify({ lastSessionId: 8 }, null, 2)
-      )
-      expect(steps).toEqual(['createDirectory', 'replaceFileContent'])
     })
   })
 })

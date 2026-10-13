@@ -1,4 +1,3 @@
-import { createLogId, LogLevel, type Log } from '@echo/utilities'
 import { describe, it, expect } from 'vitest'
 
 import { convertRawLogLineToLog, type RawLogLineDto } from '../rawLogLine.dto.js'
@@ -13,41 +12,9 @@ const rawLogLine = (content: string): RawLogLineDto => ({
   content
 })
 
-/** What the valid line of the tests holds, in the log file of `rawLogLine`. */
-const noIdLog: Omit<Log, 'id'> = {
-  date: '2024-05-12T14:30:00.386Z',
-  groupName: 'billing',
-  location: '/server/billing/logs/count_stock.jsonl',
-  locationName: 'count_stock',
-  jobId: 123,
-  level: LogLevel.INFO,
-  message: 'Something happened',
-  origin: '/server/billing/count_stock.sh:4'
-}
-
+// A line converted to a log is tested through the server (`logs.routes.test.ts`). Here are the
+// lines that hold no log, one case each, which its tests only reach as a line that is not JSON.
 describe('convertRawLogLineToLog', () => {
-  it('Should convert a valid line to a log', () => {
-    const content =
-      '{"jobId":123,"timestamp":"2024-05-12T14:30:00.386Z","level":"INFO","message":"Something happened","origin":"/server/billing/count_stock.sh:4"}'
-
-    expect(convertRawLogLineToLog(rawLogLine(content))).toEqual({
-      ...noIdLog,
-      id: createLogId(noIdLog, rawLogLine(content).index)
-    })
-  })
-
-  it('Should convert a valid line without origin to a log without origin', () => {
-    const content =
-      '{"jobId":123,"timestamp":"2024-05-12T14:30:00.386Z","level":"INFO","message":"Something happened"}'
-
-    const noOriginLog = { ...noIdLog, origin: undefined }
-
-    expect(convertRawLogLineToLog(rawLogLine(content))).toEqual({
-      ...noOriginLog,
-      id: createLogId(noOriginLog, rawLogLine(content).index)
-    })
-  })
-
   it('Should return undefined for an empty origin', () => {
     const content =
       '{"jobId":1,"timestamp":"2024-05-12T14:30:00.012Z","level":"INFO","message":"No origin","origin":""}'

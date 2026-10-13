@@ -63,13 +63,13 @@ Read by [loadSettings.ts](../echo_backend/src/initializers/settings/loadSettings
 
 ### Notifications
 
-| Variable                            | Required | Docker default  | Description                                                                                                                                                                  |
-| ----------------------------------- | :------: | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TELEGRAM_CHAT_ID`                  |    no    | _(empty)_       | Telegram chat the messages are sent to.                                                                                                                                      |
-| `TELEGRAM_BOT_TOKEN`                |    no    | _(empty)_       | Token of the bot sending them, as BotFather gives it (`123456:ABC-DEF…`), without `https://api.telegram.org/bot` in front. A secret.                                         |
-| `LOGS_NOTIFIER_SCHEDULE`            |  yes\*   | `*/30 * * * *`  | Cron expression ([node-cron](https://github.com/node-cron/node-cron) syntax) saying when the logs are checked.                                                               |
-| `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` |  yes\*   | `ERROR,WARNING` | Levels that are notified, separated by commas, among `SUCCESS`, `INFO`, `WARNING` and `ERROR`. An unknown entry is ignored, and the server does not start when none is left. |
-| `LOGS_NOTIFIER_TIMEZONE`            |  yes\*   | `UTC`           | Time zone the dates of the messages are shown in: a fixed offset (`UTC+2`, or `GMT+2`) or an IANA zone (`Europe/Paris`).                                                     |
+| Variable                            | Required | Docker default  | Description                                                                                                                                                |
+| ----------------------------------- | :------: | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TELEGRAM_CHAT_ID`                  |    no    | _(empty)_       | Telegram chat the messages are sent to.                                                                                                                    |
+| `TELEGRAM_BOT_TOKEN`                |    no    | _(empty)_       | Token of the bot sending them, as BotFather gives it (`123456:ABC-DEF…`), without `https://api.telegram.org/bot` in front. A secret.                       |
+| `LOGS_NOTIFIER_SCHEDULE`            |  yes\*   | `*/30 * * * *`  | Cron expression ([node-cron](https://github.com/node-cron/node-cron) syntax) saying when the logs are checked.                                             |
+| `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` |  yes\*   | `ERROR,WARNING` | Levels that are notified, separated by commas, among `SUCCESS`, `INFO`, `WARNING` and `ERROR`. The server does not start when an entry is not one of them. |
+| `LOGS_NOTIFIER_TIMEZONE`            |  yes\*   | `UTC`           | Time zone the schedule is read in and the dates of the messages are shown in: a fixed offset (`UTC+2`, or `GMT+2`) or an IANA zone (`Europe/Paris`).       |
 
 \* Only once `TELEGRAM_CHAT_ID` and `TELEGRAM_BOT_TOKEN` are both set, which is what enables the notifications. Not read otherwise.
 
@@ -145,7 +145,7 @@ The JWT is signed with a secret created when the process starts, so no session s
 
 A request carrying an `Origin` header is only answered when that origin is the one the request is itself sent to: same host and port as its `Host` header, or as its `X-Forwarded-Host` when its sender is believed. The page then comes from the server itself, on whatever address the user reached. A request without `Origin`, which no page of another site sent, is answered.
 
-Any other origin is refused: the request gets a 500, and the logs of the server say `Not allowed by CORS: <origin> (Allowed: <host>)`. A reverse proxy must therefore forward the host the browser reached, one way or the other.
+Any other origin is refused: the request gets a 403, and the logs of the server say `Not allowed by CORS: <origin> (Allowed: <host>)`. A reverse proxy must therefore forward the host the browser reached, one way or the other.
 
 In development, the Vite dev server forwards the `Host` header as it is, so the app and the API share the origin `http://localhost:5173` there too.
 

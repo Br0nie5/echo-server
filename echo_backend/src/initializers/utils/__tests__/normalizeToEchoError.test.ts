@@ -21,6 +21,16 @@ describe('normalizeToEchoError', () => {
     })
   })
 
+  it.each([500, 503, 302, 200])(
+    'Should default an error carrying the status code %s to a generic 500',
+    (statusCode) => {
+      expect(normalizeToEchoError({ statusCode, message: 'The database is locked.' })).toEqual({
+        statusCode: 500,
+        message: 'An unexpected error occurred.'
+      })
+    }
+  )
+
   it('Should default a bare Error to a generic 500', () => {
     expect(normalizeToEchoError(new Error('Cannot read properties of undefined'))).toEqual({
       statusCode: 500,

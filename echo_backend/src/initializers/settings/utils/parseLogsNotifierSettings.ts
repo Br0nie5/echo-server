@@ -13,15 +13,13 @@ const parseSchedule = (raw: string): string => {
 }
 
 const parseWatchedLogsLevels = (raw: string): LogLevel[] => {
-  const watchedLogsLevels = raw
-    .split(',')
-    .map((level) => level.trim())
-    .filter((level) => isLogLevel(level))
+  const levels = raw.split(',').map((level) => level.trim())
+  const unknownLevel = levels.find((level) => !isLogLevel(level))
 
-  if (watchedLogsLevels.length === 0) {
-    throw new Error(`No known log level in: ${raw}`)
+  if (unknownLevel !== undefined) {
+    throw new Error(`Unknown log level: "${unknownLevel}" in: ${raw}`)
   }
-  return watchedLogsLevels
+  return levels.filter((level) => isLogLevel(level))
 }
 
 /**
@@ -29,9 +27,8 @@ const parseWatchedLogsLevels = (raw: string): LogLevel[] => {
  * the watched logs: its config, completed with `serverName`, and `lastLogsCheckFilePath`.
  *
  * The three variables are required. Throws when one is missing, when `LOGS_NOTIFIER_SCHEDULE` is
- * not a cron expression, when `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` names no log level (it is a
- * comma-separated list, whose unknown levels are ignored) or when `LOGS_NOTIFIER_TIMEZONE` is not
- * a known zone.
+ * not a cron expression, when `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS`, a comma-separated list, holds
+ * something that is not a log level, or when `LOGS_NOTIFIER_TIMEZONE` is not a known zone.
  */
 export const parseLogsNotifierSettings = (
   processEnv: NodeJS.ProcessEnv,

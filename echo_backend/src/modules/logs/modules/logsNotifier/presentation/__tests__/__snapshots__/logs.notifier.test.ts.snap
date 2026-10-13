@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`logs notifier > Should notify the problem logs logged since the previous check, once 1`] = `
+exports[`logs notifier > Should notify the watched logs logged since the previous check, once 1`] = `
 [
   "Logs from device test-device:
 

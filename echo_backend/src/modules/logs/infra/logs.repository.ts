@@ -13,18 +13,22 @@ export interface CreateLogsRepositoryOptions extends LogsFilesLocation {
   /** What the log files are read with. */
   filesService: FilesService
   /**
-   * Where the lines of the log files that hold no log are reported, and where the self reports
-   * given among the logs are read from. Missing when the self reports are disabled.
+   * Where the lines of the log files that hold no log are reported. Missing when the self reports
+   * are disabled.
    */
   parseLogsSelfReportRepository: SelfReportRepository | undefined
+  /** The repositories whose self reports are given among the logs, each as a log. */
+  selfReportRepositoriesToShow: SelfReportRepository[]
 }
 
 /**
  * Creates the `LogsRepository` of the backend, from the storages it is given.
  *
  * Its logs are always those of the log files, the files of `logsDirPath` whose name ends with
- * `logFileExtension`, read through `filesService` (see `createLogsFilesRepository`). With a `parseLogsSelfReportRepository`, that is when the self
- * reports are enabled, they are also its self reports, each as a log (see
+ * `logFileExtension`, read through `filesService` (see `createLogsFilesRepository`), which reports
+ * the lines that hold no log to `parseLogsSelfReportRepository`. With no repository in
+ * `selfReportRepositoriesToShow`, that is when the self reports are disabled, these are its only
+ * logs. Otherwise they are also the self reports of every one of them, each as a log (see
  * `createLogsSelfReportsRepository`): the log files are read first, so the self reports saved
  * while reading them are among the logs.
  *
@@ -34,7 +38,8 @@ export interface CreateLogsRepositoryOptions extends LogsFilesLocation {
  *   logFileExtension: '.jsonl',
  *   logFilesDirName: 'logs',
  *   filesService,
- *   parseLogsSelfReportRepository
+ *   parseLogsSelfReportRepository,
+ *   selfReportRepositoriesToShow: [parseLogsSelfReportRepository, notificationsSelfReportRepository]
  * })
  * ```
  */
@@ -43,18 +48,21 @@ export const createLogsRepository = ({
   logFileExtension,
   logFilesDirName,
   filesService,
-  parseLogsSelfReportRepository
+  parseLogsSelfReportRepository,
+  selfReportRepositoriesToShow
 }: CreateLogsRepositoryOptions): LogsRepository => {
   const logsFilesRepository = createLogsFilesRepository(
     createLogsFilesApi({ logsDirPath, logFileExtension, logFilesDirName }, filesService),
     parseLogsSelfReportRepository
   )
+  const logsSelfReportsRepository =
+    selfReportRepositoriesToShow.length > 0
+      ? createLogsSelfReportsRepository(selfReportRepositoriesToShow)
+      : undefined
 
-  if (parseLogsSelfReportRepository === undefined) {
+  if (logsSelfReportsRepository === undefined) {
     return logsFilesRepository
   }
-
-  const logsSelfReportsRepository = createLogsSelfReportsRepository(parseLogsSelfReportRepository)
 
   return {
     getAllLogs: async (): Promise<Log[]> => {

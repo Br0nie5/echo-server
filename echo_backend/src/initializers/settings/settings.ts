@@ -60,12 +60,16 @@ export type SelfReportsSettings = {
   retentionDays: number
   /** Directory holding the self-report files, inside `SELF_REPORTS_DIR_PATH` and named after the server (`SERVER_NAME`). */
   dirPath: string
-  /** Extension, with its dot, a file of `dirPath` must have to be read as a self-report file. */
-  fileExtension: string
   /** Name, with its extension, of the file of `dirPath` the self reports are stored in. */
   fileName: string
   /** File remembering the id of the last session the self reports of `fileName` were written during. */
   sessionFilePath: string
+  /**
+   * Whether a problem is stored once, as it was first reported, for as long as its self report is
+   * kept: what is reported again and again at each read is, what is reported when it happens is
+   * not.
+   */
+  isEachProblemStoredOnce: boolean
 }
 
 /** The config of the cron notifying the watched logs, and where it remembers its last check. */
@@ -133,13 +137,13 @@ export type Settings = {
    *
    * Missing when the self reports are disabled, that is when nothing uses them: they are stored
    * only when they are shown among the logs (`INCLUDE_SELF_REPORTS_IN_LOGS`), as logs of their
-   * own.
+   * own. A line is reported at each read of its file, so it is stored once.
    */
   parseLogsSelfReports?: SelfReportsSettings
   /**
-   * Where the notifications that could not be sent are reported. It has the directory, the
-   * extension and the retention of `parseLogsSelfReports`, and a file and a session file of its
-   * own.
+   * Where the notifications that could not be sent are reported. It has the directory and the
+   * retention of `parseLogsSelfReports`, and a file and a session file of its own. Each failure is
+   * stored, even one that already happened.
    *
    * Missing when the self reports are disabled.
    */

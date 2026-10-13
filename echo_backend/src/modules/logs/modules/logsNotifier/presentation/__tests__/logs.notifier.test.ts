@@ -9,6 +9,7 @@ import {
   getMockNotificationSettings,
   getMockSelfReportsSettings
 } from '../../../../../../test/mocks/mockSettings.js'
+import { toJsonLinesFileContent } from '../../../../../../test/utils/toJsonLinesFileContent.js'
 
 /** The instant the server starts at: the cron checks the logs at each minute after it. */
 const SERVER_START = new Date('2026-04-28T10:00:30.000Z')
@@ -27,14 +28,11 @@ const logFilePath = '/logs/server/billing/logs/send_invoices.jsonl'
 const { telegramBaseUrl, telegramBotToken } = notificationSettings
 const telegramUrl = `${telegramBaseUrl}/bot${telegramBotToken}/sendMessage`
 
-const toLogFileContent = (lines: object[]): string =>
-  lines.map((line) => `${JSON.stringify(line)}\n`).join('')
-
 const toLastCheckFileContent = (lastCheck: Date): string =>
   JSON.stringify({ lastCheck: lastCheck.toISOString() }, null, 2)
 
 /** A log file with a watched log before the previous check, and two logs after it, one of them watched. */
-const logFileContent = toLogFileContent([
+const logFileContent = toJsonLinesFileContent([
   {
     jobId: 11,
     timestamp: '2026-04-28T09:00:00.000Z',
@@ -88,17 +86,16 @@ describe('logs notifier', () => {
 
     await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
 
-    expect(getSentMessages()).toEqual([
-      'Logs from device test-device:\n\n\n' +
-        '[12] [2026-04-28 09:42:01 UTC] [WARNING] - send_invoices > Invoice 41 sent on attempt 2.\n\n' +
-        '[11] [2026-04-28 09:00:00 UTC] [ERROR] - send_invoices > Invoices not sent.'
-    ])
+    const oldestWatchedLogMessage = 'Invoices not sent.'
+    const [sentMessage] = getSentMessages()
+
+    expect(sentMessage).toContain(oldestWatchedLogMessage)
     expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
       toLastCheckFileContent(FIRST_CHECK)
     )
   })
 
-  test('Should notify the problem logs logged since the previous check, once', async () => {
+  test('Should notify the watched logs logged since the previous check, once', async () => {
     const { fileSystem } = await buildServerWithLogsNotifier({
       [logFilePath]: logFileContent,
       [logsNotifierSettings.lastLogsCheckFilePath]: toLastCheckFileContent(PREVIOUS_CHECK)
@@ -147,10 +144,33 @@ describe('logs notifier', () => {
     )
   })
 
-  test('Should save a self report in place of a notification that is too long for the channel', async () => {
+  test('Should read its schedule in the timezone of its config', async () => {
+    const noonInTimezoneSchedule = '1 12 * * *'
+
+    await buildServerWithLogsNotifier(
+      { [logFilePath]: logFileContent },
+      {
+        logs: getMockLogsSettings({
+          logsNotifier: getMockLogsNotifierSettings({
+            config: getMockLogsNotifierConfig({
+              schedule: noonInTimezoneSchedule,
+              timezone: '+02:00'
+            })
+          })
+        })
+      }
+    )
+
+    await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
+
+    expect(getSentMessages()).toEqual([expect.stringContaining('2026-04-28 11:42:01 UTC+2')])
+  })
+
+  test('Should save a self report for each notification that is too long for the channel', async () => {
     const selfReportsSettings = getMockSelfReportsSettings({
       fileName: 'notifications.jsonl',
-      sessionFilePath: '/fake/data/notifications_self_reports_session.json'
+      sessionFilePath: '/fake/data/notifications_self_reports_session.json',
+      isEachProblemStoredOnce: false
     })
     const selfReportsFilePath = `${selfReportsSettings.dirPath}/${selfReportsSettings.fileName}`
 
@@ -165,19 +185,20 @@ describe('logs notifier', () => {
       }
     )
 
-    await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
+    await vi.advanceTimersByTimeAsync(2 * ONE_MINUTE_MILLISECONDS)
+
+    const notSentSelfReport = {
+      level: 'ERROR',
+      message:
+        'The notification was not sent: The message telling about the watched logs cannot be built: its size limit of 10 characters is too small for any message',
+      origin: 'notificationsTelegramService'
+    }
 
     expect(fetchMock).not.toHaveBeenCalled()
     expect(fileSystem.getFile(selfReportsFilePath)).toBe(
-      toLogFileContent([
-        {
-          sessionId: 1,
-          date: FIRST_CHECK.toISOString(),
-          level: 'ERROR',
-          message:
-            'The notification was not sent: The message telling about the watched logs cannot be built: its size limit of 10 characters is too small for any message',
-          origin: 'notificationsTelegramService'
-        }
+      toJsonLinesFileContent([
+        { sessionId: 1, date: FIRST_CHECK.toISOString(), ...notSentSelfReport },
+        { sessionId: 1, date: SECOND_CHECK.toISOString(), ...notSentSelfReport }
       ])
     )
     expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(

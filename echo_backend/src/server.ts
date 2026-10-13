@@ -10,12 +10,13 @@ import { registerLogsNotifier } from './initializers/registerLogsNotifier.js'
 import { registerLogsRoutes } from './initializers/registerLogsRoutes.js'
 import { registerSecurity } from './initializers/registerSecurity.js'
 import { loadSettings } from './initializers/settings/loadSettings.js'
-import type { Settings } from './initializers/settings/settings.js'
+import type { SelfReportsSettings, Settings } from './initializers/settings/settings.js'
 import type { EchoServer } from './initializers/types/echoServer.js'
 import { addBasePath } from './initializers/utils/addBasePath.js'
 import { normalizeToEchoError } from './initializers/utils/normalizeToEchoError.js'
 import { removeBasePath } from './initializers/utils/removeBasePath.js'
 import { createLogsRepository } from './modules/logs/infra/logs.repository.js'
+import type { SelfReportRepository } from './modules/selfReports/domain/selfReport.repository.js'
 import { createSelfReportFilesRepository } from './modules/selfReports/infra/selfReportFiles.repository.js'
 import { EchoErrorJsonSchema } from './shared/schemas/errors.schemas.js'
 import { createFilesService, type FilesService } from './shared/services/files.service.js'
@@ -25,7 +26,9 @@ import { createFilesService, type FilesService } from './shared/services/files.s
  *
  * The settings stop here: a module is given its config as it is, and what implements its storage
  * the values it needs, one by one. Whatever reads or writes files is given `filesService`, the one
- * access to the file system. A request is routed the same whether the reverse proxy forwarded it
+ * access to the file system. Each part of the backend that reports is given a self-report
+ * repository of its own, built here when its settings are there (the one of the notifications only
+ * along with the notifications), and the logs are given every one of them to show. A request is routed the same whether the reverse proxy forwarded it
  * with the `basePath` of the settings or without it, and a redirection to a path of the server is
  * sent below `basePath`, where the browser reaches it. The protocol, the host and the address of a
  * request are those its `X-Forwarded-*` headers give when it comes from one of the
@@ -66,7 +69,13 @@ export const buildServer = async (
 
   server.setErrorHandler((error, request, reply) => {
     const echoError = normalizeToEchoError(error)
-    request.log.error({ err: error }, echoError.message)
+
+    if (echoError.statusCode >= 500) {
+      request.log.error({ err: error }, echoError.message)
+    } else {
+      request.log.info({ err: error }, echoError.message)
+    }
+
     reply.status(echoError.statusCode).send(echoError)
   })
 
@@ -76,23 +85,37 @@ export const buildServer = async (
 
   server.addSchema(EchoErrorJsonSchema)
 
-  const parseLogsSelfReportRepository =
-    settings.parseLogsSelfReports &&
-    (await createSelfReportFilesRepository({
+  const createSelfReportRepository = async (
+    selfReportsSettings: SelfReportsSettings | undefined
+  ): Promise<SelfReportRepository | undefined> =>
+    selfReportsSettings &&
+    createSelfReportFilesRepository({
       filesService,
-      selfReportsDirPath: settings.parseLogsSelfReports.dirPath,
-      selfReportFileExtension: settings.parseLogsSelfReports.fileExtension,
-      selfReportFileName: settings.parseLogsSelfReports.fileName,
-      sessionFilePath: settings.parseLogsSelfReports.sessionFilePath,
-      retentionDays: settings.parseLogsSelfReports.retentionDays,
+      selfReportsDirPath: selfReportsSettings.dirPath,
+      selfReportFileName: selfReportsSettings.fileName,
+      sessionFilePath: selfReportsSettings.sessionFilePath,
+      retentionDays: selfReportsSettings.retentionDays,
+      isEachProblemStoredOnce: selfReportsSettings.isEachProblemStoredOnce,
       logger: server.log
-    }))
+    })
+
+  const parseLogsSelfReportRepository = await createSelfReportRepository(
+    settings.parseLogsSelfReports
+  )
+  const notificationsSelfReportRepository = await createSelfReportRepository(
+    settings.notification && settings.notificationsSelfReports
+  )
+
   const logsRepository = createLogsRepository({
     logsDirPath: settings.logs.logsDirPath,
     logFileExtension: settings.logs.logFileExtension,
     logFilesDirName: settings.logs.logFilesDirName,
     filesService,
-    parseLogsSelfReportRepository
+    parseLogsSelfReportRepository,
+    selfReportRepositoriesToShow: [
+      parseLogsSelfReportRepository,
+      notificationsSelfReportRepository
+    ].filter((selfReportRepository) => selfReportRepository !== undefined)
   })
 
   await registerAuthRoutes(server, settings, filesService)
@@ -102,6 +125,7 @@ export const buildServer = async (
 
   await registerLogsNotifier(server, settings, {
     logsRepository,
+    notificationsSelfReportRepository,
     filesService
   })
 

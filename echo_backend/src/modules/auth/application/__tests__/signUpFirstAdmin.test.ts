@@ -19,6 +19,8 @@ const createInMemoryAuthRepository = (): AuthRepository & { users: NewUser[] } =
   }
 }
 
+// The sign up is tested through the server (`auth.routes.test.ts`). Here is what its requests,
+// answered one after the other, never make happen: two sign ups at once, and the storage failing.
 describe('createSignUpFirstAdmin', () => {
   let authRepository: ReturnType<typeof createInMemoryAuthRepository>
 

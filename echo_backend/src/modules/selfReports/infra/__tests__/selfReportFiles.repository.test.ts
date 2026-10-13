@@ -21,7 +21,6 @@ const logger = { error: vi.fn() }
 const filesService = getMockFilesService()
 
 const selfReportsFilesApi = {
-  getAllSelfReportFilesPaths: vi.fn(),
   getSelfReportFilePathFromRoot: vi.fn(),
   getSelfReportLines: vi.fn(),
   saveSelfReportLines: vi.fn()
@@ -35,16 +34,18 @@ const sessionIdApi = {
 const options = {
   filesService,
   selfReportsDirPath: '/self_reports/Echo',
-  selfReportFileExtension: '.jsonl',
   selfReportFileName: 'parseLogs.jsonl',
   sessionFilePath: '/fake/data/parse_logs_self_reports_session.json',
   retentionDays: 10,
+  isEachProblemStoredOnce: true,
   logger
 }
 
-/** Creates the repository of `options`, whose set up the tests of its methods do not make fail. */
-const createRepository = async (): Promise<SelfReportRepository> =>
-  (await createSelfReportFilesRepository(options))!
+/** Creates the repository of `options`, with `overrides` on top, whose set up the tests of its methods do not make fail. */
+const createRepository = async (
+  overrides: Partial<typeof options> = {}
+): Promise<SelfReportRepository> =>
+  (await createSelfReportFilesRepository({ ...options, ...overrides }))!
 
 /** A self report to save, which the repository stores with its session, the 5, unless `overrides` says otherwise. */
 const selfReport = (overrides: Partial<SelfReport> = {}): SelfReport => ({
@@ -103,16 +104,13 @@ afterEach(() => {
 })
 
 // Saving a self report and reading it back are tested through the server (`logs.routes.test.ts`,
-// `logs.notifier.test.ts`). Here is what no request reaches: the retention, the self
-// reports stored after the ones already there, several self-report files, and the storage failing.
+// `logs.notifier.test.ts`). Here is what no request reaches: the retention, the self reports
+// stored after the ones already there, the file that is in no directory, and the storage failing.
 describe('createSelfReportFilesRepository', () => {
   it('Should read and write its files through the files service, where it is told they are', async () => {
     await createSelfReportFilesRepository(options)
 
-    expect(createSelfReportsFilesApi).toHaveBeenCalledExactlyOnceWith(
-      { selfReportsDirPath: '/self_reports/Echo', selfReportFileExtension: '.jsonl' },
-      filesService
-    )
+    expect(createSelfReportsFilesApi).toHaveBeenCalledExactlyOnceWith(filesService)
     expect(createSessionIdFileApi).toHaveBeenCalledExactlyOnceWith(
       '/fake/data/parse_logs_self_reports_session.json',
       filesService
@@ -262,6 +260,36 @@ describe('createSelfReportFilesRepository', () => {
       ])
     })
 
+    it('Should store again a problem whose self report is older than retentionDays, and leave the old one out', async () => {
+      const selfReportRepository = await createRepository()
+      const recentLine = storedLine({ date: daysAgo(10), message: 'kept line' })
+      selfReportsFilesApi.getSelfReportLines.mockResolvedValueOnce([
+        storedLine({ date: daysAgo(11) }),
+        recentLine
+      ])
+
+      await selfReportRepository.saveSelfReports([selfReport()])
+
+      expect(lastSavedLines()).toEqual([
+        recentLine,
+        storedLine({ sessionId: 5, date: '2026-10-01T08:00:00.000Z' })
+      ])
+    })
+
+    it('Should store a problem that is already stored when it does not store each problem once', async () => {
+      const selfReportRepository = await createRepository({ isEachProblemStoredOnce: false })
+      const storedSameContentLine = storedLine()
+      selfReportsFilesApi.getSelfReportLines.mockResolvedValueOnce([storedSameContentLine])
+
+      await selfReportRepository.saveSelfReports([selfReport(), selfReport()])
+
+      expect(lastSavedLines()).toEqual([
+        storedSameContentLine,
+        storedLine({ sessionId: 5, date: '2026-10-01T08:00:00.000Z' }),
+        storedLine({ sessionId: 5, date: '2026-10-01T08:00:00.000Z' })
+      ])
+    })
+
     it('Should not write its file when every self report is already stored', async () => {
       const selfReportRepository = await createRepository()
       selfReportsFilesApi.getSelfReportLines.mockResolvedValueOnce([storedLine()])
@@ -303,38 +331,7 @@ describe('createSelfReportFilesRepository', () => {
     )
   })
 
-  describe('getAllSelfReports', () => {
-    it('Should read the self reports of every self-report file, each stored at its file', async () => {
-      const otherFilePath = '/self_reports/Echo/notifications.jsonl'
-      const selfReportRepository = await createRepository()
-      selfReportsFilesApi.getAllSelfReportFilesPaths.mockResolvedValueOnce([
-        SELF_REPORTS_FILE_PATH,
-        otherFilePath
-      ])
-      selfReportsFilesApi.getSelfReportLines
-        .mockResolvedValueOnce([storedLine({ message: 'bad line' }), 'not a self report'])
-        .mockResolvedValueOnce([storedLine({ sessionId: 2, message: 'not notified' })])
-
-      const selfReports = await selfReportRepository.getAllSelfReports()
-
-      expect(selfReports).toMatchObject([
-        {
-          location: SELF_REPORTS_FILE_PATH,
-          locationName: 'parseLogs',
-          groupName: 'self_reports_Echo',
-          sessionId: 1,
-          message: 'bad line'
-        },
-        {
-          location: otherFilePath,
-          locationName: 'notifications',
-          groupName: 'self_reports_Echo',
-          sessionId: 2,
-          message: 'not notified'
-        }
-      ])
-    })
-
+  describe('getSelfReports', () => {
     it.each([
       { reason: 'is in no directory', filePathFromRoot: 'parseLogs.jsonl' },
       { reason: 'has no path from the root of the file system', filePathFromRoot: undefined }
@@ -343,40 +340,22 @@ describe('createSelfReportFilesRepository', () => {
       async ({ filePathFromRoot }) => {
         const selfReportRepository = await createRepository()
         selfReportsFilesApi.getSelfReportFilePathFromRoot.mockReturnValue(filePathFromRoot)
-        selfReportsFilesApi.getAllSelfReportFilesPaths.mockResolvedValueOnce([
-          SELF_REPORTS_FILE_PATH
-        ])
         selfReportsFilesApi.getSelfReportLines.mockResolvedValueOnce([storedLine()])
 
-        const [storedSelfReport] = await selfReportRepository.getAllSelfReports()
+        const [storedSelfReport] = await selfReportRepository.getSelfReports()
 
         expect(storedSelfReport.groupName).toBeUndefined()
       }
     )
 
-    it.each([
-      [
-        'the self-report files cannot be listed',
-        (): unknown =>
-          selfReportsFilesApi.getAllSelfReportFilesPaths.mockRejectedValueOnce(new Error('EACCES'))
-      ],
-      [
-        'a self-report file cannot be read',
-        (): void => {
-          selfReportsFilesApi.getAllSelfReportFilesPaths.mockResolvedValueOnce([
-            SELF_REPORTS_FILE_PATH
-          ])
-          selfReportsFilesApi.getSelfReportLines.mockRejectedValueOnce(new Error('EACCES'))
-        }
-      ]
-    ])('Should log the error and give no self report when %s', async (_, failRead) => {
+    it('Should log the error and give no self report when its file cannot be read', async () => {
       const selfReportRepository = await createRepository()
-      failRead()
+      selfReportsFilesApi.getSelfReportLines.mockRejectedValueOnce(new Error('EACCES'))
 
-      await expect(selfReportRepository.getAllSelfReports()).resolves.toEqual([])
+      await expect(selfReportRepository.getSelfReports()).resolves.toEqual([])
 
       expect(logger.error).toHaveBeenCalledWith(
-        { err: expect.any(Error) },
+        { err: expect.any(Error), selfReportsFilePath: SELF_REPORTS_FILE_PATH },
         'Failed to read self reports'
       )
     })

@@ -5,11 +5,9 @@ import type { EchoServer } from '../initializers/types/echoServer.js'
 import { buildServer } from '../server.js'
 import { createFilesService } from '../shared/services/files.service.js'
 
+import { IN_MEMORY_DATABASE_PATH } from './mocks/inMemoryDatabase.js'
 import { createInMemoryFileSystem, type InMemoryFileSystem } from './mocks/inMemoryFileSystem.js'
 import { getMockAuthSettings, getMockSettings } from './mocks/mockSettings.js'
-
-/** Where SQLite keeps a database in memory, in place of the path of a file. */
-const IN_MEMORY_DATABASE_PATH = ':memory:'
 
 /** What `buildTestServer` gives. */
 export interface TestServer {

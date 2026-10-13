@@ -227,16 +227,16 @@ describe('loadSettings', () => {
       parseLogsSelfReports: {
         retentionDays: 30,
         dirPath: '/self_reports/Shop Prod',
-        fileExtension: '.jsonl',
         fileName: 'parseLogs.jsonl',
-        sessionFilePath: path.join(DATA_DIR_PATH, 'parse_logs_self_reports_session.json')
+        sessionFilePath: path.join(DATA_DIR_PATH, 'parse_logs_self_reports_session.json'),
+        isEachProblemStoredOnce: true
       },
       notificationsSelfReports: {
         retentionDays: 30,
         dirPath: '/self_reports/Shop Prod',
-        fileExtension: '.jsonl',
         fileName: 'notifications.jsonl',
-        sessionFilePath: path.join(DATA_DIR_PATH, 'notifications_self_reports_session.json')
+        sessionFilePath: path.join(DATA_DIR_PATH, 'notifications_self_reports_session.json'),
+        isEachProblemStoredOnce: false
       },
       notification: {
         telegramChatId: '123456789',

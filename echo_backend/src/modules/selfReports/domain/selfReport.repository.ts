@@ -19,7 +19,7 @@ import type { SelfReport, SelfReportsSession } from './selfReport.js'
  *   }
  * ])
  *
- * const selfReports = await selfReportRepository.getAllSelfReports()
+ * const selfReports = await selfReportRepository.getSelfReports()
  * const { sessionId, locationName } = selfReports[0]
  * ```
  */
@@ -28,17 +28,16 @@ export interface SelfReportRepository {
    * Stores `selfReports`, after the ones already stored, as reported during the session of the
    * repository.
    *
-   * A self report with the `level`, the `message` and the `origin` of one already stored, or of one
-   * before it in `selfReports`, is left out: a problem is stored once, as it was first reported.
-   * Never throws: a diagnostic that cannot be stored must not break what was being diagnosed.
+   * Whether a problem that is already stored is stored again is up to the storage. Never throws: a
+   * diagnostic that cannot be stored must not break what was being diagnosed.
    */
   saveSelfReports: (selfReports: SelfReport[]) => Promise<void>
   /**
-   * Reads the self reports of the whole storage, those the other parts of the backend stored and
-   * those of the sessions before included, unordered, each with the session it was reported during
-   * and where it is stored.
+   * Reads the self reports of the repository, those of the sessions before included, in the order
+   * they were stored, each with the session it was reported during and where it is stored. The
+   * self reports of the other parts of the backend are in their own repository.
    *
    * Never throws: it gives none when the storage cannot be read.
    */
-  getAllSelfReports: () => Promise<Array<SelfReport & SelfReportsSession>>
+  getSelfReports: () => Promise<Array<SelfReport & SelfReportsSession>>
 }

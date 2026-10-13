@@ -2,10 +2,8 @@ import type { Log } from '@echo/utilities'
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest'
 
 import { buildTestServer } from '../../../../test/buildTestServer.js'
-import {
-  getMockAuthSettings,
-  getMockSelfReportsSettings
-} from '../../../../test/mocks/mockSettings.js'
+import { getMockSelfReportsSettings } from '../../../../test/mocks/mockSettings.js'
+import { toJsonLinesFileContent } from '../../../../test/utils/toJsonLinesFileContent.js'
 
 /** The instant the tests run at, which the lines that hold no log are reported at. */
 const NOW = new Date('2026-04-28T10:00:00.000Z')
@@ -13,12 +11,9 @@ const NOW = new Date('2026-04-28T10:00:00.000Z')
 const sendInvoicesLogFilePath = '/logs/server/billing/logs/send_invoices.jsonl'
 const pingLogFilePath = '/logs/ping.jsonl'
 
-const toLogFileContent = (lines: object[]): string =>
-  lines.map((line) => `${JSON.stringify(line)}\n`).join('')
-
 /** Two log files: one of a script of the `billing` group, over two days, and one without group. */
 const logFiles = {
-  [sendInvoicesLogFilePath]: toLogFileContent([
+  [sendInvoicesLogFilePath]: toJsonLinesFileContent([
     {
       jobId: 11,
       timestamp: '2026-04-27T09:40:00.000Z',
@@ -39,7 +34,7 @@ const logFiles = {
       message: 'Invoices sent.'
     }
   ]),
-  [pingLogFilePath]: toLogFileContent([
+  [pingLogFilePath]: toJsonLinesFileContent([
     {
       jobId: 3,
       timestamp: '2026-04-28T07:00:00.000Z',
@@ -183,10 +178,7 @@ describe('GET /logs', () => {
   })
 
   test('Should only answer a logged in user when the server has authentication', async () => {
-    const { server, settings } = await buildTestServer({
-      settings: { auth: getMockAuthSettings({ usersDbFilePath: ':memory:' }) },
-      files: logFiles
-    })
+    const { server, settings } = await buildTestServer({ files: logFiles })
     const query = { fromDate: '2026-04-26T00:00:00.000Z' }
 
     const anonymousResponse = await server.inject({ method: 'GET', url: '/api/logs', query })
@@ -220,7 +212,7 @@ describe('GET /logs', () => {
     const secondResponse = await server.inject({ method: 'GET', url: '/api/logs', query })
 
     expect(fileSystem.getFile(selfReportsFilePath)).toBe(
-      toLogFileContent([
+      toJsonLinesFileContent([
         {
           sessionId: 1,
           date: NOW.toISOString(),

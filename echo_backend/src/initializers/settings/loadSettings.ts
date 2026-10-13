@@ -119,8 +119,7 @@ export const loadSettings = async (
         dirPath: createSelfReportsDirPath(
           requireEnv(processEnv, 'SELF_REPORTS_DIR_PATH'),
           config.SERVER_NAME
-        ),
-        fileExtension: LOG_FILE_EXTENSION
+        )
       }
     : undefined
 
@@ -170,12 +169,14 @@ export const loadSettings = async (
     parseLogsSelfReports: sharedSelfReportsSettings && {
       ...sharedSelfReportsSettings,
       fileName: `parseLogs${LOG_FILE_EXTENSION}`,
-      sessionFilePath: path.join(DATA_DIR_PATH, 'parse_logs_self_reports_session.json')
+      sessionFilePath: path.join(DATA_DIR_PATH, 'parse_logs_self_reports_session.json'),
+      isEachProblemStoredOnce: true
     },
     notificationsSelfReports: sharedSelfReportsSettings && {
       ...sharedSelfReportsSettings,
       fileName: `notifications${LOG_FILE_EXTENSION}`,
-      sessionFilePath: path.join(DATA_DIR_PATH, 'notifications_self_reports_session.json')
+      sessionFilePath: path.join(DATA_DIR_PATH, 'notifications_self_reports_session.json'),
+      isEachProblemStoredOnce: false
     },
     notification
   }

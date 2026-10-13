@@ -1,13 +1,11 @@
 import type { LightMyRequestResponse } from 'fastify'
 import { describe, expect, test } from 'vitest'
 
-import { createCookieSerializeOptions } from '../../../../initializers/settings/utils/createCookieSerializeOptions.js'
 import type { EchoServer } from '../../../../initializers/types/echoServer.js'
 import { buildTestServer } from '../../../../test/buildTestServer.js'
+import { IN_MEMORY_DATABASE_PATH } from '../../../../test/mocks/inMemoryDatabase.js'
 import { getMockAuthConfig } from '../../../../test/mocks/mockConfigs.js'
 import { getMockAuthSettings, getMockServerSettings } from '../../../../test/mocks/mockSettings.js'
-
-const IN_MEMORY_DATABASE_PATH = ':memory:'
 
 const credentials = { username: 'admin', password: 'secret' }
 
@@ -115,7 +113,7 @@ describe('auth routes', () => {
         settings: {
           auth: getMockAuthSettings({
             config: getMockAuthConfig({
-              cookieSerializeOptions: createCookieSerializeOptions('/echo', 24 * 60 * 60)
+              cookieSerializeOptions: { path: '/echo', secure: 'auto', httpOnly: true }
             }),
             usersDbFilePath: IN_MEMORY_DATABASE_PATH
           })
