@@ -1,9 +1,6 @@
 import type { Log, LogLevel } from '@echo/utilities'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../../../../application/getFilteredLogs.js')
-
-import { getFilteredLogs as actualGetFilteredLogs } from '../../../../application/getFilteredLogs.js'
 import { checkProblemLogsAndNotify, type ProblemLogsCheck } from '../checkProblemLogsAndNotify.js'
 
 const log: Log = {
@@ -17,14 +14,12 @@ const log: Log = {
   origin: '/server/worker.sh:12'
 }
 
-const getFilteredLogs = vi.mocked(actualGetFilteredLogs)
-const logsRepository = { getAllLogs: vi.fn() }
+const markAsNotified = vi.fn()
+const unNotifiedLogsRepository = { getUnNotifiedLogs: vi.fn() }
 const notificationsService = { getMessageSizeLimit: vi.fn(), notify: vi.fn() }
-const checkDateRepository = { getLastCheckDate: vi.fn(), saveLastCheckDate: vi.fn() }
 const logsNotifierSelfReportRepository = { saveSelfReports: vi.fn(), getAllSelfReports: vi.fn() }
 const WATCHED = ['ERROR', 'WARNING'] as LogLevel[]
-const PREVIOUS_CHECK = { lastCheckDate: new Date('2026-01-01T00:00:00.000Z') }
-/** When the check being tested runs: it looks at the logs from `PREVIOUS_CHECK` up to it. */
+/** When the check being tested runs. */
 const CHECK_DATE = new Date('2026-01-01T00:30:00.000Z')
 
 const problemLogsCheck: ProblemLogsCheck = {
@@ -34,13 +29,16 @@ const problemLogsCheck: ProblemLogsCheck = {
     timezone: 'UTC+2',
     serverName: 'test-device'
   },
-  logsRepository,
+  unNotifiedLogsRepository,
   notificationsService,
-  checkDateRepository,
   logsNotifierSelfReportRepository
 }
 
 const check = (): Promise<void> => checkProblemLogsAndNotify(problemLogsCheck)
+
+const mockUnNotifiedLogs = (logs: Log[]): void => {
+  unNotifiedLogsRepository.getUnNotifiedLogs.mockResolvedValueOnce({ logs, markAsNotified })
+}
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -54,42 +52,35 @@ afterEach(() => {
 })
 
 describe('checkProblemLogsAndNotify', () => {
-  it('Should save the date and skip checking/notifying on the first check (no date stored)', async () => {
-    checkDateRepository.getLastCheckDate.mockResolvedValueOnce(undefined)
+  it('Should notify the unNotified logs of a watched level, from the newest to the oldest', async () => {
+    const olderWarningLog: Log = {
+      ...log,
+      id: 'older-warning-log-id',
+      date: '2026-01-01T09:00:00.000Z',
+      level: 'WARNING',
+      message: 'Something is slow'
+    }
+    const unwatchedInfoLog: Log = {
+      ...log,
+      id: 'info-log-id',
+      level: 'INFO',
+      message: 'Something started'
+    }
+    mockUnNotifiedLogs([olderWarningLog, unwatchedInfoLog, log])
 
     await check()
 
-    expect(getFilteredLogs).not.toHaveBeenCalled()
-    expect(notificationsService.notify).not.toHaveBeenCalled()
-    expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledExactlyOnceWith({
-      lastCheckDate: CHECK_DATE
-    })
-  })
-
-  it('Should notify the problem logs logged since the previous check', async () => {
-    checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
-    getFilteredLogs.mockResolvedValueOnce([log])
-
-    await check()
-
-    expect(getFilteredLogs).toHaveBeenCalledWith(logsRepository, {
-      fromDate: PREVIOUS_CHECK.lastCheckDate,
-      toDate: CHECK_DATE,
-      levels: WATCHED,
-      searchFilters: []
-    })
     expect(notificationsService.notify).toHaveBeenCalledWith(
-      'Logs from device test-device:\n\n\n[1] [2026-01-01 12:00:00 UTC+2] [ERROR] - worker > Something broke'
+      'Logs from device test-device:\n\n\n' +
+        '[1] [2026-01-01 12:00:00 UTC+2] [ERROR] - worker > Something broke\n\n' +
+        '[1] [2026-01-01 11:00:00 UTC+2] [WARNING] - worker > Something is slow'
     )
     expect(logsNotifierSelfReportRepository.saveSelfReports).not.toHaveBeenCalled()
-    expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledExactlyOnceWith({
-      lastCheckDate: CHECK_DATE
-    })
+    expect(markAsNotified).toHaveBeenCalledOnce()
   })
 
   it('Should notify a message within the size limit of the notifier', async () => {
-    checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
-    getFilteredLogs.mockResolvedValueOnce([log, log])
+    mockUnNotifiedLogs([log, log])
     notificationsService.getMessageSizeLimit.mockReturnValue(60)
 
     await check()
@@ -100,9 +91,8 @@ describe('checkProblemLogsAndNotify', () => {
     expect(logsNotifierSelfReportRepository.saveSelfReports).not.toHaveBeenCalled()
   })
 
-  it('Should notify nothing, save a warning self report and still save the date when the size limit is too small for any message', async () => {
-    checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
-    getFilteredLogs.mockResolvedValueOnce([log])
+  it('Should notify nothing, save a warning self report and still mark the logs as notified when the size limit is too small for any message', async () => {
+    mockUnNotifiedLogs([log])
     notificationsService.getMessageSizeLimit.mockReturnValue(10)
 
     await check()
@@ -117,14 +107,11 @@ describe('checkProblemLogsAndNotify', () => {
         origin: 'checkProblemLogsAndNotify'
       }
     ])
-    expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledExactlyOnceWith({
-      lastCheckDate: CHECK_DATE
-    })
+    expect(markAsNotified).toHaveBeenCalledOnce()
   })
 
-  it('Should notify nothing and still save the date when the size limit is too small and the self reports are disabled', async () => {
-    checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
-    getFilteredLogs.mockResolvedValueOnce([log])
+  it('Should notify nothing and still mark the logs as notified when the size limit is too small and the self reports are disabled', async () => {
+    mockUnNotifiedLogs([log])
     notificationsService.getMessageSizeLimit.mockReturnValue(10)
 
     await checkProblemLogsAndNotify({
@@ -133,30 +120,24 @@ describe('checkProblemLogsAndNotify', () => {
     })
 
     expect(notificationsService.notify).not.toHaveBeenCalled()
-    expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledExactlyOnceWith({
-      lastCheckDate: CHECK_DATE
-    })
+    expect(markAsNotified).toHaveBeenCalledOnce()
   })
 
-  it('Should not notify when no problem logs are found, and still save the date', async () => {
-    checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
-    getFilteredLogs.mockResolvedValueOnce([])
+  it('Should not notify when no problem logs are found, and still mark the logs as notified', async () => {
+    mockUnNotifiedLogs([])
 
     await check()
 
     expect(notificationsService.notify).not.toHaveBeenCalled()
-    expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledExactlyOnceWith({
-      lastCheckDate: CHECK_DATE
-    })
+    expect(markAsNotified).toHaveBeenCalledOnce()
   })
 
-  it('Should not save the date when notifying fails', async () => {
-    checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
-    getFilteredLogs.mockResolvedValueOnce([log])
+  it('Should not mark the logs as notified when notifying fails', async () => {
+    mockUnNotifiedLogs([log])
     notificationsService.notify.mockRejectedValueOnce(new Error('Telegram down'))
 
     await expect(check()).rejects.toThrow('Telegram down')
 
-    expect(checkDateRepository.saveLastCheckDate).not.toHaveBeenCalled()
+    expect(markAsNotified).not.toHaveBeenCalled()
   })
 })

@@ -184,11 +184,8 @@ const config: IConfiguration = {
       name: 'backend-submodule-not-to-parent-internals',
       severity: 'error',
       comment:
-        'A submodule may only import its parent through its domain/ and infra/, as it would another module, with one exception: its application/ may build on the use cases of the application/ of its parent (and on nothing more of it, see backend-application-not-to-outer-layers).',
-      from: {
-        path: `${MODULES}/([^/]+)/modules/[^/]+/`,
-        pathNot: [TESTS, `${MODULES}/[^/]+/modules/[^/]+/application/`]
-      },
+        'A submodule may only import its parent through its domain/ and infra/, as it would another module: the application/ and the presentation/ of its parent stay its own.',
+      from: { path: `${MODULES}/([^/]+)/modules/[^/]+/`, pathNot: TESTS },
       to: {
         path: `${MODULES}/$1/(?!modules/)`,
         pathNot: `${MODULES}/[^/]+/(domain|infra)/`

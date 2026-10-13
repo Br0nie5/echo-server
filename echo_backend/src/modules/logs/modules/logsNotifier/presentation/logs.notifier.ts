@@ -5,16 +5,14 @@ import cron from 'node-cron'
 import type { LogsNotifierConfig } from '../../../../../shared/config/logsNotifierConfig.js'
 import type { NotificationsService } from '../../../../notifications/domain/notifications.service.js'
 import type { SelfReportRepository } from '../../../../selfReports/domain/selfReport.repository.js'
-import type { LogsRepository } from '../../../domain/logs.repository.js'
 import { checkProblemLogsAndNotify } from '../application/checkProblemLogsAndNotify.js'
-import type { CheckDateRepository } from '../domain/checkDate.repository.js'
+import type { UnNotifiedLogsRepository } from '../domain/unNotifiedLogs.repository.js'
 
 /** Options of the `logsNotifier` plugin. */
 export interface LogsNotifierPluginOptions extends FastifyPluginOptions {
   logsNotifierConfig: LogsNotifierConfig
-  logsRepository: LogsRepository
+  unNotifiedLogsRepository: UnNotifiedLogsRepository
   notificationsService: NotificationsService
-  checkDateRepository: CheckDateRepository
   /**
    * Where a check reports the problem logs it could not notify. Missing when the self reports are
    * disabled.
@@ -26,9 +24,8 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
   fastify,
   {
     logsNotifierConfig,
-    logsRepository,
+    unNotifiedLogsRepository,
     notificationsService,
-    checkDateRepository,
     logsNotifierSelfReportRepository
   }
 ) => {
@@ -40,9 +37,8 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
       try {
         await checkProblemLogsAndNotify({
           logsNotifierConfig,
-          logsRepository,
+          unNotifiedLogsRepository,
           notificationsService,
-          checkDateRepository,
           logsNotifierSelfReportRepository
         })
       } catch (error) {
@@ -62,11 +58,11 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
  * stopping when the server closes.
  *
  * A failing run is logged, not thrown, so it does not stop the schedule. A run that is due while
- * the previous one is still going is skipped: two runs at once would read the same last check date
- * and notify the same logs twice, while the next run notifies what the skipped one would have.
+ * the previous one is still going is skipped: two runs at once would read the same unnotified logs
+ * and notify them twice, while the next run notifies what the skipped one would have.
  *
  * ```ts
- * await server.register(logsNotifier, { logsNotifierConfig, logsRepository, ... })
+ * await server.register(logsNotifier, { logsNotifierConfig, unNotifiedLogsRepository, ... })
  * ```
  */
 export const logsNotifier = fastifyPlugin(scheduleLogsNotifier)

@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-import type { LastCheckDate } from '../../domain/lastCheckDate.js'
-
 /** Validates the JSON of the last-check file. */
 export const LastCheckDateDtoSchema = z.object({
   lastCheck: z.string()
@@ -11,14 +9,14 @@ export const LastCheckDateDtoSchema = z.object({
 type LastCheckDateDto = z.infer<typeof LastCheckDateDtoSchema>
 
 /**
- * Converts the content of the last-check file to the `LastCheckDate` it holds.
+ * Converts the content of the last-check file to the date of the last check it holds.
  *
  * Returns `undefined` when the content holds none: it is not JSON, does not have the shape of a
  * `LastCheckDateDto`, or its `lastCheck` is not a date.
  */
 export const convertRawLastCheckDateToLastCheckDate = (
   rawLastCheckDate: string
-): LastCheckDate | undefined => {
+): Date | undefined => {
   let json: unknown
 
   try {
@@ -39,13 +37,11 @@ export const convertRawLastCheckDateToLastCheckDate = (
     return
   }
 
-  return { lastCheckDate }
+  return lastCheckDate
 }
 
-/** Converts a `LastCheckDate` to the content the last-check file stores it as. */
-export const convertLastCheckDateToRawLastCheckDate = ({
-  lastCheckDate
-}: LastCheckDate): string => {
+/** Converts the date of the last check to the content the last-check file stores it as. */
+export const convertLastCheckDateToRawLastCheckDate = (lastCheckDate: Date): string => {
   const lastCheckDateDto: LastCheckDateDto = { lastCheck: lastCheckDate.toISOString() }
 
   return JSON.stringify(lastCheckDateDto, null, 2)

@@ -104,7 +104,7 @@ A **submodule** lives in `modules/<module>/modules/<submodule>/` and is layered 
 
 ### Between modules
 
-A module or a submodule may import the `domain/` and the `infra/` of any other one, and only its own `infra/` may import the `infra/` of another. Its `application/` and its `presentation/` stay its own, with one exception: the `application/` of a submodule may build on the `application/` of its parent.
+A module or a submodule may import the `domain/` and the `infra/` of any other one, and only its own `infra/` may import the `infra/` of another. Its `application/` and its `presentation/` stay its own.
 
 ### The composition root
 
@@ -155,18 +155,18 @@ The logs are only read from `LOGS_DIR_PATH`. The self reports are not stored amo
 
 `modules/logs/modules/logsNotifier/` is the optional cron notifying the problem logs.
 
-| Folder          | Content                                                                                                                                                                   |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `domain/`       | `LastCheckDate`, when the logs were last checked, and `CheckDateRepository`, the contract it is stored through.                                                           |
-| `application/`  | `checkProblemLogsAndNotify`, one check. `utils/buildNotifierMessage.ts` writes the message, never longer than the size limit it is given.                                 |
-| `infra/`        | `CheckDateApi` reads and writes the last-check file, `checkDateFile.repository.ts` implements the contract on top of it.                                                  |
-| `presentation/` | `logs.notifier.ts`, the Fastify plugin running the check on the schedule of the config. A cron is the entry point of the submodule, the way a route is the one of `logs`. |
+| Folder          | Content                                                                                                                                                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `domain/`       | `UnNotifiedLogsRepository`, the contract giving the logs that were not notified yet, with the way to mark them as notified.                                                                                                          |
+| `application/`  | `checkProblemLogsAndNotify`, one check: it keeps the unnotified logs of a watched level, notifies them and marks them as notified. `utils/buildNotifierMessage.ts` writes the message, never longer than the size limit it is given. |
+| `infra/`        | `unNotifiedLogsCheckDate.repository.ts` implements the contract on top of the `LogsRepository` of `logs` and of the date of the last check, which `CheckDateApi` reads from and writes to the last-check file.                       |
+| `presentation/` | `logs.notifier.ts`, the Fastify plugin running the check on the schedule of the config. A cron is the entry point of the submodule, the way a route is the one of `logs`.                                                            |
 
-A check builds on `getFilteredLogs`, the use case of its parent:
+The use case knows nothing of how the notified logs are remembered: that it is a date is a choice of the implementation.
 
-- It looks at the logs from the date of the previous check to its own, the latter left out. A log is therefore in the period of one check only, and is notified once, even when it is written while the logs are being read.
-- The very first check only saves its date, so the logs that predate it are never notified.
-- A check whose notification fails does not save its date: the next one sends the same logs again.
+- The repository gives the logs from the date of the previous check to the one of its read, the latter left out. A log is therefore in the period of one check only, and is notified once, even when it is written while the logs are being read.
+- While no check date is saved, at the very first check or when the last-check file cannot be read, the repository gives every log: the first check notifies every problem log there is.
+- The date is saved when the use case marks the logs as notified, which it does not do when the notification fails: the next check sends the same logs again.
 - A run that is due while the previous one is still going is skipped.
 - When the self reports are included in the logs, they are notified like any other log when their level is watched. A line that holds no valid log is reported each time the logs are read, but stored once, with the date it was first read at: it is notified once too.
 - When the size limit of the channel is too small for any message, nothing is sent, and the check reports it as a warning to a `SelfReportRepository` of its own, when the self reports are enabled.
@@ -361,7 +361,7 @@ The other rules know a file by its folder, hence these two. A rule is about a de
 | `backend-domain-is-independent`, `backend-application-not-to-outer-layers`, `backend-infra-not-to-upper-layers`, `backend-presentation-not-to-infra` | A backend import other than `presentation → application → domain ← infra`, within a module and across modules.                                                                                   |
 | `backend-domain-and-application-not-to-node`, `backend-domain-and-application-not-to-fastify`                                                        | A backend `domain/` or `application/` importing a built-in module of Node.js, Fastify or one of its plugins.                                                                                     |
 | `backend-modules-isolated`, `backend-parent-not-to-submodule-internals`, `backend-submodules-isolated`                                               | A backend module or submodule importing anything but the `domain/` and the `infra/` of another one.                                                                                              |
-| `backend-submodule-not-to-parent-internals`                                                                                                          | A submodule importing its parent, except its `domain/` and `infra/`, and its `application/` from the `application/` of the submodule.                                                            |
+| `backend-submodule-not-to-parent-internals`                                                                                                          | A submodule importing its parent, except its `domain/` and `infra/`.                                                                                                                             |
 | `frontend-domain-is-independent`, `frontend-infra-only-to-domain`, `frontend-application-not-to-presentation`, `frontend-presentation-not-to-infra`  | Within a frontend module: `domain/` importing another layer, `infra/` importing `application/` or `presentation/`, `application/` importing `presentation/`, `presentation/` importing `infra/`. |
 | `frontend-domain-not-to-packages`, `frontend-ui-packages-only-in-presentation`                                                                       | A frontend `domain/` importing a package, and a layer other than `presentation/` importing MUI or React Router.                                                                                  |
 | `frontend-modules-isolated`                                                                                                                          | A frontend module importing another module.                                                                                                                                                      |

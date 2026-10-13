@@ -1,9 +1,9 @@
+import { filterLogByLevels } from '@echo/utilities'
+
 import type { LogsNotifierConfig } from '../../../../../shared/config/logsNotifierConfig.js'
 import type { NotificationsService } from '../../../../notifications/domain/notifications.service.js'
 import type { SelfReportRepository } from '../../../../selfReports/domain/selfReport.repository.js'
-import { getFilteredLogs } from '../../../application/getFilteredLogs.js'
-import type { LogsRepository } from '../../../domain/logs.repository.js'
-import type { CheckDateRepository } from '../domain/checkDate.repository.js'
+import type { UnNotifiedLogsRepository } from '../domain/unNotifiedLogs.repository.js'
 
 import { buildNotifierMessage } from './utils/buildNotifierMessage.js'
 
@@ -14,9 +14,8 @@ export interface ProblemLogsCheck {
    * from and the zone their dates are shown in.
    */
   logsNotifierConfig: LogsNotifierConfig
-  logsRepository: LogsRepository
+  unNotifiedLogsRepository: UnNotifiedLogsRepository
   notificationsService: NotificationsService
-  checkDateRepository: CheckDateRepository
   /**
    * Where the check reports the problem logs it could not notify. Missing when the self reports
    * are disabled.
@@ -25,61 +24,45 @@ export interface ProblemLogsCheck {
 }
 
 /**
- * Notifies the problem logs logged since the previous check, then saves the date of this one.
+ * Notifies the problem logs that were not notified yet, then marks them as notified.
  *
- * A check looks at the logs logged from the date of the previous check to its own, the latter left
- * out: a log is in the period of one check only, so it is notified once, even when it is written
- * while the logs are being read. The logs are looked up in `logsRepository`, with
- * `getFilteredLogs`, a problem log being one whose level is among the `watchedLogsLevels` of
- * `logsNotifierConfig`.
+ * The logs are those `unNotifiedLogsRepository` gives, a problem log being one whose level is
+ * among the `watchedLogsLevels` of `logsNotifierConfig`. Every log it gives is marked as notified,
+ * the ones that are no problem too, so a check never looks at a log twice.
  *
- * When the self reports are among the logs of `logsRepository`, they are notified when their level
- * is watched. A stored entry that holds no valid log is reported each time the logs are read, but
- * stored once, with the date it was first read at: it is notified once too, by the check that
- * follows the one that found it.
+ * The notification is one message telling about the problem logs, from the newest to the oldest
+ * (see {@link buildNotifierMessage}), with the `serverName` and the `timezone` of
+ * `logsNotifierConfig`, built for the size limit of `notificationsService`. Nothing is sent when
+ * there is no problem log, nor when the size limit is too small for any message: a warning is then
+ * saved to `logsNotifierSelfReportRepository`, when there is one, and the logs are marked as
+ * notified all the same, since notifying them again would fail the same way.
  *
- * The notification is one message telling about the logs (see {@link buildNotifierMessage}), with
- * the `serverName` and the `timezone` of `logsNotifierConfig`, built for the size limit of
- * `notificationsService`. Nothing is sent when there is no problem log, nor when the size limit is
- * too small for any message: a warning is then saved to `logsNotifierSelfReportRepository`, when
- * there is one, and the date of the check is saved all the same, since notifying the same logs
- * again would fail the same way.
- *
- * The very first check only saves its date, so the logs that predate it are not notified. The date
- * is not saved when notifying throws, so the same logs are notified again by the next check.
+ * The logs are not marked as notified when notifying throws, so the next check notifies them
+ * again.
  *
  * ```ts
  * await checkProblemLogsAndNotify({
  *   logsNotifierConfig,
- *   logsRepository,
+ *   unNotifiedLogsRepository,
  *   notificationsService,
- *   checkDateRepository,
  *   logsNotifierSelfReportRepository
  * })
  * ```
  */
 export const checkProblemLogsAndNotify = async ({
   logsNotifierConfig: { watchedLogsLevels, serverName, timezone },
-  logsRepository,
+  unNotifiedLogsRepository,
   notificationsService,
-  checkDateRepository,
   logsNotifierSelfReportRepository
 }: ProblemLogsCheck): Promise<void> => {
-  const previousCheck = await checkDateRepository.getLastCheckDate()
+  const { logs, markAsNotified } = await unNotifiedLogsRepository.getUnNotifiedLogs()
 
-  const newCheckDate = new Date()
-
-  if (previousCheck === undefined) {
-    await checkDateRepository.saveLastCheckDate({ lastCheckDate: newCheckDate })
-    return
-  }
-
-  const problemLogs = await getFilteredLogs(logsRepository, {
-    fromDate: previousCheck.lastCheckDate,
-    toDate: newCheckDate,
-    levels: watchedLogsLevels,
-    searchFilters: []
-  })
+  const problemLogs = logs
+    .filter((log) => filterLogByLevels(log, watchedLogsLevels))
+    .sort(
+      (firstLog, secondLog) =>
+        new Date(secondLog.date).getTime() - new Date(firstLog.date).getTime()
+    )
 
   if (problemLogs.length > 0) {
     const messageSizeLimit = notificationsService.getMessageSizeLimit()
@@ -90,7 +73,7 @@ export const checkProblemLogsAndNotify = async ({
     } else if (logsNotifierSelfReportRepository !== undefined) {
       await logsNotifierSelfReportRepository.saveSelfReports([
         {
-          date: newCheckDate,
+          date: new Date(),
           message:
             `The problem logs were not notified: the notifier takes messages of ` +
             `${messageSizeLimit} characters at most, which is not enough for any message`,
@@ -101,5 +84,5 @@ export const checkProblemLogsAndNotify = async ({
     }
   }
 
-  await checkDateRepository.saveLastCheckDate({ lastCheckDate: newCheckDate })
+  await markAsNotified()
 }

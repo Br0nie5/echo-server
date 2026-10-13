@@ -1,6 +1,6 @@
 import type { LogsRepository } from '../modules/logs/domain/logs.repository.js'
 import { createCheckDateFileApi } from '../modules/logs/modules/logsNotifier/infra/checkDateFile.api.js'
-import { createCheckDateFileRepository } from '../modules/logs/modules/logsNotifier/infra/checkDateFile.repository.js'
+import { createUnNotifiedLogsCheckDateRepository } from '../modules/logs/modules/logsNotifier/infra/unNotifiedLogsCheckDate.repository.js'
 import { logsNotifier } from '../modules/logs/modules/logsNotifier/presentation/logs.notifier.js'
 import { createNotificationsTelegramService } from '../modules/notifications/infra/notificationsTelegram.service.js'
 import { createSelfReportFilesRepository } from '../modules/selfReports/infra/selfReportFiles.repository.js'
@@ -20,10 +20,11 @@ export interface LogsNotifierDependencies {
  * Registers the cron notifying the problem logs, only when it is set up along with the
  * notifications.
  *
- * The cron is given its config, and reads the logs like the routes do, from `logsRepository`. It
- * remembers its last check in the `lastLogsCheckFilePath` of its settings. When the self reports
- * are enabled, it is given a self-report repository of its own for the problem logs it could not
- * notify. It notifies through Telegram, with the `notification` settings.
+ * The cron is given its config, and the logs it has not notified yet: those of `logsRepository`,
+ * which the routes read too, logged since its last check, whose date it remembers in the
+ * `lastLogsCheckFilePath` of its settings. When the self reports are enabled, it is given a
+ * self-report repository of its own for the problem logs it could not notify. It notifies through
+ * Telegram, with the `notification` settings.
  */
 export const registerLogsNotifier = async (
   server: EchoServer,
@@ -43,11 +44,11 @@ export const registerLogsNotifier = async (
 
   await server.register(logsNotifier, {
     logsNotifierConfig,
-    logsRepository,
-    notificationsService: createNotificationsTelegramService(notificationSettings),
-    checkDateRepository: createCheckDateFileRepository(
+    unNotifiedLogsRepository: createUnNotifiedLogsCheckDateRepository(
+      logsRepository,
       createCheckDateFileApi({ lastLogsCheckFilePath }, filesService)
     ),
+    notificationsService: createNotificationsTelegramService(notificationSettings),
     logsNotifierSelfReportRepository:
       logsNotifierSelfReports &&
       (await createSelfReportFilesRepository({

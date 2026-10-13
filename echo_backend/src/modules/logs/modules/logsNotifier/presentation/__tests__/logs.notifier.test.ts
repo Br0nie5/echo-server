@@ -83,15 +83,19 @@ afterEach(() => {
 })
 
 describe('logs notifier', () => {
-  test('Should only save the date of its first check, and notify nothing', async () => {
+  test('Should notify every problem log at its first check, and save its date', async () => {
     const { fileSystem } = await buildServerWithLogsNotifier({ [logFilePath]: logFileContent })
 
     await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
 
+    expect(getSentMessages()).toEqual([
+      'Logs from device test-device:\n\n\n' +
+        '[12] [2026-04-28 09:42:01 UTC] [WARNING] - send_invoices > Invoice 41 sent on attempt 2.\n\n' +
+        '[11] [2026-04-28 09:00:00 UTC] [ERROR] - send_invoices > Invoices not sent.'
+    ])
     expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
       toLastCheckFileContent(FIRST_CHECK)
     )
-    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   test('Should notify the problem logs logged since the previous check, once', async () => {

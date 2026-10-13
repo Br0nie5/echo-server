@@ -28,7 +28,7 @@ describe('convertRawLastCheckDateToLastCheckDate', () => {
       JSON.stringify({ lastCheck: '2026-01-01T00:00:00.000Z' })
     )
 
-    expect(lastCheckDate).toEqual({ lastCheckDate: new Date('2026-01-01T00:00:00.000Z') })
+    expect(lastCheckDate).toEqual(new Date('2026-01-01T00:00:00.000Z'))
   })
 
   it('Should return undefined when the content is not JSON', () => {
@@ -56,13 +56,13 @@ describe('convertLastCheckDateToRawLastCheckDate', () => {
   it('Should give the JSON of the date under the lastCheck field', () => {
     const lastCheckDate = new Date('2026-01-01T00:00:00.000Z')
 
-    expect(convertLastCheckDateToRawLastCheckDate({ lastCheckDate })).toBe(
+    expect(convertLastCheckDateToRawLastCheckDate(lastCheckDate)).toBe(
       JSON.stringify({ lastCheck: '2026-01-01T00:00:00.000Z' }, null, 2)
     )
   })
 
   it('Should give a content that converts back to the same date', () => {
-    const lastCheckDate = { lastCheckDate: new Date('2026-03-04T05:06:07.890Z') }
+    const lastCheckDate = new Date('2026-03-04T05:06:07.890Z')
 
     expect(
       convertRawLastCheckDateToLastCheckDate(convertLastCheckDateToRawLastCheckDate(lastCheckDate))
