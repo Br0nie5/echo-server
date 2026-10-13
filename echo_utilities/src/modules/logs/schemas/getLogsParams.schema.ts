@@ -1,25 +1,23 @@
 import { z } from 'zod'
 
+import { getInvalidDateFieldMessage } from '../utils/getInvalidDateFieldMessage.js'
+
 import { LogLevel, LogLevelSchema } from './logLevel.schema.js'
 
 /**
- * Gives the message telling the client that `fieldName`, a date field of the query, is not an ISO
- * date.
+ * Explains which value of `logLevels` is not a log level, and which ones can be used.
  *
- * ```ts
- * getInvalidDateFieldMessage('fromDate') // 'Field fromDate is not a valid date, it should be an ISO string'
- * ```
+ * `logLevels` is one value or a list of them. The value is written as it is when it is a text, and
+ * as JSON otherwise, so a list or an object given in place of a level can be told from a text.
  */
-export const getInvalidDateFieldMessage = (fieldName: string): string =>
-  `Field ${fieldName} is not a valid date, it should be an ISO string`
-
-/** Explains which value of `logLevels` is not a log level, and which ones can be used. */
 const describeInvalidLogLevel = (logLevels: unknown): string => {
-  const invalidLogLevel = [logLevels]
-    .flat()
-    .find((logLevel) => !LogLevelSchema.safeParse(logLevel).success)
+  const invalidLogLevel = (Array.isArray(logLevels) ? logLevels : [logLevels]).find(
+    (logLevel) => !LogLevelSchema.safeParse(logLevel).success
+  )
+  const invalidLogLevelText =
+    typeof invalidLogLevel === 'string' ? invalidLogLevel : JSON.stringify(invalidLogLevel)
 
-  return `${invalidLogLevel} is not a valid log level, use ${Object.values(LogLevel).join('|')}`
+  return `${invalidLogLevelText} is not a valid log level, use ${Object.values(LogLevel).join('|')}`
 }
 
 /**
@@ -28,7 +26,7 @@ const describeInvalidLogLevel = (logLevels: unknown): string => {
  * The `GetLogsParams` type is inferred from it. The messages of its errors are written for the
  * client, to be returned as they are. A date is only checked to be a text: `format: 'date-time'`
  * describes it in the JSON schema `z.toJSONSchema` gives, and whoever turns that text into a date
- * checks that it is one.
+ * checks that it is one. The properties it does not describe are left out of what it parses.
  *
  * ```ts
  * const result = GetLogsParamsSchema.safeParse({ logLevels: 'DEBUG' })

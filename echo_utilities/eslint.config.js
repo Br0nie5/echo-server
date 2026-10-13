@@ -13,8 +13,8 @@ export default defineConfig([
     files: ['**/*.{js,ts,mts}'],
     extends: [js.configs.recommended, tseslint.configs.recommended],
     languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
+      ecmaVersion: 2022,
+      globals: globals['shared-node-browser'],
       parserOptions: {
         tsconfigRootDir: import.meta.dirname
       }
@@ -22,7 +22,7 @@ export default defineConfig([
     settings: {
       'import/resolver': {
         node: {
-          extensions: ['.js', '.cjs', '.jsx', '.ts', '.tsx', '.d.ts']
+          extensions: ['.js', '.ts', '.mts', '.d.ts']
         },
         typescript: {
           alwaysTryTypes: true,
@@ -85,14 +85,8 @@ export default defineConfig([
     // Documentation (TSDoc): every exported function, interface and type has a comment. `@param` and
     // `@returns` are not required, since the types already say what goes in and out: add them when
     // a parameter or the result has a rule the types do not show. They are validated when present.
-    files: ['src/**/*.{ts,tsx}'],
-    ignores: [
-      '**/__tests__/**',
-      '**/*.test.{ts,tsx}',
-      'src/test/**',
-      'src/setupTests.ts',
-      'src/vite-env.d.ts'
-    ],
+    files: ['src/**/*.ts'],
+    ignores: ['**/__tests__/**'],
     plugins: { jsdoc, tsdoc },
     rules: {
       'tsdoc/syntax': 'error',
@@ -101,12 +95,7 @@ export default defineConfig([
         {
           publicOnly: true,
           require: { FunctionDeclaration: true, ArrowFunctionExpression: true },
-          contexts: [
-            'TSInterfaceDeclaration',
-            'TSTypeAliasDeclaration',
-            // Exported components wrapped in memo(...), which the function selectors do not see
-            "ExportNamedDeclaration > VariableDeclaration[declarations.0.init.type='CallExpression']"
-          ]
+          contexts: ['TSInterfaceDeclaration', 'TSTypeAliasDeclaration']
         }
       ],
       'jsdoc/require-param-description': 'error',

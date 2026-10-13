@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 import type { GetLogsParams } from '../getLogsParams.schema.js'
-import { GetLogsParamsSchema, getInvalidDateFieldMessage } from '../getLogsParams.schema.js'
+import { GetLogsParamsSchema } from '../getLogsParams.schema.js'
 import { LogLevel } from '../logLevel.schema.js'
 
 const fromDate = '2026-04-28T10:00:00.000Z'
@@ -56,6 +56,26 @@ describe('GetLogsParamsSchema', () => {
       reason: 'one of the log levels is not one',
       query: { fromDate, logLevels: [LogLevel.INFO, 'DEBUG'] },
       message: invalidLogLevelMessage
+    },
+    {
+      reason: 'a list given in place of a log level is not one',
+      query: { fromDate, logLevels: [[LogLevel.INFO]] },
+      message: '["INFO"] is not a valid log level, use SUCCESS|INFO|WARNING|ERROR'
+    },
+    {
+      reason: 'an object given in place of a log level is not one',
+      query: { fromDate, logLevels: { level: LogLevel.INFO } },
+      message: '{"level":"INFO"} is not a valid log level, use SUCCESS|INFO|WARNING|ERROR'
+    },
+    {
+      reason: 'a number is not a log level',
+      query: { fromDate, logLevels: 3 },
+      message: '3 is not a valid log level, use SUCCESS|INFO|WARNING|ERROR'
+    },
+    {
+      reason: 'null is not a log level',
+      query: { fromDate, logLevels: null },
+      message: 'null is not a valid log level, use SUCCESS|INFO|WARNING|ERROR'
     }
   ])('Should tell the client that $reason', ({ query, message }) => {
     expect(getIssuesMessages(query)).toEqual([message])
@@ -69,15 +89,11 @@ describe('GetLogsParamsSchema', () => {
     ])
   })
 
+  it('Should leave out the properties it does not describe', () => {
+    expect(GetLogsParamsSchema.parse({ fromDate, page: 2 })).toEqual({ fromDate })
+  })
+
   it('Should refuse a logSearch that is not a text', () => {
     expect(GetLogsParamsSchema.safeParse({ fromDate, logSearch: 42 }).success).toBe(false)
-  })
-})
-
-describe('getInvalidDateFieldMessage', () => {
-  it.each(['fromDate', 'toDate'])('Should name %s as the field that is not a date', (fieldName) => {
-    expect(getInvalidDateFieldMessage(fieldName)).toBe(
-      `Field ${fieldName} is not a valid date, it should be an ISO string`
-    )
   })
 })

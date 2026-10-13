@@ -1,12 +1,12 @@
 /**
  * Architecture rules of `@echo/utilities`, checked by `npm run arch:check`.
- * See docs/architecture.md for the conventions these rules enforce.
+ * Each rule says why it exists in its `comment`, which the check prints when it fails.
  */
 
 import type { IConfiguration } from 'dependency-cruiser'
 
 const SHARED = '^src/shared/'
-const TESTS = '(^|/)__tests__/|\\.test\\.tsx?$'
+const TESTS = '(^|/)__tests__/'
 
 const config: IConfiguration = {
   forbidden: [
@@ -36,11 +36,12 @@ const config: IConfiguration = {
       to: { path: '^\\.\\./', dependencyTypes: ['local'] }
     },
     {
-      name: 'utilities-not-to-apps',
+      name: 'utilities-not-to-repository-packages',
       severity: 'error',
-      comment: '@echo/utilities is the shared base and must not import backend or frontend code.',
+      comment:
+        '@echo/utilities is a base others build on: it imports installed packages only, and no other package of its repository, even by its name.',
       from: {},
-      to: { path: '(^|/)echo_(backend|frontend)/' }
+      to: { path: '^\\.\\./', pathNot: '(^|/)node_modules/' }
     },
 
     // ── shared/ is a leaf, and nothing reaches the machine ─────────────────

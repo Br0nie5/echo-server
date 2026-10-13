@@ -16,7 +16,7 @@ import type { ControlledState } from '../types/controlledState'
 
 interface SearchBarProps {
   /** The keys offered once the user types `:` in the last word, filtered by what follows it. */
-  suggestions?: string[]
+  suggestions?: readonly string[]
   /** The hint displayed in the empty input, in place of the default one. */
   placeholder?: string
   /** The submitted search, held by the parent. */

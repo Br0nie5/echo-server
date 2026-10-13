@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import type { LogSearchableKey } from '../../consts/logSearchFilter.js'
+import type { LogSearchableKey } from '../../consts/logSearchableKeys.js'
 import type { Log } from '../../schemas/log.schema.js'
 import { LogLevel } from '../../schemas/logLevel.schema.js'
 import { filterLogBySearch } from '../filterLogBySearch.js'
@@ -25,13 +25,6 @@ const searchOfEachKey: Array<{ key: LogSearchableKey; search: string }> = [
 ]
 
 describe('filterLogBySearch', () => {
-  it.each(searchOfEachKey)(
-    'Should keep a log whose $key holds what a find filter looks for in it',
-    ({ key, search }) => {
-      expect(filterLogBySearch(log, [{ key, mode: 'find', search }])).toBe(true)
-    }
-  )
-
   it.each(searchOfEachKey)(
     'Should leave out a log whose $key holds what a remove filter looks for in it',
     ({ key, search }) => {

@@ -333,7 +333,7 @@ Each workspace has its own rules, with paths relative to it: [echo_backend/.depe
 | Rule                                                      | Refuses                                                                                        |
 | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `backend-frontend-independent`, `frontend-not-to-backend` | The backend and the frontend importing each other.                                             |
-| `utilities-not-to-apps`                                   | `@echo/utilities` importing one of the apps.                                                   |
+| `utilities-not-to-repository-packages`                    | `@echo/utilities` importing another package of the repository, even by its name.               |
 | `utilities-only-through-barrel`                           | Reaching into `echo_utilities` other than through its barrel.                                  |
 | `utilities-not-to-node`                                   | `@echo/utilities` importing a built-in module of Node.js: the frontend runs it in the browser. |
 

@@ -20,17 +20,29 @@ describe('requireEnv', () => {
   it.each([
     { value: 14, text: '14' },
     { value: 0, text: '0' },
+    { value: NaN, text: 'NaN' },
     { value: true, text: 'true' },
     { value: false, text: 'false' }
   ])('Should give $value as the text "$text"', ({ value, text }) => {
     expect(requireEnv({ SOME_VARIABLE: value }, 'SOME_VARIABLE')).toBe(text)
   })
 
-  it.each([undefined, null, '', '   ', {}, ['some value']])(
-    'Should throw when the variable is %j, which is no text to read',
+  it.each([undefined, null, '', '   '])(
+    'Should throw when the variable is %j, which is missing',
     (value) => {
       expect(() => requireEnv({ SOME_VARIABLE: value }, 'SOME_VARIABLE')).toThrow(
         new Error('Missing required environment variable: SOME_VARIABLE')
+      )
+    }
+  )
+
+  it.each([{}, { name: 'some value' }, [], ['some value']])(
+    'Should throw when the variable is %j, which is no text to read',
+    (value) => {
+      expect(() => requireEnv({ SOME_VARIABLE: value }, 'SOME_VARIABLE')).toThrow(
+        new Error(
+          'Invalid environment variable: SOME_VARIABLE is neither a text, a number nor a boolean'
+        )
       )
     }
   )

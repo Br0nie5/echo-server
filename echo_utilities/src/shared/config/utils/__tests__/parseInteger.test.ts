@@ -7,7 +7,10 @@ describe('parseInteger', () => {
     { raw: '14', integer: 14 },
     { raw: '0', integer: 0 },
     { raw: '-3', integer: -3 },
-    { raw: '007', integer: 7 }
+    { raw: '007', integer: 7 },
+    { raw: '-0', integer: 0 },
+    { raw: '9007199254740991', integer: 9007199254740991 },
+    { raw: '-9007199254740991', integer: -9007199254740991 }
   ])('Should parse "$raw" into $integer', ({ raw, integer }) => {
     expect(parseInteger(raw)).toBe(integer)
   })
@@ -18,6 +21,13 @@ describe('parseInteger', () => {
       expect(() => parseInteger(raw)).toThrow(
         new Error(`Invalid integer: ${raw} is not an integer`)
       )
+    }
+  )
+
+  it.each(['9007199254740992', '-9007199254740992', '99999999999999999999'])(
+    'Should throw when %s is too far from zero to be read exactly',
+    (raw) => {
+      expect(() => parseInteger(raw)).toThrow(new Error(`Invalid integer: ${raw} is out of range`))
     }
   )
 })

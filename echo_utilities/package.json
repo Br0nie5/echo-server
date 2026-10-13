@@ -11,8 +11,9 @@
     }
   },
   "scripts": {
-    "build": "npm run clean && tsc --project tsconfig.build.json",
+    "build": "npm run clean && npm run types:check && tsc --project tsconfig.build.json",
     "dev": "tsc --project tsconfig.build.json --watch --preserveWatchOutput",
+    "types:check": "tsc",
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "format": "prettier --write . --ignore-path ../.gitignore --ignore-path ../.prettierignore",
     "lint": "eslint . --fix",

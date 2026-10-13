@@ -1,5 +1,6 @@
-import type { LogSearchableKey, LogSearchFilter } from '../consts/logSearchFilter.js'
+import type { LogSearchableKey } from '../consts/logSearchableKeys.js'
 import type { Log } from '../schemas/log.schema.js'
+import type { LogSearchFilter } from '../types/logSearchFilter.js'
 
 /** Whether a field of the log contains `search` (already lower-cased). */
 type LogFieldMatcher = (log: Log, search: string) => boolean

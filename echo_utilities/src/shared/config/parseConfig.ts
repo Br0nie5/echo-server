@@ -6,8 +6,8 @@ import { requireEnv } from './utils/requireEnv.js'
 /**
  * Builds the `Config` from `rawConfig`, the variables as they were written.
  *
- * `rawConfig` may hold other variables, which are not read. Throws when `SERVER_NAME` is missing or
- * blank, and when `HAS_AUTHENTICATION` is missing or neither `true` nor `false`.
+ * `rawConfig` may hold other variables, which are not read. Throws when `SERVER_NAME` is missing,
+ * blank or no text, and when `HAS_AUTHENTICATION` is missing or neither `true` nor `false`.
  *
  * ```ts
  * const config = parseConfig({ SERVER_NAME: 'my-server', HAS_AUTHENTICATION: 'true' })

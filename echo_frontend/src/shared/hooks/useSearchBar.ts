@@ -11,7 +11,7 @@ import { useWindowSize } from './useWindowSize'
 const SUGGESTION_DEFAULT_INDEX = -1
 
 interface UseSearchBarParams {
-  suggestions?: string[]
+  suggestions?: readonly string[]
   controlledState?: ControlledState<string>
 }
 

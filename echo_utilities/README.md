@@ -23,16 +23,16 @@ It has no side effect when imported (`"sideEffects": false`), so a bundler leave
 
 Each shape the API exchanges is a zod schema, its single source of truth, in a `schemas/` folder:
 
-| Schema                | Type            | Describes                              |
-| --------------------- | --------------- | -------------------------------------- |
-| `LogSchema`           | `Log`           | One entry emitted by a watched script. |
-| `LogArraySchema`      | `Log[]`         | The answer of `GET /logs`.             |
-| `LogLevelSchema`      | `LogLevel`      | The severity of a log.                 |
-| `GetLogsParamsSchema` | `GetLogsParams` | The query of `GET /logs`.              |
-| `AuthStatusSchema`    | `AuthStatus`    | The answer of `GET /auth/status`.      |
-| `LoginRequestSchema`  | `LoginRequest`  | The body of `POST /auth/login`.        |
-| `SignUpRequestSchema` | `SignUpRequest` | The body of `POST /auth/signup`.       |
-| `EchoErrorSchema`     | `EchoError`     | The error the API answers with.        |
+| Schema                | Type            | Describes                         |
+| --------------------- | --------------- | --------------------------------- |
+| `LogSchema`           | `Log`           | One entry of what was reported.   |
+| `LogArraySchema`      | `Log[]`         | The answer of `GET /logs`.        |
+| `LogLevelSchema`      | `LogLevel`      | The severity of a log.            |
+| `GetLogsParamsSchema` | `GetLogsParams` | The query of `GET /logs`.         |
+| `AuthStatusSchema`    | `AuthStatus`    | The answer of `GET /auth/status`. |
+| `LoginRequestSchema`  | `LoginRequest`  | The body of `POST /auth/login`.   |
+| `SignUpRequestSchema` | `SignUpRequest` | The body of `POST /auth/signup`.  |
+| `EchoErrorSchema`     | `EchoError`     | The error the API answers with.   |
 
 One schema gives three things:
 
@@ -44,11 +44,15 @@ const log: Log = LogSchema.parse(answer) // the type, inferred with z.infer, and
 const logJsonSchema = z.toJSONSchema(LogSchema) // its JSON schema
 ```
 
-The type is never declared again. What a TypeScript type cannot say is in the schema: `z.int()` for a number without decimals, `.meta({ format: 'date-time' })` for the format of a string.
+The type is never declared again. What a TypeScript type cannot say is in the schema: `z.int()` for a number without decimals, `z.iso.datetime()` for a text that must be a date, `.meta({ format: 'date-time' })` for one that is only described as a date.
+
+`LogSchema` and `AuthStatusSchema` refuse a property they do not describe. The other ones leave it out of what they parse.
+
+The `date` of a `Log` is an ISO 8601 date and time in UTC, the way `Date.toISOString` writes it (`2026-04-28T10:00:00.000Z`): `LogSchema` refuses any other text. The username and the password of `LoginRequestSchema` and `SignUpRequestSchema` are never empty.
 
 `LogLevel` is also a value, holding the levels by name (`LogLevel.ERROR`), and `isLogLevel` tells whether a text is one of them.
 
-The messages of the errors of `GetLogsParamsSchema` are written for the client, to be answered as they are. `getInvalidDateFieldMessage` gives the one of a date field that is not an ISO date, for whoever turns that text into a date.
+The messages of the errors of `GetLogsParamsSchema` are written for the client, to be answered as they are. It only checks that a date is a text: `getInvalidDateFieldMessage` gives the message of a date field that is not an ISO date, for whoever turns that text into a date.
 
 ### Configuration
 
@@ -63,17 +67,18 @@ import { parseInteger, parseRequiredEnv } from '@echo/utilities'
 
 const maxRetries = parseRequiredEnv(env, 'MAX_RETRIES', parseInteger)
 // throws 'Missing required environment variable: MAX_RETRIES' when it is missing or blank,
+// 'Invalid environment variable: MAX_RETRIES is neither a text, a number nor a boolean' when it is a list,
 // and 'MAX_RETRIES: Invalid integer: many is not an integer' when it is 'many'
 ```
 
-A parser of a single value (`parseBoolean`, `parseInteger`) takes its text and knows nothing of the name of its variable: `parseRequiredEnv` names it in the error. The variables are given as a plain object, so they can come from the environment of a process as well as from a JSON file, where a value may be written as a number or a boolean.
+A parser of a single value (`parseBoolean`, `parseInteger`) takes its text and knows nothing of the name of its variable: `parseRequiredEnv` names it in the error. `parseInteger` refuses an integer beyond `Number.MAX_SAFE_INTEGER`, which could not be read exactly. The variables are given as a plain object, so they can come from the environment of a process as well as from a JSON file, where a value may be written as a number or a boolean.
 
 ### Logs
 
 In `src/modules/logs/`:
 
 - **Id.** `createLogId` creates the `id` of a log, from its date, its job, its `location`, `level`, `message` and `origin`, and a number telling apart the logs that have all of those in common.
-- **Filtering.** `filterLogByLevels` and `filterLogBySearch` tell whether a log is kept. `parseLogSearchInput` turns what a user typed into the `LogSearchFilter`s the second one applies, and `logSearchableKeys` lists the fields a search can target.
+- **Filtering.** `filterLogByLevels` and `filterLogBySearch` tell whether a log is kept. `parseLogSearchInput` turns what a user typed into the `LogSearchFilter`s the second one applies, and `logSearchableKeys` lists the fields a search can target, `LogSearchableKey` being one of them.
 
 The search syntax `parseLogSearchInput` reads:
 
@@ -83,16 +88,19 @@ The search syntax `parseLogSearchInput` reads:
 | `message:timeout` | Keeps those holding it in that field, one of `logSearchableKeys`.                    |
 | `-timeout`        | Drops those holding it. A field can follow the dash.                                 |
 | `"disk full"`     | Keeps those holding these words together. A space can also be escaped: `disk\ full`. |
+| `"-12"`           | Keeps those holding `-12`: a quoted dash or field is searched for, like any text.    |
+| `say\"hi`         | Keeps those holding `say"hi`: a backslash makes a double quote part of the text.     |
 
-A log is kept when it satisfies every term. Case is ignored.
+A log is kept when it satisfies every term. Case is ignored. The terms are separated by the space character only: a tab or a line break belongs to the term it is in.
 
 ## Commands
 
 Run from this directory.
 
 ```bash
-npm run build           # empties dist/, then tsc to it, the tests left out (tsconfig.build.json)
-npm run dev             # the same build, watching the sources
+npm run build           # empties dist/, type-checks everything, then tsc to dist/, the tests left out (tsconfig.build.json)
+npm run dev             # tsc to dist/ at each change of the sources, without emptying it nor checking the tests
+npm run types:check     # tsc on the sources, the tests and the config files (tsconfig.json), emitting nothing
 npm run lint            # eslint --fix
 npm run format          # prettier --write
 npm run arch:check      # dependency-cruiser rules (.dependency-cruiser.mts)
@@ -100,7 +108,7 @@ npm run test:coverage   # vitest run --coverage, 100% threshold
 npm run test:watch
 ```
 
-`npm run arch:check` refuses an import of a built-in module of Node.js.
+`npm run arch:check` refuses an import of a built-in module of Node.js, and of anything outside this package but an installed package.
 
 ## Tests
 

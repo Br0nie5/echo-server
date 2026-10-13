@@ -8,7 +8,10 @@
  * getSearchSuggestions('error :co', ['color', 'count', 'size']) // ['color', 'count']
  * ```
  */
-export const getSearchSuggestions = (inputValue: string, suggestions: string[]): string[] => {
+export const getSearchSuggestions = (
+  inputValue: string,
+  suggestions: readonly string[]
+): string[] => {
   const lastWord = inputValue.split(' ').pop() || ''
 
   if (!lastWord.includes(':')) {

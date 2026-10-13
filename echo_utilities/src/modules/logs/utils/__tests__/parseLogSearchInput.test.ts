@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
-import { logSearchableKeys, type LogSearchFilter } from '../../consts/logSearchFilter.js'
+import { logSearchableKeys } from '../../consts/logSearchableKeys.js'
+import type { LogSearchFilter } from '../../types/logSearchFilter.js'
 import { parseLogSearchInput } from '../parseLogSearchInput.js'
 
 interface ParsedInput {
@@ -31,9 +32,53 @@ describe('parseLogSearchInput', () => {
       input: 'My\\ "custom"\\ search',
       searchFilters: [{ mode: 'find', search: 'My custom search' }]
     },
-    { input: 'foo\\bar', searchFilters: [{ mode: 'find', search: 'foo\\bar' }] }
+    { input: '"foo\\ bar"', searchFilters: [{ mode: 'find', search: 'foo bar' }] },
+    { input: 'foo\\bar', searchFilters: [{ mode: 'find', search: 'foo\\bar' }] },
+    { input: 'foo\\', searchFilters: [{ mode: 'find', search: 'foo\\' }] }
   ])(
     'Should split the input `$input` on the spaces that are neither escaped nor quoted',
+    ({ input, searchFilters }) => {
+      expect(parseLogSearchInput(input)).toEqual(searchFilters)
+    }
+  )
+
+  it.each<ParsedInput>([
+    { input: 'foo\tbar', searchFilters: [{ mode: 'find', search: 'foo\tbar' }] },
+    { input: 'foo\nbar', searchFilters: [{ mode: 'find', search: 'foo\nbar' }] },
+    { input: 'foo\u00a0bar', searchFilters: [{ mode: 'find', search: 'foo\u00a0bar' }] }
+  ])(
+    'Should not split the input %j, which holds no space character',
+    ({ input, searchFilters }) => {
+      expect(parseLogSearchInput(input)).toEqual(searchFilters)
+    }
+  )
+
+  it.each<ParsedInput>([
+    { input: 'say\\"hi', searchFilters: [{ mode: 'find', search: 'say"hi' }] },
+    { input: '"say \\"hi\\""', searchFilters: [{ mode: 'find', search: 'say "hi"' }] },
+    {
+      input: '\\"foo bar',
+      searchFilters: [
+        { mode: 'find', search: '"foo' },
+        { mode: 'find', search: 'bar' }
+      ]
+    }
+  ])('Should search for the escaped double quotes of `$input`', ({ input, searchFilters }) => {
+    expect(parseLogSearchInput(input)).toEqual(searchFilters)
+  })
+
+  it.each<ParsedInput>([
+    { input: '"-foo"', searchFilters: [{ mode: 'find', search: '-foo' }] },
+    { input: '-"-foo"', searchFilters: [{ mode: 'remove', search: '-foo' }] },
+    { input: '"message:foo"', searchFilters: [{ mode: 'find', search: 'message:foo' }] },
+    { input: '"message":foo', searchFilters: [{ mode: 'find', search: 'message:foo' }] },
+    { input: 'message":"foo', searchFilters: [{ mode: 'find', search: 'message:foo' }] },
+    {
+      input: 'message:"-jobId:12"',
+      searchFilters: [{ key: 'message', mode: 'find', search: '-jobId:12' }]
+    }
+  ])(
+    'Should search for the quoted dash or key of `$input`, which is not read as syntax',
     ({ input, searchFilters }) => {
       expect(parseLogSearchInput(input)).toEqual(searchFilters)
     }
@@ -79,7 +124,7 @@ describe('parseLogSearchInput', () => {
     }
   )
 
-  it.each(['', '   ', '""', '-', 'message:', '-message:'])(
+  it.each(['', '   ', '""', '-', '-""', 'message:', 'message:""', '-message:'])(
     'Should give no filter for `%s`, which has nothing to search for',
     (input) => {
       expect(parseLogSearchInput(input)).toEqual([])
