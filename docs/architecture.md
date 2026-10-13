@@ -33,8 +33,8 @@ The backend and the frontend never import each other. Both import `@echo/utiliti
 1. The logs screen asks for the logs from a date: `GET /api/logs?fromDate=…`. Only the date goes to the API.
 2. `presentation/logs.routes.ts` runs the authentication hook first, when there is one, then validates the query against its JSON schema.
 3. `presentation/logs.controller.ts` turns the query into dates and filters (`safeParseGetLogsParams`), and calls the use case, `application/getFilteredLogs.ts`.
-4. `getFilteredLogs` asks the `LogsRepository` for every log. `infra/logsFiles.repository.ts` lists the log files, reads their lines and converts each one to a log; a line that holds none becomes a self report.
-5. `getFilteredLogs` saves those self reports to its `SelfReportRepository`. When the self reports are included in the logs (`INCLUDE_SELF_REPORTS_IN_LOGS`), it then reads every self report back from it and converts each one to a log.
+4. `getFilteredLogs` asks the `LogsRepository` for every log. `infra/logsFiles.repository.ts` lists the log files, reads their lines and converts each one to a log; a line that holds none becomes a self report, which the repository saves to its `SelfReportRepository`, when it has one.
+5. When the self reports are included in the logs (`INCLUDE_SELF_REPORTS_IN_LOGS`), `getFilteredLogs` then reads every self report from its `SelfReportRepository` and converts each one to a log.
 6. It filters the logs and sorts them from the newest to the oldest, in memory.
 7. The app filters what it received by level and by search, in a Web Worker, each time the user changes a filter, without asking the API again.
 
@@ -178,7 +178,7 @@ It sends its message through the `NotifierService` of `shared/services/`.
 
 A `SelfReport` is a model of its own, not a `Log`, and it is stored on its own too: in the files of `SELF_REPORTS_DIR_PATH/<server name>/`, one line each, through the `FilesService`. `selfReport` knows nothing of the logs: turning a self report into a log is up to `logs`.
 
-- **One repository per reporter.** Whoever reports is given its own `SelfReportRepository`, created for one file, and never names it: `getFilteredLogs` reports the lines that hold no log (`parseLogFile.jsonl`), the logs notifier the problem logs it could not notify (`logsNotifier.jsonl`).
+- **One repository per reporter.** Whoever reports is given its own `SelfReportRepository`, created for one file, and never names it: the logs files repository reports the lines that hold no log (`parseLogFile.jsonl`), the logs notifier the problem logs it could not notify (`logsNotifier.jsonl`).
 - **Without self reports**, that is without a `SelfReportsConfig`, there is no repository: whoever reports is given `undefined`, and reports nothing. They are enabled when something uses them: today, when they are included in the logs.
 - **The session is the repository's business.** Whoever reports saves plain self reports, which the repository stores with the id of its session. Reading gives each self report with its session: the id of the run it was reported during, and the location, the location name and the group name of its file.
 - **When it is created**, the repository takes the next session id of its own session file (`logs_self_reports_session.json`, `logs_notifier_self_reports_session.json`) and writes its file again without the self reports older than the retention, which also tells whether the file can be written. Should that fail, the error is logged and no repository is created: an optional feature never stops the server from starting.

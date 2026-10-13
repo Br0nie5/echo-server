@@ -1,18 +1,5 @@
 import type { Log } from '@echo/utilities'
 
-import type { SelfReport } from '../../selfReport/domain/selfReport.js'
-
-/** What reading the storage of the logs gives. */
-export interface FoundLogs {
-  /** The stored log entries, unordered. */
-  logs: Log[]
-  /**
-   * A diagnostic for each stored entry that holds no valid log, and is therefore left out of
-   * `logs`.
-   */
-  selfReports: SelfReport[]
-}
-
 /**
  * Storage of the logs.
  *
@@ -21,14 +8,14 @@ export interface FoundLogs {
  * something to the implementation only (the path of a file, the address of another server...).
  *
  * ```ts
- * const { logs, selfReports } = await logsRepository.getAllLogs()
+ * const logs = await logsRepository.getAllLogs()
  * ```
  */
 export interface LogsRepository {
   /**
-   * Reads the log entries of every location the storage watches.
+   * Reads the log entries of every location the storage watches, unordered.
    *
-   * It only reads: what to do with the `selfReports` it gives is up to the use case calling it.
+   * A stored entry that holds no valid log is left out: reporting it is up to the storage.
    */
-  getAllLogs: () => Promise<FoundLogs>
+  getAllLogs: () => Promise<Log[]>
 }

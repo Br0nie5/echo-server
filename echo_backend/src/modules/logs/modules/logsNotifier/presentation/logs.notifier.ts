@@ -14,8 +14,8 @@ export interface LogsNotifierPluginOptions extends FastifyPluginOptions {
   logsNotifierConfig: LogsNotifierConfig
   logsRepository: LogsRepository
   /**
-   * Where the stored entries that hold no valid log are reported, and where the self reports that
-   * are checked among the logs are read from. Missing when the self reports are disabled.
+   * Where the self reports that are checked among the logs are read from. Missing when the self
+   * reports are disabled.
    */
   parseLogsSelfReportRepository?: SelfReportRepository
   notifierService: NotifierService

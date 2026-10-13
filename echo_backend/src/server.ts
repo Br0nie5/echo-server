@@ -76,7 +76,6 @@ export const buildServer = async (
 
   server.addSchema(EchoErrorJsonSchema)
 
-  const logsRepository = createLogsFilesRepository(createLogsFilesApi(config.logs, filesService))
   const parseLogsSelfReportRepository = await createSelfReportFilesRepository({
     filesService,
     selfReportsConfig: config.selfReports,
@@ -84,6 +83,10 @@ export const buildServer = async (
     getSessionFilePath: ({ parseLogsSessionFilePath }) => parseLogsSessionFilePath,
     logger: server.log
   })
+  const logsRepository = createLogsFilesRepository(
+    createLogsFilesApi(config.logs, filesService),
+    parseLogsSelfReportRepository
+  )
 
   await registerAuthRoutes(server, config, filesService)
   await registerLogsRoutes(server, config, logsRepository, parseLogsSelfReportRepository)

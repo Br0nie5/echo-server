@@ -18,8 +18,8 @@ export interface ProblemLogsCheck {
   timezone: string
   logsRepository: LogsRepository
   /**
-   * Where the stored entries that hold no valid log are reported, and where the self reports that
-   * are checked among the logs are read from. Missing when the self reports are disabled.
+   * Where the self reports that are checked among the logs are read from. Missing when the self
+   * reports are disabled.
    */
   parseLogsSelfReportRepository?: SelfReportRepository
   notifierService: NotifierService
@@ -40,9 +40,9 @@ export interface ProblemLogsCheck {
  * `parseLogsSelfReportRepository`.
  *
  * With a `parseLogsSelfReportRepository`, the self reports are among those logs, so they are
- * notified when their level is watched. A stored entry that holds no valid log is reported each
- * time the logs are read, but stored once, with the date it was first read at: it is notified once
- * too, by the check that follows the one that found it.
+ * notified when their level is watched. A stored entry that holds no valid log is reported by
+ * `logsRepository` each time the logs are read, but stored once, with the date it was first read
+ * at: it is notified once too, by the check that follows the one that found it.
  *
  * The notification is one message telling about the logs (see {@link buildNotifierMessage}), built
  * for the size limit of `notifierService`. Nothing is sent when there is no problem log, nor when

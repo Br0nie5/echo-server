@@ -14,8 +14,8 @@ import type { EchoServer } from './types/echoServer.js'
 export interface LogsNotifierDependencies {
   logsRepository: LogsRepository
   /**
-   * Where the stored entries that hold no valid log are reported. Missing when the self reports
-   * are disabled.
+   * Where the self reports that are checked among the logs are read from. Missing when the self
+   * reports are disabled.
    */
   parseLogsSelfReportRepository: SelfReportRepository | undefined
   /** What the last-check file and the files of its self reports are read and written with. */
@@ -26,11 +26,10 @@ export interface LogsNotifierDependencies {
  * Registers the cron notifying the problem logs, only when it is configured along with the
  * notifications.
  *
- * The cron reads the logs like the routes do, from `logsRepository` and, when there is one,
- * reporting to `parseLogsSelfReportRepository`, whose self reports are then among them. When the
- * self reports are enabled, it is given a self-report repository of its own for the problem logs
- * it could not notify. It notifies through a `NotifierService` built from the `notification`
- * config.
+ * The cron reads the logs like the routes do, from `logsRepository`, with the self reports of
+ * `parseLogsSelfReportRepository` among them when there is one. When the self reports are enabled,
+ * it is given a self-report repository of its own for the problem logs it could not notify. It
+ * notifies through a `NotifierService` built from the `notification` config.
  */
 export const registerLogsNotifier = async (
   server: EchoServer,

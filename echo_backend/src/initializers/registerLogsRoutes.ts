@@ -12,8 +12,7 @@ import type { EchoServer } from './types/echoServer.js'
  * authentication is enabled.
  *
  * They read the logs from `logsRepository`. When they are given a `parseLogsSelfReportRepository`,
- * that is when the self reports are enabled, they report the stored entries that hold no valid log
- * to it, and answer its self reports among the logs.
+ * that is when the self reports are enabled, they answer its self reports among the logs.
  */
 export const registerLogsRoutes = async (
   server: EchoServer,

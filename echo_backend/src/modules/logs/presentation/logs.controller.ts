@@ -18,8 +18,8 @@ export interface LogsController {
 
 /**
  * Builds the logs handlers, which read the logs from `logsRepository` and, when the self reports
- * are enabled, report the stored entries that hold no valid log to `parseLogsSelfReportRepository`
- * and answer its self reports among the logs (see `getFilteredLogs`).
+ * are enabled, answer the self reports of `parseLogsSelfReportRepository` among them (see
+ * `getFilteredLogs`).
  */
 export const createLogsController = (
   logsRepository: LogsRepository,
