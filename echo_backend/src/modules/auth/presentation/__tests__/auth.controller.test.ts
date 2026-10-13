@@ -6,8 +6,6 @@ import { getMockAuthConfig } from '../../../../test/mocks/mockConfigs.js'
 import type { AuthRepository } from '../../domain/auth.repository.js'
 import { createAuthController, type SessionReply } from '../auth.controller.js'
 
-// The routes are tested through the server (`auth.routes.test.ts`). Here is only what no request
-// can make happen: the storage of the accounts failing.
 describe('createAuthController', () => {
   describe('signUp', () => {
     it('Should throw the error of a sign up that fails for another reason than being refused', async () => {

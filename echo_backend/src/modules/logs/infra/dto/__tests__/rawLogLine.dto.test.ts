@@ -12,8 +12,6 @@ const rawLogLine = (content: string): RawLogLineDto => ({
   content
 })
 
-// A line converted to a log is tested through the server (`logs.routes.test.ts`). Here are the
-// lines that hold no log, one case each, which its tests only reach as a line that is not JSON.
 describe('convertRawLogLineToLog', () => {
   it('Should return undefined for an empty origin', () => {
     const content =

@@ -103,9 +103,6 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-// Saving a self report and reading it back are tested through the server (`logs.routes.test.ts`,
-// `logs.notifier.test.ts`). Here is what no request reaches: the retention, the self reports
-// stored after the ones already there, the file that is in no directory, and the storage failing.
 describe('createSelfReportFilesRepository', () => {
   it('Should read and write its files through the files service, where it is told they are', async () => {
     await createSelfReportFilesRepository(options)

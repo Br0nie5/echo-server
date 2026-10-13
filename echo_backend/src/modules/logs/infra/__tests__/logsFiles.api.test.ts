@@ -16,9 +16,6 @@ beforeEach(() => {
   vi.resetAllMocks()
 })
 
-// The log files are tested through the server (`logs.routes.test.ts`). Here are the files that
-// cannot be read, which the file system of the tests never makes happen, the file that is gone
-// once it is read, which no request can make happen, and every case of the group of a log file.
 describe('LogsFilesApi', () => {
   describe('getAllLogFiles', () => {
     it('Should throw the error of the files service when the logs directory cannot be read', async () => {

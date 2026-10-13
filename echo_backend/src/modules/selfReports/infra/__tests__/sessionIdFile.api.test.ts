@@ -11,8 +11,6 @@ beforeEach(() => {
   vi.resetAllMocks()
 })
 
-// The session id read and saved is tested through the server (`logs.routes.test.ts`). Here is the
-// session file that cannot be read or holds no session id, which the server never writes.
 describe('SessionIdApi', () => {
   describe('getLastSessionId', () => {
     it('Should throw when the file cannot be read', async () => {

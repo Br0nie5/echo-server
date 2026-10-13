@@ -9,8 +9,6 @@ beforeEach(() => {
   vi.resetAllMocks()
 })
 
-// The self-report files are tested through the server (`logs.routes.test.ts`). Here is the file
-// that cannot be read, which the file system of the tests never makes happen.
 describe('SelfReportsFilesApi', () => {
   describe('getSelfReportLines', () => {
     it('Should throw the error of the files service when the file exists but cannot be read', async () => {

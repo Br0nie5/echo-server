@@ -9,9 +9,6 @@ const run = vi.fn()
 const usersDb = { prepare: vi.fn(() => ({ get, run })) }
 const AuthRepository = createAuthUsersDbRepository(usersDb as unknown as Database)
 
-// The accounts are tested through the server (`auth.routes.test.ts`). Here is what no request shows:
-// a user who is not an admin, which the sign up never creates, and an unknown user costing as much
-// to check as a known one.
 describe('createAuthUsersDbRepository', () => {
   beforeEach(() => {
     vi.clearAllMocks()

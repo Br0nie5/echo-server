@@ -23,9 +23,6 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-// Sending a notification, and reporting the one Telegram refuses or that cannot be written, are
-// tested through the cron (`logs.notifier.test.ts`). Here is what it does not reach: Telegram that
-// cannot be reached at all, and what is thrown not being an `Error`.
 describe('createNotificationsTelegramService', () => {
   describe('notify', () => {
     it('Should throw the error of the network when Telegram cannot be reached', async () => {
