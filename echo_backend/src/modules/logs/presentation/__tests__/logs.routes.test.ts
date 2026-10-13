@@ -205,8 +205,8 @@ describe('GET /logs', () => {
   test('Should save the lines that hold no log as self reports, and answer them as logs', async () => {
     const notALogLine = 'Invoices sent, but this line is no JSON.'
     const selfReportsConfig = getMockSelfReportsConfig()
-    const { selfReportsDirPath, parseLogFileSelfReportFileName } = selfReportsConfig
-    const selfReportsFilePath = `${selfReportsDirPath}/${parseLogFileSelfReportFileName}`
+    const { selfReportsDirPath, parseLogsSelfReportFileName } = selfReportsConfig
+    const selfReportsFilePath = `${selfReportsDirPath}/${parseLogsSelfReportFileName}`
 
     const { server, fileSystem } = await buildTestServer({
       config: { auth: undefined, selfReports: selfReportsConfig },

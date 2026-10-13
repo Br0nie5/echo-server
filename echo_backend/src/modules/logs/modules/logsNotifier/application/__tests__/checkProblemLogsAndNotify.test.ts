@@ -19,7 +19,7 @@ const log: Log = {
 
 const getFilteredLogs = vi.mocked(actualGetFilteredLogs)
 const logsRepository = { getAllLogs: vi.fn() }
-const logsSelfReportRepository = { saveSelfReports: vi.fn(), getAllSelfReports: vi.fn() }
+const parseLogsSelfReportRepository = { saveSelfReports: vi.fn(), getAllSelfReports: vi.fn() }
 const notifierService = { getMessageSizeLimit: vi.fn(), notify: vi.fn() }
 const checkDateRepository = { getLastCheckDate: vi.fn(), saveLastCheckDate: vi.fn() }
 const logsNotifierSelfReportRepository = { saveSelfReports: vi.fn(), getAllSelfReports: vi.fn() }
@@ -33,7 +33,7 @@ const problemLogsCheck: ProblemLogsCheck = {
   serverName: 'test-device',
   timezone: 'UTC+2',
   logsRepository,
-  logsSelfReportRepository,
+  parseLogsSelfReportRepository,
   notifierService,
   checkDateRepository,
   logsNotifierSelfReportRepository
@@ -71,7 +71,7 @@ describe('checkProblemLogsAndNotify', () => {
 
     await check()
 
-    expect(getFilteredLogs).toHaveBeenCalledWith(logsRepository, logsSelfReportRepository, {
+    expect(getFilteredLogs).toHaveBeenCalledWith(logsRepository, parseLogsSelfReportRepository, {
       fromDate: PREVIOUS_CHECK.lastCheckDate,
       toDate: CHECK_DATE,
       levels: WATCHED,
@@ -128,7 +128,7 @@ describe('checkProblemLogsAndNotify', () => {
 
     await checkProblemLogsAndNotify({
       ...problemLogsCheck,
-      logsSelfReportRepository: undefined,
+      parseLogsSelfReportRepository: undefined,
       logsNotifierSelfReportRepository: undefined
     })
 

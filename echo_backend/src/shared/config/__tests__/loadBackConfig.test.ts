@@ -223,9 +223,13 @@ describe('loadBackConfig', () => {
         retentionDays: 30,
         selfReportsDirPath: '/self_reports/Shop Prod',
         selfReportFileExtension: '.jsonl',
-        parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
+        parseLogsSelfReportFileName: 'parseLogFile.jsonl',
         logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
-        sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')
+        parseLogsSessionFilePath: path.join(DATA_DIR_PATH, 'logs_self_reports_session.json'),
+        logsNotifierSessionFilePath: path.join(
+          DATA_DIR_PATH,
+          'logs_notifier_self_reports_session.json'
+        )
       },
       notification: {
         telegramChatId: '123456789',

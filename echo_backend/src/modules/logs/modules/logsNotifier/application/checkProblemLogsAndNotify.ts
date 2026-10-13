@@ -21,7 +21,7 @@ export interface ProblemLogsCheck {
    * Where the stored entries that hold no valid log are reported, and where the self reports that
    * are checked among the logs are read from. Missing when the self reports are disabled.
    */
-  logsSelfReportRepository?: SelfReportRepository
+  parseLogsSelfReportRepository?: SelfReportRepository
   notifierService: NotifierService
   checkDateRepository: CheckDateRepository
   /**
@@ -37,12 +37,12 @@ export interface ProblemLogsCheck {
  * A check looks at the logs logged from the date of the previous check to its own, the latter left
  * out: a log is in the period of one check only, so it is notified once, even when it is written
  * while the logs are being read. The logs are looked up with `getFilteredLogs`, given
- * `logsSelfReportRepository`.
+ * `parseLogsSelfReportRepository`.
  *
- * With a `logsSelfReportRepository`, the self reports are among those logs, so they are notified
- * when their level is watched. A stored entry that holds no valid log is reported each time the
- * logs are read, but stored once, with the date it was first read at: it is notified once too, by
- * the check that follows the one that found it.
+ * With a `parseLogsSelfReportRepository`, the self reports are among those logs, so they are
+ * notified when their level is watched. A stored entry that holds no valid log is reported each
+ * time the logs are read, but stored once, with the date it was first read at: it is notified once
+ * too, by the check that follows the one that found it.
  *
  * The notification is one message telling about the logs (see {@link buildNotifierMessage}), built
  * for the size limit of `notifierService`. Nothing is sent when there is no problem log, nor when
@@ -59,7 +59,7 @@ export interface ProblemLogsCheck {
  *   serverName: logsNotifierConfig.serverName,
  *   timezone: logsNotifierConfig.notifierTimezone,
  *   logsRepository,
- *   logsSelfReportRepository,
+ *   parseLogsSelfReportRepository,
  *   notifierService,
  *   checkDateRepository,
  *   logsNotifierSelfReportRepository
@@ -71,7 +71,7 @@ export const checkProblemLogsAndNotify = async ({
   serverName,
   timezone,
   logsRepository,
-  logsSelfReportRepository,
+  parseLogsSelfReportRepository,
   notifierService,
   checkDateRepository,
   logsNotifierSelfReportRepository
@@ -85,7 +85,7 @@ export const checkProblemLogsAndNotify = async ({
     return
   }
 
-  const problemLogs = await getFilteredLogs(logsRepository, logsSelfReportRepository, {
+  const problemLogs = await getFilteredLogs(logsRepository, parseLogsSelfReportRepository, {
     fromDate: previousCheck.lastCheckDate,
     toDate: newCheckDate,
     levels: watchedLogsLevels,

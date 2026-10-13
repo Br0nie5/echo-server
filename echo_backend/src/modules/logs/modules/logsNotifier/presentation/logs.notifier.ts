@@ -17,7 +17,7 @@ export interface LogsNotifierPluginOptions extends FastifyPluginOptions {
    * Where the stored entries that hold no valid log are reported, and where the self reports that
    * are checked among the logs are read from. Missing when the self reports are disabled.
    */
-  logsSelfReportRepository?: SelfReportRepository
+  parseLogsSelfReportRepository?: SelfReportRepository
   notifierService: NotifierService
   checkDateRepository: CheckDateRepository
   /**
@@ -32,7 +32,7 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
   {
     logsNotifierConfig,
     logsRepository,
-    logsSelfReportRepository,
+    parseLogsSelfReportRepository,
     notifierService,
     checkDateRepository,
     logsNotifierSelfReportRepository
@@ -49,7 +49,7 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
           serverName: logsNotifierConfig.serverName,
           timezone: logsNotifierConfig.notifierTimezone,
           logsRepository,
-          logsSelfReportRepository,
+          parseLogsSelfReportRepository,
           notifierService,
           checkDateRepository,
           logsNotifierSelfReportRepository

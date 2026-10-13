@@ -77,21 +77,22 @@ export const buildServer = async (
   server.addSchema(EchoErrorJsonSchema)
 
   const logsRepository = createLogsFilesRepository(createLogsFilesApi(config.logs, filesService))
-  const logsSelfReportRepository = await createSelfReportFilesRepository({
+  const parseLogsSelfReportRepository = await createSelfReportFilesRepository({
     filesService,
     selfReportsConfig: config.selfReports,
-    getSelfReportFileName: ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName,
+    getSelfReportFileName: ({ parseLogsSelfReportFileName }) => parseLogsSelfReportFileName,
+    getSessionFilePath: ({ parseLogsSessionFilePath }) => parseLogsSessionFilePath,
     logger: server.log
   })
 
   await registerAuthRoutes(server, config, filesService)
-  await registerLogsRoutes(server, config, logsRepository, logsSelfReportRepository)
+  await registerLogsRoutes(server, config, logsRepository, parseLogsSelfReportRepository)
 
   await registerFrontend(server, config.server, filesService)
 
   await registerLogsNotifier(server, config, {
     logsRepository,
-    logsSelfReportRepository,
+    parseLogsSelfReportRepository,
     filesService
   })
 

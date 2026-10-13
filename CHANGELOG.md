@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking:** an unknown path outside `/app` and `/api` now gets the same error body as the API, `{ "statusCode": 404, "message": "Not found." }`, instead of `{ "error": "Not found" }`.
 
-- The file remembering the last session of the self reports is now `data/self_reports_session.json`, in a format of its own: the sessions are numbered from `1` again, and `data/self_logs_session.json` is no longer read, so you can remove it from your `data/` volume.
+- The last session of the self reports is now remembered in two files, one per self-report file, `data/logs_self_reports_session.json` and `data/logs_notifier_self_reports_session.json`, in a format of their own: the sessions are numbered from `1` again, and `data/self_logs_session.json` is no longer read, so you can remove it from your `data/` volume.
 
 - **Breaking:** the container runs as the unprivileged `node` user (uid `1000`, gid `1000`) instead of root. The files it wrote as root are no longer writable by it, and `users.db`, which only its owner can read, no longer readable: before upgrading, give the content of your `/app/data` and `/self_reports` volumes to that user, with `sudo chown -R 1000:1000 /path/to/echo/data /path/to/echo/self-reports` for bind mounts, or `docker run --rm -v <volume>:/volume busybox chown -R 1000:1000 /volume` for each named volume. Make the certificate and key of `TLS_CERT_PATH` and `TLS_KEY_PATH` readable by that user too.
 

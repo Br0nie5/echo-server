@@ -36,17 +36,23 @@ const sessionIdApi = {
 const selfReportsConfig = getMockSelfReportsConfig({
   retentionDays: 10,
   selfReportsDirPath: '/self_reports/Echo',
-  parseLogFileSelfReportFileName: 'parseLogFile.jsonl'
+  parseLogsSelfReportFileName: 'parseLogFile.jsonl',
+  parseLogsSessionFilePath: '/fake/data/logs_self_reports_session.json'
 })
 
 const options = {
   filesService,
   selfReportsConfig,
   getSelfReportFileName: ({
-    parseLogFileSelfReportFileName
+    parseLogsSelfReportFileName
   }: {
-    parseLogFileSelfReportFileName: string
-  }): string => parseLogFileSelfReportFileName,
+    parseLogsSelfReportFileName: string
+  }): string => parseLogsSelfReportFileName,
+  getSessionFilePath: ({
+    parseLogsSessionFilePath
+  }: {
+    parseLogsSessionFilePath: string
+  }): string => parseLogsSessionFilePath,
   logger
 }
 
@@ -121,7 +127,10 @@ describe('createSelfReportFilesRepository', () => {
       selfReportsConfig,
       filesService
     )
-    expect(createSessionIdFileApi).toHaveBeenCalledExactlyOnceWith(selfReportsConfig, filesService)
+    expect(createSessionIdFileApi).toHaveBeenCalledExactlyOnceWith(
+      '/fake/data/logs_self_reports_session.json',
+      filesService
+    )
   })
 
   it('Should create no repository when there is no self reports config', async () => {

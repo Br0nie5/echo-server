@@ -21,12 +21,12 @@ interface LogsFilters {
 }
 
 const saveSelfReportsAndGetAllAsLogs = async (
-  logsSelfReportRepository: SelfReportRepository,
+  parseLogsSelfReportRepository: SelfReportRepository,
   newSelfReports: SelfReport[]
 ): Promise<Log[]> => {
-  await logsSelfReportRepository.saveSelfReports(newSelfReports)
+  await parseLogsSelfReportRepository.saveSelfReports(newSelfReports)
 
-  const selfReports = await logsSelfReportRepository.getAllSelfReports()
+  const selfReports = await parseLogsSelfReportRepository.getAllSelfReports()
 
   return selfReports.map(({ date, sessionId: jobId, ...selfReport }, index) => {
     const noIdLog: Omit<Log, 'id'> = { ...selfReport, date: date.toISOString(), jobId }
@@ -38,14 +38,14 @@ const saveSelfReportsAndGetAllAsLogs = async (
 /**
  * Returns the logs of `logsRepository` matching `filters`, from the newest to the oldest.
  *
- * With a `logsSelfReportRepository`, that is when the self reports are enabled, the self reports
- * `logsRepository` gives along with its logs, about the stored entries that hold no valid log, are
- * first saved to it, all in a single save. Every self report it holds is then read back and added to the logs, as a log of its
- * own: those just saved are therefore among them. Such a log keeps the `date`, the `message`, the
- * `level`, the `origin`, the `location`, the `locationName` and the `groupName` of its self report,
- * its job is the session the self report was reported during, and its `id` the one `createLogId`
- * gives it. Without one, these self reports are dropped, and the logs are those of `logsRepository`
- * alone.
+ * With a `parseLogsSelfReportRepository`, that is when the self reports are enabled, the self
+ * reports `logsRepository` gives along with its logs, about the stored entries that hold no valid
+ * log, are first saved to it, all in a single save. Every self report it holds is then read back
+ * and added to the logs, as a log of its own: those just saved are therefore among them. Such a
+ * log keeps the `date`, the `message`, the `level`, the `origin`, the `location`, the
+ * `locationName` and the `groupName` of its self report, its job is the session the self report
+ * was reported during, and its `id` the one `createLogId` gives it. Without one, these self reports
+ * are dropped, and the logs are those of `logsRepository` alone.
  *
  * A log matches when it was logged at `fromDate` or later, before `toDate` when it is given, is in
  * one of the `levels` and passes every one of the `searchFilters`. Two lookups where the
@@ -53,7 +53,7 @@ const saveSelfReportsAndGetAllAsLogs = async (
  * filtering is done in memory, with `filterLogByLevels` and `filterLogBySearch`.
  *
  * ```ts
- * const logs = await getFilteredLogs(logsRepository, logsSelfReportRepository, {
+ * const logs = await getFilteredLogs(logsRepository, parseLogsSelfReportRepository, {
  *   fromDate,
  *   levels: ['ERROR'],
  *   searchFilters: []
@@ -62,14 +62,14 @@ const saveSelfReportsAndGetAllAsLogs = async (
  */
 export const getFilteredLogs = async (
   logsRepository: LogsRepository,
-  logsSelfReportRepository: SelfReportRepository | undefined,
+  parseLogsSelfReportRepository: SelfReportRepository | undefined,
   { fromDate, toDate, levels, searchFilters }: LogsFilters
 ): Promise<Log[]> => {
   const { logs, selfReports } = await logsRepository.getAllLogs()
 
   const selfReportsLogs =
-    logsSelfReportRepository !== undefined
-      ? await saveSelfReportsAndGetAllAsLogs(logsSelfReportRepository, selfReports)
+    parseLogsSelfReportRepository !== undefined
+      ? await saveSelfReportsAndGetAllAsLogs(parseLogsSelfReportRepository, selfReports)
       : []
 
   return [...logs, ...selfReportsLogs]

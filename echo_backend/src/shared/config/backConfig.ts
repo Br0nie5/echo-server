@@ -75,11 +75,13 @@ export type SelfReportsConfig = {
   /** Extension, with its dot, a file of `selfReportsDirPath` must have to be read as a self-report file. */
   selfReportFileExtension: string
   /** Name of the self-report file the lines of the log files that hold no log are reported to, with its extension. */
-  parseLogFileSelfReportFileName: string
+  parseLogsSelfReportFileName: string
   /** Name of the self-report file the problem logs that could not be notified are reported to, with its extension. */
   logsNotifierSelfReportFileName: string
-  /** File remembering the id of the last session the self reports were written during. */
-  sessionFilePath: string
+  /** File remembering the id of the last session the self reports of `parseLogsSelfReportFileName` were written during. */
+  parseLogsSessionFilePath: string
+  /** File remembering the id of the last session the self reports of `logsNotifierSelfReportFileName` were written during. */
+  logsNotifierSessionFilePath: string
 }
 
 /** What the cron notifying the problem logs needs, the channel it notifies through apart (`NotificationConfig`). */

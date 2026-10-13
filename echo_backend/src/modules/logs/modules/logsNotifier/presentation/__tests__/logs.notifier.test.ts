@@ -162,7 +162,7 @@ describe('logs notifier', () => {
     expect(fileSystem.getFile(selfReportsFilePath)).toBe(
       toLogFileContent([
         {
-          sessionId: 2,
+          sessionId: 1,
           date: FIRST_CHECK.toISOString(),
           level: 'WARNING',
           message:

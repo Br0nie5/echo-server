@@ -18,12 +18,14 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
 
 /** What {@link createSelfReportFilesRepository} needs. */
 export interface CreateSelfReportFilesRepositoryOptions {
-  /** What the self-report files and the session file are read and written with. */
+  /** What the self-report files and the session file of the repository are read and written with. */
   filesService: FilesService
   /** Missing when the self reports are disabled. */
   selfReportsConfig: SelfReportsConfig | undefined
   /** Picks, in `selfReportsConfig`, the name of the file the self reports are stored in. */
   getSelfReportFileName: (selfReportsConfig: SelfReportsConfig) => string
+  /** Picks, in `selfReportsConfig`, the path of the file the session of the repository is remembered in. */
+  getSessionFilePath: (selfReportsConfig: SelfReportsConfig) => string
   /** Where what cannot be stored or read is written. */
   logger: Logger
 }
@@ -44,7 +46,8 @@ const createSelfReportContentKey = ({ level, message, origin }: SelfReport): str
  * const selfReportRepository = await createSelfReportFilesRepository({
  *   filesService,
  *   selfReportsConfig: config.selfReports,
- *   getSelfReportFileName: ({ parseLogFileSelfReportFileName }) => parseLogFileSelfReportFileName,
+ *   getSelfReportFileName: ({ parseLogsSelfReportFileName }) => parseLogsSelfReportFileName,
+ *   getSessionFilePath: ({ parseLogsSessionFilePath }) => parseLogsSessionFilePath,
  *   logger: server.log
  * })
  * ```
@@ -52,7 +55,8 @@ const createSelfReportContentKey = ({ level, message, origin }: SelfReport): str
  * Returns `undefined` when the self reports are disabled, that is without a `selfReportsConfig`,
  * or when their storage could not be set up.
  *
- * Creating the repository takes its session id: the last one the session file holds plus one, or
+ * Creating the repository takes its session id: the last one its session file holds, the one
+ * `getSessionFilePath` picks the path of, plus one, or
  * `1` when it holds none (it is missing, unreadable or holds none). It then writes its file again
  * without the self reports older than the `retentionDays` of `selfReportsConfig`, which also tells
  * whether the file can be written. The session id is saved last, once the file is ready, so the
@@ -81,6 +85,7 @@ export const createSelfReportFilesRepository = async ({
   filesService,
   selfReportsConfig,
   getSelfReportFileName,
+  getSessionFilePath,
   logger
 }: CreateSelfReportFilesRepositoryOptions): Promise<SelfReportRepository | undefined> => {
   if (selfReportsConfig === undefined) {
@@ -88,7 +93,7 @@ export const createSelfReportFilesRepository = async ({
   }
 
   const selfReportsFilesApi = createSelfReportsFilesApi(selfReportsConfig, filesService)
-  const sessionIdApi = createSessionIdFileApi(selfReportsConfig, filesService)
+  const sessionIdApi = createSessionIdFileApi(getSessionFilePath(selfReportsConfig), filesService)
   const selfReportsFilePath = path.join(
     selfReportsConfig.selfReportsDirPath,
     getSelfReportFileName(selfReportsConfig)

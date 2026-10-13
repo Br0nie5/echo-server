@@ -30,7 +30,7 @@ import { parseTrustedProxies } from './utils/parseTrustedProxies.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const REPOSITORY_ROOT_PATH = path.join(__dirname, '../../../..')
-/** Directory holding the persistent data of the backend (users database, cron checkpoint, self-reports session). */
+/** Directory holding the persistent data of the backend (users database, cron checkpoint, self-reports sessions). */
 const DATA_DIR_PATH = path.join(REPOSITORY_ROOT_PATH, 'data')
 
 /** Extension of the files the logs are read from, and of the files the self reports are written to. */
@@ -164,9 +164,13 @@ export const loadBackConfig = async (
             config.SERVER_NAME
           ),
           selfReportFileExtension: LOG_FILE_EXTENSION,
-          parseLogFileSelfReportFileName: `parseLogFile${LOG_FILE_EXTENSION}`,
+          parseLogsSelfReportFileName: `parseLogFile${LOG_FILE_EXTENSION}`,
           logsNotifierSelfReportFileName: `logsNotifier${LOG_FILE_EXTENSION}`,
-          sessionFilePath: path.join(DATA_DIR_PATH, 'self_reports_session.json')
+          parseLogsSessionFilePath: path.join(DATA_DIR_PATH, 'logs_self_reports_session.json'),
+          logsNotifierSessionFilePath: path.join(
+            DATA_DIR_PATH,
+            'logs_notifier_self_reports_session.json'
+          )
         }
       : undefined,
     notification

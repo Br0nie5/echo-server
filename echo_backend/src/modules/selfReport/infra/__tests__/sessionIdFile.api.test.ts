@@ -1,12 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getMockSelfReportsConfig } from '../../../../test/mocks/mockConfigs.js'
 import { getMockFilesService } from '../../../../test/mocks/mockFilesService.js'
 import { createSessionIdFileApi } from '../sessionIdFile.api.js'
 
-const selfReportsConfig = getMockSelfReportsConfig({
-  sessionFilePath: '/fake/data/nested/self_reports_session.json'
-})
+const sessionFilePath = '/fake/data/nested/self_reports_session.json'
 
 const filesService = getMockFilesService()
 
@@ -20,7 +17,7 @@ describe('SessionIdApi', () => {
       filesService.getFileContent.mockResolvedValue('{"lastSessionId":7}')
 
       const lastSessionId = await createSessionIdFileApi(
-        selfReportsConfig,
+        sessionFilePath,
         filesService
       ).getLastSessionId()
 
@@ -34,7 +31,7 @@ describe('SessionIdApi', () => {
       filesService.getFileContent.mockRejectedValue(new Error('ENOENT'))
 
       await expect(
-        createSessionIdFileApi(selfReportsConfig, filesService).getLastSessionId()
+        createSessionIdFileApi(sessionFilePath, filesService).getLastSessionId()
       ).rejects.toThrow('ENOENT')
     })
 
@@ -47,7 +44,7 @@ describe('SessionIdApi', () => {
       filesService.getFileContent.mockResolvedValue(content)
 
       await expect(
-        createSessionIdFileApi(selfReportsConfig, filesService).getLastSessionId()
+        createSessionIdFileApi(sessionFilePath, filesService).getLastSessionId()
       ).rejects.toThrow()
     })
   })
@@ -62,7 +59,7 @@ describe('SessionIdApi', () => {
         steps.push('replaceFileContent')
       })
 
-      await createSessionIdFileApi(selfReportsConfig, filesService).saveLastSessionId(8)
+      await createSessionIdFileApi(sessionFilePath, filesService).saveLastSessionId(8)
 
       expect(filesService.createDirectory).toHaveBeenCalledWith('/fake/data/nested')
       expect(filesService.replaceFileContent).toHaveBeenCalledWith(

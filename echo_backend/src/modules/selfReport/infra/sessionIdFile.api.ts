@@ -1,11 +1,10 @@
 import path from 'path'
 
-import type { SelfReportsConfig } from '../../../shared/config/backConfig.js'
 import type { FilesService } from '../../../shared/services/files.service.js'
 
 import { SessionIdDtoSchema, type SessionIdDto } from './dto/sessionId.dto.js'
 
-/** Access to the session file, the data source the last session id is stored in. */
+/** Access to a session file, the data source the last session id of one self-report file is stored in. */
 export interface SessionIdApi {
   /**
    * The session id the session file holds, an integer.
@@ -22,17 +21,20 @@ export interface SessionIdApi {
 }
 
 /**
- * Builds the access to the session file, found at `sessionFilePath`, read and written through
+ * Builds the access to the session file found at `sessionFilePath`, read and written through
  * `filesService`.
  *
  * ```ts
- * const sessionIdApi = createSessionIdFileApi(selfReportsConfig, filesService)
+ * const sessionIdApi = createSessionIdFileApi(
+ *   selfReportsConfig.parseLogsSessionFilePath,
+ *   filesService
+ * )
  * const sessionId = (await sessionIdApi.getLastSessionId()) + 1
  * await sessionIdApi.saveLastSessionId(sessionId)
  * ```
  */
 export const createSessionIdFileApi = (
-  { sessionFilePath }: SelfReportsConfig,
+  sessionFilePath: string,
   filesService: FilesService
 ): SessionIdApi => ({
   getLastSessionId: async (): Promise<number> => {

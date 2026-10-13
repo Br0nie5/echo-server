@@ -39,9 +39,10 @@ export const getMockSelfReportsConfig = (
   retentionDays: 10,
   selfReportsDirPath: '/self_reports/Echo',
   selfReportFileExtension: '.jsonl',
-  parseLogFileSelfReportFileName: 'parseLogFile.jsonl',
+  parseLogsSelfReportFileName: 'parseLogFile.jsonl',
   logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
-  sessionFilePath: '/fake/data/self_reports_session.json',
+  parseLogsSessionFilePath: '/fake/data/logs_self_reports_session.json',
+  logsNotifierSessionFilePath: '/fake/data/logs_notifier_self_reports_session.json',
   ...overrides
 })
 

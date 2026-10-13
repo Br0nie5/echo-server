@@ -17,7 +17,7 @@ export interface LogsNotifierDependencies {
    * Where the stored entries that hold no valid log are reported. Missing when the self reports
    * are disabled.
    */
-  logsSelfReportRepository: SelfReportRepository | undefined
+  parseLogsSelfReportRepository: SelfReportRepository | undefined
   /** What the last-check file and the files of its self reports are read and written with. */
   filesService: FilesService
 }
@@ -27,9 +27,10 @@ export interface LogsNotifierDependencies {
  * notifications.
  *
  * The cron reads the logs like the routes do, from `logsRepository` and, when there is one,
- * reporting to `logsSelfReportRepository`, whose self reports are then among them. When the self
- * reports are enabled, it is given a self-report repository of its own for the problem logs it
- * could not notify. It notifies through a `NotifierService` built from the `notification` config.
+ * reporting to `parseLogsSelfReportRepository`, whose self reports are then among them. When the
+ * self reports are enabled, it is given a self-report repository of its own for the problem logs
+ * it could not notify. It notifies through a `NotifierService` built from the `notification`
+ * config.
  */
 export const registerLogsNotifier = async (
   server: EchoServer,
@@ -38,7 +39,7 @@ export const registerLogsNotifier = async (
     selfReports: selfReportsConfig,
     notification: notificationConfig
   }: BackConfig,
-  { logsRepository, logsSelfReportRepository, filesService }: LogsNotifierDependencies
+  { logsRepository, parseLogsSelfReportRepository, filesService }: LogsNotifierDependencies
 ): Promise<void> => {
   if (logsNotifierConfig === undefined || notificationConfig === undefined) {
     server.log.info('The logs notifier is not configured, skipping its registration')
@@ -48,7 +49,7 @@ export const registerLogsNotifier = async (
   await server.register(logsNotifier, {
     logsNotifierConfig,
     logsRepository,
-    logsSelfReportRepository,
+    parseLogsSelfReportRepository,
     notifierService: createNotifierService(notificationConfig),
     checkDateRepository: createCheckDateFileRepository(
       createCheckDateFileApi(logsNotifierConfig, filesService)
@@ -57,6 +58,7 @@ export const registerLogsNotifier = async (
       filesService,
       selfReportsConfig,
       getSelfReportFileName: ({ logsNotifierSelfReportFileName }) => logsNotifierSelfReportFileName,
+      getSessionFilePath: ({ logsNotifierSessionFilePath }) => logsNotifierSessionFilePath,
       logger: server.log
     })
   })
