@@ -1,26 +1,5 @@
-import type {
-  AuthConfig,
-  BackConfig,
-  LogsNotifierConfig,
-  NotificationConfig,
-  LogsConfig,
-  SelfReportsConfig,
-  ServerConfig
-} from '../../shared/config/backConfig.js'
-
-/** A `ServerConfig` without TLS, trusting any proxy and serving the documentation, for the tests, with `overrides` on top of its defaults. */
-export const getMockServerConfig = (overrides: Partial<ServerConfig> = {}): ServerConfig => ({
-  serverName: 'test-device',
-  basePath: '',
-  apiRoutePrefix: '/api',
-  appRoutePrefix: '/app',
-  documentationRoutePrefix: '/documentation',
-  hasDocumentationRoute: true,
-  host: '127.0.0.1',
-  port: 4000,
-  frontendDistDirPath: '/fake/echo_frontend/dist',
-  ...overrides
-})
+import type { AuthConfig } from '../../shared/config/authConfig.js'
+import type { LogsNotifierConfig } from '../../shared/config/logsNotifierConfig.js'
 
 /** An `AuthConfig` for the tests, with `overrides` on top of its defaults. */
 export const getMockAuthConfig = (overrides: Partial<AuthConfig> = {}): AuthConfig => ({
@@ -28,21 +7,6 @@ export const getMockAuthConfig = (overrides: Partial<AuthConfig> = {}): AuthConf
   credentialsAttemptsLimit: { maxAttempts: 5, timeWindowMilliseconds: 60 * 1000 },
   cookieName: 'test-cookie',
   cookieSerializeOptions: { httpOnly: true, path: '/' },
-  usersDbFilePath: '/fake/data/users.db',
-  ...overrides
-})
-
-/** A `SelfReportsConfig` for the tests, with `overrides` on top of its defaults. */
-export const getMockSelfReportsConfig = (
-  overrides: Partial<SelfReportsConfig> = {}
-): SelfReportsConfig => ({
-  retentionDays: 10,
-  selfReportsDirPath: '/self_reports/Echo',
-  selfReportFileExtension: '.jsonl',
-  parseLogsSelfReportFileName: 'parseLogFile.jsonl',
-  logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
-  parseLogsSessionFilePath: '/fake/data/logs_self_reports_session.json',
-  logsNotifierSessionFilePath: '/fake/data/logs_notifier_self_reports_session.json',
   ...overrides
 })
 
@@ -52,39 +16,7 @@ export const getMockLogsNotifierConfig = (
 ): LogsNotifierConfig => ({
   schedule: '*/30 * * * *',
   watchedLogsLevels: ['ERROR', 'WARNING'],
-  notifierTimezone: 'UTC',
+  timezone: 'UTC',
   serverName: 'test-device',
-  lastLogsCheckFilePath: '/fake/data/last_logs_check.json',
-  ...overrides
-})
-
-/** A `NotificationConfig` for the tests, with `overrides` on top of its defaults. */
-export const getMockNotificationConfig = (
-  overrides: Partial<NotificationConfig> = {}
-): NotificationConfig => ({
-  telegramChatId: 'chat-123',
-  telegramBotToken: 'fake-bot-token',
-  telegramBaseUrl: 'https://api.telegram.org',
-  telegramMessageSizeLimit: 4096,
-  ...overrides
-})
-
-/** A `LogsConfig` without logs notifier, for the tests, with `overrides` on top of its defaults. */
-export const getMockLogsConfig = (overrides: Partial<LogsConfig> = {}): LogsConfig => ({
-  logsDirPath: '/logs',
-  logFileExtension: '.jsonl',
-  logFilesDirName: 'logs',
-  ...overrides
-})
-
-/**
- * A `BackConfig` for the tests, made of the default mock of each of its parts, with `overrides` on
- * top: it has authentication and self reports, and no logs notifier and no notification unless they are given.
- */
-export const getMockBackConfig = (overrides: Partial<BackConfig> = {}): BackConfig => ({
-  server: getMockServerConfig(),
-  auth: getMockAuthConfig(),
-  logs: getMockLogsConfig(),
-  selfReports: getMockSelfReportsConfig(),
   ...overrides
 })

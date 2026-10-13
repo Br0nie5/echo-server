@@ -37,7 +37,7 @@ Read by the backend and by the frontend, with `parseConfig` of [echo_utilities](
 
 ## Backend variables
 
-Read by [loadBackConfig.ts](../echo_backend/src/shared/config/loadBackConfig.ts), which builds the `BackConfig` ([backConfig.ts](../echo_backend/src/shared/config/backConfig.ts)) the server is built with. Each variable has its own parser, in [utils/](../echo_backend/src/shared/config/utils/).
+Read by [loadSettings.ts](../echo_backend/src/initializers/settings/loadSettings.ts), which builds the `Settings` ([settings.ts](../echo_backend/src/initializers/settings/settings.ts)) the server is built with. Each variable has its own parser, in [utils/](../echo_backend/src/initializers/settings/utils/).
 
 ### Server
 
@@ -97,7 +97,7 @@ In a container, the entrypoint writes `echo_frontend/dist/env.production.json` f
 
 ## What is not a variable
 
-Paths, file names and limits are constants of `loadBackConfig`, part of the `BackConfig` like the rest. They are given here from the root of the repository, which is `/app` in the image:
+Paths, file names and limits are constants of `loadSettings`, part of the `Settings` like the rest. They are given here from the root of the repository, which is `/app` in the image:
 
 | What                                                                      | Value                                                                                 |
 | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |

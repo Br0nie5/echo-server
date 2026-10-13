@@ -1,6 +1,5 @@
 import path from 'path'
 
-import type { SelfReportsConfig } from '../../../shared/config/backConfig.js'
 import { FileDoesNotExistError } from '../../../shared/services/fileDoesNotExistError.js'
 import type { FilesService } from '../../../shared/services/files.service.js'
 
@@ -42,13 +41,19 @@ export interface SelfReportsFilesApi {
  * `selfReportFileExtension`:
  *
  * ```ts
- * const selfReportsFilesApi = createSelfReportsFilesApi(config.selfReports, filesService)
+ * const selfReportsFilesApi = createSelfReportsFilesApi(
+ *   { selfReportsDirPath: '/self_reports/Echo', selfReportFileExtension: '.jsonl' },
+ *   filesService
+ * )
  * const [filePath] = await selfReportsFilesApi.getAllSelfReportFilesPaths()
  * const lines = await selfReportsFilesApi.getSelfReportLines(filePath)
  * ```
  */
 export const createSelfReportsFilesApi = (
-  { selfReportsDirPath, selfReportFileExtension }: SelfReportsConfig,
+  {
+    selfReportsDirPath,
+    selfReportFileExtension
+  }: { selfReportsDirPath: string; selfReportFileExtension: string },
   filesService: FilesService
 ): SelfReportsFilesApi => ({
   getAllSelfReportFilesPaths: (): Promise<string[]> =>

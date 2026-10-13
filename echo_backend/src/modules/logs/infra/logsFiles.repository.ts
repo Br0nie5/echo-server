@@ -26,7 +26,7 @@ import type { LogsFilesApi } from './logsFiles.api.js'
  *
  * ```ts
  * const logsRepository = createLogsFilesRepository(
- *   createLogsFilesApi(config.logs, filesService),
+ *   createLogsFilesApi(logsFilesLocation, filesService),
  *   parseLogsSelfReportRepository
  * )
  * ```

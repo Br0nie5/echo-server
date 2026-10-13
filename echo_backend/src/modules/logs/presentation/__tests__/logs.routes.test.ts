@@ -2,7 +2,10 @@ import type { Log } from '@echo/utilities'
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest'
 
 import { buildTestServer } from '../../../../test/buildTestServer.js'
-import { getMockAuthConfig, getMockSelfReportsConfig } from '../../../../test/mocks/mockConfigs.js'
+import {
+  getMockAuthSettings,
+  getMockSelfReportsSettings
+} from '../../../../test/mocks/mockSettings.js'
 
 /** The instant the tests run at, which the lines that hold no log are reported at. */
 const NOW = new Date('2026-04-28T10:00:00.000Z')
@@ -58,7 +61,7 @@ afterAll(() => {
 
 describe('GET /logs', () => {
   test('Should answer the logs of every log file, from the newest to the oldest', async () => {
-    const { server } = await buildTestServer({ config: { auth: undefined }, files: logFiles })
+    const { server } = await buildTestServer({ settings: { auth: undefined }, files: logFiles })
 
     const response = await server.inject({
       method: 'GET',
@@ -75,7 +78,7 @@ describe('GET /logs', () => {
       const yesterdayLogMessage = 'Nothing to send.'
       const todayMorningLogMessage = 'Ping not answered.'
 
-      const { server } = await buildTestServer({ config: { auth: undefined }, files: logFiles })
+      const { server } = await buildTestServer({ settings: { auth: undefined }, files: logFiles })
 
       const fromDateResponse = await server.inject({
         method: 'GET',
@@ -113,7 +116,7 @@ describe('GET /logs', () => {
       const warningLogMessage = 'Invoice 41 sent on attempt 2.'
       const errorLogMessage = 'Ping not answered.'
 
-      const { server } = await buildTestServer({ config: { auth: undefined }, files: logFiles })
+      const { server } = await buildTestServer({ settings: { auth: undefined }, files: logFiles })
 
       const oneLevelResponse = await server.inject({
         method: 'GET',
@@ -134,7 +137,7 @@ describe('GET /logs', () => {
       const billingGroupLogMessage = 'Invoices sent.'
       const billingGroupWarningLogMessage = 'Invoice 41 sent on attempt 2.'
 
-      const { server } = await buildTestServer({ config: { auth: undefined }, files: logFiles })
+      const { server } = await buildTestServer({ settings: { auth: undefined }, files: logFiles })
 
       const response = await server.inject({
         method: 'GET',
@@ -167,7 +170,7 @@ describe('GET /logs', () => {
         wrongField: 'logLevels'
       }
     ])('Should refuse a query $reason, and name the field', async ({ query, wrongField }) => {
-      const { server } = await buildTestServer({ config: { auth: undefined }, files: logFiles })
+      const { server } = await buildTestServer({ settings: { auth: undefined }, files: logFiles })
 
       const response = await server.inject({ method: 'GET', url: '/api/logs', query })
 
@@ -180,8 +183,8 @@ describe('GET /logs', () => {
   })
 
   test('Should only answer a logged in user when the server has authentication', async () => {
-    const { server, config } = await buildTestServer({
-      config: { auth: getMockAuthConfig({ usersDbFilePath: ':memory:' }) },
+    const { server, settings } = await buildTestServer({
+      settings: { auth: getMockAuthSettings({ usersDbFilePath: ':memory:' }) },
       files: logFiles
     })
     const query = { fromDate: '2026-04-26T00:00:00.000Z' }
@@ -195,7 +198,7 @@ describe('GET /logs', () => {
       method: 'GET',
       url: '/api/logs',
       query,
-      cookies: { [config.auth!.cookieName]: server.jwt.sign({ user: 'admin' }) }
+      cookies: { [settings.auth!.config.cookieName]: server.jwt.sign({ user: 'admin' }) }
     })
 
     expect(loggedInResponse.statusCode).toBe(200)
@@ -204,12 +207,11 @@ describe('GET /logs', () => {
 
   test('Should save the lines that hold no log as self reports, and answer them as logs', async () => {
     const notALogLine = 'Invoices sent, but this line is no JSON.'
-    const selfReportsConfig = getMockSelfReportsConfig()
-    const { selfReportsDirPath, parseLogsSelfReportFileName } = selfReportsConfig
-    const selfReportsFilePath = `${selfReportsDirPath}/${parseLogsSelfReportFileName}`
+    const selfReportsSettings = getMockSelfReportsSettings()
+    const selfReportsFilePath = `${selfReportsSettings.dirPath}/${selfReportsSettings.fileName}`
 
     const { server, fileSystem } = await buildTestServer({
-      config: { auth: undefined, selfReports: selfReportsConfig },
+      settings: { auth: undefined, parseLogsSelfReports: selfReportsSettings },
       files: { [sendInvoicesLogFilePath]: `${notALogLine}\n` }
     })
     const query = { fromDate: '2026-04-26T00:00:00.000Z' }

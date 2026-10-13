@@ -26,7 +26,7 @@ export interface SessionIdApi {
  *
  * ```ts
  * const sessionIdApi = createSessionIdFileApi(
- *   selfReportsConfig.parseLogsSessionFilePath,
+ *   '/data/self_reports_session.json',
  *   filesService
  * )
  * const sessionId = (await sessionIdApi.getLastSessionId()) + 1

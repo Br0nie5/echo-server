@@ -1,10 +1,11 @@
 import type { LightMyRequestResponse } from 'fastify'
 import { describe, expect, test } from 'vitest'
 
+import { createCookieSerializeOptions } from '../../../../initializers/settings/utils/createCookieSerializeOptions.js'
 import type { EchoServer } from '../../../../initializers/types/echoServer.js'
-import { createCookieSerializeOptions } from '../../../../shared/config/utils/createCookieSerializeOptions.js'
 import { buildTestServer } from '../../../../test/buildTestServer.js'
-import { getMockAuthConfig, getMockServerConfig } from '../../../../test/mocks/mockConfigs.js'
+import { getMockAuthConfig } from '../../../../test/mocks/mockConfigs.js'
+import { getMockAuthSettings, getMockServerSettings } from '../../../../test/mocks/mockSettings.js'
 
 const IN_MEMORY_DATABASE_PATH = ':memory:'
 
@@ -26,8 +27,8 @@ const getAuthStatus = (
 
 describe('auth routes', () => {
   test('Should let the first user sign up, which logs them in, and nobody after them', async () => {
-    const { server, config } = await buildTestServer()
-    const cookieName = config.auth!.cookieName
+    const { server, settings } = await buildTestServer()
+    const cookieName = settings.auth!.config.cookieName
 
     const statusBeforeSignUpResponse = await getAuthStatus(server)
 
@@ -58,8 +59,8 @@ describe('auth routes', () => {
   })
 
   test('Should log a user in with the credentials of the account only, and out', async () => {
-    const { server, config } = await buildTestServer()
-    const cookieName = config.auth!.cookieName
+    const { server, settings } = await buildTestServer()
+    const cookieName = settings.auth!.config.cookieName
     await postCredentials(server, 'signup')
 
     const wrongPasswordResponse = await postCredentials(server, 'login', {
@@ -110,15 +111,17 @@ describe('auth routes', () => {
 
   describe('Session cookie', () => {
     test('Should only be sent back over HTTPS when the user reached the server over HTTPS', async () => {
-      const { server, config } = await buildTestServer({
-        config: {
-          auth: getMockAuthConfig({
-            usersDbFilePath: IN_MEMORY_DATABASE_PATH,
-            cookieSerializeOptions: createCookieSerializeOptions('/echo', 24 * 60 * 60)
+      const { server, settings } = await buildTestServer({
+        settings: {
+          auth: getMockAuthSettings({
+            config: getMockAuthConfig({
+              cookieSerializeOptions: createCookieSerializeOptions('/echo', 24 * 60 * 60)
+            }),
+            usersDbFilePath: IN_MEMORY_DATABASE_PATH
           })
         }
       })
-      const cookieName = config.auth!.cookieName
+      const cookieName = settings.auth!.config.cookieName
 
       const httpResponse = await postCredentials(server, 'signup')
       const httpsResponse = await postCredentials(server, 'login', credentials, {
@@ -139,9 +142,11 @@ describe('auth routes', () => {
   })
 
   describe('Attempts limit', () => {
-    const limitedAuthConfig = getMockAuthConfig({
-      usersDbFilePath: IN_MEMORY_DATABASE_PATH,
-      credentialsAttemptsLimit: { maxAttempts: 2, timeWindowMilliseconds: 60 * 1000 }
+    const limitedAuthSettings = getMockAuthSettings({
+      config: getMockAuthConfig({
+        credentialsAttemptsLimit: { maxAttempts: 2, timeWindowMilliseconds: 60 * 1000 }
+      }),
+      usersDbFilePath: IN_MEMORY_DATABASE_PATH
     })
 
     const sendThreeLoginsFromThreeForwardedAddresses = async (
@@ -160,7 +165,7 @@ describe('auth routes', () => {
     }
 
     test('Should stop answering the address that sent too many credentials', async () => {
-      const { server } = await buildTestServer({ config: { auth: limitedAuthConfig } })
+      const { server } = await buildTestServer({ settings: { auth: limitedAuthSettings } })
 
       const statusCodes = await sendThreeLoginsFromThreeForwardedAddresses(server)
 
@@ -169,9 +174,9 @@ describe('auth routes', () => {
 
     test('Should count the attempts per forwarded address once the proxies to believe are listed', async () => {
       const { server } = await buildTestServer({
-        config: {
-          auth: limitedAuthConfig,
-          server: getMockServerConfig({ trustedProxies: ['127.0.0.1'] })
+        settings: {
+          auth: limitedAuthSettings,
+          server: getMockServerSettings({ trustedProxies: ['127.0.0.1'] })
         }
       })
 

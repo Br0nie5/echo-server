@@ -10,7 +10,6 @@ vi.mock('better-sqlite3', async (importOriginal) => {
   }
 })
 
-import { getMockAuthConfig } from '../../../../test/mocks/mockConfigs.js'
 import { getMockFilesService } from '../../../../test/mocks/mockFilesService.js'
 import { createUsersDb } from '../users.db.js'
 
@@ -30,7 +29,7 @@ describe('createUsersDb', () => {
   })
 
   it('Should create the parent directory, open the file and restrict it to its owner', async () => {
-    usersDb = await createUsersDb(getMockAuthConfig({ usersDbFilePath }), filesService)
+    usersDb = await createUsersDb({ usersDbFilePath }, filesService)
 
     expect(filesService.createDirectory).toHaveBeenCalledExactlyOnceWith('/data/nested')
     expect(Database).toHaveBeenCalledExactlyOnceWith(usersDbFilePath)

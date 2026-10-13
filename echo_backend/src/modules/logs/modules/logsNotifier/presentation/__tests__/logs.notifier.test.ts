@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import type { BackConfig } from '../../../../../../shared/config/backConfig.js'
+import type { Settings } from '../../../../../../initializers/settings/settings.js'
 import { buildTestServer, type TestServer } from '../../../../../../test/buildTestServer.js'
+import { getMockLogsNotifierConfig } from '../../../../../../test/mocks/mockConfigs.js'
 import {
-  getMockLogsConfig,
-  getMockLogsNotifierConfig,
-  getMockNotificationConfig,
-  getMockSelfReportsConfig
-} from '../../../../../../test/mocks/mockConfigs.js'
+  getMockLogsNotifierSettings,
+  getMockLogsSettings,
+  getMockNotificationSettings,
+  getMockSelfReportsSettings
+} from '../../../../../../test/mocks/mockSettings.js'
 
 /** The instant the server starts at: the cron checks the logs at each minute after it. */
 const SERVER_START = new Date('2026-04-28T10:00:30.000Z')
@@ -17,11 +18,13 @@ const SECOND_CHECK = new Date('2026-04-28T10:02:00.000Z')
 
 const ONE_MINUTE_MILLISECONDS = 60 * 1000
 
-const logsNotifierConfig = getMockLogsNotifierConfig({ schedule: '* * * * *' })
-const notificationConfig = getMockNotificationConfig()
+const logsNotifierSettings = getMockLogsNotifierSettings({
+  config: getMockLogsNotifierConfig({ schedule: '* * * * *' })
+})
+const notificationSettings = getMockNotificationSettings()
 
 const logFilePath = '/logs/server/billing/logs/send_invoices.jsonl'
-const { telegramBaseUrl, telegramBotToken } = notificationConfig
+const { telegramBaseUrl, telegramBotToken } = notificationSettings
 const telegramUrl = `${telegramBaseUrl}/bot${telegramBotToken}/sendMessage`
 
 const toLogFileContent = (lines: object[]): string =>
@@ -51,13 +54,13 @@ const fetchMock = vi.fn<typeof fetch>()
 
 const buildServerWithLogsNotifier = (
   files: Record<string, string>,
-  config: Partial<BackConfig> = {}
+  settings: Partial<Settings> = {}
 ): Promise<TestServer> =>
   buildTestServer({
-    config: {
-      logs: getMockLogsConfig({ logsNotifier: logsNotifierConfig }),
-      notification: notificationConfig,
-      ...config
+    settings: {
+      logs: getMockLogsSettings({ logsNotifier: logsNotifierSettings }),
+      notification: notificationSettings,
+      ...settings
     },
     files
   })
@@ -85,7 +88,7 @@ describe('logs notifier', () => {
 
     await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
 
-    expect(fileSystem.getFile(logsNotifierConfig.lastLogsCheckFilePath)).toBe(
+    expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
       toLastCheckFileContent(FIRST_CHECK)
     )
     expect(fetchMock).not.toHaveBeenCalled()
@@ -94,7 +97,7 @@ describe('logs notifier', () => {
   test('Should notify the problem logs logged since the previous check, once', async () => {
     const { fileSystem } = await buildServerWithLogsNotifier({
       [logFilePath]: logFileContent,
-      [logsNotifierConfig.lastLogsCheckFilePath]: toLastCheckFileContent(PREVIOUS_CHECK)
+      [logsNotifierSettings.lastLogsCheckFilePath]: toLastCheckFileContent(PREVIOUS_CHECK)
     })
 
     await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
@@ -102,17 +105,17 @@ describe('logs notifier', () => {
     expect(fetchMock).toHaveBeenCalledExactlyOnceWith(telegramUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: expect.stringContaining(`"chat_id":"${notificationConfig.telegramChatId}"`)
+      body: expect.stringContaining(`"chat_id":"${notificationSettings.telegramChatId}"`)
     })
     expect(getSentMessages()).toMatchSnapshot()
-    expect(fileSystem.getFile(logsNotifierConfig.lastLogsCheckFilePath)).toBe(
+    expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
       toLastCheckFileContent(FIRST_CHECK)
     )
 
     await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
 
     expect(fetchMock).toHaveBeenCalledOnce()
-    expect(fileSystem.getFile(logsNotifierConfig.lastLogsCheckFilePath)).toBe(
+    expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
       toLastCheckFileContent(SECOND_CHECK)
     )
   })
@@ -121,13 +124,13 @@ describe('logs notifier', () => {
     fetchMock.mockResolvedValueOnce(new Response('{}', { status: 500 }))
     const { fileSystem } = await buildServerWithLogsNotifier({
       [logFilePath]: logFileContent,
-      [logsNotifierConfig.lastLogsCheckFilePath]: toLastCheckFileContent(PREVIOUS_CHECK)
+      [logsNotifierSettings.lastLogsCheckFilePath]: toLastCheckFileContent(PREVIOUS_CHECK)
     })
 
     await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
 
     expect(fetchMock).toHaveBeenCalledOnce()
-    expect(fileSystem.getFile(logsNotifierConfig.lastLogsCheckFilePath)).toBe(
+    expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
       toLastCheckFileContent(PREVIOUS_CHECK)
     )
 
@@ -135,24 +138,26 @@ describe('logs notifier', () => {
 
     const [firstMessage, secondMessage] = getSentMessages()
     expect(secondMessage).toBe(firstMessage)
-    expect(fileSystem.getFile(logsNotifierConfig.lastLogsCheckFilePath)).toBe(
+    expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
       toLastCheckFileContent(SECOND_CHECK)
     )
   })
 
   test('Should save a self report in place of a notification that is too long for the channel', async () => {
-    const selfReportsConfig = getMockSelfReportsConfig()
-    const { selfReportsDirPath, logsNotifierSelfReportFileName } = selfReportsConfig
-    const selfReportsFilePath = `${selfReportsDirPath}/${logsNotifierSelfReportFileName}`
+    const selfReportsSettings = getMockSelfReportsSettings({
+      fileName: 'logsNotifier.jsonl',
+      sessionFilePath: '/fake/data/logs_notifier_self_reports_session.json'
+    })
+    const selfReportsFilePath = `${selfReportsSettings.dirPath}/${selfReportsSettings.fileName}`
 
     const { fileSystem } = await buildServerWithLogsNotifier(
       {
         [logFilePath]: logFileContent,
-        [logsNotifierConfig.lastLogsCheckFilePath]: toLastCheckFileContent(PREVIOUS_CHECK)
+        [logsNotifierSettings.lastLogsCheckFilePath]: toLastCheckFileContent(PREVIOUS_CHECK)
       },
       {
-        notification: getMockNotificationConfig({ telegramMessageSizeLimit: 10 }),
-        selfReports: selfReportsConfig
+        notification: getMockNotificationSettings({ telegramMessageSizeLimit: 10 }),
+        logsNotifierSelfReports: selfReportsSettings
       }
     )
 
@@ -171,7 +176,7 @@ describe('logs notifier', () => {
         }
       ])
     )
-    expect(fileSystem.getFile(logsNotifierConfig.lastLogsCheckFilePath)).toBe(
+    expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
       toLastCheckFileContent(FIRST_CHECK)
     )
   })
@@ -184,6 +189,6 @@ describe('logs notifier', () => {
     await server.close()
     await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
 
-    expect(fileSystem.getFile(logsNotifierConfig.lastLogsCheckFilePath)).toBeUndefined()
+    expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBeUndefined()
   })
 })

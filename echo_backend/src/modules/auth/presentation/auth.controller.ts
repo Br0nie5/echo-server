@@ -1,7 +1,7 @@
 import type { AuthStatus, EchoError, LoginRequest, SignUpRequest } from '@echo/utilities'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 
-import type { AuthConfig } from '../../../shared/config/backConfig.js'
+import type { AuthConfig } from '../../../shared/config/authConfig.js'
 import { canSignUp, createSignUpFirstAdmin } from '../application/signUpFirstAdmin.js'
 import { validateCredentials } from '../application/validateCredentials.js'
 import type { AuthRepository } from '../domain/auth.repository.js'

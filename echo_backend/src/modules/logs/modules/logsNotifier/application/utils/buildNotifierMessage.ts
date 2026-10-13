@@ -35,7 +35,7 @@ export interface NotifierMessageContent {
  *
  * ```ts
  * const message = buildNotifierMessage({
- *   messageSizeLimit: notifierService.getMessageSizeLimit(),
+ *   messageSizeLimit: notificationsService.getMessageSizeLimit(),
  *   problemLogs,
  *   serverName,
  *   timezone

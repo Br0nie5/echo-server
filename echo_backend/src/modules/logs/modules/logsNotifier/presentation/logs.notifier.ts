@@ -2,8 +2,8 @@ import type { FastifyPluginAsync, FastifyPluginOptions } from 'fastify'
 import fastifyPlugin from 'fastify-plugin'
 import cron from 'node-cron'
 
-import type { LogsNotifierConfig } from '../../../../../shared/config/backConfig.js'
-import type { NotifierService } from '../../../../../shared/services/notifier.service.js'
+import type { LogsNotifierConfig } from '../../../../../shared/config/logsNotifierConfig.js'
+import type { NotificationsService } from '../../../../notifications/domain/notifications.service.js'
 import type { SelfReportRepository } from '../../../../selfReport/domain/selfReport.repository.js'
 import type { LogsRepository } from '../../../domain/logs.repository.js'
 import { checkProblemLogsAndNotify } from '../application/checkProblemLogsAndNotify.js'
@@ -13,7 +13,7 @@ import type { CheckDateRepository } from '../domain/checkDate.repository.js'
 export interface LogsNotifierPluginOptions extends FastifyPluginOptions {
   logsNotifierConfig: LogsNotifierConfig
   logsRepository: LogsRepository
-  notifierService: NotifierService
+  notificationsService: NotificationsService
   checkDateRepository: CheckDateRepository
   /**
    * Where a check reports the problem logs it could not notify. Missing when the self reports are
@@ -27,7 +27,7 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
   {
     logsNotifierConfig,
     logsRepository,
-    notifierService,
+    notificationsService,
     checkDateRepository,
     logsNotifierSelfReportRepository
   }
@@ -39,11 +39,9 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
     async () => {
       try {
         await checkProblemLogsAndNotify({
-          watchedLogsLevels: logsNotifierConfig.watchedLogsLevels,
-          serverName: logsNotifierConfig.serverName,
-          timezone: logsNotifierConfig.notifierTimezone,
+          logsNotifierConfig,
           logsRepository,
-          notifierService,
+          notificationsService,
           checkDateRepository,
           logsNotifierSelfReportRepository
         })

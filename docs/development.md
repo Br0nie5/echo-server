@@ -86,9 +86,9 @@ No test reaches the outside: no network call, no file written, no real clock whe
 
 ### Backend
 
-- **A route or the cron** is tested on the real server (`logs.routes.test.ts`, `auth.routes.test.ts`, `logs.notifier.test.ts`). `buildTestServer` (`src/test/`) builds it with `buildServer`, from a config with the authentication and nothing optional, which a test completes with the part it is about. Only the outside is replaced: the file system by one kept in memory (`createInMemoryFileSystem`), which the real `FilesService` runs on, the users database by an in-memory SQLite one, and `fetch`, stubbed, for the notifications. A test fills the files, sends requests with `server.inject` and reads the files back. The cron is run by moving the fake clock.
+- **A route or the cron** is tested on the real server (`logs.routes.test.ts`, `auth.routes.test.ts`, `logs.notifier.test.ts`). `buildTestServer` (`src/test/`) builds it with `buildServer`, from settings with the authentication and nothing optional, which a test completes with the part it is about. Only the outside is replaced: the file system by one kept in memory (`createInMemoryFileSystem`), which the real `FilesService` runs on, the users database by an in-memory SQLite one, and `fetch`, stubbed, for the notifications. A test fills the files, sends requests with `server.inject` and reads the files back. The cron is run by moving the fake clock.
 - **The server itself** (`src/__tests__/server.test.ts`): its paths, its documentation, its frontend, CORS, the proxies, TLS, and `startServer`, whose `listen` is a stub, so no test opens a port. The routes and the cron are mocked there, so a change in a module never changes that file. The initializers have no test of their own.
-- **Everything else** has unit tests, with a `FilesService` whose methods are mocks (`getMockFilesService`) and a config from `src/test/mocks/mockConfigs.ts`.
+- **Everything else** has unit tests, with a `FilesService` whose methods are mocks (`getMockFilesService`) and a config from `src/test/mocks/mockConfigs.ts`. The settings of a test on the real server come from `src/test/mocks/mockSettings.ts`.
 
 ### Frontend
 

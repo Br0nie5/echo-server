@@ -79,8 +79,9 @@ echo_backend/src/
     auth/
     logs/
       modules/logsNotifier/
+    notifications/
     selfReport/
-  shared/            the config, the services, what the modules share
+  shared/            the types of the configs, the files service, what the modules share
   test/              the helpers of the tests
 ```
 
@@ -107,12 +108,12 @@ A module or a submodule may import the `domain/` and the `infra/` of any other o
 
 ### The composition root
 
-`server.ts` is where everything is put together. `buildServer(config, filesService)` creates the Fastify app, builds the repositories and calls the `register*` functions of [initializers/](../echo_backend/src/initializers/), one per file:
+`server.ts` is where everything is put together. `buildServer(settings, filesService)` creates the Fastify app, builds the repositories and calls the `register*` functions of [initializers/](../echo_backend/src/initializers/), one per file:
 
 | Initializer             | Registers                                                                                         |
 | ----------------------- | ------------------------------------------------------------------------------------------------- |
 | `registerSecurity`      | Cookie and JWT support, only with the authentication, and CORS.                                   |
-| `registerDocumentation` | Swagger and its UI, only when the config asks for them.                                           |
+| `registerDocumentation` | Swagger and its UI, only when the settings ask for them.                                          |
 | `registerAuthRoutes`    | The auth routes and their rate limit, on top of the users database, only with the authentication. |
 | `registerLogsRoutes`    | The logs routes, given the authentication hook when there is one.                                 |
 | `registerFrontend`      | The built frontend, the redirection of the root to it, and the 404 of any unknown path.           |
@@ -120,13 +121,18 @@ A module or a submodule may import the `domain/` and the `infra/` of any other o
 
 They build the `infra/` of the modules and hand it to their `presentation/`, which calls their `application/` itself: an initializer never imports an `application/`. Nothing but `server.ts` imports `initializers/`, and nothing but `main.ts` imports `server.ts`.
 
-`startServer`, next to `buildServer`, creates the `FilesService`, loads the config, builds the server and starts listening. `main.ts` only calls it.
+`startServer`, next to `buildServer`, creates the `FilesService`, loads the settings, builds the server and starts listening. `main.ts` only calls it.
 
-### The config
+### The settings and the configs
 
-`shared/config/loadBackConfig.ts` builds the `BackConfig` once, from the environment variables and from constants: the paths, the file names, the limits. It is split by what uses it: `server`, `logs` (which holds the optional `logsNotifier`) and the optional `auth`, `selfReports` and `notification`. A part that is missing is disabled.
+`initializers/settings/loadSettings.ts` builds the `Settings` once, from the environment variables and from constants: the paths, the file names, the limits. They are split by what uses them: `server`, `logs` (which holds the optional `logsNotifier`) and the optional `auth`, `parseLogsSelfReports`, `logsNotifierSelfReports` (one per part of the backend that reports) and `notification`. A part that is missing is disabled. The parser of each variable is in `initializers/settings/utils/`.
 
-A function is given the config of its domain (`createLogsFilesApi(config.logs, filesService)`), and takes every setting, path and file name from it. No module reads `process.env`, builds a path from `import.meta.url` or declares a file name of its own. See the [configuration reference](configuration.md).
+The settings stay in the composition root: only `server.ts` and the initializers read them. What goes down to a module is one of two things.
+
+- **A config**, the part of the settings a module is given as it is, which any of its layers may know. Its type is in `shared/config/`: `AuthConfig` (the session, its cookie, the limit of the attempts) and `LogsNotifierConfig` (the schedule, the watched levels, the timezone, the server name). `AuthSettings` and `LogsNotifierSettings` hold theirs as `config`.
+- **What an implementation needs**: a path, a file name, an extension, a token. It is in no config, so the `presentation/` and the `application/` of a module never see it. The `infra/` that needs it asks for it as named values (`createUsersDb({ usersDbFilePath }, filesService)`, `createLogsFilesApi({ logsDirPath, logFileExtension, logFilesDirName }, filesService)`), and never imports a type of the settings, which the rule keeping `initializers/` for `server.ts` refuses.
+
+No module reads `process.env`, builds a path from `import.meta.url` or declares a file name of its own. See the [configuration reference](configuration.md).
 
 ### The `logs` module
 
@@ -165,7 +171,18 @@ A check builds on `getFilteredLogs`, the use case of its parent:
 - When the self reports are included in the logs, they are notified like any other log when their level is watched. A line that holds no valid log is reported each time the logs are read, but stored once, with the date it was first read at: it is notified once too.
 - When the size limit of the channel is too small for any message, nothing is sent, and the check reports it as a warning to a `SelfReportRepository` of its own, when the self reports are enabled.
 
-It sends its message through the `NotifierService` of `shared/services/`.
+It sends its message through the `NotificationsService` of the `notifications` module, which it only knows by its contract.
+
+### The `notifications` module
+
+`modules/notifications/` is how the backend sends a message to the outside. It has no route and no business rule, so it has two layers.
+
+| Folder    | Content                                                                                                                                                                                                      |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `domain/` | `NotificationsService`, the contract whoever notifies is given: it gives the size limit of its messages and sends one. It knows nothing of what the messages say, nor of the channel they go through.        |
+| `infra/`  | `notificationsTelegram.service.ts` (`createNotificationsTelegramService`) implements the contract through the Telegram bot API, given the chat, the token of the bot, the URL of the API and the size limit. |
+
+Another channel is another implementation of the contract, chosen in `registerLogsNotifier`, without changing whoever notifies.
 
 ### The `selfReport` module
 
@@ -179,7 +196,7 @@ It sends its message through the `NotifierService` of `shared/services/`.
 A `SelfReport` is a model of its own, not a `Log`, and it is stored on its own too: in the files of `SELF_REPORTS_DIR_PATH/<server name>/`, one line each, through the `FilesService`. `selfReport` knows nothing of the logs: turning a self report into a log is up to `logs`.
 
 - **One repository per reporter.** Whoever reports is given its own `SelfReportRepository`, created for one file, and never names it: the logs files repository reports the lines that hold no log (`parseLogFile.jsonl`), the logs notifier the problem logs it could not notify (`logsNotifier.jsonl`).
-- **Without self reports**, that is without a `SelfReportsConfig`, there is no repository: whoever reports is given `undefined`, and reports nothing. They are enabled when something uses them: today, when they are included in the logs.
+- **Without self reports**, that is without the `SelfReportsSettings` of a reporter, the composition root creates no repository: whoever reports is given `undefined`, and reports nothing. They are enabled when something uses them: today, when they are included in the logs.
 - **The session is the repository's business.** Whoever reports saves plain self reports, which the repository stores with the id of its session. Reading gives each self report with its session: the id of the run it was reported during, and the location, the location name and the group name of its file.
 - **When it is created**, the repository takes the next session id of its own session file (`logs_self_reports_session.json`, `logs_notifier_self_reports_session.json`) and writes its file again without the self reports older than the retention, which also tells whether the file can be written. Should that fail, the error is logged and no repository is created: an optional feature never stops the server from starting.
 - **A self report is stored after the stored ones**, unless one of them has its `level`, its `message` and its `origin`: a problem that lasts is stored once, with the date it was first seen at.
@@ -207,9 +224,8 @@ A `SelfReport` is a model of its own, not a `Log`, and it is stored on its own t
 
 What several modules use. It imports nothing of the backend but itself.
 
-- **`config/`**: the `BackConfig`, `loadBackConfig`, and in `utils/` the parser of each variable.
+- **`config/`**: the types of the configs a module is given, `AuthConfig` and `LogsNotifierConfig`. Types only: they are built by `loadSettings`, in `initializers/settings/`.
 - **`services/files.service.ts`**: the `FilesService`, the one access of the backend's own code to the file system. Nothing else imports `fs`, the tests included, but its own tests. It creates a directory, reads a file as a whole or as lines (throwing a `FileDoesNotExistError` when it is missing), lists the files of a directory, gives the path of a file relative to a directory, replaces the content of a file and restricts a file to its owner. A write goes through a temporary file, so a reader never sees a file half written, and the writes of one file are done one after the other. It knows nothing of what the files hold nor of how they are named. `startServer` builds it once and hands it down. Only libraries given a path by the config reach the disk on their own: `better-sqlite3`, `dotenv` and `@fastify/static`.
-- **`services/notifier.service.ts`**: the `NotifierService`, how the backend sends a message to the outside. It gives the size limit of its messages and sends one, through the Telegram bot API. It knows nothing of what the messages say: another channel would be chosen inside `createNotifierService`, without changing whoever notifies.
 - **`types/logger.ts`**: the `Logger` a part of the backend writes its errors to, so that none depends on the logger of Fastify for it.
 - **`schemas/errors.schemas.ts`**: the JSON schema of `EchoError`, which every route may answer.
 
@@ -354,7 +370,7 @@ The other rules know a file by its folder, hence these two. A rule is about a de
 
 The rules about the packages apply to the test files too, which the rules about the layers leave alone. Type-only imports are checked like the others.
 
-Two conventions are out of its reach, and are checked in review: reading `process.env` anywhere but in `loadBackConfig`, and a package talking about another one in its documentation.
+Two conventions are out of its reach, and are checked in review: reading `process.env` anywhere but in `loadSettings`, a setting that only an implementation needs put in a config, and a package talking about another one in its documentation.
 
 dependency-cruiser reads the sources with the `typescript` package, of which it supports the versions below 7, as `typescript-eslint` supports those below 6.1: the three workspaces therefore declare `typescript` `~6.0.3`, the one version the build, the lint and this check all run on.
 

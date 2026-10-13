@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('../sessionIdFile.api.js')
 vi.mock('../selfReportsFiles.api.js')
 
-import { getMockSelfReportsConfig } from '../../../../test/mocks/mockConfigs.js'
 import { getMockFilesService } from '../../../../test/mocks/mockFilesService.js'
 import type { SelfReport } from '../../domain/selfReport.js'
 import type { SelfReportRepository } from '../../domain/selfReport.repository.js'
@@ -33,26 +32,13 @@ const sessionIdApi = {
   saveLastSessionId: vi.fn()
 }
 
-const selfReportsConfig = getMockSelfReportsConfig({
-  retentionDays: 10,
-  selfReportsDirPath: '/self_reports/Echo',
-  parseLogsSelfReportFileName: 'parseLogFile.jsonl',
-  parseLogsSessionFilePath: '/fake/data/logs_self_reports_session.json'
-})
-
 const options = {
   filesService,
-  selfReportsConfig,
-  getSelfReportFileName: ({
-    parseLogsSelfReportFileName
-  }: {
-    parseLogsSelfReportFileName: string
-  }): string => parseLogsSelfReportFileName,
-  getSessionFilePath: ({
-    parseLogsSessionFilePath
-  }: {
-    parseLogsSessionFilePath: string
-  }): string => parseLogsSessionFilePath,
+  selfReportsDirPath: '/self_reports/Echo',
+  selfReportFileExtension: '.jsonl',
+  selfReportFileName: 'parseLogFile.jsonl',
+  sessionFilePath: '/fake/data/logs_self_reports_session.json',
+  retentionDays: 10,
   logger
 }
 
@@ -120,27 +106,17 @@ afterEach(() => {
 // `logs.notifier.test.ts`). Here is what no request reaches: the retention, the self
 // reports stored after the ones already there, several self-report files, and the storage failing.
 describe('createSelfReportFilesRepository', () => {
-  it('Should read and write its files through the files service, with the self reports config', async () => {
+  it('Should read and write its files through the files service, where it is told they are', async () => {
     await createSelfReportFilesRepository(options)
 
     expect(createSelfReportsFilesApi).toHaveBeenCalledExactlyOnceWith(
-      selfReportsConfig,
+      { selfReportsDirPath: '/self_reports/Echo', selfReportFileExtension: '.jsonl' },
       filesService
     )
     expect(createSessionIdFileApi).toHaveBeenCalledExactlyOnceWith(
       '/fake/data/logs_self_reports_session.json',
       filesService
     )
-  })
-
-  it('Should create no repository when there is no self reports config', async () => {
-    const selfReportRepository = await createSelfReportFilesRepository({
-      ...options,
-      selfReportsConfig: undefined
-    })
-
-    expect(selfReportRepository).toBeUndefined()
-    expect(createSelfReportsFilesApi).not.toHaveBeenCalled()
   })
 
   it('Should write its file again without the self reports older than retentionDays, nor the lines that hold none', async () => {

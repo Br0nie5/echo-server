@@ -4,9 +4,9 @@ import type { EchoError } from '@echo/utilities'
 import fastifyStatic from '@fastify/static'
 import type { FastifyReply } from 'fastify'
 
-import type { ServerConfig } from '../shared/config/backConfig.js'
 import type { FilesService } from '../shared/services/files.service.js'
 
+import type { ServerSettings } from './settings/settings.js'
 import type { EchoServer } from './types/echoServer.js'
 
 const INDEX_HTML_FILE_NAME = 'index.html'
@@ -23,7 +23,7 @@ const INDEX_HTML_FILE_NAME = 'index.html'
  */
 export const registerFrontend = async (
   server: EchoServer,
-  { frontendDistDirPath, basePath, appRoutePrefix }: ServerConfig,
+  { frontendDistDirPath, basePath, appRoutePrefix }: ServerSettings,
   filesService: FilesService
 ): Promise<void> => {
   await server.register(fastifyStatic, {

@@ -19,7 +19,7 @@ const log: Log = {
 
 const getFilteredLogs = vi.mocked(actualGetFilteredLogs)
 const logsRepository = { getAllLogs: vi.fn() }
-const notifierService = { getMessageSizeLimit: vi.fn(), notify: vi.fn() }
+const notificationsService = { getMessageSizeLimit: vi.fn(), notify: vi.fn() }
 const checkDateRepository = { getLastCheckDate: vi.fn(), saveLastCheckDate: vi.fn() }
 const logsNotifierSelfReportRepository = { saveSelfReports: vi.fn(), getAllSelfReports: vi.fn() }
 const WATCHED = ['ERROR', 'WARNING'] as LogLevel[]
@@ -28,11 +28,14 @@ const PREVIOUS_CHECK = { lastCheckDate: new Date('2026-01-01T00:00:00.000Z') }
 const CHECK_DATE = new Date('2026-01-01T00:30:00.000Z')
 
 const problemLogsCheck: ProblemLogsCheck = {
-  watchedLogsLevels: WATCHED,
-  serverName: 'test-device',
-  timezone: 'UTC+2',
+  logsNotifierConfig: {
+    schedule: '*/30 * * * *',
+    watchedLogsLevels: WATCHED,
+    timezone: 'UTC+2',
+    serverName: 'test-device'
+  },
   logsRepository,
-  notifierService,
+  notificationsService,
   checkDateRepository,
   logsNotifierSelfReportRepository
 }
@@ -43,7 +46,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(CHECK_DATE)
-  notifierService.getMessageSizeLimit.mockReturnValue(4096)
+  notificationsService.getMessageSizeLimit.mockReturnValue(4096)
 })
 
 afterEach(() => {
@@ -57,7 +60,7 @@ describe('checkProblemLogsAndNotify', () => {
     await check()
 
     expect(getFilteredLogs).not.toHaveBeenCalled()
-    expect(notifierService.notify).not.toHaveBeenCalled()
+    expect(notificationsService.notify).not.toHaveBeenCalled()
     expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledExactlyOnceWith({
       lastCheckDate: CHECK_DATE
     })
@@ -75,7 +78,7 @@ describe('checkProblemLogsAndNotify', () => {
       levels: WATCHED,
       searchFilters: []
     })
-    expect(notifierService.notify).toHaveBeenCalledWith(
+    expect(notificationsService.notify).toHaveBeenCalledWith(
       'Logs from device test-device:\n\n\n[1] [2026-01-01 12:00:00 UTC+2] [ERROR] - worker > Something broke'
     )
     expect(logsNotifierSelfReportRepository.saveSelfReports).not.toHaveBeenCalled()
@@ -87,11 +90,11 @@ describe('checkProblemLogsAndNotify', () => {
   it('Should notify a message within the size limit of the notifier', async () => {
     checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
     getFilteredLogs.mockResolvedValueOnce([log, log])
-    notifierService.getMessageSizeLimit.mockReturnValue(60)
+    notificationsService.getMessageSizeLimit.mockReturnValue(60)
 
     await check()
 
-    expect(notifierService.notify).toHaveBeenCalledWith(
+    expect(notificationsService.notify).toHaveBeenCalledWith(
       '2 logs from device test-device to see inside the console'
     )
     expect(logsNotifierSelfReportRepository.saveSelfReports).not.toHaveBeenCalled()
@@ -100,11 +103,11 @@ describe('checkProblemLogsAndNotify', () => {
   it('Should notify nothing, save a warning self report and still save the date when the size limit is too small for any message', async () => {
     checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
     getFilteredLogs.mockResolvedValueOnce([log])
-    notifierService.getMessageSizeLimit.mockReturnValue(10)
+    notificationsService.getMessageSizeLimit.mockReturnValue(10)
 
     await check()
 
-    expect(notifierService.notify).not.toHaveBeenCalled()
+    expect(notificationsService.notify).not.toHaveBeenCalled()
     expect(logsNotifierSelfReportRepository.saveSelfReports).toHaveBeenCalledWith([
       {
         date: CHECK_DATE,
@@ -122,14 +125,14 @@ describe('checkProblemLogsAndNotify', () => {
   it('Should notify nothing and still save the date when the size limit is too small and the self reports are disabled', async () => {
     checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
     getFilteredLogs.mockResolvedValueOnce([log])
-    notifierService.getMessageSizeLimit.mockReturnValue(10)
+    notificationsService.getMessageSizeLimit.mockReturnValue(10)
 
     await checkProblemLogsAndNotify({
       ...problemLogsCheck,
       logsNotifierSelfReportRepository: undefined
     })
 
-    expect(notifierService.notify).not.toHaveBeenCalled()
+    expect(notificationsService.notify).not.toHaveBeenCalled()
     expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledExactlyOnceWith({
       lastCheckDate: CHECK_DATE
     })
@@ -141,7 +144,7 @@ describe('checkProblemLogsAndNotify', () => {
 
     await check()
 
-    expect(notifierService.notify).not.toHaveBeenCalled()
+    expect(notificationsService.notify).not.toHaveBeenCalled()
     expect(checkDateRepository.saveLastCheckDate).toHaveBeenCalledExactlyOnceWith({
       lastCheckDate: CHECK_DATE
     })
@@ -150,7 +153,7 @@ describe('checkProblemLogsAndNotify', () => {
   it('Should not save the date when notifying fails', async () => {
     checkDateRepository.getLastCheckDate.mockResolvedValueOnce(PREVIOUS_CHECK)
     getFilteredLogs.mockResolvedValueOnce([log])
-    notifierService.notify.mockRejectedValueOnce(new Error('Telegram down'))
+    notificationsService.notify.mockRejectedValueOnce(new Error('Telegram down'))
 
     await expect(check()).rejects.toThrow('Telegram down')
 

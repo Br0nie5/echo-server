@@ -1,11 +1,14 @@
 import { beforeEach, describe, it, expect, vi } from 'vitest'
 
 import { FileDoesNotExistError } from '../../../../shared/services/fileDoesNotExistError.js'
-import { getMockLogsConfig } from '../../../../test/mocks/mockConfigs.js'
 import { getMockFilesService } from '../../../../test/mocks/mockFilesService.js'
 import { createLogsFilesApi } from '../logsFiles.api.js'
 
-const logsConfig = getMockLogsConfig({ logsDirPath: '/logs' })
+const logsFilesLocation = {
+  logsDirPath: '/logs',
+  logFileExtension: '.jsonl',
+  logFilesDirName: 'logs'
+}
 
 const filesService = getMockFilesService()
 
@@ -22,9 +25,9 @@ describe('LogsFilesApi', () => {
       const readError = new Error('EACCES: permission denied')
       filesService.getFilesPaths.mockRejectedValue(readError)
 
-      await expect(createLogsFilesApi(logsConfig, filesService).getAllLogFiles()).rejects.toBe(
-        readError
-      )
+      await expect(
+        createLogsFilesApi(logsFilesLocation, filesService).getAllLogFiles()
+      ).rejects.toBe(readError)
     })
 
     it.each([
@@ -71,7 +74,7 @@ describe('LogsFilesApi', () => {
         filesService.getRelativeFilePath.mockReturnValue(relativeFilePath)
 
         const [logFile] = await createLogsFilesApi(
-          getMockLogsConfig({ logsDirPath: '/logs', logFilesDirName: 'logs' }),
+          { logsDirPath: '/logs', logFileExtension: '.jsonl', logFilesDirName: 'logs' },
           filesService
         ).getAllLogFiles()
 
@@ -89,7 +92,7 @@ describe('LogsFilesApi', () => {
       filesService.getFileLines.mockRejectedValue(new FileDoesNotExistError('/logs/ping.jsonl'))
 
       await expect(
-        createLogsFilesApi(logsConfig, filesService).getRawLogLines({
+        createLogsFilesApi(logsFilesLocation, filesService).getRawLogLines({
           path: '/logs/ping.jsonl',
           fileName: 'ping',
           groupName: undefined
@@ -102,7 +105,7 @@ describe('LogsFilesApi', () => {
       filesService.getFileLines.mockRejectedValue(readError)
 
       await expect(
-        createLogsFilesApi(logsConfig, filesService).getRawLogLines({
+        createLogsFilesApi(logsFilesLocation, filesService).getRawLogLines({
           path: '/logs/ping.jsonl',
           fileName: 'ping',
           groupName: undefined

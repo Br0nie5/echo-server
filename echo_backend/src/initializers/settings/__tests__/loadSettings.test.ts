@@ -5,7 +5,7 @@ import dotenv, { type DotenvConfigOptions } from 'dotenv'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 import { getMockFilesService } from '../../../test/mocks/mockFilesService.js'
-import { loadBackConfig } from '../loadBackConfig.js'
+import { loadSettings } from '../loadSettings.js'
 
 vi.mock('dotenv', () => ({ default: { config: vi.fn() } }))
 
@@ -53,7 +53,7 @@ const stubEnvFile = (envFilePath: string, variables: NodeJS.ProcessEnv): void =>
   })
 }
 
-describe('loadBackConfig', () => {
+describe('loadSettings', () => {
   beforeEach(() => {
     vi.mocked(dotenv.config).mockReset()
     filesService.getFileContent.mockImplementation(async (filePath) => TLS_FILES_CONTENTS[filePath])
@@ -67,34 +67,34 @@ describe('loadBackConfig', () => {
     it('Should load .env.development when NODE_ENV is not production', async () => {
       stubEnvFile('.env.development', { ...REQUIRED_ENV, SERVER_NAME: 'Development Echo' })
 
-      const config = await loadBackConfig(filesService, { NODE_ENV: 'test' })
+      const settings = await loadSettings(filesService, { NODE_ENV: 'test' })
 
-      expect(config.server.serverName).toBe('Development Echo')
+      expect(settings.server.serverName).toBe('Development Echo')
     })
 
     it('Should load .env.production when NODE_ENV is production', async () => {
       stubEnvFile('.env.production', { ...REQUIRED_ENV, SERVER_NAME: 'Production Echo' })
 
-      const config = await loadBackConfig(filesService, { NODE_ENV: 'production' })
+      const settings = await loadSettings(filesService, { NODE_ENV: 'production' })
 
-      expect(config.server.serverName).toBe('Production Echo')
+      expect(settings.server.serverName).toBe('Production Echo')
     })
 
     it('Should keep the variables already set over the ones of the env file', async () => {
       stubEnvFile('.env.development', { ...REQUIRED_ENV, SERVER_NAME: 'Development Echo' })
 
-      const config = await loadBackConfig(filesService, { SERVER_NAME: 'Already Set Echo' })
+      const settings = await loadSettings(filesService, { SERVER_NAME: 'Already Set Echo' })
 
-      expect(config.server.serverName).toBe('Already Set Echo')
+      expect(settings.server.serverName).toBe('Already Set Echo')
     })
 
     it('Should read the environment of the process by default', async () => {
       Object.entries(REQUIRED_ENV).forEach(([key, value]) => vi.stubEnv(key, value))
       vi.stubEnv('SERVER_NAME', 'Process Echo')
 
-      const config = await loadBackConfig(filesService)
+      const settings = await loadSettings(filesService)
 
-      expect(config.server.serverName).toBe('Process Echo')
+      expect(settings.server.serverName).toBe('Process Echo')
     })
   })
 
@@ -122,7 +122,7 @@ describe('loadBackConfig', () => {
     'Should throw when the parser of $variable throws on "$value"',
     async ({ variable, value }) => {
       await expect(
-        loadBackConfig(filesService, {
+        loadSettings(filesService, {
           ...REQUIRED_ENV,
           ...ENABLED_PARTS_ENV,
           [variable]: value
@@ -131,8 +131,8 @@ describe('loadBackConfig', () => {
     }
   )
 
-  it('Should build the whole config, with its defaults, from the required variables alone', async () => {
-    expect(await loadBackConfig(filesService, { ...REQUIRED_ENV })).toStrictEqual({
+  it('Should build all the settings, with their defaults, from the required variables alone', async () => {
+    expect(await loadSettings(filesService, { ...REQUIRED_ENV })).toStrictEqual({
       server: {
         serverName: 'Echo',
         basePath: '',
@@ -153,13 +153,14 @@ describe('loadBackConfig', () => {
         logFilesDirName: 'logs',
         logsNotifier: undefined
       },
-      selfReports: undefined,
+      parseLogsSelfReports: undefined,
+      logsNotifierSelfReports: undefined,
       notification: undefined
     })
   })
 
-  it('Should build the whole config from every possible variables', async () => {
-    const config = await loadBackConfig(filesService, {
+  it('Should build all the settings from every possible variables', async () => {
+    const settings = await loadSettings(filesService, {
       NODE_ENV: 'production',
       SERVER_NAME: 'Shop Prod',
       BASE_PATH: '/tools/echo',
@@ -180,7 +181,7 @@ describe('loadBackConfig', () => {
       LOGS_NOTIFIER_TIMEZONE: 'Europe/Paris'
     })
 
-    expect(config).toStrictEqual({
+    expect(settings).toStrictEqual({
       server: {
         serverName: 'Shop Prod',
         basePath: '/tools/echo',
@@ -195,15 +196,17 @@ describe('loadBackConfig', () => {
         frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
       },
       auth: {
-        sessionDurationSeconds: 86400,
-        credentialsAttemptsLimit: { maxAttempts: 5, timeWindowMilliseconds: 60 * 1000 },
-        cookieName: 'Shop_Prod_echo_access_token',
-        cookieSerializeOptions: {
-          path: '/tools/echo',
-          secure: 'auto',
-          httpOnly: true,
-          sameSite: 'lax',
-          maxAge: 86400
+        config: {
+          sessionDurationSeconds: 86400,
+          credentialsAttemptsLimit: { maxAttempts: 5, timeWindowMilliseconds: 60 * 1000 },
+          cookieName: 'Shop_Prod_echo_access_token',
+          cookieSerializeOptions: {
+            path: '/tools/echo',
+            secure: 'auto',
+            httpOnly: true,
+            sameSite: 'lax',
+            maxAge: 86400
+          }
         },
         usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')
       },
@@ -212,24 +215,28 @@ describe('loadBackConfig', () => {
         logFileExtension: '.jsonl',
         logFilesDirName: 'logs',
         logsNotifier: {
-          schedule: '*/30 * * * *',
-          watchedLogsLevels: ['WARNING', 'ERROR'],
-          notifierTimezone: 'Europe/Paris',
-          serverName: 'Shop Prod',
+          config: {
+            schedule: '*/30 * * * *',
+            watchedLogsLevels: ['WARNING', 'ERROR'],
+            timezone: 'Europe/Paris',
+            serverName: 'Shop Prod'
+          },
           lastLogsCheckFilePath: path.join(DATA_DIR_PATH, 'last_logs_check.json')
         }
       },
-      selfReports: {
+      parseLogsSelfReports: {
         retentionDays: 30,
-        selfReportsDirPath: '/self_reports/Shop Prod',
-        selfReportFileExtension: '.jsonl',
-        parseLogsSelfReportFileName: 'parseLogFile.jsonl',
-        logsNotifierSelfReportFileName: 'logsNotifier.jsonl',
-        parseLogsSessionFilePath: path.join(DATA_DIR_PATH, 'logs_self_reports_session.json'),
-        logsNotifierSessionFilePath: path.join(
-          DATA_DIR_PATH,
-          'logs_notifier_self_reports_session.json'
-        )
+        dirPath: '/self_reports/Shop Prod',
+        fileExtension: '.jsonl',
+        fileName: 'parseLogFile.jsonl',
+        sessionFilePath: path.join(DATA_DIR_PATH, 'logs_self_reports_session.json')
+      },
+      logsNotifierSelfReports: {
+        retentionDays: 30,
+        dirPath: '/self_reports/Shop Prod',
+        fileExtension: '.jsonl',
+        fileName: 'logsNotifier.jsonl',
+        sessionFilePath: path.join(DATA_DIR_PATH, 'logs_notifier_self_reports_session.json')
       },
       notification: {
         telegramChatId: '123456789',
@@ -241,23 +248,24 @@ describe('loadBackConfig', () => {
   })
 
   it('Should leave the self reports out when they are not included in the logs, without reading their other variables', async () => {
-    const config = await loadBackConfig(filesService, {
+    const settings = await loadSettings(filesService, {
       ...REQUIRED_ENV,
       INCLUDE_SELF_REPORTS_IN_LOGS: 'false',
       SELF_REPORTS_RETENTION_DAYS: '0'
     })
 
-    expect(config.selfReports).toBeUndefined()
+    expect(settings.parseLogsSelfReports).toBeUndefined()
+    expect(settings.logsNotifierSelfReports).toBeUndefined()
   })
 
-  it('Should leave the logs notifier out when there is no notification config', async () => {
-    const config = await loadBackConfig(filesService, {
+  it('Should leave the logs notifier out when there are no notification settings', async () => {
+    const settings = await loadSettings(filesService, {
       ...REQUIRED_ENV,
       LOGS_NOTIFIER_SCHEDULE: 'not-a-cron-expression',
       LOGS_NOTIFIER_TIMEZONE: 'Mars/Olympus'
     })
 
-    expect(config.notification).toBeUndefined()
-    expect(config.logs.logsNotifier).toBeUndefined()
+    expect(settings.notification).toBeUndefined()
+    expect(settings.logs.logsNotifier).toBeUndefined()
   })
 })

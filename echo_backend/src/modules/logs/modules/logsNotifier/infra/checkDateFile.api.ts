@@ -1,6 +1,5 @@
 import path from 'path'
 
-import type { LogsNotifierConfig } from '../../../../../shared/config/backConfig.js'
 import type { FilesService } from '../../../../../shared/services/files.service.js'
 
 /** Access to the last-check file, the data source the last check date is stored in. */
@@ -23,12 +22,15 @@ export interface CheckDateApi {
  * through `filesService`.
  *
  * ```ts
- * const checkDateApi = createCheckDateFileApi(logsNotifierConfig, filesService)
+ * const checkDateApi = createCheckDateFileApi(
+ *   { lastLogsCheckFilePath: '/data/last_logs_check.json' },
+ *   filesService
+ * )
  * const rawLastCheckDate = await checkDateApi.getRawLastCheckDate()
  * ```
  */
 export const createCheckDateFileApi = (
-  { lastLogsCheckFilePath }: LogsNotifierConfig,
+  { lastLogsCheckFilePath }: { lastLogsCheckFilePath: string },
   filesService: FilesService
 ): CheckDateApi => ({
   getRawLastCheckDate: (): Promise<string> => filesService.getFileContent(lastLogsCheckFilePath),

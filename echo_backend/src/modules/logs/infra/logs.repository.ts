@@ -1,17 +1,15 @@
 import type { Log } from '@echo/utilities'
 
-import type { LogsConfig } from '../../../shared/config/backConfig.js'
 import type { FilesService } from '../../../shared/services/files.service.js'
 import type { SelfReportRepository } from '../../selfReport/domain/selfReport.repository.js'
 import type { LogsRepository } from '../domain/logs.repository.js'
 
-import { createLogsFilesApi } from './logsFiles.api.js'
+import { createLogsFilesApi, type LogsFilesLocation } from './logsFiles.api.js'
 import { createLogsFilesRepository } from './logsFiles.repository.js'
 import { createLogsSelfReportsRepository } from './logsSelfReports.repository.js'
 
 /** What {@link createLogsRepository} needs. */
-export interface CreateLogsRepositoryOptions {
-  logsConfig: LogsConfig
+export interface CreateLogsRepositoryOptions extends LogsFilesLocation {
   /** What the log files are read with. */
   filesService: FilesService
   /**
@@ -24,27 +22,31 @@ export interface CreateLogsRepositoryOptions {
 /**
  * Creates the `LogsRepository` of the backend, from the storages it is given.
  *
- * Its logs are always those of the log files of `logsConfig`, read through `filesService` (see
- * `createLogsFilesRepository`). With a `parseLogsSelfReportRepository`, that is when the self
+ * Its logs are always those of the log files, the files of `logsDirPath` whose name ends with
+ * `logFileExtension`, read through `filesService` (see `createLogsFilesRepository`). With a `parseLogsSelfReportRepository`, that is when the self
  * reports are enabled, they are also its self reports, each as a log (see
  * `createLogsSelfReportsRepository`): the log files are read first, so the self reports saved
  * while reading them are among the logs.
  *
  * ```ts
  * const logsRepository = createLogsRepository({
- *   logsConfig: config.logs,
+ *   logsDirPath: '/watched_logs',
+ *   logFileExtension: '.jsonl',
+ *   logFilesDirName: 'logs',
  *   filesService,
  *   parseLogsSelfReportRepository
  * })
  * ```
  */
 export const createLogsRepository = ({
-  logsConfig,
+  logsDirPath,
+  logFileExtension,
+  logFilesDirName,
   filesService,
   parseLogsSelfReportRepository
 }: CreateLogsRepositoryOptions): LogsRepository => {
   const logsFilesRepository = createLogsFilesRepository(
-    createLogsFilesApi(logsConfig, filesService),
+    createLogsFilesApi({ logsDirPath, logFileExtension, logFilesDirName }, filesService),
     parseLogsSelfReportRepository
   )
 

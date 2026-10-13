@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getMockSelfReportsConfig } from '../../../../test/mocks/mockConfigs.js'
 import { getMockFilesService } from '../../../../test/mocks/mockFilesService.js'
 import { createSelfReportsFilesApi } from '../selfReportsFiles.api.js'
 
-const selfReportsConfig = getMockSelfReportsConfig()
+const selfReportFilesLocation = {
+  selfReportsDirPath: '/self_reports/Echo',
+  selfReportFileExtension: '.jsonl'
+}
 
 const filesService = getMockFilesService()
 
@@ -21,7 +23,7 @@ describe('SelfReportsFilesApi', () => {
       filesService.getFileLines.mockRejectedValue(readError)
 
       await expect(
-        createSelfReportsFilesApi(selfReportsConfig, filesService).getSelfReportLines(
+        createSelfReportsFilesApi(selfReportFilesLocation, filesService).getSelfReportLines(
           '/self_reports/Echo/parseLogFile.jsonl'
         )
       ).rejects.toBe(readError)

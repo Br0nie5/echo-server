@@ -2,8 +2,8 @@ import { rejectUnauthenticatedRequest } from '../modules/auth/presentation/auth.
 import type { LogsRepository } from '../modules/logs/domain/logs.repository.js'
 import { createLogsController } from '../modules/logs/presentation/logs.controller.js'
 import { logsRoutes } from '../modules/logs/presentation/logs.routes.js'
-import type { BackConfig } from '../shared/config/backConfig.js'
 
+import type { Settings } from './settings/settings.js'
 import type { EchoServer } from './types/echoServer.js'
 
 /**
@@ -14,7 +14,7 @@ import type { EchoServer } from './types/echoServer.js'
  */
 export const registerLogsRoutes = async (
   server: EchoServer,
-  { auth, server: { apiRoutePrefix } }: BackConfig,
+  { auth, server: { apiRoutePrefix } }: Settings,
   logsRepository: LogsRepository
 ): Promise<void> => {
   await server.register(logsRoutes, {

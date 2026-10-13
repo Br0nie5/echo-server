@@ -1,19 +1,19 @@
-import type { NotificationConfig } from '../backConfig.js'
+import type { NotificationSettings } from '../settings.js'
 
 /**
- * Parses the Telegram variables of `processEnv` into the config of the notifications, completed
+ * Parses the Telegram variables of `processEnv` into the settings of the notifications, completed
  * with the constants `telegramBaseUrl` and `telegramMessageSizeLimit`.
  *
  * It is `undefined`, which leaves the backend with no channel to notify through, unless
  * `TELEGRAM_CHAT_ID` and `TELEGRAM_BOT_TOKEN` are both set.
  */
-export const parseNotificationConfig = (
+export const parseNotificationSettings = (
   processEnv: NodeJS.ProcessEnv,
   {
     telegramBaseUrl,
     telegramMessageSizeLimit
-  }: Pick<NotificationConfig, 'telegramBaseUrl' | 'telegramMessageSizeLimit'>
-): NotificationConfig | undefined => {
+  }: Pick<NotificationSettings, 'telegramBaseUrl' | 'telegramMessageSizeLimit'>
+): NotificationSettings | undefined => {
   const telegramChatId = processEnv.TELEGRAM_CHAT_ID
   const telegramBotToken = processEnv.TELEGRAM_BOT_TOKEN
 

@@ -1,14 +1,13 @@
 import swagger from '@fastify/swagger'
 import swaggerUI from '@fastify/swagger-ui'
 
-import type { ServerConfig } from '../shared/config/backConfig.js'
-
+import type { ServerSettings } from './settings/settings.js'
 import type { EchoServer } from './types/echoServer.js'
 import { getSchemaReference } from './utils/getSchemaReference.js'
 
 /**
  * Registers Swagger, which builds the OpenAPI document from the routes, and its UI, served under
- * `documentationRoutePrefix`, when `hasDocumentationRoute` of the config is `true`. Registers
+ * `documentationRoutePrefix`, when `hasDocumentationRoute` of the settings is `true`. Registers
  * nothing otherwise: the server then has neither the document nor its UI.
  *
  * Both say where Echo is really reached, `basePath` included: the document gives the routes below
@@ -16,9 +15,9 @@ import { getSchemaReference } from './utils/getSchemaReference.js'
  */
 export const registerDocumentation = async (
   server: EchoServer,
-  serverConfig: ServerConfig
+  serverSettings: ServerSettings
 ): Promise<void> => {
-  if (!serverConfig.hasDocumentationRoute) {
+  if (!serverSettings.hasDocumentationRoute) {
     return
   }
 
@@ -30,7 +29,7 @@ export const registerDocumentation = async (
         version: '1.0.0'
       },
       // Without `servers`, the routes are at the root of the origin the document is loaded from.
-      ...(serverConfig.basePath && { servers: [{ url: serverConfig.basePath }] }),
+      ...(serverSettings.basePath && { servers: [{ url: serverSettings.basePath }] }),
       tags: [
         {
           name: 'Logs',
@@ -48,8 +47,8 @@ export const registerDocumentation = async (
   })
 
   await server.register(swaggerUI, {
-    routePrefix: serverConfig.documentationRoutePrefix,
-    indexPrefix: serverConfig.basePath,
+    routePrefix: serverSettings.documentationRoutePrefix,
+    indexPrefix: serverSettings.basePath,
     uiConfig: {
       docExpansion: 'list',
       deepLinking: false

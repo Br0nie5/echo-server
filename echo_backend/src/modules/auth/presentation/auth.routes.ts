@@ -1,7 +1,7 @@
 import type { AuthStatus, LoginRequest, SignUpRequest } from '@echo/utilities'
 import type { FastifyInstance, FastifyPluginAsync, FastifyPluginOptions } from 'fastify'
 
-import type { AuthConfig } from '../../../shared/config/backConfig.js'
+import type { AuthConfig } from '../../../shared/config/authConfig.js'
 
 import type { AuthController, SessionReply } from './auth.controller.js'
 import {

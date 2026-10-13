@@ -4,20 +4,20 @@ import type * as FastifyModule from 'fastify'
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
+import { loadSettings as actualLoadSettings } from '../initializers/settings/loadSettings.js'
+import type { Settings } from '../initializers/settings/settings.js'
 import { logsNotifier } from '../modules/logs/modules/logsNotifier/presentation/logs.notifier.js'
 import { startServer } from '../server.js'
-import type { BackConfig } from '../shared/config/backConfig.js'
-import { loadBackConfig as actualLoadBackConfig } from '../shared/config/loadBackConfig.js'
 import type * as FilesServiceModule from '../shared/services/files.service.js'
 import { buildTestServer } from '../test/buildTestServer.js'
 import {
-  getMockAuthConfig,
-  getMockBackConfig,
-  getMockLogsConfig,
-  getMockLogsNotifierConfig,
-  getMockNotificationConfig,
-  getMockServerConfig
-} from '../test/mocks/mockConfigs.js'
+  getMockAuthSettings,
+  getMockLogsNotifierSettings,
+  getMockLogsSettings,
+  getMockNotificationSettings,
+  getMockServerSettings,
+  getMockSettings
+} from '../test/mocks/mockSettings.js'
 
 // Unit tests of the server itself: what it serves and where, its documentation, its frontend, its
 // CORS and proxy settings, and how it starts. The routes and the cron are tested with their module,
@@ -48,7 +48,7 @@ vi.mock('../modules/logs/modules/logsNotifier/presentation/logs.notifier.js', ()
   logsNotifier: vi.fn(async () => {})
 }))
 
-vi.mock('../shared/config/loadBackConfig.js')
+vi.mock('../initializers/settings/loadSettings.js')
 
 // `startServer` builds its own files service, on the real file system: it is given one in memory.
 vi.mock('../shared/services/files.service.js', async (importOriginal) => {
@@ -96,7 +96,7 @@ vi.mock('fastify', async (importOriginal) => {
   }
 })
 
-const loadBackConfig = vi.mocked(actualLoadBackConfig)
+const loadSettings = vi.mocked(actualLoadSettings)
 
 // The assets of the frontend are read from the disk by @fastify/static itself, which has no seam
 // to give it another file system: they are fixture files, only read.
@@ -105,8 +105,8 @@ const indexHtmlFiles = {
   [path.join(frontendDistDirPath, 'index.html')]: '<!doctype html><head><title>Echo</title></head>'
 }
 
-const getInMemoryAuthConfig = (): BackConfig['auth'] =>
-  getMockAuthConfig({ usersDbFilePath: ':memory:' })
+const getInMemoryAuthSettings = (): Settings['auth'] =>
+  getMockAuthSettings({ usersDbFilePath: ':memory:' })
 
 afterEach(async () => {
   await Promise.all(fastifyStubs.builtServers.map((server) => server.close()))
@@ -127,7 +127,7 @@ describe('buildServer', () => {
     })
 
     test('Should have no auth route without authentication', async () => {
-      const { server } = await buildTestServer({ config: { auth: undefined } })
+      const { server } = await buildTestServer({ settings: { auth: undefined } })
 
       expect((await server.inject('/api/logs')).statusCode).toBe(200)
       expect((await server.inject('/api/auth/status')).statusCode).toBe(404)
@@ -156,34 +156,42 @@ describe('buildServer', () => {
   })
 
   describe('Logs notifier', () => {
-    const logsWithNotifierConfig = getMockLogsConfig({ logsNotifier: getMockLogsNotifierConfig() })
+    const logsWithNotifierSettings = getMockLogsSettings({
+      logsNotifier: getMockLogsNotifierSettings()
+    })
 
     test('Should start the logs notifier when it is configured along with the notifications', async () => {
       await buildTestServer({
-        config: { logs: logsWithNotifierConfig, notification: getMockNotificationConfig() }
+        settings: {
+          logs: logsWithNotifierSettings,
+          notification: getMockNotificationSettings()
+        }
       })
 
       expect(logsNotifier).toHaveBeenCalledOnce()
     })
 
-    test.each<{ reason: string; config: Partial<BackConfig> }>([
-      { reason: 'the notifications are not configured', config: { logs: logsWithNotifierConfig } },
+    test.each<{ reason: string; settings: Partial<Settings> }>([
+      {
+        reason: 'the notifications are not configured',
+        settings: { logs: logsWithNotifierSettings }
+      },
       {
         reason: 'the logs notifier is not configured',
-        config: { notification: getMockNotificationConfig() }
+        settings: { notification: getMockNotificationSettings() }
       },
-      { reason: 'neither the notifications nor the logs notifier are configured', config: {} }
-    ])('Should not start the logs notifier when $reason', async ({ config }) => {
-      await buildTestServer({ config })
+      { reason: 'neither the notifications nor the logs notifier are configured', settings: {} }
+    ])('Should not start the logs notifier when $reason', async ({ settings }) => {
+      await buildTestServer({ settings })
 
       expect(logsNotifier).not.toHaveBeenCalled()
     })
   })
 
   describe('Documentation', () => {
-    test('Should serve the documentation of the routes when the config asks for it', async () => {
+    test('Should serve the documentation of the routes when the settings ask for it', async () => {
       const { server } = await buildTestServer({
-        config: { server: getMockServerConfig({ hasDocumentationRoute: true }) }
+        settings: { server: getMockServerSettings({ hasDocumentationRoute: true }) }
       })
 
       const response = await server.inject('/documentation/json')
@@ -196,7 +204,9 @@ describe('buildServer', () => {
 
     test('Should say in the documentation that the routes are below the base path', async () => {
       const { server } = await buildTestServer({
-        config: { server: getMockServerConfig({ hasDocumentationRoute: true, basePath: '/echo' }) }
+        settings: {
+          server: getMockServerSettings({ hasDocumentationRoute: true, basePath: '/echo' })
+        }
       })
 
       const response = await server.inject('/documentation/json')
@@ -204,9 +214,9 @@ describe('buildServer', () => {
       expect(response.json()).toMatchObject({ servers: [{ url: '/echo' }] })
     })
 
-    test('Should serve no documentation when the config does not ask for it', async () => {
+    test('Should serve no documentation when the settings do not ask for it', async () => {
       const { server } = await buildTestServer({
-        config: { server: getMockServerConfig({ hasDocumentationRoute: false }) }
+        settings: { server: getMockServerSettings({ hasDocumentationRoute: false }) }
       })
 
       expect((await server.inject('/documentation/json')).statusCode).toBe(404)
@@ -215,9 +225,9 @@ describe('buildServer', () => {
   })
 
   describe('Base path', () => {
-    test('Should route a request the same with the base path of the config or without it', async () => {
+    test('Should route a request the same with the base path of the settings or without it', async () => {
       const { server } = await buildTestServer({
-        config: { server: getMockServerConfig({ basePath: '/echo' }) }
+        settings: { server: getMockServerSettings({ basePath: '/echo' }) }
       })
 
       expect((await server.inject('/echo/api/logs')).statusCode).toBe(200)
@@ -227,7 +237,7 @@ describe('buildServer', () => {
 
     test('Should send a redirection to a path of the server below the base path', async () => {
       const { server } = await buildTestServer({
-        config: { server: getMockServerConfig({ basePath: '/echo' }) }
+        settings: { server: getMockServerSettings({ basePath: '/echo' }) }
       })
 
       const response = await server.inject('/echo/api/logs/redirecting')
@@ -242,7 +252,7 @@ describe('buildServer', () => {
       'Should answer %s with the page of the frontend, told where it is served',
       async (url) => {
         const { server } = await buildTestServer({
-          config: { server: getMockServerConfig({ frontendDistDirPath }) },
+          settings: { server: getMockServerSettings({ frontendDistDirPath }) },
           files: indexHtmlFiles
         })
 
@@ -258,7 +268,7 @@ describe('buildServer', () => {
 
     test('Should tell the page of the frontend that it is served below the base path', async () => {
       const { server } = await buildTestServer({
-        config: { server: getMockServerConfig({ frontendDistDirPath, basePath: '/echo' }) },
+        settings: { server: getMockServerSettings({ frontendDistDirPath, basePath: '/echo' }) },
         files: indexHtmlFiles
       })
 
@@ -269,7 +279,7 @@ describe('buildServer', () => {
 
     test('Should serve the other files of the frontend as they are', async () => {
       const { server } = await buildTestServer({
-        config: { server: getMockServerConfig({ frontendDistDirPath }) },
+        settings: { server: getMockServerSettings({ frontendDistDirPath }) },
         files: indexHtmlFiles
       })
 
@@ -287,7 +297,7 @@ describe('buildServer', () => {
       'Should redirect $url to the frontend at $location when the base path is "$basePath"',
       async ({ basePath, url, location }) => {
         const { server } = await buildTestServer({
-          config: { server: getMockServerConfig({ basePath }) }
+          settings: { server: getMockServerSettings({ basePath }) }
         })
 
         const response = await server.inject(url)
@@ -299,7 +309,7 @@ describe('buildServer', () => {
 
     test('Should answer a 404 error to a path that only starts like the one of the frontend', async () => {
       const { server } = await buildTestServer({
-        config: { server: getMockServerConfig({ frontendDistDirPath }) },
+        settings: { server: getMockServerSettings({ frontendDistDirPath }) },
         files: indexHtmlFiles
       })
 
@@ -361,7 +371,7 @@ describe('buildServer', () => {
       }
     }
 
-    test('Should believe the forwarded host of whatever sends the request when the config lists no proxy', async () => {
+    test('Should believe the forwarded host of whatever sends the request when the settings list no proxy', async () => {
       const { server } = await buildTestServer()
 
       const response = await server.inject(forwardedRequest)
@@ -369,9 +379,9 @@ describe('buildServer', () => {
       expect(response.statusCode).toBe(200)
     })
 
-    test('Should only believe the forwarded host of the proxies the config lists', async () => {
+    test('Should only believe the forwarded host of the proxies the settings list', async () => {
       const { server } = await buildTestServer({
-        config: { server: getMockServerConfig({ trustedProxies: ['10.0.0.1'] }) }
+        settings: { server: getMockServerSettings({ trustedProxies: ['10.0.0.1'] }) }
       })
 
       const proxyResponse = await server.inject({ ...forwardedRequest, remoteAddress: '10.0.0.1' })
@@ -383,15 +393,15 @@ describe('buildServer', () => {
   })
 
   describe('TLS', () => {
-    test('Should serve over HTTPS with the certificate and the key of the config', async () => {
+    test('Should serve over HTTPS with the certificate and the key of the settings', async () => {
       const tls = { cert: 'certificate', key: 'key' }
 
-      await buildTestServer({ config: { server: getMockServerConfig({ tls }) } })
+      await buildTestServer({ settings: { server: getMockServerSettings({ tls }) } })
 
       expect(Fastify).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ https: tls }))
     })
 
-    test('Should serve over HTTP when the config has no certificate', async () => {
+    test('Should serve over HTTP when the settings have no certificate', async () => {
       await buildTestServer()
 
       expect(Fastify).toHaveBeenCalledExactlyOnceWith(
@@ -402,14 +412,15 @@ describe('buildServer', () => {
 })
 
 describe('startServer', () => {
-  const config = getMockBackConfig({
-    server: getMockServerConfig({ host: '127.0.0.1', port: 4000, basePath: '/echo' }),
-    auth: getInMemoryAuthConfig(),
-    selfReports: undefined
+  const settings = getMockSettings({
+    server: getMockServerSettings({ host: '127.0.0.1', port: 4000, basePath: '/echo' }),
+    auth: getInMemoryAuthSettings(),
+    parseLogsSelfReports: undefined,
+    logsNotifierSelfReports: undefined
   })
 
-  test('Should listen on the host and port of the config and say which paths it serves', async () => {
-    loadBackConfig.mockResolvedValue(config)
+  test('Should listen on the host and port of the settings and say which paths it serves', async () => {
+    loadSettings.mockResolvedValue(settings)
     fastifyStubs.listen.mockResolvedValue('http://127.0.0.1:4000')
 
     await startServer()
@@ -419,9 +430,9 @@ describe('startServer', () => {
     expect(fastifyStubs.logInfo).toHaveBeenCalledWith('App is served under /echo/app')
   })
 
-  test('Should exit the process when the config cannot be loaded', async () => {
+  test('Should exit the process when the settings cannot be loaded', async () => {
     const error = new Error('Missing required environment variable: HTTP_PORT')
-    loadBackConfig.mockRejectedValue(error)
+    loadSettings.mockRejectedValue(error)
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     const exit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
 
@@ -435,7 +446,7 @@ describe('startServer', () => {
   test('Should exit the process when the server cannot be built', async () => {
     const error = new Error('The routes could not be registered.')
     moduleStubs.logsRoutesError = error
-    loadBackConfig.mockResolvedValue(config)
+    loadSettings.mockResolvedValue(settings)
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     const exit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
 
@@ -448,7 +459,7 @@ describe('startServer', () => {
 
   test('Should log the error and exit the process when the server cannot listen', async () => {
     const error = Object.assign(new Error('listen EADDRINUSE'), { code: 'EADDRINUSE' })
-    loadBackConfig.mockResolvedValue(config)
+    loadSettings.mockResolvedValue(settings)
     fastifyStubs.listen.mockRejectedValue(error)
     const exit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never)
 

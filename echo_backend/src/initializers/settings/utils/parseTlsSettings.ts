@@ -1,5 +1,5 @@
-import type { FilesService } from '../../services/files.service.js'
-import type { TlsConfig } from '../backConfig.js'
+import type { FilesService } from '../../../shared/services/files.service.js'
+import type { TlsSettings } from '../settings.js'
 
 /**
  * Reads, through `filesService`, the certificate and the private key `TLS_CERT_PATH` and
@@ -8,10 +8,10 @@ import type { TlsConfig } from '../backConfig.js'
  * It is `undefined`, the server then using HTTP, when neither variable is set. Throws when only one
  * of them is set, or when one of the two files cannot be read.
  */
-export const parseTlsConfig = async (
+export const parseTlsSettings = async (
   processEnv: NodeJS.ProcessEnv,
   filesService: FilesService
-): Promise<TlsConfig | undefined> => {
+): Promise<TlsSettings | undefined> => {
   const TLS_CERT_PATH = processEnv.TLS_CERT_PATH
   const TLS_KEY_PATH = processEnv.TLS_KEY_PATH
 

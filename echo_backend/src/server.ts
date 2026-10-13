@@ -9,31 +9,32 @@ import { registerFrontend } from './initializers/registerFrontend.js'
 import { registerLogsNotifier } from './initializers/registerLogsNotifier.js'
 import { registerLogsRoutes } from './initializers/registerLogsRoutes.js'
 import { registerSecurity } from './initializers/registerSecurity.js'
+import { loadSettings } from './initializers/settings/loadSettings.js'
+import type { Settings } from './initializers/settings/settings.js'
 import type { EchoServer } from './initializers/types/echoServer.js'
 import { addBasePath } from './initializers/utils/addBasePath.js'
 import { normalizeToEchoError } from './initializers/utils/normalizeToEchoError.js'
 import { removeBasePath } from './initializers/utils/removeBasePath.js'
 import { createLogsRepository } from './modules/logs/infra/logs.repository.js'
 import { createSelfReportFilesRepository } from './modules/selfReport/infra/selfReportFiles.repository.js'
-import type { BackConfig } from './shared/config/backConfig.js'
-import { loadBackConfig } from './shared/config/loadBackConfig.js'
 import { EchoErrorJsonSchema } from './shared/schemas/errors.schemas.js'
 import { createFilesService, type FilesService } from './shared/services/files.service.js'
 
 /**
- * Composition root: builds the dependency graph from `config` and wires it into the Fastify app.
+ * Composition root: builds the dependency graph from `settings` and wires it into the Fastify app.
  *
- * Whatever reads or writes files is given `filesService`, the one access to the file system. A
- * request is routed the same whether the reverse proxy forwarded it with the `basePath` of the
- * config or without it, and a redirection to a path of the server is sent below `basePath`, where
- * the browser reaches it. The protocol, the host and the address of a request are those its
- * `X-Forwarded-*` headers give when it comes from one of the `trustedProxies` of the config, or
- * from anything when the config has none.
+ * The settings stop here: a module is given its config as it is, and what implements its storage
+ * the values it needs, one by one. Whatever reads or writes files is given `filesService`, the one
+ * access to the file system. A request is routed the same whether the reverse proxy forwarded it
+ * with the `basePath` of the settings or without it, and a redirection to a path of the server is
+ * sent below `basePath`, where the browser reaches it. The protocol, the host and the address of a
+ * request are those its `X-Forwarded-*` headers give when it comes from one of the
+ * `trustedProxies` of the settings, or from anything when the settings have none.
  *
  * The server logs to the output of the process, unless `hasLogger` is `false`.
  */
 export const buildServer = async (
-  config: BackConfig,
+  settings: Settings,
   filesService: FilesService,
   hasLogger: boolean = true
 ): Promise<EchoServer> => {
@@ -43,12 +44,12 @@ export const buildServer = async (
   // plain-http shape Fastify's default overload expects; `https` still drives TLS at runtime.
   const serverOptions = {
     logger: hasLogger,
-    trustProxy: config.server.trustedProxies ?? true,
+    trustProxy: settings.server.trustedProxies ?? true,
     // Node.js only leaves the `url` of a message undefined for a response a client received: a
     // request a server received always has one.
     rewriteUrl: (request: IncomingMessage) =>
-      removeBasePath(request.url as string, config.server.basePath),
-    ...(config.server.tls && { https: config.server.tls })
+      removeBasePath(request.url as string, settings.server.basePath),
+    ...(settings.server.tls && { https: settings.server.tls })
   } as FastifyServerOptions<Server<typeof IncomingMessage, typeof ServerResponse>>
 
   const server = Fastify(serverOptions)
@@ -57,7 +58,7 @@ export const buildServer = async (
     const location = reply.getHeader('location')
 
     if (typeof location === 'string') {
-      reply.header('location', addBasePath(location, config.server.basePath))
+      reply.header('location', addBasePath(location, settings.server.basePath))
     }
 
     return payload
@@ -69,31 +70,37 @@ export const buildServer = async (
     reply.status(echoError.statusCode).send(echoError)
   })
 
-  await registerSecurity(server, config)
+  await registerSecurity(server, settings)
 
-  await registerDocumentation(server, config.server)
+  await registerDocumentation(server, settings.server)
 
   server.addSchema(EchoErrorJsonSchema)
 
-  const parseLogsSelfReportRepository = await createSelfReportFilesRepository({
-    filesService,
-    selfReportsConfig: config.selfReports,
-    getSelfReportFileName: ({ parseLogsSelfReportFileName }) => parseLogsSelfReportFileName,
-    getSessionFilePath: ({ parseLogsSessionFilePath }) => parseLogsSessionFilePath,
-    logger: server.log
-  })
+  const parseLogsSelfReportRepository =
+    settings.parseLogsSelfReports &&
+    (await createSelfReportFilesRepository({
+      filesService,
+      selfReportsDirPath: settings.parseLogsSelfReports.dirPath,
+      selfReportFileExtension: settings.parseLogsSelfReports.fileExtension,
+      selfReportFileName: settings.parseLogsSelfReports.fileName,
+      sessionFilePath: settings.parseLogsSelfReports.sessionFilePath,
+      retentionDays: settings.parseLogsSelfReports.retentionDays,
+      logger: server.log
+    }))
   const logsRepository = createLogsRepository({
-    logsConfig: config.logs,
+    logsDirPath: settings.logs.logsDirPath,
+    logFileExtension: settings.logs.logFileExtension,
+    logFilesDirName: settings.logs.logFilesDirName,
     filesService,
     parseLogsSelfReportRepository
   })
 
-  await registerAuthRoutes(server, config, filesService)
-  await registerLogsRoutes(server, config, logsRepository)
+  await registerAuthRoutes(server, settings, filesService)
+  await registerLogsRoutes(server, settings, logsRepository)
 
-  await registerFrontend(server, config.server, filesService)
+  await registerFrontend(server, settings.server, filesService)
 
-  await registerLogsNotifier(server, config, {
+  await registerLogsNotifier(server, settings, {
     logsRepository,
     filesService
   })
@@ -102,7 +109,7 @@ export const buildServer = async (
 }
 
 /**
- * Loads the config, builds the server with it and starts listening, exiting the process on
+ * Loads the settings, builds the server with them and starts listening, exiting the process on
  * failure.
  *
  * The files service both are given is built here, once. A failure is logged before exiting: by the
@@ -113,12 +120,12 @@ export const startServer = async (): Promise<void> => {
   let server: EchoServer | undefined
 
   try {
-    const config = await loadBackConfig(filesService)
-    server = await buildServer(config, filesService)
+    const settings = await loadSettings(filesService)
+    server = await buildServer(settings, filesService)
 
-    await server.listen({ port: config.server.port, host: config.server.host })
+    await server.listen({ port: settings.server.port, host: settings.server.host })
 
-    const { basePath, apiRoutePrefix, appRoutePrefix } = config.server
+    const { basePath, apiRoutePrefix, appRoutePrefix } = settings.server
     server.log.info(`Api is served under ${basePath}${apiRoutePrefix}`)
     server.log.info(`App is served under ${basePath}${appRoutePrefix}`)
   } catch (error) {

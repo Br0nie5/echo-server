@@ -1,6 +1,5 @@
 import path from 'path'
 
-import type { LogsConfig } from '../../../shared/config/backConfig.js'
 import { FileDoesNotExistError } from '../../../shared/services/fileDoesNotExistError.js'
 import type { FilesService } from '../../../shared/services/files.service.js'
 
@@ -27,6 +26,16 @@ export interface LogsFilesApi {
   getRawLogLines: (logFile: LogFileDto) => Promise<RawLogLineDto[]>
 }
 
+/** Where {@link createLogsFilesApi} finds the log files. */
+export interface LogsFilesLocation {
+  /** Directory the log files are read from, at any depth. */
+  logsDirPath: string
+  /** Extension, with its dot, a file of `logsDirPath` must have to be read as a log file. */
+  logFileExtension: string
+  /** Name of the directories that only hold log files, left out of the group of a log file. */
+  logFilesDirName: string
+}
+
 /**
  * Builds the access to the log files, read through `filesService`.
  *
@@ -34,13 +43,16 @@ export interface LogsFilesApi {
  * `logFilesDirName` is the name of the directories left out of the group of a log file:
  *
  * ```ts
- * const logsFilesApi = createLogsFilesApi(config.logs, createFilesService())
+ * const logsFilesApi = createLogsFilesApi(
+ *   { logsDirPath: '/watched_logs', logFileExtension: '.jsonl', logFilesDirName: 'logs' },
+ *   filesService
+ * )
  * const logFiles = await logsFilesApi.getAllLogFiles()
  * const rawLogLines = await logsFilesApi.getRawLogLines(logFiles[0])
  * ```
  */
 export const createLogsFilesApi = (
-  { logsDirPath, logFileExtension, logFilesDirName }: LogsConfig,
+  { logsDirPath, logFileExtension, logFilesDirName }: LogsFilesLocation,
   filesService: FilesService
 ): LogsFilesApi => {
   const createGroupName = (filePath: string): string | undefined => {

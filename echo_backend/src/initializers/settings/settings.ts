@@ -1,14 +1,14 @@
-import type { LogLevel } from '@echo/utilities'
-import type { CookieSerializeOptions } from '@fastify/cookie'
+import type { AuthConfig } from '../../shared/config/authConfig.js'
+import type { LogsNotifierConfig } from '../../shared/config/logsNotifierConfig.js'
 
 /** Certificate and private key that make the server use HTTPS, as the text of their PEM files. */
-export type TlsConfig = {
+export type TlsSettings = {
   cert: string
   key: string
 }
 
 /** What the HTTP server needs to listen, to know the paths it is reached under and to serve the frontend. */
-export type ServerConfig = {
+export type ServerSettings = {
   /** Display name of the server (`SERVER_NAME`). */
   serverName: string
   /**
@@ -42,64 +42,41 @@ export type ServerConfig = {
    */
   trustedProxies?: string[]
   /** Set when the server uses HTTPS (`TLS_CERT_PATH` and `TLS_KEY_PATH`). */
-  tls?: TlsConfig
+  tls?: TlsSettings
   /** Directory holding the built frontend, served under `appRoutePrefix`. */
   frontendDistDirPath: string
 }
 
-/** What the authentication needs: its session, its cookie, its limits and where the users are stored. */
-export type AuthConfig = {
-  /** How long a session lasts, both its cookie and its JWT. */
-  sessionDurationSeconds: number
-  /**
-   * Limit of the login and sign-up attempts, so passwords cannot be guessed at speed: how many
-   * times credentials may be sent from one address within a time window.
-   */
-  credentialsAttemptsLimit: {
-    maxAttempts: number
-    timeWindowMilliseconds: number
-  }
-  /** Name of the cookie holding the JWT of the session. */
-  cookieName: string
-  cookieSerializeOptions: CookieSerializeOptions
+/** The config of the authentication, and where its accounts are stored. */
+export type AuthSettings = {
+  config: AuthConfig
   /** File of the SQLite database holding the users. */
   usersDbFilePath: string
 }
 
-/** What the backend needs to store the diagnostics it reports about itself. */
-export type SelfReportsConfig = {
+/** Where one part of the backend stores the diagnostics it reports about itself. */
+export type SelfReportsSettings = {
   /** Number of days a stored self report is kept (`SELF_REPORTS_RETENTION_DAYS`). */
   retentionDays: number
   /** Directory holding the self-report files, inside `SELF_REPORTS_DIR_PATH` and named after the server (`SERVER_NAME`). */
-  selfReportsDirPath: string
-  /** Extension, with its dot, a file of `selfReportsDirPath` must have to be read as a self-report file. */
-  selfReportFileExtension: string
-  /** Name of the self-report file the lines of the log files that hold no log are reported to, with its extension. */
-  parseLogsSelfReportFileName: string
-  /** Name of the self-report file the problem logs that could not be notified are reported to, with its extension. */
-  logsNotifierSelfReportFileName: string
-  /** File remembering the id of the last session the self reports of `parseLogsSelfReportFileName` were written during. */
-  parseLogsSessionFilePath: string
-  /** File remembering the id of the last session the self reports of `logsNotifierSelfReportFileName` were written during. */
-  logsNotifierSessionFilePath: string
+  dirPath: string
+  /** Extension, with its dot, a file of `dirPath` must have to be read as a self-report file. */
+  fileExtension: string
+  /** Name, with its extension, of the file of `dirPath` the self reports are stored in. */
+  fileName: string
+  /** File remembering the id of the last session the self reports of `fileName` were written during. */
+  sessionFilePath: string
 }
 
-/** What the cron notifying the problem logs needs, the channel it notifies through apart (`NotificationConfig`). */
-export type LogsNotifierConfig = {
-  /** Cron expression saying when the logs are checked (`LOGS_NOTIFIER_SCHEDULE`). */
-  schedule: string
-  /** Levels that make a log a problem log (`LOGS_NOTIFIER_WATCHED_LOGS_LEVELS`). */
-  watchedLogsLevels: LogLevel[]
-  /** Luxon zone the dates of the messages are shown in (`LOGS_NOTIFIER_TIMEZONE`). */
-  notifierTimezone: string
-  /** Name the messages say the logs come from (`SERVER_NAME`). */
-  serverName: string
+/** The config of the cron notifying the problem logs, and where it remembers its last check. */
+export type LogsNotifierSettings = {
+  config: LogsNotifierConfig
   /** File remembering when the logs were last checked. */
   lastLogsCheckFilePath: string
 }
 
-/** What reading the logs needs, with the settings of the features built on top of them. */
-export type LogsConfig = {
+/** Where the logs are read from, with the settings of the features built on top of them. */
+export type LogsSettings = {
   /** Directory the log files are read from, at any depth (`LOGS_DIR_PATH`). */
   logsDirPath: string
   /** Extension, with its dot, a file of a logs directory must have to be read as a log file. */
@@ -110,14 +87,14 @@ export type LogsConfig = {
    */
   logFilesDirName: string
   /**
-   * Missing when the cron notifying the problem logs is not configured, or when there is no
-   * `NotificationConfig` to notify with, which disables it.
+   * Missing when the cron notifying the problem logs is not configured, or when there are no
+   * `NotificationSettings` to notify with, which disables it.
    */
-  logsNotifier?: LogsNotifierConfig
+  logsNotifier?: LogsNotifierSettings
 }
 
 /** What sending a notification needs: the Telegram bot sending it and the chat it goes to. */
-export type NotificationConfig = {
+export type NotificationSettings = {
   /** Chat the messages are sent to (`TELEGRAM_CHAT_ID`). */
   telegramChatId: string
   /** Token of the bot the messages are sent by (`TELEGRAM_BOT_TOKEN`). A secret. */
@@ -129,35 +106,44 @@ export type NotificationConfig = {
 }
 
 /**
- * The whole configuration of the backend, split by what uses it.
+ * Everything the backend is set up with, split by what uses it.
  *
- * It is built once, by `loadBackConfig`, from the environment variables and from constants. Each
- * part of the backend is given the one config it needs, and reads every setting, path and file
- * name from it:
+ * It is built once, by `loadSettings`, from the environment variables and from constants, and it
+ * stays in the composition root: `buildServer` and what it registers read it, and nothing else
+ * does. A setting is either a config, which a module is given as it is (the `config` of
+ * `AuthSettings` and of `LogsNotifierSettings`), or what an implementation needs (a path, a file
+ * name, a token), which is handed to that implementation value by value:
  *
  * ```ts
- * const config = await loadBackConfig(filesService)
- * const logsFilesApi = createLogsFilesApi(config.logs, filesService)
- * const notifierService = createNotifierService(config.notification)
+ * const settings = await loadSettings(filesService)
+ * const usersDb = await createUsersDb({ usersDbFilePath: settings.auth.usersDbFilePath }, filesService)
+ * const controller = createAuthController(authRepository, settings.auth.config)
  * ```
  *
- * `auth`, `selfReports` and `notification` are missing when what they configure is disabled: whoever takes
- * one is only built when it is there.
- *
- * A value needed in two places is in both configs (`serverName` is in `ServerConfig` and
- * `LogsNotifierConfig`), so no function needs a second config for one field.
+ * `auth`, `parseLogsSelfReports`, `logsNotifierSelfReports` and `notification` are missing when
+ * what they set up is disabled: whoever takes one is only built when it is there.
  */
-export type BackConfig = {
-  server: ServerConfig
+export type Settings = {
+  server: ServerSettings
   /** Missing when the authentication is disabled (`HAS_AUTHENTICATION`): the routes are then open to anyone. */
-  auth?: AuthConfig
-  logs: LogsConfig
+  auth?: AuthSettings
+  logs: LogsSettings
   /**
+   * Where the lines of the log files that hold no log are reported.
+   *
    * Missing when the self reports are disabled, that is when nothing uses them: they are stored
    * only when they are shown among the logs (`INCLUDE_SELF_REPORTS_IN_LOGS`), as logs of their
    * own.
    */
-  selfReports?: SelfReportsConfig
+  parseLogsSelfReports?: SelfReportsSettings
+  /**
+   * Where the problem logs that could not be notified are reported. It has the directory, the
+   * extension and the retention of `parseLogsSelfReports`, and a file and a session file of its
+   * own.
+   *
+   * Missing when the self reports are disabled.
+   */
+  logsNotifierSelfReports?: SelfReportsSettings
   /** Missing when Telegram is not configured: the backend then has no channel to notify through. */
-  notification?: NotificationConfig
+  notification?: NotificationSettings
 }

@@ -1,7 +1,7 @@
 import { isLogLevel, parseRequiredEnv, type LogLevel } from '@echo/utilities'
 import cron from 'node-cron'
 
-import type { LogsNotifierConfig } from '../backConfig.js'
+import type { LogsNotifierSettings } from '../settings.js'
 
 import { parseTimezone } from './parseTimezone.js'
 
@@ -25,28 +25,27 @@ const parseWatchedLogsLevels = (raw: string): LogLevel[] => {
 }
 
 /**
- * Parses the `LOGS_NOTIFIER_*` variables of `processEnv` into the config of the cron notifying the
- * problem logs, completed with `serverName` and `lastLogsCheckFilePath`.
+ * Parses the `LOGS_NOTIFIER_*` variables of `processEnv` into the settings of the cron notifying
+ * the problem logs: its config, completed with `serverName`, and `lastLogsCheckFilePath`.
  *
  * The three variables are required. Throws when one is missing, when `LOGS_NOTIFIER_SCHEDULE` is
  * not a cron expression, when `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` names no log level (it is a
  * comma-separated list, whose unknown levels are ignored) or when `LOGS_NOTIFIER_TIMEZONE` is not
  * a known zone.
  */
-export const parseLogsNotifierConfig = (
+export const parseLogsNotifierSettings = (
   processEnv: NodeJS.ProcessEnv,
-  {
-    serverName,
-    lastLogsCheckFilePath
-  }: Pick<LogsNotifierConfig, 'serverName' | 'lastLogsCheckFilePath'>
-): LogsNotifierConfig => ({
-  schedule: parseRequiredEnv(processEnv, 'LOGS_NOTIFIER_SCHEDULE', parseSchedule),
-  watchedLogsLevels: parseRequiredEnv(
-    processEnv,
-    'LOGS_NOTIFIER_WATCHED_LOGS_LEVELS',
-    parseWatchedLogsLevels
-  ),
-  notifierTimezone: parseRequiredEnv(processEnv, 'LOGS_NOTIFIER_TIMEZONE', parseTimezone),
-  serverName,
+  { serverName, lastLogsCheckFilePath }: { serverName: string; lastLogsCheckFilePath: string }
+): LogsNotifierSettings => ({
+  config: {
+    schedule: parseRequiredEnv(processEnv, 'LOGS_NOTIFIER_SCHEDULE', parseSchedule),
+    watchedLogsLevels: parseRequiredEnv(
+      processEnv,
+      'LOGS_NOTIFIER_WATCHED_LOGS_LEVELS',
+      parseWatchedLogsLevels
+    ),
+    timezone: parseRequiredEnv(processEnv, 'LOGS_NOTIFIER_TIMEZONE', parseTimezone),
+    serverName
+  },
   lastLogsCheckFilePath
 })

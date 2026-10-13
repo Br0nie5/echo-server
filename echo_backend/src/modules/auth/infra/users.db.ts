@@ -2,7 +2,6 @@ import path from 'path'
 
 import Database from 'better-sqlite3'
 
-import type { AuthConfig } from '../../../shared/config/backConfig.js'
 import type { FilesService } from '../../../shared/services/files.service.js'
 
 /**
@@ -13,11 +12,11 @@ import type { FilesService } from '../../../shared/services/files.service.js'
  * the file cannot be created.
  *
  * ```ts
- * const authRepository = createAuthUsersDbRepository(await createUsersDb(authConfig, filesService))
+ * const authRepository = createAuthUsersDbRepository(await createUsersDb({ usersDbFilePath }, filesService))
  * ```
  */
 export const createUsersDb = async (
-  { usersDbFilePath }: AuthConfig,
+  { usersDbFilePath }: { usersDbFilePath: string },
   filesService: FilesService
 ): Promise<Database.Database> => {
   await filesService.createDirectory(path.dirname(usersDbFilePath))

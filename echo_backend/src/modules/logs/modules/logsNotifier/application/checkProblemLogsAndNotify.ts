@@ -1,6 +1,5 @@
-import type { LogLevel } from '@echo/utilities'
-
-import type { NotifierService } from '../../../../../shared/services/notifier.service.js'
+import type { LogsNotifierConfig } from '../../../../../shared/config/logsNotifierConfig.js'
+import type { NotificationsService } from '../../../../notifications/domain/notifications.service.js'
 import type { SelfReportRepository } from '../../../../selfReport/domain/selfReport.repository.js'
 import { getFilteredLogs } from '../../../application/getFilteredLogs.js'
 import type { LogsRepository } from '../../../domain/logs.repository.js'
@@ -10,14 +9,13 @@ import { buildNotifierMessage } from './utils/buildNotifierMessage.js'
 
 /** Everything one run of the problem logs check needs. */
 export interface ProblemLogsCheck {
-  /** Levels that make a log a problem log. */
-  watchedLogsLevels: LogLevel[]
-  /** Name the notification says the logs come from. */
-  serverName: string
-  /** Luxon zone the dates of the logs are shown in. */
-  timezone: string
+  /**
+   * Gives the levels that make a log a problem log, the name the notification says the logs come
+   * from and the zone their dates are shown in.
+   */
+  logsNotifierConfig: LogsNotifierConfig
   logsRepository: LogsRepository
-  notifierService: NotifierService
+  notificationsService: NotificationsService
   checkDateRepository: CheckDateRepository
   /**
    * Where the check reports the problem logs it could not notify. Missing when the self reports
@@ -32,40 +30,38 @@ export interface ProblemLogsCheck {
  * A check looks at the logs logged from the date of the previous check to its own, the latter left
  * out: a log is in the period of one check only, so it is notified once, even when it is written
  * while the logs are being read. The logs are looked up in `logsRepository`, with
- * `getFilteredLogs`.
+ * `getFilteredLogs`, a problem log being one whose level is among the `watchedLogsLevels` of
+ * `logsNotifierConfig`.
  *
  * When the self reports are among the logs of `logsRepository`, they are notified when their level
  * is watched. A stored entry that holds no valid log is reported each time the logs are read, but
  * stored once, with the date it was first read at: it is notified once too, by the check that
  * follows the one that found it.
  *
- * The notification is one message telling about the logs (see {@link buildNotifierMessage}), built
- * for the size limit of `notifierService`. Nothing is sent when there is no problem log, nor when
- * the size limit is too small for any message: a warning is then saved to
- * `logsNotifierSelfReportRepository`, when there is one, and the date of the check is saved all the
- * same, since notifying the same logs again would fail the same way.
+ * The notification is one message telling about the logs (see {@link buildNotifierMessage}), with
+ * the `serverName` and the `timezone` of `logsNotifierConfig`, built for the size limit of
+ * `notificationsService`. Nothing is sent when there is no problem log, nor when the size limit is
+ * too small for any message: a warning is then saved to `logsNotifierSelfReportRepository`, when
+ * there is one, and the date of the check is saved all the same, since notifying the same logs
+ * again would fail the same way.
  *
  * The very first check only saves its date, so the logs that predate it are not notified. The date
  * is not saved when notifying throws, so the same logs are notified again by the next check.
  *
  * ```ts
  * await checkProblemLogsAndNotify({
- *   watchedLogsLevels: logsNotifierConfig.watchedLogsLevels,
- *   serverName: logsNotifierConfig.serverName,
- *   timezone: logsNotifierConfig.notifierTimezone,
+ *   logsNotifierConfig,
  *   logsRepository,
- *   notifierService,
+ *   notificationsService,
  *   checkDateRepository,
  *   logsNotifierSelfReportRepository
  * })
  * ```
  */
 export const checkProblemLogsAndNotify = async ({
-  watchedLogsLevels,
-  serverName,
-  timezone,
+  logsNotifierConfig: { watchedLogsLevels, serverName, timezone },
   logsRepository,
-  notifierService,
+  notificationsService,
   checkDateRepository,
   logsNotifierSelfReportRepository
 }: ProblemLogsCheck): Promise<void> => {
@@ -86,11 +82,11 @@ export const checkProblemLogsAndNotify = async ({
   })
 
   if (problemLogs.length > 0) {
-    const messageSizeLimit = notifierService.getMessageSizeLimit()
+    const messageSizeLimit = notificationsService.getMessageSizeLimit()
     const message = buildNotifierMessage({ messageSizeLimit, problemLogs, serverName, timezone })
 
     if (message !== undefined) {
-      await notifierService.notify(message)
+      await notificationsService.notify(message)
     } else if (logsNotifierSelfReportRepository !== undefined) {
       await logsNotifierSelfReportRepository.saveSelfReports([
         {

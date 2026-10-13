@@ -12,18 +12,18 @@ import {
 } from '@echo/utilities'
 import dotenv from 'dotenv'
 
-import type { FilesService } from '../services/files.service.js'
+import type { FilesService } from '../../shared/services/files.service.js'
 
-import type { BackConfig } from './backConfig.js'
+import type { Settings } from './settings.js'
 import { createCookieSerializeOptions } from './utils/createCookieSerializeOptions.js'
 import { createSelfReportsDirPath } from './utils/createSelfReportsDirPath.js'
 import { createSessionCookieName } from './utils/createSessionCookieName.js'
 import { parseBasePath } from './utils/parseBasePath.js'
 import { parseDaysNumber } from './utils/parseDaysNumber.js'
 import { parseHttpPort } from './utils/parseHttpPort.js'
-import { parseLogsNotifierConfig } from './utils/parseLogsNotifierConfig.js'
-import { parseNotificationConfig } from './utils/parseNotificationConfig.js'
-import { parseTlsConfig } from './utils/parseTlsConfig.js'
+import { parseLogsNotifierSettings } from './utils/parseLogsNotifierSettings.js'
+import { parseNotificationSettings } from './utils/parseNotificationSettings.js'
+import { parseTlsSettings } from './utils/parseTlsSettings.js'
 import { parseTrustedProxies } from './utils/parseTrustedProxies.js'
 
 /** ESM has no `__dirname`, so it is rebuilt from the module URL. */
@@ -55,9 +55,10 @@ const TELEGRAM_BASE_URL = 'https://api.telegram.org'
 const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
 
 /**
- * Builds the configuration of the backend from `processEnv` (the environment of the process by
- * default), from the constants of the backend (paths, file names, cookie settings) and from the
- * files some variables point to, read through `filesService` (the TLS certificate and key).
+ * Builds the settings of the backend, the configs of its modules included, from `processEnv` (the
+ * environment of the process by default), from the constants of the backend (paths, file names,
+ * cookie options) and from the files some variables point to, read through `filesService` (the
+ * TLS certificate and key).
  *
  * `.env.<mode>` is loaded into `processEnv` first, without overriding the variables already set;
  * `<mode>` is `production` when `NODE_ENV` is, `development` otherwise. Each variable is then read
@@ -78,19 +79,20 @@ const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
  * them, since it would have no channel to notify through, and its three `LOGS_NOTIFIER_*`
  * variables are required only when they are set.
  *
- * It is meant to be called once, when the server starts, the config then being handed down:
+ * It is meant to be called once, when the server starts, the settings then being handed to what
+ * builds it:
  *
  * ```ts
  * const filesService = createFilesService()
- * const config = await loadBackConfig(filesService)
- * const server = await buildServer(config, filesService)
- * await server.listen({ port: config.server.port, host: config.server.host })
+ * const settings = await loadSettings(filesService)
+ * const server = await buildServer(settings, filesService)
+ * await server.listen({ port: settings.server.port, host: settings.server.host })
  * ```
  */
-export const loadBackConfig = async (
+export const loadSettings = async (
   filesService: FilesService,
   processEnv: NodeJS.ProcessEnv = process.env
-): Promise<BackConfig> => {
+): Promise<Settings> => {
   const mode = processEnv.NODE_ENV === 'production' ? processEnv.NODE_ENV : 'development'
   dotenv.config({ path: `.env.${mode}`, processEnv, override: false, quiet: true })
 
@@ -111,7 +113,18 @@ export const loadBackConfig = async (
   )
   const areSelfReportsEnabled = areSelfReportsIncludedInLogs
 
-  const notification = parseNotificationConfig(processEnv, {
+  const sharedSelfReportsSettings = areSelfReportsEnabled
+    ? {
+        retentionDays: parseRequiredEnv(processEnv, 'SELF_REPORTS_RETENTION_DAYS', parseDaysNumber),
+        dirPath: createSelfReportsDirPath(
+          requireEnv(processEnv, 'SELF_REPORTS_DIR_PATH'),
+          config.SERVER_NAME
+        ),
+        fileExtension: LOG_FILE_EXTENSION
+      }
+    : undefined
+
+  const notification = parseNotificationSettings(processEnv, {
     telegramBaseUrl: TELEGRAM_BASE_URL,
     telegramMessageSizeLimit: TELEGRAM_MESSAGE_SIZE_LIMIT
   })
@@ -129,15 +142,17 @@ export const loadBackConfig = async (
       trustedProxies: addEnvNameToError('TRUSTED_PROXIES', () =>
         parseTrustedProxies(processEnv.TRUSTED_PROXIES)
       ),
-      tls: await parseTlsConfig(processEnv, filesService),
+      tls: await parseTlsSettings(processEnv, filesService),
       frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
     },
     auth: config.HAS_AUTHENTICATION
       ? {
-          sessionDurationSeconds: SESSION_DURATION_SECONDS,
-          credentialsAttemptsLimit: CREDENTIALS_ATTEMPTS_LIMIT,
-          cookieName: createSessionCookieName(config.SERVER_NAME),
-          cookieSerializeOptions: createCookieSerializeOptions(basePath, SESSION_DURATION_SECONDS),
+          config: {
+            sessionDurationSeconds: SESSION_DURATION_SECONDS,
+            credentialsAttemptsLimit: CREDENTIALS_ATTEMPTS_LIMIT,
+            cookieName: createSessionCookieName(config.SERVER_NAME),
+            cookieSerializeOptions: createCookieSerializeOptions(basePath, SESSION_DURATION_SECONDS)
+          },
           usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')
         }
       : undefined,
@@ -147,32 +162,21 @@ export const loadBackConfig = async (
       logFilesDirName: LOG_FILES_DIR_NAME,
       logsNotifier:
         notification &&
-        parseLogsNotifierConfig(processEnv, {
+        parseLogsNotifierSettings(processEnv, {
           serverName: config.SERVER_NAME,
           lastLogsCheckFilePath: path.join(DATA_DIR_PATH, 'last_logs_check.json')
         })
     },
-    selfReports: areSelfReportsEnabled
-      ? {
-          retentionDays: parseRequiredEnv(
-            processEnv,
-            'SELF_REPORTS_RETENTION_DAYS',
-            parseDaysNumber
-          ),
-          selfReportsDirPath: createSelfReportsDirPath(
-            requireEnv(processEnv, 'SELF_REPORTS_DIR_PATH'),
-            config.SERVER_NAME
-          ),
-          selfReportFileExtension: LOG_FILE_EXTENSION,
-          parseLogsSelfReportFileName: `parseLogFile${LOG_FILE_EXTENSION}`,
-          logsNotifierSelfReportFileName: `logsNotifier${LOG_FILE_EXTENSION}`,
-          parseLogsSessionFilePath: path.join(DATA_DIR_PATH, 'logs_self_reports_session.json'),
-          logsNotifierSessionFilePath: path.join(
-            DATA_DIR_PATH,
-            'logs_notifier_self_reports_session.json'
-          )
-        }
-      : undefined,
+    parseLogsSelfReports: sharedSelfReportsSettings && {
+      ...sharedSelfReportsSettings,
+      fileName: `parseLogFile${LOG_FILE_EXTENSION}`,
+      sessionFilePath: path.join(DATA_DIR_PATH, 'logs_self_reports_session.json')
+    },
+    logsNotifierSelfReports: sharedSelfReportsSettings && {
+      ...sharedSelfReportsSettings,
+      fileName: `logsNotifier${LOG_FILE_EXTENSION}`,
+      sessionFilePath: path.join(DATA_DIR_PATH, 'logs_notifier_self_reports_session.json')
+    },
     notification
   }
 }

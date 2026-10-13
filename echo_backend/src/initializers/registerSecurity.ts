@@ -4,8 +4,7 @@ import fastifyCookie from '@fastify/cookie'
 import cors, { type FastifyCorsOptions } from '@fastify/cors'
 import fastifyJwt from '@fastify/jwt'
 
-import type { BackConfig } from '../shared/config/backConfig.js'
-
+import type { Settings } from './settings/settings.js'
 import type { EchoServer } from './types/echoServer.js'
 import { isOriginAllowed } from './utils/isOriginAllowed.js'
 
@@ -19,19 +18,22 @@ const DYNAMIC_JWT_SECRET = crypto.randomBytes(256).toString('hex')
  *
  * That one is the host of the request, which behind a reverse proxy is the one the browser
  * reached only when the proxy forwards it: as the `Host` header, or as `X-Forwarded-Host` when it
- * is one of the `trustedProxies` of the config, or when the config has none.
+ * is one of the `trustedProxies` of the settings, or when the settings have none.
  */
-export const registerSecurity = async (server: EchoServer, config: BackConfig): Promise<void> => {
-  if (config.auth) {
+export const registerSecurity = async (
+  server: EchoServer,
+  { auth: authSettings }: Settings
+): Promise<void> => {
+  if (authSettings) {
     await server.register(fastifyCookie)
 
     await server.register(fastifyJwt, {
       secret: DYNAMIC_JWT_SECRET,
       // A token outlives neither its cookie nor the server: copied out of the cookie, it is no
       // longer accepted once the session is over.
-      sign: { expiresIn: `${config.auth.sessionDurationSeconds}s` },
+      sign: { expiresIn: `${authSettings.config.sessionDurationSeconds}s` },
       cookie: {
-        cookieName: config.auth.cookieName,
+        cookieName: authSettings.config.cookieName,
         signed: false // We verify via JWT signature, so the cookie itself doesn't need a secondary signature
       }
     })
