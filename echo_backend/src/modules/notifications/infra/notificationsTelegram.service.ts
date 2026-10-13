@@ -29,7 +29,7 @@ export interface CreateNotificationsTelegramServiceOptions {
  *   telegramBaseUrl: 'https://api.telegram.org',
  *   telegramMessageSizeLimit: 4096
  * })
- * await notificationsService.notify('3 problem logs since 08:00')
+ * await notificationsService.notify('3 watched logs since 08:00')
  * ```
  */
 export const createNotificationsTelegramService = ({

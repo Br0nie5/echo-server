@@ -7,8 +7,8 @@ import type { LogLevel } from '../schemas/logLevel.schema.js'
  * Without any level, every log is kept.
  *
  * ```ts
- * const problemLevels = [LogLevel.WARNING, LogLevel.ERROR]
- * const problemLogs = logs.filter((log) => filterLogByLevels(log, problemLevels))
+ * const watchedLevels = [LogLevel.WARNING, LogLevel.ERROR]
+ * const watchedLogs = logs.filter((log) => filterLogByLevels(log, watchedLevels))
  * ```
  */
 export const filterLogByLevels = (log: Log, levels: LogLevel[]): boolean => {

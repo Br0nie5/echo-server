@@ -102,7 +102,7 @@ describe('checkWatchedLogsAndNotify', () => {
       {
         date: CHECK_DATE,
         message:
-          'The problem logs were not notified: the notifier takes messages of 10 characters at most, which is not enough for any message',
+          'The watched logs were not notified: the notifier takes messages of 10 characters at most, which is not enough for any message',
         level: 'WARNING',
         origin: 'checkWatchedLogsAndNotify'
       }
@@ -123,7 +123,7 @@ describe('checkWatchedLogsAndNotify', () => {
     expect(markAsNotified).toHaveBeenCalledOnce()
   })
 
-  it('Should not notify when no problem logs are found, and still mark the logs as notified', async () => {
+  it('Should not notify when no watched logs are found, and still mark the logs as notified', async () => {
     mockUnNotifiedLogs([])
 
     await check()

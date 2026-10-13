@@ -6,10 +6,10 @@ import { buildNotifierMessage, formatLogLine } from '../buildNotifierMessage.js'
 const MESSAGE_SIZE_LIMIT = 4096
 
 const buildMessage = (
-  problemLogs: Log[],
+  watchedLogs: Log[],
   messageSizeLimit = MESSAGE_SIZE_LIMIT
 ): string | undefined =>
-  buildNotifierMessage({ messageSizeLimit, problemLogs, serverName: 'my-device', timezone: 'UTC' })
+  buildNotifierMessage({ messageSizeLimit, watchedLogs, serverName: 'my-device', timezone: 'UTC' })
 
 function mockLog(overrides: Partial<Log> = {}): Log {
   return {

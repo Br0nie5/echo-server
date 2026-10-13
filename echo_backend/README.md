@@ -1,6 +1,6 @@
 # echo_backend
 
-The server of Echo, a Fastify app in TypeScript (ESM). It reads `.jsonl` log files from the disk and serves them through a REST API, with an optional login, an optional cron notifying the problem logs through Telegram, and optional Swagger docs. It also serves a built web app, whose directory its config gives.
+The server of Echo, a Fastify app in TypeScript (ESM). It reads `.jsonl` log files from the disk and serves them through a REST API, with an optional login, an optional cron notifying the watched logs through Telegram, and optional Swagger docs. It also serves a built web app, whose directory its config gives.
 
 | Path             | Serves                                                                        |
 | ---------------- | ----------------------------------------------------------------------------- |
@@ -58,7 +58,7 @@ src/
   modules/
     auth/            sign-up, login, check and logout, the SQLite users, the JWT of the session
     logs/            the logs API and the log files
-      modules/logsNotifier/   the cron notifying the problem logs
+      modules/logsNotifier/   the cron notifying the watched logs
     notifications/   the NotificationsService, how a message is sent to the outside, and its Telegram implementation
     selfReports/     the diagnostics the server reports about itself, stored in files of their own
   shared/            the types of the configs, the FilesService, the error schema, the Logger type

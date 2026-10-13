@@ -16,7 +16,8 @@ export const formatLogLine = (log: Log, timezone: string): string => {
 export interface NotifierMessageContent {
   /** Maximum length of the message, given by the channel it is sent through. */
   messageSizeLimit: number
-  problemLogs: Log[]
+  /** Logs the message tells about, in the order it lists them. */
+  watchedLogs: Log[]
   /** Name the message says the logs come from. */
   serverName: string
   /** Luxon zone the dates of the logs are shown in. */
@@ -24,7 +25,7 @@ export interface NotifierMessageContent {
 }
 
 /**
- * Builds the message telling about `problemLogs`, never longer than `messageSizeLimit`.
+ * Builds the message telling about `watchedLogs`, never longer than `messageSizeLimit`.
  *
  * The message lists the logs, in order, under a header naming `serverName`. The logs that do not
  * fit are replaced by a footer counting them. When not even the first log fits, the message only
@@ -36,7 +37,7 @@ export interface NotifierMessageContent {
  * ```ts
  * const message = buildNotifierMessage({
  *   messageSizeLimit: notificationsService.getMessageSizeLimit(),
- *   problemLogs,
+ *   watchedLogs,
  *   serverName,
  *   timezone
  * })
@@ -44,15 +45,15 @@ export interface NotifierMessageContent {
  */
 export const buildNotifierMessage = ({
   messageSizeLimit,
-  problemLogs,
+  watchedLogs,
   serverName,
   timezone
 }: NotifierMessageContent): string | undefined => {
-  if (problemLogs.length === 0) {
+  if (watchedLogs.length === 0) {
     return undefined
   }
 
-  const lines = problemLogs.map((log) => formatLogLine(log, timezone))
+  const lines = watchedLogs.map((log) => formatLogLine(log, timezone))
   const header = `Logs from device ${serverName}:\n\n\n`
 
   const buildMessageListingLogs = (listedLogsCount: number): string => {

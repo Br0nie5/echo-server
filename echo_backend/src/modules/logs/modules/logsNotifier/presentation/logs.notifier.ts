@@ -14,7 +14,7 @@ export interface LogsNotifierPluginOptions extends FastifyPluginOptions {
   unNotifiedLogsRepository: UnNotifiedLogsRepository
   notificationsService: NotificationsService
   /**
-   * Where a check reports the problem logs it could not notify. Missing when the self reports are
+   * Where a check reports the watched logs it could not notify. Missing when the self reports are
    * disabled.
    */
   logsNotifierSelfReportRepository?: SelfReportRepository

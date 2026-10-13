@@ -33,7 +33,7 @@ const toLogFileContent = (lines: object[]): string =>
 const toLastCheckFileContent = (lastCheck: Date): string =>
   JSON.stringify({ lastCheck: lastCheck.toISOString() }, null, 2)
 
-/** A log file with a problem log before the previous check, and two logs after it, one a problem. */
+/** A log file with a watched log before the previous check, and two logs after it, one of them watched. */
 const logFileContent = toLogFileContent([
   {
     jobId: 11,
@@ -83,7 +83,7 @@ afterEach(() => {
 })
 
 describe('logs notifier', () => {
-  test('Should notify every problem log at its first check, and save its date', async () => {
+  test('Should notify every watched log at its first check, and save its date', async () => {
     const { fileSystem } = await buildServerWithLogsNotifier({ [logFilePath]: logFileContent })
 
     await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
@@ -175,7 +175,7 @@ describe('logs notifier', () => {
           date: FIRST_CHECK.toISOString(),
           level: 'WARNING',
           message:
-            'The problem logs were not notified: the notifier takes messages of 10 characters at most, which is not enough for any message',
+            'The watched logs were not notified: the notifier takes messages of 10 characters at most, which is not enough for any message',
           origin: 'checkWatchedLogsAndNotify'
         }
       ])

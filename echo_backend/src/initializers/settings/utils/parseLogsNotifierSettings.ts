@@ -26,7 +26,7 @@ const parseWatchedLogsLevels = (raw: string): LogLevel[] => {
 
 /**
  * Parses the `LOGS_NOTIFIER_*` variables of `processEnv` into the settings of the cron notifying
- * the problem logs: its config, completed with `serverName`, and `lastLogsCheckFilePath`.
+ * the watched logs: its config, completed with `serverName`, and `lastLogsCheckFilePath`.
  *
  * The three variables are required. Throws when one is missing, when `LOGS_NOTIFIER_SCHEDULE` is
  * not a cron expression, when `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` names no log level (it is a

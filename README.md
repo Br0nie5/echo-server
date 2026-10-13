@@ -7,7 +7,7 @@ Echo is a self-hosted log viewer. Mount a directory of `.jsonl` log files, and E
 - **No database, no ingestion.** The log files are read from the disk at each request.
 - **A web app** grouping the logs by day, group and job, with a date, level and text filter.
 - **An optional login.** The first user to sign up becomes the admin. Without it, Echo is open, for use behind something that already authenticates.
-- **Optional Telegram notifications** of the problem logs.
+- **Optional Telegram notifications** of the watched logs.
 - **HTTPS**, served by Echo itself or by a reverse proxy, at the root of a domain or under a path.
 - **One image for `amd64` and `arm64`**, running as an unprivileged user.
 

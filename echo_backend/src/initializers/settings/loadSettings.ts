@@ -75,7 +75,7 @@ const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
  * served only when `HAS_DOCUMENTATION_ROUTE` is `true`.
  *
  * The notifications have no switch: they are left out, hence disabled, unless `TELEGRAM_CHAT_ID`
- * and `TELEGRAM_BOT_TOKEN` are both set. The cron notifying the problem logs is left out with
+ * and `TELEGRAM_BOT_TOKEN` are both set. The cron notifying the watched logs is left out with
  * them, since it would have no channel to notify through, and its three `LOGS_NOTIFIER_*`
  * variables are required only when they are set.
  *

@@ -9,7 +9,7 @@ import type { FilesService } from '../shared/services/files.service.js'
 import type { Settings } from './settings/settings.js'
 import type { EchoServer } from './types/echoServer.js'
 
-/** What `buildServer` already built that the cron notifying the problem logs is built with. */
+/** What `buildServer` already built that the cron notifying the watched logs is built with. */
 export interface LogsNotifierDependencies {
   logsRepository: LogsRepository
   /** What the last-check file and the files of its self reports are read and written with. */
@@ -17,13 +17,13 @@ export interface LogsNotifierDependencies {
 }
 
 /**
- * Registers the cron notifying the problem logs, only when it is set up along with the
+ * Registers the cron notifying the watched logs, only when it is set up along with the
  * notifications.
  *
  * The cron is given its config, and the logs it has not notified yet: those of `logsRepository`,
  * which the routes read too, logged since its last check, whose date it remembers in the
  * `lastLogsCheckFilePath` of its settings. When the self reports are enabled, it is given a
- * self-report repository of its own for the problem logs it could not notify. It notifies through
+ * self-report repository of its own for the watched logs it could not notify. It notifies through
  * Telegram, with the `notification` settings.
  */
 export const registerLogsNotifier = async (

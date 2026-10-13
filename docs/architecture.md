@@ -5,7 +5,7 @@ Echo is an npm-workspaces monorepo of three packages.
 | Package                             | Role                                                                                                                                     |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | [echo_utilities](../echo_utilities) | `@echo/utilities`: what the two others must agree on. The shapes the API exchanges, the shared configuration, the filtering of the logs. |
-| [echo_backend](../echo_backend)     | The server (Fastify, TypeScript, ESM): the API, the cron notifying the problem logs, and the built frontend, which it serves.            |
+| [echo_backend](../echo_backend)     | The server (Fastify, TypeScript, ESM): the API, the cron notifying the watched logs, and the built frontend, which it serves.            |
 | [echo_frontend](../echo_frontend)   | The web app (React 19, MUI, TanStack Query), a single-page app.                                                                          |
 
 The backend and the frontend never import each other. Both import `@echo/utilities`, by its name and through its barrel (`src/index.ts`) only, from its build (`dist/`): it is therefore built first.
@@ -153,7 +153,7 @@ The logs are only read from `LOGS_DIR_PATH`. The self reports are not stored amo
 
 ### The `logsNotifier` submodule
 
-`modules/logs/modules/logsNotifier/` is the optional cron notifying the problem logs.
+`modules/logs/modules/logsNotifier/` is the optional cron notifying the watched logs.
 
 | Folder          | Content                                                                                                                                                                                                                              |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -165,7 +165,7 @@ The logs are only read from `LOGS_DIR_PATH`. The self reports are not stored amo
 The use case knows nothing of how the notified logs are remembered: that it is a date is a choice of the implementation.
 
 - The repository gives the logs from the date of the previous check to the one of its read, the latter left out. A log is therefore in the period of one check only, and is notified once, even when it is written while the logs are being read.
-- While no check date is saved, at the very first check or when the last-check file cannot be read, the repository gives every log: the first check notifies every problem log there is.
+- While no check date is saved, at the very first check or when the last-check file cannot be read, the repository gives every log: the first check notifies every watched log there is.
 - The date is saved when the use case marks the logs as notified, which it does not do when the notification fails: the next check sends the same logs again.
 - A run that is due while the previous one is still going is skipped.
 - When the self reports are included in the logs, they are notified like any other log when their level is watched. A line that holds no valid log is reported each time the logs are read, but stored once, with the date it was first read at: it is notified once too.
@@ -195,7 +195,7 @@ Another channel is another implementation of the contract, chosen in `registerLo
 
 A `SelfReport` is a model of its own, not a `Log`, and it is stored on its own too: in the files of `SELF_REPORTS_DIR_PATH/<server name>/`, one line each, through the `FilesService`. `selfReports` knows nothing of the logs: turning a self report into a log is up to `logs`.
 
-- **One repository per reporter.** Whoever reports is given its own `SelfReportRepository`, created for one file, and never names it: the logs files repository reports the lines that hold no log (`parseLogFile.jsonl`), the logs notifier the problem logs it could not notify (`logsNotifier.jsonl`).
+- **One repository per reporter.** Whoever reports is given its own `SelfReportRepository`, created for one file, and never names it: the logs files repository reports the lines that hold no log (`parseLogFile.jsonl`), the logs notifier the watched logs it could not notify (`logsNotifier.jsonl`).
 - **Without self reports**, that is without the `SelfReportsSettings` of a reporter, the composition root creates no repository: whoever reports is given `undefined`, and reports nothing. They are enabled when something uses them: today, when they are included in the logs.
 - **The session is the repository's business.** Whoever reports saves plain self reports, which the repository stores with the id of its session. Reading gives each self report with its session: the id of the run it was reported during, and the location, the location name and the group name of its file.
 - **When it is created**, the repository takes the next session id of its own session file (`logs_self_reports_session.json`, `logs_notifier_self_reports_session.json`) and writes its file again without the self reports older than the retention, which also tells whether the file can be written. Should that fail, the error is logged and no repository is created: an optional feature never stops the server from starting.

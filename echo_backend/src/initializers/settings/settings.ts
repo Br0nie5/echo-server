@@ -68,7 +68,7 @@ export type SelfReportsSettings = {
   sessionFilePath: string
 }
 
-/** The config of the cron notifying the problem logs, and where it remembers its last check. */
+/** The config of the cron notifying the watched logs, and where it remembers its last check. */
 export type LogsNotifierSettings = {
   config: LogsNotifierConfig
   /** File remembering when the logs were last checked. */
@@ -87,7 +87,7 @@ export type LogsSettings = {
    */
   logFilesDirName: string
   /**
-   * Missing when the cron notifying the problem logs is not configured, or when there are no
+   * Missing when the cron notifying the watched logs is not configured, or when there are no
    * `NotificationSettings` to notify with, which disables it.
    */
   logsNotifier?: LogsNotifierSettings
@@ -137,7 +137,7 @@ export type Settings = {
    */
   parseLogsSelfReports?: SelfReportsSettings
   /**
-   * Where the problem logs that could not be notified are reported. It has the directory, the
+   * Where the watched logs that could not be notified are reported. It has the directory, the
    * extension and the retention of `parseLogsSelfReports`, and a file and a session file of its
    * own.
    *
