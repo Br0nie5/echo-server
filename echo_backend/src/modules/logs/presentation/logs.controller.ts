@@ -1,7 +1,6 @@
 import { parseLogSearchInput, type EchoError, type GetLogsParams, type Log } from '@echo/utilities'
 import type { FastifyRequest, FastifyReply } from 'fastify'
 
-import type { SelfReportRepository } from '../../selfReport/domain/selfReport.repository.js'
 import { getFilteredLogs } from '../application/getFilteredLogs.js'
 import type { LogsRepository } from '../domain/logs.repository.js'
 
@@ -16,15 +15,8 @@ export interface LogsController {
   ) => Promise<void>
 }
 
-/**
- * Builds the logs handlers, which read the logs from `logsRepository` and, when the self reports
- * are enabled, answer the self reports of `parseLogsSelfReportRepository` among them (see
- * `getFilteredLogs`).
- */
-export const createLogsController = (
-  logsRepository: LogsRepository,
-  parseLogsSelfReportRepository: SelfReportRepository | undefined
-): LogsController => ({
+/** Builds the logs handlers, which read the logs from `logsRepository`. */
+export const createLogsController = (logsRepository: LogsRepository): LogsController => ({
   getLogs: async (
     request: FastifyRequest<{ Querystring: GetLogsParams }>,
     reply: FastifyReply<{ Reply: Log[] | EchoError }>
@@ -43,7 +35,7 @@ export const createLogsController = (
 
     const logSearchFilters = parseLogSearchInput(logSearch ?? '')
 
-    const logs = await getFilteredLogs(logsRepository, parseLogsSelfReportRepository, {
+    const logs = await getFilteredLogs(logsRepository, {
       fromDate,
       toDate,
       levels: logLevels,

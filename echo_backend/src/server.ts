@@ -13,8 +13,7 @@ import type { EchoServer } from './initializers/types/echoServer.js'
 import { addBasePath } from './initializers/utils/addBasePath.js'
 import { normalizeToEchoError } from './initializers/utils/normalizeToEchoError.js'
 import { removeBasePath } from './initializers/utils/removeBasePath.js'
-import { createLogsFilesApi } from './modules/logs/infra/logsFiles.api.js'
-import { createLogsFilesRepository } from './modules/logs/infra/logsFiles.repository.js'
+import { createLogsRepository } from './modules/logs/infra/logs.repository.js'
 import { createSelfReportFilesRepository } from './modules/selfReport/infra/selfReportFiles.repository.js'
 import type { BackConfig } from './shared/config/backConfig.js'
 import { loadBackConfig } from './shared/config/loadBackConfig.js'
@@ -83,19 +82,19 @@ export const buildServer = async (
     getSessionFilePath: ({ parseLogsSessionFilePath }) => parseLogsSessionFilePath,
     logger: server.log
   })
-  const logsRepository = createLogsFilesRepository(
-    createLogsFilesApi(config.logs, filesService),
+  const logsRepository = createLogsRepository({
+    logsConfig: config.logs,
+    filesService,
     parseLogsSelfReportRepository
-  )
+  })
 
   await registerAuthRoutes(server, config, filesService)
-  await registerLogsRoutes(server, config, logsRepository, parseLogsSelfReportRepository)
+  await registerLogsRoutes(server, config, logsRepository)
 
   await registerFrontend(server, config.server, filesService)
 
   await registerLogsNotifier(server, config, {
     logsRepository,
-    parseLogsSelfReportRepository,
     filesService
   })
 

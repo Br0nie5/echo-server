@@ -34,8 +34,8 @@ The backend and the frontend never import each other. Both import `@echo/utiliti
 2. `presentation/logs.routes.ts` runs the authentication hook first, when there is one, then validates the query against its JSON schema.
 3. `presentation/logs.controller.ts` turns the query into dates and filters (`safeParseGetLogsParams`), and calls the use case, `application/getFilteredLogs.ts`.
 4. `getFilteredLogs` asks the `LogsRepository` for every log. `infra/logsFiles.repository.ts` lists the log files, reads their lines and converts each one to a log; a line that holds none becomes a self report, which the repository saves to its `SelfReportRepository`, when it has one.
-5. When the self reports are included in the logs (`INCLUDE_SELF_REPORTS_IN_LOGS`), `getFilteredLogs` then reads every self report from its `SelfReportRepository` and converts each one to a log.
-6. It filters the logs and sorts them from the newest to the oldest, in memory.
+5. When the self reports are included in the logs (`INCLUDE_SELF_REPORTS_IN_LOGS`), the `LogsRepository` is two in one (`infra/logs.repository.ts`): once the log files are read, `infra/logsSelfReports.repository.ts` reads every self report from its `SelfReportRepository` and gives each one as a log.
+6. `getFilteredLogs` filters the logs and sorts them from the newest to the oldest, in memory.
 7. The app filters what it received by level and by search, in a Web Worker, each time the user changes a filter, without asking the API again.
 
 There is no database of logs: every request reads the files again.
@@ -130,12 +130,12 @@ A function is given the config of its domain (`createLogsFilesApi(config.logs, f
 
 ### The `logs` module
 
-| Folder          | Content                                                                                                                                                                                                                                 |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `domain/`       | `LogsRepository`: it reads the logs of every location it watches (`getAllLogs`) or of one (`getLogs`), stores logs, each at its own `location`, where they replace what was stored (`saveLogs`), and empties a location (`deleteLogs`). |
-| `application/`  | `getFilteredLogs`, the one use case.                                                                                                                                                                                                    |
-| `infra/`        | `logsFiles.api.ts` lists the log files and reads the lines of one. `logsFiles.repository.ts` implements `LogsRepository` on top of it, with the DTOs of `dto/`.                                                                         |
-| `presentation/` | `GET /logs`.                                                                                                                                                                                                                            |
+| Folder          | Content                                                                                                                                                                                                                                                                                                                                                    |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain/`       | `LogsRepository`: it reads the logs of every location it watches (`getAllLogs`) or of one (`getLogs`), stores logs, each at its own `location`, where they replace what was stored (`saveLogs`), and empties a location (`deleteLogs`).                                                                                                                    |
+| `application/`  | `getFilteredLogs`, the one use case.                                                                                                                                                                                                                                                                                                                       |
+| `infra/`        | `logsFiles.api.ts` lists the log files and reads the lines of one. `logsFiles.repository.ts` implements `LogsRepository` on top of it, with the DTOs of `dto/`. `logsSelfReports.repository.ts` implements it on top of a `SelfReportRepository`. `logs.repository.ts` (`createLogsRepository`) gives the one the backend uses: the first, or both as one. |
+| `presentation/` | `GET /logs`.                                                                                                                                                                                                                                                                                                                                               |
 
 The models, `Log` and `LogLevel`, come from `@echo/utilities`, since the frontend shares them.
 
@@ -143,7 +143,7 @@ A **location** is an opaque string saying where some logs are stored. Only the i
 
 A line of a log file holds neither the `id`, the `locationName` nor the `groupName` of its log: they are worked out again each time it is read. `createLogId` of `@echo/utilities` makes the `id` of the date, the job, the `location`, the `level`, the `message`, the `origin` and the position of the line. `logsFiles.api.ts` makes the `groupName` of the path of the file below the logs directory, which the `FilesService` gives it (`getRelativeFilePath`): its directories, without those named `logs` nor the first of the others.
 
-The logs are only read from `LOGS_DIR_PATH`. The self reports are not stored among them: when `INCLUDE_SELF_REPORTS_IN_LOGS` is `true`, `getFilteredLogs` reads them from the `SelfReportRepository` and converts each one to a log, whose job is the session it was reported during and whose group is the one the self report carries: `selfReportFiles.repository.ts` makes it of every directory of its file, from the root of the file system, which gives `self_reports_<server name>` in a container, where `SELF_REPORTS_DIR_PATH` is `/self_reports`.
+The logs are only read from `LOGS_DIR_PATH`. The self reports are not stored among them: when `INCLUDE_SELF_REPORTS_IN_LOGS` is `true`, `infra/logsSelfReports.repository.ts`, a second `LogsRepository`, reads them from the `SelfReportRepository` and converts each one to a log, whose job is the session it was reported during and whose group is the one the self report carries: `selfReportFiles.repository.ts` makes it of every directory of its file, from the root of the file system, which gives `self_reports_<server name>` in a container, where `SELF_REPORTS_DIR_PATH` is `/self_reports`.
 
 ### The `logsNotifier` submodule
 
@@ -186,7 +186,7 @@ A `SelfReport` is a model of its own, not a `Log`, and it is stored on its own t
 - **Reading** gives the self reports of every self-report file, whichever repository is asked, each with the session it was reported during.
 - **It never throws.** What cannot be stored or read goes to the `Logger` of `shared/types/logger.ts`: a diagnostic must not break what was being diagnosed.
 
-`logs` depends on `selfReport` through its contract only: it imports its `domain/`, to say what it reports and to read the self reports back. `selfReport` imports nothing of `logs`.
+`logs` depends on `selfReport` through its contract only: its `infra/` imports its `domain/`, to report and to read the self reports back. `selfReport` imports nothing of `logs`.
 
 ### The `auth` module
 

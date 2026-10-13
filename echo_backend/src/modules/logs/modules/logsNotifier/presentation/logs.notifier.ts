@@ -13,11 +13,6 @@ import type { CheckDateRepository } from '../domain/checkDate.repository.js'
 export interface LogsNotifierPluginOptions extends FastifyPluginOptions {
   logsNotifierConfig: LogsNotifierConfig
   logsRepository: LogsRepository
-  /**
-   * Where the self reports that are checked among the logs are read from. Missing when the self
-   * reports are disabled.
-   */
-  parseLogsSelfReportRepository?: SelfReportRepository
   notifierService: NotifierService
   checkDateRepository: CheckDateRepository
   /**
@@ -32,7 +27,6 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
   {
     logsNotifierConfig,
     logsRepository,
-    parseLogsSelfReportRepository,
     notifierService,
     checkDateRepository,
     logsNotifierSelfReportRepository
@@ -49,7 +43,6 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
           serverName: logsNotifierConfig.serverName,
           timezone: logsNotifierConfig.notifierTimezone,
           logsRepository,
-          parseLogsSelfReportRepository,
           notifierService,
           checkDateRepository,
           logsNotifierSelfReportRepository

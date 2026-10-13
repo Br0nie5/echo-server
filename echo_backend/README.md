@@ -85,7 +85,8 @@ There is no database of logs: `GET /logs` reads the files at each request.
 
 1. `infra/logsFiles.api.ts` lists the files with the log extension under the logs directory, at any depth, and reads their non-blank lines.
 2. `infra/logsFiles.repository.ts` converts each line to a `Log`. A line that holds none, because it is not JSON, misses a field or has an unknown level or a date that is not one, becomes a warning self report instead, which the repository saves when the self reports are enabled.
-3. `application/getFilteredLogs.ts` adds every stored self report to the logs, each converted to a log, when the self reports are enabled, then filters the logs by date, level and search, and sorts them from the newest to the oldest.
+3. When the self reports are enabled, `infra/logsSelfReports.repository.ts` gives every stored self report as a log too, and `infra/logs.repository.ts` makes one repository of both.
+4. `application/getFilteredLogs.ts` filters the logs by date, level and search, and sorts them from the newest to the oldest.
 
 The group of a log is made of the directories of its file, and its id is worked out from its content and its position: a line stores neither.
 
