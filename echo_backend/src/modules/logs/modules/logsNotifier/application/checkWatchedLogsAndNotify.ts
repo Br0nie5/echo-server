@@ -8,7 +8,7 @@ import type { UnNotifiedLogsRepository } from '../domain/unNotifiedLogs.reposito
 import { buildNotifierMessage } from './utils/buildNotifierMessage.js'
 
 /** Everything one run of the problem logs check needs. */
-export interface ProblemLogsCheck {
+export interface WatchedLogsCheck {
   /**
    * Gives the levels that make a log a problem log, the name the notification says the logs come
    * from and the zone their dates are shown in.
@@ -41,7 +41,7 @@ export interface ProblemLogsCheck {
  * again.
  *
  * ```ts
- * await checkProblemLogsAndNotify({
+ * await checkWatchedLogsAndNotify({
  *   logsNotifierConfig,
  *   unNotifiedLogsRepository,
  *   notificationsService,
@@ -49,12 +49,12 @@ export interface ProblemLogsCheck {
  * })
  * ```
  */
-export const checkProblemLogsAndNotify = async ({
+export const checkWatchedLogsAndNotify = async ({
   logsNotifierConfig: { watchedLogsLevels, serverName, timezone },
   unNotifiedLogsRepository,
   notificationsService,
   logsNotifierSelfReportRepository
-}: ProblemLogsCheck): Promise<void> => {
+}: WatchedLogsCheck): Promise<void> => {
   const { logs, markAsNotified } = await unNotifiedLogsRepository.getUnNotifiedLogs()
 
   const problemLogs = logs
@@ -78,7 +78,7 @@ export const checkProblemLogsAndNotify = async ({
             `The problem logs were not notified: the notifier takes messages of ` +
             `${messageSizeLimit} characters at most, which is not enough for any message`,
           level: 'WARNING',
-          origin: 'checkProblemLogsAndNotify'
+          origin: 'checkWatchedLogsAndNotify'
         }
       ])
     }

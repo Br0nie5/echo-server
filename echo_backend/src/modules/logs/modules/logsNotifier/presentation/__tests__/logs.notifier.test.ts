@@ -176,7 +176,7 @@ describe('logs notifier', () => {
           level: 'WARNING',
           message:
             'The problem logs were not notified: the notifier takes messages of 10 characters at most, which is not enough for any message',
-          origin: 'checkProblemLogsAndNotify'
+          origin: 'checkWatchedLogsAndNotify'
         }
       ])
     )

@@ -5,7 +5,7 @@ import cron from 'node-cron'
 import type { LogsNotifierConfig } from '../../../../../shared/config/logsNotifierConfig.js'
 import type { NotificationsService } from '../../../../notifications/domain/notifications.service.js'
 import type { SelfReportRepository } from '../../../../selfReports/domain/selfReport.repository.js'
-import { checkProblemLogsAndNotify } from '../application/checkProblemLogsAndNotify.js'
+import { checkWatchedLogsAndNotify } from '../application/checkWatchedLogsAndNotify.js'
 import type { UnNotifiedLogsRepository } from '../domain/unNotifiedLogs.repository.js'
 
 /** Options of the `logsNotifier` plugin. */
@@ -35,7 +35,7 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
     logsNotifierConfig.schedule,
     async () => {
       try {
-        await checkProblemLogsAndNotify({
+        await checkWatchedLogsAndNotify({
           logsNotifierConfig,
           unNotifiedLogsRepository,
           notificationsService,
@@ -54,7 +54,7 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
 }
 
 /**
- * Fastify plugin running `checkProblemLogsAndNotify` on the `schedule` of `logsNotifierConfig`, and
+ * Fastify plugin running `checkWatchedLogsAndNotify` on the `schedule` of `logsNotifierConfig`, and
  * stopping when the server closes.
  *
  * A failing run is logged, not thrown, so it does not stop the schedule. A run that is due while

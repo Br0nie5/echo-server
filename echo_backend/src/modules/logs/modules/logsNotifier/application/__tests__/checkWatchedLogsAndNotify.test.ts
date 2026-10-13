@@ -1,7 +1,7 @@
 import type { Log, LogLevel } from '@echo/utilities'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { checkProblemLogsAndNotify, type ProblemLogsCheck } from '../checkProblemLogsAndNotify.js'
+import { checkWatchedLogsAndNotify, type WatchedLogsCheck } from '../checkWatchedLogsAndNotify.js'
 
 const log: Log = {
   id: 'log-id',
@@ -22,7 +22,7 @@ const WATCHED = ['ERROR', 'WARNING'] as LogLevel[]
 /** When the check being tested runs. */
 const CHECK_DATE = new Date('2026-01-01T00:30:00.000Z')
 
-const problemLogsCheck: ProblemLogsCheck = {
+const watchedLogsCheck: WatchedLogsCheck = {
   logsNotifierConfig: {
     schedule: '*/30 * * * *',
     watchedLogsLevels: WATCHED,
@@ -34,7 +34,7 @@ const problemLogsCheck: ProblemLogsCheck = {
   logsNotifierSelfReportRepository
 }
 
-const check = (): Promise<void> => checkProblemLogsAndNotify(problemLogsCheck)
+const check = (): Promise<void> => checkWatchedLogsAndNotify(watchedLogsCheck)
 
 const mockUnNotifiedLogs = (logs: Log[]): void => {
   unNotifiedLogsRepository.getUnNotifiedLogs.mockResolvedValueOnce({ logs, markAsNotified })
@@ -51,7 +51,7 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-describe('checkProblemLogsAndNotify', () => {
+describe('checkWatchedLogsAndNotify', () => {
   it('Should notify the unNotified logs of a watched level, from the newest to the oldest', async () => {
     const olderWarningLog: Log = {
       ...log,
@@ -104,7 +104,7 @@ describe('checkProblemLogsAndNotify', () => {
         message:
           'The problem logs were not notified: the notifier takes messages of 10 characters at most, which is not enough for any message',
         level: 'WARNING',
-        origin: 'checkProblemLogsAndNotify'
+        origin: 'checkWatchedLogsAndNotify'
       }
     ])
     expect(markAsNotified).toHaveBeenCalledOnce()
@@ -114,8 +114,8 @@ describe('checkProblemLogsAndNotify', () => {
     mockUnNotifiedLogs([log])
     notificationsService.getMessageSizeLimit.mockReturnValue(10)
 
-    await checkProblemLogsAndNotify({
-      ...problemLogsCheck,
+    await checkWatchedLogsAndNotify({
+      ...watchedLogsCheck,
       logsNotifierSelfReportRepository: undefined
     })
 
