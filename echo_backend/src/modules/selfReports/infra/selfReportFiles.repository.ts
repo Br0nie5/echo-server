@@ -49,8 +49,8 @@ const createSelfReportContentKey = ({ level, message, origin }: SelfReport): str
  *   filesService,
  *   selfReportsDirPath: '/self_reports/Echo',
  *   selfReportFileExtension: '.jsonl',
- *   selfReportFileName: 'parseLogFile.jsonl',
- *   sessionFilePath: '/data/logs_self_reports_session.json',
+ *   selfReportFileName: 'parseLogs.jsonl',
+ *   sessionFilePath: '/data/parse_logs_self_reports_session.json',
  *   retentionDays: 30,
  *   logger: server.log
  * })
@@ -80,7 +80,7 @@ const createSelfReportContentKey = ({ level, message, origin }: SelfReport): str
  * session: the session id of its line, and what its file gives it. That is its location, the path
  * of the file, its location name, the name of the file without its extension, and its group name,
  * every directory of the path of the file from the root of the file system, joined with `_`
- * (`self_reports_Echo` for `/self_reports/Echo/parseLogFile.jsonl`), or none when the file is in
+ * (`self_reports_Echo` for `/self_reports/Echo/parseLogs.jsonl`), or none when the file is in
  * no directory. A failure to read goes to `logger`, and gives none.
  */
 export const createSelfReportFilesRepository = async ({

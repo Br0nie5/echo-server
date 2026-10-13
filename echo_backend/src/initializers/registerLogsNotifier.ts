@@ -12,7 +12,7 @@ import type { EchoServer } from './types/echoServer.js'
 /** What `buildServer` already built that the cron notifying the watched logs is built with. */
 export interface LogsNotifierDependencies {
   logsRepository: LogsRepository
-  /** What the last-check file and the files of its self reports are read and written with. */
+  /** What the last-check file and the files of the self reports of the notifications are read and written with. */
   filesService: FilesService
 }
 
@@ -22,15 +22,15 @@ export interface LogsNotifierDependencies {
  *
  * The cron is given its config, and the logs it has not notified yet: those of `logsRepository`,
  * which the routes read too, logged since its last check, whose date it remembers in the
- * `lastLogsCheckFilePath` of its settings. When the self reports are enabled, it is given a
- * self-report repository of its own for the watched logs it could not notify. It notifies through
- * Telegram, with the `notification` settings.
+ * `lastLogsCheckFilePath` of its settings. It notifies through Telegram, with the `notification`
+ * settings. When the self reports are enabled, the Telegram notifications are given a self-report
+ * repository of their own for the notifications that could not be sent.
  */
 export const registerLogsNotifier = async (
   server: EchoServer,
   {
     logs: { logsNotifier: logsNotifierSettings },
-    logsNotifierSelfReports: logsNotifierSelfReports,
+    notificationsSelfReports,
     notification: notificationSettings
   }: Settings,
   { logsRepository, filesService }: LogsNotifierDependencies
@@ -42,23 +42,27 @@ export const registerLogsNotifier = async (
 
   const { config: logsNotifierConfig, lastLogsCheckFilePath } = logsNotifierSettings
 
+  const notificationsSelfReportRepository =
+    notificationsSelfReports &&
+    (await createSelfReportFilesRepository({
+      filesService,
+      selfReportsDirPath: notificationsSelfReports.dirPath,
+      selfReportFileExtension: notificationsSelfReports.fileExtension,
+      selfReportFileName: notificationsSelfReports.fileName,
+      sessionFilePath: notificationsSelfReports.sessionFilePath,
+      retentionDays: notificationsSelfReports.retentionDays,
+      logger: server.log
+    }))
+
   await server.register(logsNotifier, {
     logsNotifierConfig,
     unNotifiedLogsRepository: createUnNotifiedLogsCheckDateRepository(
       logsRepository,
       createCheckDateFileApi({ lastLogsCheckFilePath }, filesService)
     ),
-    notificationsService: createNotificationsTelegramService(notificationSettings),
-    logsNotifierSelfReportRepository:
-      logsNotifierSelfReports &&
-      (await createSelfReportFilesRepository({
-        filesService,
-        selfReportsDirPath: logsNotifierSelfReports.dirPath,
-        selfReportFileExtension: logsNotifierSelfReports.fileExtension,
-        selfReportFileName: logsNotifierSelfReports.fileName,
-        sessionFilePath: logsNotifierSelfReports.sessionFilePath,
-        retentionDays: logsNotifierSelfReports.retentionDays,
-        logger: server.log
-      }))
+    notificationsService: createNotificationsTelegramService(
+      notificationSettings,
+      notificationsSelfReportRepository
+    )
   })
 }

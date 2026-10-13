@@ -120,7 +120,7 @@ export type NotificationSettings = {
  * const controller = createAuthController(authRepository, settings.auth.config)
  * ```
  *
- * `auth`, `parseLogsSelfReports`, `logsNotifierSelfReports` and `notification` are missing when
+ * `auth`, `parseLogsSelfReports`, `notificationsSelfReports` and `notification` are missing when
  * what they set up is disabled: whoever takes one is only built when it is there.
  */
 export type Settings = {
@@ -137,13 +137,13 @@ export type Settings = {
    */
   parseLogsSelfReports?: SelfReportsSettings
   /**
-   * Where the watched logs that could not be notified are reported. It has the directory, the
+   * Where the notifications that could not be sent are reported. It has the directory, the
    * extension and the retention of `parseLogsSelfReports`, and a file and a session file of its
    * own.
    *
    * Missing when the self reports are disabled.
    */
-  logsNotifierSelfReports?: SelfReportsSettings
+  notificationsSelfReports?: SelfReportsSettings
   /** Missing when Telegram is not configured: the backend then has no channel to notify through. */
   notification?: NotificationSettings
 }

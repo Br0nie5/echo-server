@@ -169,13 +169,13 @@ export const loadSettings = async (
     },
     parseLogsSelfReports: sharedSelfReportsSettings && {
       ...sharedSelfReportsSettings,
-      fileName: `parseLogFile${LOG_FILE_EXTENSION}`,
-      sessionFilePath: path.join(DATA_DIR_PATH, 'logs_self_reports_session.json')
+      fileName: `parseLogs${LOG_FILE_EXTENSION}`,
+      sessionFilePath: path.join(DATA_DIR_PATH, 'parse_logs_self_reports_session.json')
     },
-    logsNotifierSelfReports: sharedSelfReportsSettings && {
+    notificationsSelfReports: sharedSelfReportsSettings && {
       ...sharedSelfReportsSettings,
-      fileName: `logsNotifier${LOG_FILE_EXTENSION}`,
-      sessionFilePath: path.join(DATA_DIR_PATH, 'logs_notifier_self_reports_session.json')
+      fileName: `notifications${LOG_FILE_EXTENSION}`,
+      sessionFilePath: path.join(DATA_DIR_PATH, 'notifications_self_reports_session.json')
     },
     notification
   }

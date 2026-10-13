@@ -38,8 +38,8 @@ export const getMockSelfReportsSettings = (
   retentionDays: 10,
   dirPath: '/self_reports/Echo',
   fileExtension: '.jsonl',
-  fileName: 'parseLogFile.jsonl',
-  sessionFilePath: '/fake/data/logs_self_reports_session.json',
+  fileName: 'parseLogs.jsonl',
+  sessionFilePath: '/fake/data/parse_logs_self_reports_session.json',
   ...overrides
 })
 
@@ -80,9 +80,9 @@ export const getMockSettings = (overrides: Partial<Settings> = {}): Settings => 
   auth: getMockAuthSettings(),
   logs: getMockLogsSettings(),
   parseLogsSelfReports: getMockSelfReportsSettings(),
-  logsNotifierSelfReports: getMockSelfReportsSettings({
-    fileName: 'logsNotifier.jsonl',
-    sessionFilePath: '/fake/data/logs_notifier_self_reports_session.json'
+  notificationsSelfReports: getMockSelfReportsSettings({
+    fileName: 'notifications.jsonl',
+    sessionFilePath: '/fake/data/notifications_self_reports_session.json'
   }),
   ...overrides
 })

@@ -416,7 +416,7 @@ describe('startServer', () => {
     server: getMockServerSettings({ host: '127.0.0.1', port: 4000, basePath: '/echo' }),
     auth: getInMemoryAuthSettings(),
     parseLogsSelfReports: undefined,
-    logsNotifierSelfReports: undefined
+    notificationsSelfReports: undefined
   })
 
   test('Should listen on the host and port of the settings and say which paths it serves', async () => {

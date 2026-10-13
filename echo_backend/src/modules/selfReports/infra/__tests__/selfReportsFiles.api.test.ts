@@ -24,7 +24,7 @@ describe('SelfReportsFilesApi', () => {
 
       await expect(
         createSelfReportsFilesApi(selfReportFilesLocation, filesService).getSelfReportLines(
-          '/self_reports/Echo/parseLogFile.jsonl'
+          '/self_reports/Echo/parseLogs.jsonl'
         )
       ).rejects.toBe(readError)
     })

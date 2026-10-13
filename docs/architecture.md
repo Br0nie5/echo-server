@@ -125,7 +125,7 @@ They build the `infra/` of the modules and hand it to their `presentation/`, whi
 
 ### The settings and the configs
 
-`initializers/settings/loadSettings.ts` builds the `Settings` once, from the environment variables and from constants: the paths, the file names, the limits. They are split by what uses them: `server`, `logs` (which holds the optional `logsNotifier`) and the optional `auth`, `parseLogsSelfReports`, `logsNotifierSelfReports` (one per part of the backend that reports) and `notification`. A part that is missing is disabled. The parser of each variable is in `initializers/settings/utils/`.
+`initializers/settings/loadSettings.ts` builds the `Settings` once, from the environment variables and from constants: the paths, the file names, the limits. They are split by what uses them: `server`, `logs` (which holds the optional `logsNotifier`) and the optional `auth`, `parseLogsSelfReports`, `notificationsSelfReports` (one per part of the backend that reports) and `notification`. A part that is missing is disabled. The parser of each variable is in `initializers/settings/utils/`.
 
 The settings stay in the composition root: only `server.ts` and the initializers read them. What goes down to a module is one of two things.
 
@@ -169,7 +169,7 @@ The use case knows nothing of how the notified logs are remembered: that it is a
 - The date is saved when the use case marks the logs as notified, which it does not do when the notification fails: the next check sends the same logs again.
 - A run that is due while the previous one is still going is skipped.
 - When the self reports are included in the logs, they are notified like any other log when their level is watched. A line that holds no valid log is reported each time the logs are read, but stored once, with the date it was first read at: it is notified once too.
-- When the size limit of the channel is too small for any message, nothing is sent, and the check reports it as a warning to a `SelfReportRepository` of its own, when the self reports are enabled.
+- When the size limit of the channel is too small for any message, writing the message throws: the notification fails like one that could not be sent.
 
 It sends its message through the `NotificationsService` of the `notifications` module, which it only knows by its contract.
 
@@ -177,10 +177,12 @@ It sends its message through the `NotificationsService` of the `notifications` m
 
 `modules/notifications/` is how the backend sends a message to the outside. It has no route and no business rule, so it has two layers.
 
-| Folder    | Content                                                                                                                                                                                                      |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `domain/` | `NotificationsService`, the contract whoever notifies is given: it gives the size limit of its messages and sends one. It knows nothing of what the messages say, nor of the channel they go through.        |
-| `infra/`  | `notificationsTelegram.service.ts` (`createNotificationsTelegramService`) implements the contract through the Telegram bot API, given the chat, the token of the bot, the URL of the API and the size limit. |
+| Folder    | Content                                                                                                                                                                                                                                                     |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain/` | `NotificationsService`, the contract whoever notifies is given: it sends the message written by the function it is given, which it calls with the size limit of its channel. It knows nothing of what the messages say, nor of the channel they go through. |
+| `infra/`  | `notificationsTelegram.service.ts` (`createNotificationsTelegramService`) implements the contract through the Telegram bot API, given the chat, the token of the bot, the URL of the API and the size limit, and a `SelfReportRepository` of its own.       |
+
+A notification that fails, because its message could not be written, Telegram could not be reached or Telegram refused it, is reported as an error to that `SelfReportRepository`, when the self reports are enabled, then thrown again to whoever notifies.
 
 Another channel is another implementation of the contract, chosen in `registerLogsNotifier`, without changing whoever notifies.
 
@@ -195,10 +197,10 @@ Another channel is another implementation of the contract, chosen in `registerLo
 
 A `SelfReport` is a model of its own, not a `Log`, and it is stored on its own too: in the files of `SELF_REPORTS_DIR_PATH/<server name>/`, one line each, through the `FilesService`. `selfReports` knows nothing of the logs: turning a self report into a log is up to `logs`.
 
-- **One repository per reporter.** Whoever reports is given its own `SelfReportRepository`, created for one file, and never names it: the logs files repository reports the lines that hold no log (`parseLogFile.jsonl`), the logs notifier the watched logs it could not notify (`logsNotifier.jsonl`).
+- **One repository per reporter.** Whoever reports is given its own `SelfReportRepository`, created for one file, and never names it: the logs files repository reports the lines that hold no log (`parseLogs.jsonl`), the Telegram notifications the ones that could not be sent (`notifications.jsonl`).
 - **Without self reports**, that is without the `SelfReportsSettings` of a reporter, the composition root creates no repository: whoever reports is given `undefined`, and reports nothing. They are enabled when something uses them: today, when they are included in the logs.
 - **The session is the repository's business.** Whoever reports saves plain self reports, which the repository stores with the id of its session. Reading gives each self report with its session: the id of the run it was reported during, and the location, the location name and the group name of its file.
-- **When it is created**, the repository takes the next session id of its own session file (`logs_self_reports_session.json`, `logs_notifier_self_reports_session.json`) and writes its file again without the self reports older than the retention, which also tells whether the file can be written. Should that fail, the error is logged and no repository is created: an optional feature never stops the server from starting.
+- **When it is created**, the repository takes the next session id of its own session file (`parse_logs_self_reports_session.json`, `notifications_self_reports_session.json`) and writes its file again without the self reports older than the retention, which also tells whether the file can be written. Should that fail, the error is logged and no repository is created: an optional feature never stops the server from starting.
 - **A self report is stored after the stored ones**, unless one of them has its `level`, its `message` and its `origin`: a problem that lasts is stored once, with the date it was first seen at.
 - **Reading** gives the self reports of every self-report file, whichever repository is asked, each with the session it was reported during.
 - **It never throws.** What cannot be stored or read goes to the `Logger` of `shared/types/logger.ts`: a diagnostic must not break what was being diagnosed.

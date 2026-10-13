@@ -2,7 +2,6 @@ import { filterLogByLevels } from '@echo/utilities'
 
 import type { LogsNotifierConfig } from '../../../../../shared/config/logsNotifierConfig.js'
 import type { NotificationsService } from '../../../../notifications/domain/notifications.service.js'
-import type { SelfReportRepository } from '../../../../selfReports/domain/selfReport.repository.js'
 import type { UnNotifiedLogsRepository } from '../domain/unNotifiedLogs.repository.js'
 
 import { buildNotifierMessage } from './utils/buildNotifierMessage.js'
@@ -16,11 +15,6 @@ export interface WatchedLogsCheck {
   logsNotifierConfig: LogsNotifierConfig
   unNotifiedLogsRepository: UnNotifiedLogsRepository
   notificationsService: NotificationsService
-  /**
-   * Where the check reports the watched logs it could not notify. Missing when the self reports
-   * are disabled.
-   */
-  logsNotifierSelfReportRepository?: SelfReportRepository
 }
 
 /**
@@ -32,28 +26,25 @@ export interface WatchedLogsCheck {
  *
  * The notification is one message telling about the watched logs, from the newest to the oldest
  * (see {@link buildNotifierMessage}), with the `serverName` and the `timezone` of
- * `logsNotifierConfig`, built for the size limit of `notificationsService`. Nothing is sent when
- * there is no watched log, nor when the size limit is too small for any message: in the second
- * case a warning is saved to `logsNotifierSelfReportRepository`, when there is one, and the logs
- * are marked as notified all the same, since notifying them again would fail the same way.
+ * `logsNotifierConfig`, built for the size limit `notificationsService` gives. Nothing is sent
+ * when there is no watched log.
  *
- * The logs are not marked as notified when notifying throws, so the next check notifies them
- * again.
+ * Throws when notifying does, that is when the notification could not be sent or when the size
+ * limit is too small for any message. The logs are not marked as notified then, so the next check
+ * notifies them again.
  *
  * ```ts
  * await checkWatchedLogsAndNotify({
  *   logsNotifierConfig,
  *   unNotifiedLogsRepository,
- *   notificationsService,
- *   logsNotifierSelfReportRepository
+ *   notificationsService
  * })
  * ```
  */
 export const checkWatchedLogsAndNotify = async ({
   logsNotifierConfig: { watchedLogsLevels, serverName, timezone },
   unNotifiedLogsRepository,
-  notificationsService,
-  logsNotifierSelfReportRepository
+  notificationsService
 }: WatchedLogsCheck): Promise<void> => {
   const { logs, markAsNotified } = await unNotifiedLogsRepository.getUnNotifiedLogs()
 
@@ -65,23 +56,9 @@ export const checkWatchedLogsAndNotify = async ({
     )
 
   if (watchedLogs.length > 0) {
-    const messageSizeLimit = notificationsService.getMessageSizeLimit()
-    const message = buildNotifierMessage({ messageSizeLimit, watchedLogs, serverName, timezone })
-
-    if (message !== undefined) {
-      await notificationsService.notify(message)
-    } else if (logsNotifierSelfReportRepository !== undefined) {
-      await logsNotifierSelfReportRepository.saveSelfReports([
-        {
-          date: new Date(),
-          message:
-            `The watched logs were not notified: the notifier takes messages of ` +
-            `${messageSizeLimit} characters at most, which is not enough for any message`,
-          level: 'WARNING',
-          origin: 'checkWatchedLogsAndNotify'
-        }
-      ])
-    }
+    await notificationsService.notify((messageSizeLimit) =>
+      buildNotifierMessage({ messageSizeLimit, watchedLogs, serverName, timezone })
+    )
   }
 
   await markAsNotified()

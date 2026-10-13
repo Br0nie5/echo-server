@@ -13,7 +13,7 @@ import { createSessionIdFileApi as actualCreateSessionIdFileApi } from '../sessi
 const createSessionIdFileApi = vi.mocked(actualCreateSessionIdFileApi)
 const createSelfReportsFilesApi = vi.mocked(actualCreateSelfReportsFilesApi)
 
-const SELF_REPORTS_FILE_PATH = '/self_reports/Echo/parseLogFile.jsonl'
+const SELF_REPORTS_FILE_PATH = '/self_reports/Echo/parseLogs.jsonl'
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
 
@@ -36,8 +36,8 @@ const options = {
   filesService,
   selfReportsDirPath: '/self_reports/Echo',
   selfReportFileExtension: '.jsonl',
-  selfReportFileName: 'parseLogFile.jsonl',
-  sessionFilePath: '/fake/data/logs_self_reports_session.json',
+  selfReportFileName: 'parseLogs.jsonl',
+  sessionFilePath: '/fake/data/parse_logs_self_reports_session.json',
   retentionDays: 10,
   logger
 }
@@ -114,7 +114,7 @@ describe('createSelfReportFilesRepository', () => {
       filesService
     )
     expect(createSessionIdFileApi).toHaveBeenCalledExactlyOnceWith(
-      '/fake/data/logs_self_reports_session.json',
+      '/fake/data/parse_logs_self_reports_session.json',
       filesService
     )
   })
@@ -305,7 +305,7 @@ describe('createSelfReportFilesRepository', () => {
 
   describe('getAllSelfReports', () => {
     it('Should read the self reports of every self-report file, each stored at its file', async () => {
-      const otherFilePath = '/self_reports/Echo/logsNotifier.jsonl'
+      const otherFilePath = '/self_reports/Echo/notifications.jsonl'
       const selfReportRepository = await createRepository()
       selfReportsFilesApi.getAllSelfReportFilesPaths.mockResolvedValueOnce([
         SELF_REPORTS_FILE_PATH,
@@ -320,14 +320,14 @@ describe('createSelfReportFilesRepository', () => {
       expect(selfReports).toMatchObject([
         {
           location: SELF_REPORTS_FILE_PATH,
-          locationName: 'parseLogFile',
+          locationName: 'parseLogs',
           groupName: 'self_reports_Echo',
           sessionId: 1,
           message: 'bad line'
         },
         {
           location: otherFilePath,
-          locationName: 'logsNotifier',
+          locationName: 'notifications',
           groupName: 'self_reports_Echo',
           sessionId: 2,
           message: 'not notified'
@@ -336,7 +336,7 @@ describe('createSelfReportFilesRepository', () => {
     })
 
     it.each([
-      { reason: 'is in no directory', filePathFromRoot: 'parseLogFile.jsonl' },
+      { reason: 'is in no directory', filePathFromRoot: 'parseLogs.jsonl' },
       { reason: 'has no path from the root of the file system', filePathFromRoot: undefined }
     ])(
       'Should give no group name to the self reports of a file that $reason',

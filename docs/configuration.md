@@ -99,20 +99,20 @@ In a container, the entrypoint writes `echo_frontend/dist/env.production.json` f
 
 Paths, file names and limits are constants of `loadSettings`, part of the `Settings` like the rest. They are given here from the root of the repository, which is `/app` in the image:
 
-| What                                                                      | Value                                                                                 |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Users database                                                            | `data/users.db`                                                                       |
-| Date of the last check of the logs notifier                               | `data/last_logs_check.json`                                                           |
-| Id of the last session of the self reports, one file per self-report file | `data/logs_self_reports_session.json`, `data/logs_notifier_self_reports_session.json` |
-| Built frontend                                                            | `echo_frontend/dist`                                                                  |
-| Extension of a log file                                                   | `.jsonl`                                                                              |
-| Directory name left out of the group names                                | `logs`                                                                                |
-| Self-report files                                                         | `parseLogFile.jsonl`, `logsNotifier.jsonl`                                            |
-| Extension of a self-report file                                           | `.jsonl`                                                                              |
-| Route prefixes, below `BASE_PATH`                                         | `/api`, `/app`, `/documentation`                                                      |
-| Length of a session                                                       | 24 hours                                                                              |
-| Login and sign-up attempts                                                | 5 a minute per address                                                                |
-| Telegram bot API, and the size limit of a message                         | `https://api.telegram.org`, 4096 characters                                           |
+| What                                                                      | Value                                                                                       |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Users database                                                            | `data/users.db`                                                                             |
+| Date of the last check of the logs notifier                               | `data/last_logs_check.json`                                                                 |
+| Id of the last session of the self reports, one file per self-report file | `data/parse_logs_self_reports_session.json`, `data/notifications_self_reports_session.json` |
+| Built frontend                                                            | `echo_frontend/dist`                                                                        |
+| Extension of a log file                                                   | `.jsonl`                                                                                    |
+| Directory name left out of the group names                                | `logs`                                                                                      |
+| Self-report files                                                         | `parseLogs.jsonl`, `notifications.jsonl`                                                    |
+| Extension of a self-report file                                           | `.jsonl`                                                                                    |
+| Route prefixes, below `BASE_PATH`                                         | `/api`, `/app`, `/documentation`                                                            |
+| Length of a session                                                       | 24 hours                                                                                    |
+| Login and sign-up attempts                                                | 5 a minute per address                                                                      |
+| Telegram bot API, and the size limit of a message                         | `https://api.telegram.org`, 4096 characters                                                 |
 
 ## The address Echo is reached at
 

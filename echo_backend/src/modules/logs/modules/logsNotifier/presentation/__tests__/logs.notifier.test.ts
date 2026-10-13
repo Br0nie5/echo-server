@@ -149,8 +149,8 @@ describe('logs notifier', () => {
 
   test('Should save a self report in place of a notification that is too long for the channel', async () => {
     const selfReportsSettings = getMockSelfReportsSettings({
-      fileName: 'logsNotifier.jsonl',
-      sessionFilePath: '/fake/data/logs_notifier_self_reports_session.json'
+      fileName: 'notifications.jsonl',
+      sessionFilePath: '/fake/data/notifications_self_reports_session.json'
     })
     const selfReportsFilePath = `${selfReportsSettings.dirPath}/${selfReportsSettings.fileName}`
 
@@ -161,7 +161,7 @@ describe('logs notifier', () => {
       },
       {
         notification: getMockNotificationSettings({ telegramMessageSizeLimit: 10 }),
-        logsNotifierSelfReports: selfReportsSettings
+        notificationsSelfReports: selfReportsSettings
       }
     )
 
@@ -173,15 +173,15 @@ describe('logs notifier', () => {
         {
           sessionId: 1,
           date: FIRST_CHECK.toISOString(),
-          level: 'WARNING',
+          level: 'ERROR',
           message:
-            'The watched logs were not notified: the notifier takes messages of 10 characters at most, which is not enough for any message',
-          origin: 'checkWatchedLogsAndNotify'
+            'The notification was not sent: The message telling about the watched logs cannot be built: its size limit of 10 characters is too small for any message',
+          origin: 'notificationsTelegramService'
         }
       ])
     )
     expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
-      toLastCheckFileContent(FIRST_CHECK)
+      toLastCheckFileContent(PREVIOUS_CHECK)
     )
   })
 

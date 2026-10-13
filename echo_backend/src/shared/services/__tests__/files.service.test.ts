@@ -79,7 +79,7 @@ const buildRecordingFileSystem = (
   return { fileSystem, steps }
 }
 
-const FILE_PATH = '/server_logs/self_reports/Echo/logs/parseLogFile.jsonl'
+const FILE_PATH = '/server_logs/self_reports/Echo/logs/parseLogs.jsonl'
 const TEMPORARY_FILE_PATH = `${FILE_PATH}.tmp`
 
 describe('FilesService', () => {

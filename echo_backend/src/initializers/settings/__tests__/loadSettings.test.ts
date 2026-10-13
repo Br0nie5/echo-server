@@ -154,7 +154,7 @@ describe('loadSettings', () => {
         logsNotifier: undefined
       },
       parseLogsSelfReports: undefined,
-      logsNotifierSelfReports: undefined,
+      notificationsSelfReports: undefined,
       notification: undefined
     })
   })
@@ -228,15 +228,15 @@ describe('loadSettings', () => {
         retentionDays: 30,
         dirPath: '/self_reports/Shop Prod',
         fileExtension: '.jsonl',
-        fileName: 'parseLogFile.jsonl',
-        sessionFilePath: path.join(DATA_DIR_PATH, 'logs_self_reports_session.json')
+        fileName: 'parseLogs.jsonl',
+        sessionFilePath: path.join(DATA_DIR_PATH, 'parse_logs_self_reports_session.json')
       },
-      logsNotifierSelfReports: {
+      notificationsSelfReports: {
         retentionDays: 30,
         dirPath: '/self_reports/Shop Prod',
         fileExtension: '.jsonl',
-        fileName: 'logsNotifier.jsonl',
-        sessionFilePath: path.join(DATA_DIR_PATH, 'logs_notifier_self_reports_session.json')
+        fileName: 'notifications.jsonl',
+        sessionFilePath: path.join(DATA_DIR_PATH, 'notifications_self_reports_session.json')
       },
       notification: {
         telegramChatId: '123456789',
@@ -255,7 +255,7 @@ describe('loadSettings', () => {
     })
 
     expect(settings.parseLogsSelfReports).toBeUndefined()
-    expect(settings.logsNotifierSelfReports).toBeUndefined()
+    expect(settings.notificationsSelfReports).toBeUndefined()
   })
 
   it('Should leave the logs notifier out when there are no notification settings', async () => {

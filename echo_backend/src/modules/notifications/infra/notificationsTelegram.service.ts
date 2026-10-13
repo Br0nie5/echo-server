@@ -1,3 +1,4 @@
+import type { SelfReportRepository } from '../../selfReports/domain/selfReport.repository.js'
 import type { NotificationsService } from '../domain/notifications.service.js'
 
 /** What {@link createNotificationsTelegramService} needs. */
@@ -15,32 +16,39 @@ export interface CreateNotificationsTelegramServiceOptions {
 /**
  * Builds the `NotificationsService` sending its messages through Telegram: to the chat
  * `telegramChatId`, from the bot of `telegramBotToken`, through the Telegram bot API at
- * `telegramBaseUrl`, within the `telegramMessageSizeLimit`.
+ * `telegramBaseUrl`. The function writing a message is given `telegramMessageSizeLimit`.
  *
- * Notifying throws when Telegram cannot be reached or answers with an error status.
+ * Notifying throws when the message cannot be written, when Telegram cannot be reached or when it
+ * answers with an error status. The error is first saved as an error self report to
+ * `notificationsSelfReportRepository`, when there is one, then thrown as it is: leave the
+ * repository out when the self reports are disabled.
  *
  * It is meant to be built once, when the notifications are set up, and handed to whatever
  * notifies:
  *
  * ```ts
- * const notificationsService = createNotificationsTelegramService({
- *   telegramChatId: '123456789',
- *   telegramBotToken: '123456:ABC-DEF',
- *   telegramBaseUrl: 'https://api.telegram.org',
- *   telegramMessageSizeLimit: 4096
- * })
- * await notificationsService.notify('3 watched logs since 08:00')
+ * const notificationsService = createNotificationsTelegramService(
+ *   {
+ *     telegramChatId: '123456789',
+ *     telegramBotToken: '123456:ABC-DEF',
+ *     telegramBaseUrl: 'https://api.telegram.org',
+ *     telegramMessageSizeLimit: 4096
+ *   },
+ *   notificationsSelfReportRepository
+ * )
+ * await notificationsService.notify(() => '3 watched logs since 08:00')
  * ```
  */
-export const createNotificationsTelegramService = ({
-  telegramChatId,
-  telegramBotToken,
-  telegramBaseUrl,
-  telegramMessageSizeLimit
-}: CreateNotificationsTelegramServiceOptions): NotificationsService => ({
-  getMessageSizeLimit: (): number => telegramMessageSizeLimit,
-
-  notify: async (message): Promise<void> => {
+export const createNotificationsTelegramService = (
+  {
+    telegramChatId,
+    telegramBotToken,
+    telegramBaseUrl,
+    telegramMessageSizeLimit
+  }: CreateNotificationsTelegramServiceOptions,
+  notificationsSelfReportRepository?: SelfReportRepository
+): NotificationsService => {
+  const sendMessage = async (message: string): Promise<void> => {
     const response = await fetch(`${telegramBaseUrl}/bot${telegramBotToken}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -51,4 +59,25 @@ export const createNotificationsTelegramService = ({
       throw new Error(`Telegram API error: ${response.status}`)
     }
   }
-})
+
+  return {
+    notify: async (buildMessage): Promise<void> => {
+      try {
+        await sendMessage(buildMessage(telegramMessageSizeLimit))
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error)
+
+        await notificationsSelfReportRepository?.saveSelfReports([
+          {
+            date: new Date(),
+            message: `The notification was not sent: ${errorMessage}`,
+            level: 'ERROR',
+            origin: 'notificationsTelegramService'
+          }
+        ])
+
+        throw error
+      }
+    }
+  }
+}

@@ -31,12 +31,12 @@ export interface NotifierMessageContent {
  * fit are replaced by a footer counting them. When not even the first log fits, the message only
  * says how many logs there are.
  *
- * Returns `undefined` when there is nothing to say, that is no log, or when `messageSizeLimit` is
- * too small for the shortest of these messages.
+ * Throws when `messageSizeLimit` is too small for the shortest of these messages, the one counting
+ * the logs.
  *
  * ```ts
  * const message = buildNotifierMessage({
- *   messageSizeLimit: notificationsService.getMessageSizeLimit(),
+ *   messageSizeLimit: 4096,
  *   watchedLogs,
  *   serverName,
  *   timezone
@@ -48,26 +48,25 @@ export const buildNotifierMessage = ({
   watchedLogs,
   serverName,
   timezone
-}: NotifierMessageContent): string | undefined => {
-  if (watchedLogs.length === 0) {
-    return undefined
-  }
-
+}: NotifierMessageContent): string => {
   const lines = watchedLogs.map((log) => formatLogLine(log, timezone))
   const header = `Logs from device ${serverName}:\n\n\n`
 
   const buildMessageListingLogs = (listedLogsCount: number): string => {
     const otherLogsCount = lines.length - listedLogsCount
     const footer =
-      otherLogsCount > 0 ? `\n\n\n${otherLogsCount} other logs to see inside the console` : ''
+      otherLogsCount > 0 ? `\n\n\n${otherLogsCount} other logs to see inside the app` : ''
 
     return `${header}${lines.slice(0, listedLogsCount).join('\n\n')}${footer}`
   }
 
-  let message = `${lines.length} logs from device ${serverName} to see inside the console`
+  let message = `${lines.length} logs from device ${serverName} to see inside the app`
 
   if (message.length > messageSizeLimit) {
-    return undefined
+    throw new Error(
+      `The message telling about the watched logs cannot be built: its size limit of ` +
+        `${messageSizeLimit} characters is too small for any message`
+    )
   }
 
   for (let listedLogsCount = 1; listedLogsCount <= lines.length; listedLogsCount++) {

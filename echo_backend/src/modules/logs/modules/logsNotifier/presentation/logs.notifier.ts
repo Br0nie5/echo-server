@@ -4,7 +4,6 @@ import cron from 'node-cron'
 
 import type { LogsNotifierConfig } from '../../../../../shared/config/logsNotifierConfig.js'
 import type { NotificationsService } from '../../../../notifications/domain/notifications.service.js'
-import type { SelfReportRepository } from '../../../../selfReports/domain/selfReport.repository.js'
 import { checkWatchedLogsAndNotify } from '../application/checkWatchedLogsAndNotify.js'
 import type { UnNotifiedLogsRepository } from '../domain/unNotifiedLogs.repository.js'
 
@@ -13,21 +12,11 @@ export interface LogsNotifierPluginOptions extends FastifyPluginOptions {
   logsNotifierConfig: LogsNotifierConfig
   unNotifiedLogsRepository: UnNotifiedLogsRepository
   notificationsService: NotificationsService
-  /**
-   * Where a check reports the watched logs it could not notify. Missing when the self reports are
-   * disabled.
-   */
-  logsNotifierSelfReportRepository?: SelfReportRepository
 }
 
 const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = async (
   fastify,
-  {
-    logsNotifierConfig,
-    unNotifiedLogsRepository,
-    notificationsService,
-    logsNotifierSelfReportRepository
-  }
+  { logsNotifierConfig, unNotifiedLogsRepository, notificationsService }
 ) => {
   fastify.log.info('Registering logs notifier')
 
@@ -38,8 +27,7 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
         await checkWatchedLogsAndNotify({
           logsNotifierConfig,
           unNotifiedLogsRepository,
-          notificationsService,
-          logsNotifierSelfReportRepository
+          notificationsService
         })
       } catch (error) {
         fastify.log.error({ err: error }, 'Cron job failed')

@@ -234,7 +234,7 @@ describe('GET /logs', () => {
       {
         groupName: 'self_reports_Echo',
         location: selfReportsFilePath,
-        locationName: 'parseLogFile',
+        locationName: 'parseLogs',
         jobId: 1,
         level: 'WARNING',
         message: notALogLine,

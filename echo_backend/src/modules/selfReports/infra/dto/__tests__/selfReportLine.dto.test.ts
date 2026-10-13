@@ -7,8 +7,8 @@ import {
 } from '../selfReportLine.dto.js'
 
 const storage = {
-  location: '/self_reports/Echo/parseLogFile.jsonl',
-  locationName: 'parseLogFile',
+  location: '/self_reports/Echo/parseLogs.jsonl',
+  locationName: 'parseLogs',
   groupName: 'self_reports_Echo'
 }
 

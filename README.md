@@ -220,7 +220,7 @@ So scripts can keep their log files in a `logs` directory next to them without `
 By default, a line Echo cannot read is silently left out. With `INCLUDE_SELF_REPORTS_IN_LOGS=true`, Echo reports it instead, and shows the report among the logs, like any other log:
 
 - its level is `WARNING`, its message is the line itself, and its `origin` is the path of the log file followed by the position of the line among its non-blank lines, starting at 1: `/watched_logs/backup/logs/nightly.log.jsonl:3`;
-- it is in the group `self_reports_<server name>`, the server name being `SERVER_NAME` with every character other than a letter, a digit, `-`, `_` or a space replaced with `_`, in the file `parseLogFile`.
+- it is in the group `self_reports_<server name>`, the server name being `SERVER_NAME` with every character other than a letter, a digit, `-`, `_` or a space replaced with `_`, in the file `parseLogs`.
 
 The self reports are stored in `/self_reports/<server name>/`, apart from the logs, which are only read from `/watched_logs`. This needs the writable `/self_reports` volume (see [Volumes](#volumes)). When that directory cannot be written, Echo says so in the logs of the container and starts without the self reports.
 
@@ -265,7 +265,7 @@ Logs from device Echo:
 ```
 
 - The first run sends nothing: it only records its date, in `/app/data/last_logs_check.json`, so the logs written before it are never sent.
-- A message holds 4096 characters at most, the limit of Telegram. The logs that do not fit are counted in its last line: `3 other logs to see inside the console`.
+- A message holds 4096 characters at most, the limit of Telegram. The logs that do not fit are counted in its last line: `3 other logs to see inside the app`.
 - When a message cannot be sent, the same logs are sent again by the next run.
 - With the [self reports](#self-reports) enabled and `WARNING` watched, a line Echo cannot read is sent at every run until its file is fixed, since it is reported again each time the logs are read.
 

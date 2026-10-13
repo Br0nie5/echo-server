@@ -5,10 +5,7 @@ import { buildNotifierMessage, formatLogLine } from '../buildNotifierMessage.js'
 
 const MESSAGE_SIZE_LIMIT = 4096
 
-const buildMessage = (
-  watchedLogs: Log[],
-  messageSizeLimit = MESSAGE_SIZE_LIMIT
-): string | undefined =>
+const buildMessage = (watchedLogs: Log[], messageSizeLimit = MESSAGE_SIZE_LIMIT): string =>
   buildNotifierMessage({ messageSizeLimit, watchedLogs, serverName: 'my-device', timezone: 'UTC' })
 
 function mockLog(overrides: Partial<Log> = {}): Log {
@@ -55,8 +52,8 @@ describe('formatLogLine', () => {
 })
 
 describe('buildNotifierMessage', () => {
-  it('Should return undefined when there are no logs', () => {
-    expect(buildMessage([])).toBeUndefined()
+  it('Should only count the logs when there are none', () => {
+    expect(buildMessage([])).toBe('0 logs from device my-device to see inside the app')
   })
 
   it('Should include a single log line under the size limit', () => {
@@ -87,41 +84,47 @@ describe('buildNotifierMessage', () => {
     expect(result).toBe(
       'Logs from device my-device:\n\n\n' +
         '[1] [2026-01-01 10:00:00 UTC] [ERROR] - worker > short' +
-        '\n\n\n2 other logs to see inside the console'
+        '\n\n\n2 other logs to see inside the app'
     )
   })
 
   it('Should list the logs that fit exactly in the size limit', () => {
     const logs = [mockLog({ jobId: 1 }), mockLog({ jobId: 2 })]
-    const allLogsMessage = buildMessage(logs)!
+    const allLogsMessage = buildMessage(logs)
 
     expect(buildMessage(logs, allLogsMessage.length)).toBe(allLogsMessage)
     expect(buildMessage(logs, allLogsMessage.length - 1)).toContain(
-      '1 other logs to see inside the console'
+      '1 other logs to see inside the app'
     )
   })
 
   it('Should only count the logs when not even the first one fits', () => {
     const logs = [mockLog({ jobId: 1 }), mockLog({ jobId: 2 })]
 
-    expect(buildMessage(logs, 60)).toBe('2 logs from device my-device to see inside the console')
+    expect(buildMessage(logs, 60)).toBe('2 logs from device my-device to see inside the app')
   })
 
-  it('Should return undefined when the size limit is too small for any message', () => {
+  it('Should throw when the size limit is too small for any message', () => {
     const logs = [mockLog({ jobId: 1 }), mockLog({ jobId: 2 })]
-    const shortestMessage = '2 logs from device my-device to see inside the console'
+    const shortestMessage = '2 logs from device my-device to see inside the app'
 
     expect(buildMessage(logs, shortestMessage.length)).toBe(shortestMessage)
-    expect(buildMessage(logs, shortestMessage.length - 1)).toBeUndefined()
+    expect(() => buildMessage(logs, shortestMessage.length - 1)).toThrow(
+      'The message telling about the watched logs cannot be built: its size limit of 49 characters is too small for any message'
+    )
   })
 
   it('Should never build a message longer than the size limit', () => {
     const logs = [mockLog({ jobId: 1 }), mockLog({ jobId: 2 }), mockLog({ jobId: 3 })]
 
-    for (let messageSizeLimit = 0; messageSizeLimit <= 300; messageSizeLimit++) {
-      const result = buildMessage(logs, messageSizeLimit)
+    const shortestMessage = '3 logs from device my-device to see inside the app'
 
-      expect(result?.length ?? 0).toBeLessThanOrEqual(messageSizeLimit)
+    for (
+      let messageSizeLimit = shortestMessage.length;
+      messageSizeLimit <= 300;
+      messageSizeLimit++
+    ) {
+      expect(buildMessage(logs, messageSizeLimit).length).toBeLessThanOrEqual(messageSizeLimit)
     }
   })
 })

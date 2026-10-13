@@ -52,7 +52,7 @@ export const buildTestServer = async ({
   const settings = getMockSettings({
     auth: getMockAuthSettings({ usersDbFilePath: IN_MEMORY_DATABASE_PATH }),
     parseLogsSelfReports: undefined,
-    logsNotifierSelfReports: undefined,
+    notificationsSelfReports: undefined,
     ...settingsOverrides
   })
 
