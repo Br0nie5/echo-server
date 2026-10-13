@@ -17,7 +17,6 @@ export interface TranslationKeys {
     }
     redirect: {
       message: string
-      button: string
     }
     error: string
   }

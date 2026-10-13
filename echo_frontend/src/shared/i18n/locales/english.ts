@@ -17,8 +17,7 @@ export const english: TranslationKeys = {
       button: 'Sign up'
     },
     redirect: {
-      message: 'You are already logged, you can go on!',
-      button: 'Continue'
+      message: 'You are already logged in, you should be redirected to:'
     },
     error: 'An error occurred'
   },
