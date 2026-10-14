@@ -19,7 +19,8 @@ services:
       # - HAS_AUTHENTICATION=false
       # Disabled by default (false): enabled here, hence the /self_reports volume.
       - INCLUDE_SELF_REPORTS_IN_LOGS=true
-      # Telegram notifications: disabled unless the four are set.
+      # Telegram notifications: enabled once TELEGRAM_CHAT_ID and TELEGRAM_BOT_TOKEN are both set,
+      # the LOGS_NOTIFIER_* lines being optional.
       # - LOGS_NOTIFIER_SCHEDULE=*/30 * * * *
       # - LOGS_NOTIFIER_WATCHED_LOGS_LEVELS=ERROR,WARNING
       # - TELEGRAM_CHAT_ID=123456789

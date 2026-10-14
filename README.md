@@ -218,14 +218,18 @@ So scripts can keep their log files in a `logs` directory next to them without `
 
 ## Self reports
 
-By default, a line Echo cannot read is silently left out. With `INCLUDE_SELF_REPORTS_IN_LOGS=true`, Echo reports it instead, and shows the report among the logs, like any other log:
+By default, a line Echo cannot read is silently left out. With `INCLUDE_SELF_REPORTS_IN_LOGS=true`, Echo reports what goes wrong on its side, and shows each report among the logs, like any other log. It reports two things, each in a file of its own:
 
-- its level is `WARNING`, its message is the line itself, and its `origin` is the path of the log file followed by the position of the line among its non-blank lines, starting at 1: `/watched_logs/backup/logs/nightly.log.jsonl:3`;
-- it is in the group `self_reports_<server name>`, the server name being `SERVER_NAME` with every character other than a letter, a digit, `-`, `_` or a space replaced with `_`, then in lower case with its spaces replaced with `_` (`self_reports_shop_prod` for `Shop Prod`), in the file `parseLogs`.
+| File            | Reports                                                  | Level     | Message                                    | `origin`                                                                                                         |
+| --------------- | -------------------------------------------------------- | --------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `parseLogs`     | A line of a log file that holds no log.                  | `WARNING` | The line itself.                           | The path of the log file and the position of the line among its non-blank lines, from 1: `…/nightly.log.jsonl:3` |
+| `notifications` | A Telegram message that could not be sent, when enabled. | `ERROR`   | `The notification was not sent: <reason>`. | `notificationsTelegramService`                                                                                   |
+
+Both are in the group `self_reports_<server name>`, the server name being `SERVER_NAME` with every character other than a letter, a digit, `-`, `_` or a space replaced with `_`, then in lower case with its spaces replaced with `_` (`self_reports_shop_prod` for `Shop Prod`).
 
 The self reports are stored in `/self_reports/<server name>/`, apart from the logs, which are only read from `/watched_logs`. This needs the writable `/self_reports` volume (see [Volumes](#volumes)). When that directory cannot be written, Echo says so in the logs of the container and starts without the self reports.
 
-A line that is still wrong is reported again each time the logs are read, but stored once: its report keeps the date the line was first found wrong at, until it is older than `SELF_REPORTS_RETENTION_DAYS` (10 by default). Old reports are removed each time the container starts and each time a new report is stored, so a line that is still wrong then is reported again, with a new date.
+A self report is kept `SELF_REPORTS_RETENTION_DAYS` days (10 by default). A line that is still wrong is reported again each time the logs are read, but stored once: its report keeps the date the line was first found wrong at, until that report is too old to be kept, when the line is stored again, with a new date. A message that could not be sent is stored each time it fails.
 
 The self reports written between two starts of the container share a `jobId`, and each start takes a new one, so the app shows them as one job per run of Echo.
 
@@ -267,7 +271,7 @@ Logs from server Echo:
 
 - The first run sends every log of the watched levels, then records its date, in `/app/data/last_logs_check.json`: the next runs start from there.
 - A message holds 4096 characters at most, the limit of Telegram. The logs that do not fit are counted in its last line: `3 other logs to see inside the app`.
-- When a message cannot be sent, the same logs are sent again by the next run.
+- When a message cannot be sent, the same logs are sent again by the next run. With the [self reports](#self-reports) enabled, the failure is shown among the logs too.
 - With the [self reports](#self-reports) enabled and `WARNING` watched, a line Echo cannot read is sent at every run until its file is fixed, since it is reported again each time the logs are read.
 
 ## HTTPS
@@ -317,14 +321,14 @@ cd echo-server
 npm ci
 ```
 
-| Command                  | What it runs                                                                             |
-| ------------------------ | ---------------------------------------------------------------------------------------- |
-| `npm run dev`            | The development servers. Open `http://localhost:5173/app`.                               |
-| `npm start`              | A production build, served by the backend alone, with `echo_backend/.env.production`.    |
-| `npm run start:docker`   | The image, built from the sources, in the deployment of [examples/](examples/) you pick. |
-| `docker build -t echo .` | The image alone, after `npm run build`.                                                  |
+| Command                  | What it runs                                                                                                                                                                |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`            | The development servers. Open `http://localhost:5173/app`.                                                                                                                  |
+| `npm start`              | A production build, served by the backend alone, with `echo_backend/.env.production`: over HTTPS, with the test certificate of `certs/`. Open `https://localhost:4000/app`. |
+| `npm run start:docker`   | The image, built from the sources, in the deployment of [examples/](examples/) you pick.                                                                                    |
+| `docker build -t echo .` | The image alone, after `npm run build`.                                                                                                                                     |
 
-Without Docker, the logs are read from `test_logs/`, at the root of the repository: create it and put some `.jsonl` files in it. It is git-ignored.
+Without Docker, the logs are read from `test_logs/`, at the root of the repository, and the self reports written to `self_reports/` and the data to `data/`, next to it: create `test_logs/` and put some `.jsonl` files in it. All three are git-ignored.
 
 See the [development guide](docs/development.md) for the rest, and [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 

@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The container warns in its logs when `NODE_ENV` is set to anything but `production` (it is set back to `production`, as before).
 - `TRUSTED_PROXIES` restricts the reverse proxies whose `X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-For` headers Echo believes (a list, separated by `;`, of IP addresses, CIDR ranges, `loopback`, `linklocal` and `uniquelocal`). It is optional: by default, Echo believes whatever sends a request, so it works behind any reverse proxy. Once it lists your proxy, the login attempts are limited per client instead of being shared by everyone behind the proxy.
 - [examples/](examples/) holds a complete deployment, with its `compose.yaml` and the configuration of its reverse proxy (Caddy), for each common setup: without a proxy, behind an HTTP or an HTTPS proxy, with HTTPS up to Echo, on a subdomain and under a path.
+- The root of the server (`/`) redirects to the app.
+- In a search, a backslash makes the space, the double quote or the backslash after it part of the text (`disk\ full`, `say\"hi`).
+- With the self reports enabled, a Telegram message that could not be sent is shown among the logs, as an `ERROR` of the file `notifications`.
 
 ### Changed
 
@@ -58,7 +61,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking:** the self reports are no longer stored inside the watched logs, in `/watched_logs/server/<SERVER_NAME>/log`, as log lines, but in a directory of their own, `/self_reports/<SERVER_NAME>`, in a format of their own. Echo only reads its logs from `/watched_logs`, and adds the self reports to them when `INCLUDE_SELF_REPORTS_IN_LOGS=true`, in the group `self_reports_<SERVER_NAME>`. Replace the `/watched_logs/server` sub-mount with a writable `/self_reports` volume; the `server` directory created in your logs for that sub-mount is no longer needed. The self reports stored before are not read any more: a problem that is still there is reported again.
 
+- **Breaking:** the auth routes of the API answer differently, for a client other than the app to update. `GET /api/auth/check` is replaced by `GET /api/auth/status`, which always answers a `200` with `{ "status": "authenticated" | "unauthenticated" | "needsSignUp" }`, instead of a `401` while no account exists. The sign-up, the login and the logout answer a `204` with no body when they succeed, and an `EchoError` (`{ statusCode, message }`) otherwise, instead of `{ success, message }`.
+
 - **Breaking:** an unknown path outside `/app` and `/api` now gets the same error body as the API, `{ "statusCode": 404, "message": "Not found." }`, instead of `{ "error": "Not found" }`.
+
+- The very first check of the Telegram notifications, or one whose `data/last_logs_check.json` cannot be read, now sends every log of the watched levels, instead of only saving its date.
 
 - The last session of the self reports is now remembered in two files, one per self-report file, `data/parse_logs_self_reports_session.json` and `data/notifications_self_reports_session.json`, in a format of their own: the sessions are numbered from `1` again, and `data/self_logs_session.json` is no longer read, so you can remove it from your `data/` volume.
 
@@ -70,10 +77,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The group of a log file no longer includes its first directory when `LOGS_DIR_PATH` ends with a `/` or starts with `./`.
 - The container health check no longer reports a healthy instance as unhealthy when `SERVER_URL` uses `https://` while a reverse proxy handles TLS, nor when the port of `SERVER_URL` is not the one the server listens on (`-p 8080:4000` with `SERVER_URL=http://host:8080`): it now targets `HTTP_PORT` (`4000` by default), over HTTPS only when `TLS_CERT_PATH` is set.
 - A `SERVER_NAME` holding a double quote or a backslash no longer breaks the frontend.
+- A Telegram message is never longer than 4096 characters, its footer included, which Telegram refused before. Its footer now says the other logs are to see `inside the app`.
 
 ### Security
 
 - A request to `GET /api/logs` without a valid session gets a `401` before its query is validated, instead of the `400` describing what is wrong with its query.
+- The login and the sign-up are limited to 5 attempts a minute per address.
+- Two sign-ups sent at the same time can no longer both create an admin account.
+- The time a login takes no longer tells whether its username exists.
 - The API no longer accepts cross-origin requests: only the origin a request is itself sent to is allowed. Before, any website was allowed when `SERVER_URL` was `localhost` or an IP address, and every subdomain of its domain otherwise.
 
 ## [1.2.0] - 2026-09-23

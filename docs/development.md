@@ -37,6 +37,8 @@ That proxy reaches the backend over HTTP only: leave `TLS_CERT_PATH` and `TLS_KE
 
 `data/`, at the root, is created on the first run and holds the users database of development. It is git-ignored, like `test_logs/` and `self_reports/`.
 
+`SERVER_NAME` and `HAS_AUTHENTICATION` are read by both sides, so outside of a container they are written twice: in the `.env.<mode>` file of the backend and in the `env.<mode>.json` of the frontend. Change them in both.
+
 The backend and the frontend import `echo_utilities` from its build, `echo_utilities/dist/`. `npm run dev` and `npm run build` build it first: on a fresh clone, run one of them before `npm run lint`, `npm run test:coverage` or `npm run arch:check`.
 
 ## Scripts
@@ -47,7 +49,7 @@ Run from the root.
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `npm run dev`                        | The utilities (watched), the backend and the frontend together.                                                                                                                                      |
 | `npm run build`                      | Builds the three workspaces, the utilities first, then type-checks the files at the root. It starts with `npm install`, see below.                                                                   |
-| `npm start`                          | Builds, then runs the backend in production mode, serving the built frontend, with `echo_backend/.env.production`.                                                                                   |
+| `npm start`                          | Builds, then runs the backend in production mode, serving the built frontend, with `echo_backend/.env.production`: over HTTPS, at `https://localhost:4000/app`, with the certificate of `certs/`.    |
 | `npm run lint`                       | ESLint, fixing what it can, in every workspace then on the files at the root.                                                                                                                        |
 | `npm run format`                     | Prettier, in every workspace then on the files at the root, `docs/` and `examples/`.                                                                                                                 |
 | `npm run test:coverage`              | Vitest in every workspace, with a 100% coverage threshold.                                                                                                                                           |
@@ -78,17 +80,21 @@ No test reaches the outside: no network call, no file written, no real clock whe
 
 ### What is tested how
 
-| Subject                                                                                            | Kind of test                                                                                                                    |
-| -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| A piece: a util, a parser, a schema, a DTO, an adapter of `infra/`, a use case, a shared component | Unit tests, thorough: every case, as a table where the cases share a shape. This is where the edge cases and the coverage live. |
-| A screen of the frontend, a route or the cron of the backend                                       | A few integration tests of the module behind it, each one telling a whole feature. Only what reaches the outside is replaced.   |
-| An entry point: the app, the server                                                                | A unit test of what is its own (its config, its routes, what it does when it cannot start), with the modules mocked.            |
+| Subject                                                                                                              | Kind of test                                                                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A piece outside a module: `echo_utilities`, a `shared/` folder, the `utils/` of the initializers and of the settings | Unit tests, thorough: every case, as a table where the cases share a shape, each file at 100% by its own test file. This is where the edge cases and the coverage live. |
+| An entry of a module: a screen of the frontend, a route or the cron of the backend                                   | A few integration tests of the module behind it, each one telling a whole feature. Only what reaches the outside is replaced.                                           |
+| A piece of a module: a use case, an adapter of `infra/`, a DTO, the `utils/` of a module                             | Tested through its entry first. A unit test only for an edge case the entry tests do not reach (a storage failing, two sign-ups at once), its title saying which.       |
+| An entry point: the app, the server                                                                                  | A unit test of what is its own (its config, its routes, what it does when it cannot start), with the modules mocked.                                                    |
+
+Write them in that order: the pieces outside a module, then the entry tests, then run the coverage with the entry tests alone, and add a unit test for each edge case they left. A unit test of a module that reaches nothing more than the entry tests is a duplicate.
 
 ### Backend
 
 - **A route or the cron** is tested on the real server (`logs.routes.test.ts`, `auth.routes.test.ts`, `logs.notifier.test.ts`). `buildTestServer` (`src/test/`) builds it with `buildServer`, from settings with the authentication and nothing optional, which a test completes with the part it is about. Only the outside is replaced: the file system by one kept in memory (`createInMemoryFileSystem`), which the real `FilesService` runs on, the users database by an in-memory SQLite one, and `fetch`, stubbed, for the notifications. A test fills the files, sends requests with `server.inject` and reads the files back. The cron is run by moving the fake clock.
 - **The server itself** (`src/__tests__/server.test.ts`): its paths, its documentation, its frontend, CORS, the proxies, TLS, and `startServer`, whose `listen` is a stub, so no test opens a port. The routes and the cron are mocked there, so a change in a module never changes that file. The initializers have no test of their own.
-- **Everything else** has unit tests, with a `FilesService` whose methods are mocks (`getMockFilesService`) and a config from `src/test/mocks/mockConfigs.ts`. The settings of a test on the real server come from `src/test/mocks/mockSettings.ts`.
+- **`shared/` and the `utils/` of the initializers and of the settings** have unit tests of every case. `loadSettings` has a few, for which env file it loads, that the error of a parser is thrown, and the whole settings it builds.
+- **The edge cases of a module** (two sign-ups at once, a storage failing, a stored line that holds nothing valid) have unit tests where they are handled, with a `FilesService` whose methods are mocks (`getMockFilesService`) and a config from `src/test/mocks/mockConfigs.ts`. The settings of a test on the real server come from `src/test/mocks/mockSettings.ts`.
 
 ### Frontend
 

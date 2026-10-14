@@ -19,12 +19,16 @@ Run from this directory.
 npm run dev             # Vite dev server on http://localhost:5173
 npm run build           # type-check, then production build to dist/
 npm run preview         # serves the build
-npm run lint            # eslint --fix
+npm run lint            # eslint --fix, Prettier included
 npm run format          # prettier --write
 npm run arch:check      # dependency-cruiser rules (.dependency-cruiser.mts)
+npm run test            # vitest run
 npm run test:coverage   # vitest run --coverage, 100% threshold
 npm run test:watch
+npm run open:coverage   # serves coverage/ on port 9003, until stopped, the cache off so a reload shows the latest run
 ```
+
+`npm run build` type-checks the sources and the tests (`tsc -b`) before building.
 
 The dev server serves the app under `/app` and proxies `/api` and `/documentation` to `http://localhost:4000`, where it expects the API (see `vite.config.ts`). The app and the API then share one origin, as they do once deployed.
 

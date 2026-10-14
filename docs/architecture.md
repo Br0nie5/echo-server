@@ -31,8 +31,8 @@ The backend and the frontend never import each other. Both import `@echo/utiliti
 ## The life of a logs request
 
 1. The logs screen asks for the logs from a date: `GET /api/logs?fromDate=…`. Only the date goes to the API.
-2. `presentation/logs.routes.ts` runs the authentication hook first, when there is one, then validates the query against its JSON schema.
-3. `presentation/logs.controller.ts` turns the query into dates and filters (`safeParseGetLogsParams`), and calls the use case, `application/getFilteredLogs.ts`.
+2. `presentation/logs.routes.ts` runs the authentication hook first, when there is one, then validates the query with `safeParseGetLogsParams`, its `validatorCompiler`, which turns it into dates and filters. An invalid query is answered a 400 with the message of `GetLogsParamsSchema`: the JSON schema of the query only documents it.
+3. `presentation/logs.controller.ts` hands the parsed query to the use case, `application/getFilteredLogs.ts`.
 4. `getFilteredLogs` asks the `LogsRepository` for every log. `infra/logsFiles.repository.ts` lists the log files, reads their lines and converts each one to a log; a line that holds none becomes a self report, which the repository saves to its `SelfReportRepository`, when it has one.
 5. When the self reports are included in the logs (`INCLUDE_SELF_REPORTS_IN_LOGS`), the `LogsRepository` is two in one (`infra/logs.repository.ts`): once the log files are read, `infra/logsSelfReports.repository.ts` reads every self report from its `SelfReportRepository` and gives each one as a log.
 6. `getFilteredLogs` filters the logs and sorts them from the newest to the oldest, in memory.
@@ -64,7 +64,7 @@ echo_utilities/…/schemas/*.schema.ts ─┼─► parse / safeParse ─► the
 - **At runtime**, the frontend validates each answer of the API against its schema, and the backend the query of `GET /logs` and the errors it answers.
 - **The JSON schemas of the routes** are converted from the zod schemas when the server starts, in the `*.schemas.ts` files of the backend: [logs.schemas.ts](../echo_backend/src/modules/logs/presentation/logs.schemas.ts), [auth.schemas.ts](../echo_backend/src/modules/auth/presentation/auth.schemas.ts) and [errors.schemas.ts](../echo_backend/src/shared/schemas/errors.schemas.ts). To expose another zod schema, add it to the registry of one of them. They validate the requests and are what Swagger documents.
 
-`GetLogsParamsSchema` describes the query as the client sends it. `safeParseGetLogsParams` (`presentation/utils/`) turns it into what `getFilteredLogs` needs: `fromDate` and the optional `toDate` as `Date`s, `logLevels` always an array.
+`GetLogsParamsSchema` describes the query as the client sends it. `safeParseGetLogsParams` (`presentation/utils/`), the `validatorCompiler` of `GET /logs`, validates it against that schema and turns it into what `getFilteredLogs` needs: `fromDate` and the optional `toDate` as `Date`s, `logLevels` always an array. Its messages are written for the client and answered as they are, which is why the route does not let Fastify validate the query against its JSON schema.
 
 `AuthStatusSchema` is the answer of `GET /auth/status`, which the backend always answers with a 200: `authenticated`, `unauthenticated`, or `needsSignUp` while no account exists yet. The frontend reads that status to redirect, or to show the login form or the sign-up one.
 
@@ -138,7 +138,7 @@ No module reads `process.env`, builds a path from `import.meta.url` or declares 
 
 | Folder          | Content                                                                                                                                                                                                                                                                                                                                                    |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `domain/`       | `LogsRepository`: it reads the logs of every location it watches (`getAllLogs`) or of one (`getLogs`), stores logs, each at its own `location`, where they replace what was stored (`saveLogs`), and empties a location (`deleteLogs`).                                                                                                                    |
+| `domain/`       | `LogsRepository`: it reads the logs of every location it watches (`getAllLogs`). A stored entry that holds no valid log is left out, and reporting it is up to the implementation.                                                                                                                                                                         |
 | `application/`  | `getFilteredLogs`, the one use case.                                                                                                                                                                                                                                                                                                                       |
 | `infra/`        | `logsFiles.api.ts` lists the log files and reads the lines of one. `logsFiles.repository.ts` implements `LogsRepository` on top of it, with the DTOs of `dto/`. `logsSelfReports.repository.ts` implements it on top of a `SelfReportRepository`. `logs.repository.ts` (`createLogsRepository`) gives the one the backend uses: the first, or both as one. |
 | `presentation/` | `GET /logs`.                                                                                                                                                                                                                                                                                                                                               |
@@ -202,7 +202,7 @@ A `SelfReport` is a model of its own, not a `Log`, and it is stored on its own t
 - **The session is the repository's business.** Whoever reports saves plain self reports, which the repository stores with the id of its session. Reading gives each self report with its session: the id of the run it was reported during, and the location, the location name and the group name of its file.
 - **When it is created**, the repository takes the next session id of its own session file (`parse_logs_self_reports_session.json`, `notifications_self_reports_session.json`) and writes its file again without the self reports older than the retention, which also tells whether the file can be written. Should that fail, the error is logged and no repository is created: an optional feature never stops the server from starting.
 - **A self report is stored after the stored ones**, those older than the retention being left out at each save. A repository created to store each problem once (the one of the lines of the log files, not the one of the notifications) leaves out the self report that has the `level`, the `message` and the `origin` of a stored one: a problem that lasts is stored once, with the date it was first seen at, then again once that self report is too old to be kept.
-- **Reading** gives the self reports of the file of the repository, each with the session it was reported during. `server.ts` gives the logs every repository it created, so the self reports of every part are shown.
+- **Reading** gives the self reports of the file of the repository that are not older than the retention, each with the session it was reported during. `server.ts` gives the logs every repository it created, so the self reports of every part are shown.
 - **It never throws.** What cannot be stored or read goes to the `Logger` of `shared/types/logger.ts`: a diagnostic must not break what was being diagnosed.
 
 `logs` depends on `selfReports` through its contract only: its `infra/` imports its `domain/`, to report and to read the self reports back. `selfReports` imports nothing of `logs`.
@@ -227,9 +227,10 @@ A `SelfReport` is a model of its own, not a `Log`, and it is stored on its own t
 What several modules use. It imports nothing of the backend but itself.
 
 - **`config/`**: the types of the configs a module is given, `AuthConfig` and `LogsNotifierConfig`. Types only: they are built by `loadSettings`, in `initializers/settings/`.
-- **`services/files.service.ts`**: the `FilesService`, the one access of the backend's own code to the file system. Nothing else imports `fs`, the tests included, but its own tests. It creates a directory, reads a file as a whole or as lines (throwing a `FileDoesNotExistError` when it is missing), lists the files of a directory, gives the path of a file relative to a directory, replaces the content of a file and restricts a file to its owner. A write goes through a temporary file, so a reader never sees a file half written, and the writes of one file are done one after the other. It knows nothing of what the files hold nor of how they are named. `startServer` builds it once and hands it down. Only libraries given a path by the config reach the disk on their own: `better-sqlite3`, `dotenv` and `@fastify/static`.
+- **`services/files.service.ts`**: the `FilesService`, the one access of the backend's own code to the file system. Nothing else imports `fs`, the tests included, but its own tests. It creates a directory, reads a file as a whole or as lines (throwing the `FileDoesNotExistError` of `services/fileDoesNotExistError.ts` when it is missing), lists the files of a directory (following the symbolic links), gives the path of a file relative to a directory, replaces the content or the lines of a file, and creates a file readable by its owner only. A write goes through a temporary file, so a reader never sees a file half written, and the writes of one file are done one after the other: replacing its lines reads and writes it as one write, so no other write comes in between. It knows nothing of what the files hold nor of how they are named. `startServer` builds it once and hands it down. Only libraries given a path by the settings reach the disk on their own: `better-sqlite3`, `dotenv` and `@fastify/static`.
 - **`types/logger.ts`**: the `Logger` a part of the backend writes its errors to, so that none depends on the logger of Fastify for it.
 - **`schemas/errors.schemas.ts`**: the JSON schema of `EchoError`, which every route may answer.
+- **`utils/`**: `convertToDateFromISO`, the one way a stored date is read (as UTC when it carries no offset), and `createSnakeCaseName`, which makes the group names of the log files and of the self reports.
 
 ## Frontend
 
@@ -336,6 +337,7 @@ Each workspace has its own rules, with paths relative to it: [echo_backend/.depe
 | `utilities-not-to-repository-packages`                    | `@echo/utilities` importing another package of the repository, even by its name.               |
 | `utilities-only-through-barrel`                           | Reaching into `echo_utilities` other than through its barrel.                                  |
 | `utilities-not-to-node`                                   | `@echo/utilities` importing a built-in module of Node.js: the frontend runs it in the browser. |
+| `utilities-modules-isolated`                              | A module of `@echo/utilities` importing another one.                                           |
 
 ### Where a file may be
 
@@ -372,7 +374,7 @@ The other rules know a file by its folder, hence these two. A rule is about a de
 
 The rules about the packages apply to the test files too, which the rules about the layers leave alone. Type-only imports are checked like the others.
 
-Two conventions are out of its reach, and are checked in review: reading `process.env` anywhere but in `loadSettings`, a setting that only an implementation needs put in a config, and a package talking about another one in its documentation.
+Three conventions are out of its reach, and are checked in review: reading `process.env` anywhere but in `loadSettings`, a setting that only an implementation needs put in a config, and a package talking about another one in its documentation.
 
 dependency-cruiser reads the sources with the `typescript` package, of which it supports the versions below 7, as `typescript-eslint` supports those below 6.1: the three workspaces therefore declare `typescript` `~6.0.3`, the one version the build, the lint and this check all run on.
 

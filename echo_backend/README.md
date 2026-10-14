@@ -17,13 +17,18 @@ Run from this directory.
 ```bash
 npm run dev             # tsx watch src/main.ts, with .env.development
 npm run build           # empties dist/, then tsc to it, the tests left out (tsconfig.build.json)
+npm run clean           # empties dist/
 npm run start           # NODE_ENV=production node dist/main.js, with .env.production
-npm run lint            # eslint --fix
+npm run lint            # eslint --fix, Prettier included
 npm run format          # prettier --write
 npm run arch:check      # dependency-cruiser rules (.dependency-cruiser.mts)
+npm run test            # vitest run
 npm run test:coverage   # vitest run --coverage, 100% threshold
 npm run test:watch
+npm run open:coverage   # serves coverage/ on port 9002, until stopped, the cache off so a reload shows the latest run
 ```
+
+The build does not type-check the tests: `npx tsc --noEmit` does, with `tsconfig.json`.
 
 ## Configuration
 
@@ -61,7 +66,7 @@ src/
       modules/logsNotifier/   the cron notifying the watched logs
     notifications/   the NotificationsService, how a message is sent to the outside, and its Telegram implementation
     selfReports/     the diagnostics the server reports about itself, stored in files of their own
-  shared/            the types of the configs, the FilesService, the error schema, the Logger type, the date parsing
+  shared/            the types of the configs, the FilesService, the error schema, the Logger type, the date parsing, the snake case names of the groups
   test/              the helpers of the tests: buildTestServer, mocks/ and utils/
 ```
 

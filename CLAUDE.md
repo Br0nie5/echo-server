@@ -25,6 +25,8 @@ npm run arch:check           # dependency-cruiser rules, in every workspace
 npm run test:coverage        # vitest run --coverage (100% threshold) across all workspaces
 npm run open:coverage         # serves each workspace's coverage report over HTTP (utilities :9001, backend :9002, frontend :9003), for the editor to forward from the dev container
 npm run dead-code:check        # knip: unused files, exports and dependencies, all workspaces at once (knip.json)
+npm run vulnerabilities:scan   # npm audit
+npm start                       # builds, then runs the backend alone in production mode, serving the built frontend over HTTPS (the test certificate of ./certs)
 ```
 
 Single test file / watch mode (run inside the relevant workspace dir, e.g. `cd echo_backend`):

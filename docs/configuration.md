@@ -18,7 +18,7 @@ Echo is configured with environment variables only. They are read and validated 
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Docker        | The environment of the container. The [Dockerfile](../Dockerfile) sets `HTTP_PORT`, `LOGS_DIR_PATH` and `SELF_REPORTS_DIR_PATH`, and [docker-entrypoint.sh](../docker-entrypoint.sh) gives every other variable its default. |
 | `npm run dev` | `echo_backend/.env.development` for the backend, `echo_frontend/public/env.development.json` for the frontend.                                                                                                               |
-| `npm start`   | `echo_backend/.env.production` for the backend, `echo_frontend/public/env.production.json`, copied into the build, for the frontend.                                                                                         |
+| `npm start`   | `echo_backend/.env.production` for the backend, which serves HTTPS with the test certificate of `certs/`, and `echo_frontend/public/env.production.json`, copied into the build, for the frontend.                           |
 
 The backend loads `.env.production` when `NODE_ENV` is `production`, `.env.development` otherwise, from its working directory, `echo_backend/`, where npm runs its scripts. A variable already set in the environment wins over the file. `NODE_ENV` only chooses that file: no variable is read differently in development.
 
@@ -57,7 +57,7 @@ Read by [loadSettings.ts](../echo_backend/src/initializers/settings/loadSettings
 | `LOGS_DIR_PATH`                |   yes    | `/watched_logs` | Directory the `.jsonl` log files are read from, at any depth. A relative path resolves from the working directory of the backend. In a container, leave it: the entrypoint refuses any other value, mount your logs there instead.                                                                                                                  |
 | `INCLUDE_SELF_REPORTS_IN_LOGS` |   yes    | `false`         | `true` or `false`. Whether the self reports are added to the logs, so they show up in the app like any other log. The backend stores its self reports only when something uses them, that is when this is `true`.                                                                                                                                   |
 | `SELF_REPORTS_DIR_PATH`        |  yes\*   | `/self_reports` | Directory the self reports are stored in, in a directory named after `SERVER_NAME`, made safe for a path. Their group is named from that directory and the ones below it, in lower case, spaces replaced with `_`: `self_reports_<server_name>` when it is named `self_reports`, whatever its path. In a container, leave it, like `LOGS_DIR_PATH`. |
-| `SELF_REPORTS_RETENTION_DAYS`  |  yes\*   | `10`            | How many days a self report is kept, a strictly positive integer. The older ones are removed when the server starts.                                                                                                                                                                                                                                |
+| `SELF_REPORTS_RETENTION_DAYS`  |  yes\*   | `10`            | How many days a self report is kept, a strictly positive integer. The older ones are left out when the server starts, at each save and at each read.                                                                                                                                                                                                |
 
 \* Only with `INCLUDE_SELF_REPORTS_IN_LOGS=true`. Not read otherwise.
 
@@ -93,7 +93,7 @@ In the file, a value is written as text, as a number or as a boolean:
 }
 ```
 
-In a container, the entrypoint writes `echo_frontend/dist/env.production.json` from the environment at every start, which is how the same four variables configure both sides. Outside of one, the files of `echo_frontend/public/` are used.
+In a container, the entrypoint writes `echo_frontend/dist/env.production.json` from the environment at every start, which is how `SERVER_NAME` and `HAS_AUTHENTICATION` configure both sides at once. Outside of one, the files of `echo_frontend/public/` are used, and nothing ties them to the `.env.<mode>` file of the backend: change these two variables in both, or the app and the API disagree (an app asking for a login the API does not have, for instance).
 
 ## What is not a variable
 
