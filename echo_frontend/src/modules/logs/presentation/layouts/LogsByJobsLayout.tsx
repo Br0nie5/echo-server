@@ -28,13 +28,12 @@ const LogsByJobsLayoutComponent: React.FC<LogsByJobsLayoutProps> = ({ logs }) =>
             }}
           >
             <CollapsibleBox
-              id={logsByJob.id}
               title={
                 <Typography variant="body1" align="center" sx={{ fontWeight: 'bold' }}>
                   {`[${logsByJob.locationName}] > [${logsByJob.jobId}]`}
                 </Typography>
               }
-              isOpenedAtStart
+              isOpenedByParent
             >
               {logsByJob.logs.map((log) => (
                 <LogCard key={log.id} log={log} />

@@ -9,7 +9,8 @@ import { AppPathNames } from '../../../../shared/navigation/pathNames'
  * one leaving the app once resolved (`/../api`).
  *
  * ```ts
- * getRedirectionPathOnAuth('/logs?logSearch=text', 'https://example.com/app') // '/logs?logSearch=text'
+ * getRedirectionPathOnAuth('/logs?logSearch=text', 'https://example.com/app')
+ * // '/logs?logSearch=text'
  * getRedirectionPathOnAuth('/../api', 'https://example.com/app') // '/logs'
  * ```
  */

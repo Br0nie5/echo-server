@@ -5,18 +5,8 @@ import { renderComponent } from '../../../test/renderComponent'
 import { expectDateToBeSelected, getDateSection } from '../../../test/utils/dateSelector'
 import { DateSelector } from '../DateSelector'
 
-type RenderedComponent = ReturnType<typeof renderComponent>
-
 const label = 'From'
 const resetDateButtonLabel = 'Reset date'
-
-const expectDateToBeAllowed = (component: RenderedComponent): void => {
-  expect(component.getByRole('group', { name: label })).toBeValid()
-}
-
-const expectDateNotToBeAllowed = (component: RenderedComponent): void => {
-  expect(component.getByRole('group', { name: label })).toBeInvalid()
-}
 
 describe('DateSelector', () => {
   test('Should display the label', () => {
@@ -111,21 +101,21 @@ describe('DateSelector', () => {
     await user.click(getDateSection(component, 'Month'))
     await user.keyboard('03102026')
 
-    expectDateToBeAllowed(component)
+    expect(component.getByRole('group', { name: label })).toBeValid()
 
     await user.click(getDateSection(component, 'Day'))
     await user.keyboard('11')
 
-    expectDateNotToBeAllowed(component)
+    expect(component.getByRole('group', { name: label })).toBeInvalid()
 
     await user.click(getDateSection(component, 'Day'))
     await user.keyboard('04')
 
-    expectDateNotToBeAllowed(component)
+    expect(component.getByRole('group', { name: label })).toBeInvalid()
 
     await user.click(getDateSection(component, 'Day'))
     await user.keyboard('05')
 
-    expectDateToBeAllowed(component)
+    expect(component.getByRole('group', { name: label })).toBeValid()
   })
 })

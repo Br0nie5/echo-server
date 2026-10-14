@@ -18,9 +18,9 @@ const loginUrl = '/auth/login'
 const signUpUrl = '/auth/signup'
 
 const authCheckResultsByStatus: Record<AuthStatus['status'], AuthCheckResult> = {
-  authenticated: 'redirect',
-  unauthenticated: 'login',
-  needsSignUp: 'signUp'
+  authenticated: 'loggedIn',
+  unauthenticated: 'needsLogin',
+  needsSignUp: 'needsSignUp'
 }
 
 /**

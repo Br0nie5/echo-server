@@ -41,11 +41,11 @@ The bundle holds no configuration, so one build fits any deployment. The app rea
 | `LOGS_INITIAL_DATE_DAYS_AGO` | How many days back the logs start when the address gives no `fromDate`. At most the next one. |
 | `LOGS_MINIMAL_DATE_DAYS_AGO` | How many days back the start date can be set at most.                                         |
 
-`public/` holds the file of each mode. Whoever deploys the app writes `env.production.json` again.
+`public/` holds the file of each mode, and the build leaves `env.development.json` out. Whoever deploys the app writes `env.production.json` again.
 
-**The `<base>` of the page** says where the app is served, the path of a reverse proxy included. Whatever serves `index.html` adds it. `APP_URL` is that URL and `API_URL` is next to it, under `/api` (`parseAppUrls`), both on the host the user reached. The build therefore only uses relative URLs. In dev, a plugin of `vite.config.ts` adds the `<base>`.
+**The `<base>` of the page** says where the app is served, the path of a reverse proxy included. Whatever serves `index.html` adds it. `appUrl` is that URL and `apiUrl` is next to it, under `/api` (`parseAppUrls`), both on the host the user reached. The build therefore only uses relative URLs. In dev, a plugin of `vite.config.ts` adds the `<base>`.
 
-`parseFrontConfig` (`shared/config/utils/`) builds the `FrontConfig` from both, and `useConfig` gives it. The app shows an error page when the file cannot be loaded or when a variable is missing or not valid.
+`parseFrontConfig` (`shared/config/utils/`) builds the `FrontConfig` from both, its numbers of days ago turned into the dates the logs start at when the app loads (`logsInitialDate`, `logsMinimalDate` and `logsMaximalDate`), and `useConfig` gives it. The app shows an error page when the file cannot be loaded or when a variable is missing or not valid.
 
 ## Layout
 
@@ -76,7 +76,7 @@ Both modules have these four layers, `domain/` at the center:
 
 ## How it works
 
-**The filters are in the address.** The logs screen reads its start date, its levels and its search from the query params (`fromDate`, `logLevels`, `logSearch`) and writes them back at each change, so a filtered view can be bookmarked.
+**The filters are in the address.** The logs screen reads its start date, its levels and its search from the query params (`fromDate`, `logLevels`, `logSearch`) and writes them back at each change, so a filtered view can be bookmarked. A start date outside of the dates the picker offers, such as the one of an old bookmark, is moved to the closest one.
 
 **Only the start date is given to the API.** The levels and the search are applied in the app, in a Web Worker (`modules/logs/infra/workers/`), so changing a filter asks the API nothing and typing a search never freezes the page. The filtering is debounced, and one whose filters changed before it ended is cancelled.
 
@@ -95,7 +95,7 @@ The tests live in a `__tests__` directory next to the code they test. They never
 - **A module is tested through its screen**, with a few integration tests (`LogsScreen.test.tsx`, `AuthScreen.test.tsx`): a snapshot shows what the user sees, for each layout, and every other test is an action of the user (filtering, opening and closing a box, logging in), one test telling a whole feature.
 
   ```tsx
-  nock(mockConfig.API_URL).get('/auth/status').reply(200, { status: 'authenticated' })
+  nock(mockAppUrls.apiUrl).get('/auth/status').reply(200, { status: 'authenticated' })
 
   const screen = renderFakeRouterApp('/auth')
 

@@ -3,7 +3,7 @@ import { useCallback, useState, type SubmitEvent } from 'react'
 import { usePostLogin } from '../../application/usePostLogin'
 import { usePostSignUp } from '../../application/usePostSignUp'
 import { InvalidCredentialsError } from '../../domain/auth.repository'
-import type { AuthAlert, AuthenticationMode } from '../utils/types'
+import type { AuthAlert, AuthFormMode } from '../utils/authForm'
 
 import { useRedirectionOnAuth } from './useRedirectionOnAuth'
 
@@ -27,7 +27,7 @@ interface UseAuthFormReturnType {
  * field left empty, in which case nothing is sent, credentials that are those of no account, or a
  * request that failed. It is emptied by the next submit.
  */
-export const useAuthForm = (formMode: AuthenticationMode): UseAuthFormReturnType => {
+export const useAuthForm = (formMode: AuthFormMode): UseAuthFormReturnType => {
   const { redirectOnAuth } = useRedirectionOnAuth()
 
   const postLogin = usePostLogin()

@@ -1,22 +1,22 @@
 import { MemoryRouter, type Location } from 'react-router-dom'
 
-import type { FrontConfig } from '../../shared/config/frontConfig'
-import { mockConfig } from '../mocks/mockConfig'
+import { getPathnameWithoutTrailingSlashes } from '../../initializers/navigation/utils/getPathnameWithoutTrailingSlashes'
+import { mockAppUrls } from '../mocks/mockConfig'
 
 import { LocationObserver } from './LocationObserver'
 
 interface AppRouterWrapperProps {
-  /** The path, below `APP_URL`, with its query string, the router starts at. */
+  /** The path, below `appUrl`, with its query string, the router starts at. */
   initialPath: string
-  /** The config whose `APP_URL` the router is below: `mockConfig` when left out. */
-  config?: FrontConfig
-  /** Called with the location, below `APP_URL`, at first and each time it changes. */
+  /** The URL of the app, which the router is below: the one of `mockAppUrls` when left out. */
+  appUrl?: string
+  /** Called with the location, below `appUrl`, at first and each time it changes. */
   onLocationChange?: (location: Location) => void
   children: React.ReactNode
 }
 
 /**
- * Puts its children in a router whose `basename` is the path of `APP_URL`, as `AppRouter` does.
+ * Puts its children in a router whose `basename` is the path of `appUrl`, as `AppRouter` does.
  *
  * The router keeps its location in memory, so the address bar cannot be read: give
  * `onLocationChange` to check where the children navigate.
@@ -29,11 +29,11 @@ interface AppRouterWrapperProps {
  */
 export const AppRouterWrapper: React.FC<AppRouterWrapperProps> = ({
   initialPath,
-  config = mockConfig,
+  appUrl = mockAppUrls.appUrl,
   onLocationChange,
   children
 }) => {
-  const appPathname = new URL(config.APP_URL).pathname
+  const appPathname = getPathnameWithoutTrailingSlashes(new URL(appUrl))
 
   return (
     <MemoryRouter basename={appPathname} initialEntries={[`${appPathname}${initialPath}`]}>

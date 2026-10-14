@@ -1,12 +1,12 @@
 import type { LoginRequest, SignUpRequest } from '@echo/utilities'
 
 /**
- * What the auth screen does after the auth check.
+ * Whether the user is authenticated.
  *
- * `redirect` when the user is already authenticated, `login` when they are not, and `signUp` when
- * no account exists yet.
+ * `loggedIn` when they already are, `needsLogin` when they are not, and `needsSignUp` when no
+ * account exists yet.
  */
-export type AuthCheckResult = 'redirect' | 'login' | 'signUp'
+export type AuthCheckResult = 'loggedIn' | 'needsLogin' | 'needsSignUp'
 
 /** The error of a login refused because of the username or the password. */
 export class InvalidCredentialsError extends Error {
@@ -25,8 +25,8 @@ export interface AuthRepository {
   /**
    * Asks whether the user is authenticated.
    *
-   * Not being so is a regular result (`login` or `signUp`): any other failure is thrown. Aborting
-   * `signal` cancels the check.
+   * Not being so is a regular result (`needsLogin` or `needsSignUp`): any other failure is thrown.
+   * Aborting `signal` cancels the check.
    */
   checkAuthentication: (signal?: AbortSignal) => Promise<AuthCheckResult>
   /**

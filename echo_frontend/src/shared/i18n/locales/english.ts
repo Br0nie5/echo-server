@@ -1,4 +1,4 @@
-import type { TranslationKeys } from './types'
+import type { TranslationKeys } from './translationKeys'
 
 export const english: TranslationKeys = {
   auth: {
@@ -33,10 +33,12 @@ export const english: TranslationKeys = {
     error: 'Something went wrong.',
     refetchButton: 'Try again'
   },
-  utils: {
+  date: {
     today: 'Today',
-    yesterday: 'Yesterday',
-    searchPlaceholder: 'Search…',
-    searchButton: 'Search'
+    yesterday: 'Yesterday'
+  },
+  search: {
+    placeholder: 'Search…',
+    button: 'Search'
   }
 }

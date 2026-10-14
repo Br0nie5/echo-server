@@ -7,7 +7,7 @@ import { useApi } from './useApi'
 
 /** A request sent through `useSendApiRequest`. */
 interface ApiRequest<TParams = unknown, TBody = unknown> {
-  /** The path of the endpoint, below `API_URL`. */
+  /** The path of the endpoint, below `apiUrl`. */
   url: string
   method: string
   /** The query params. */

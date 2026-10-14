@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi, type Mock } from 'vitest'
+import type { Mock } from 'vitest'
 
 import { buildLog } from '../../../../../test/mocks/buildLog'
 import { createFilterLogs } from '../filterLogs'

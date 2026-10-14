@@ -3,9 +3,9 @@ import { apiRoutePrefix } from '@echo/utilities'
 /** Where the app and the API are reached, parsed by `parseAppUrls`. */
 export type AppUrls = {
   /** Where the app is served, without a trailing slash. */
-  APP_URL: string
+  appUrl: string
   /** Where the API is served. */
-  API_URL: string
+  apiUrl: string
 }
 
 /**
@@ -18,10 +18,10 @@ export type AppUrls = {
  *
  * ```ts
  * parseAppUrls('https://example.com/echo/app/')
- * // { APP_URL: 'https://example.com/echo/app', API_URL: 'https://example.com/echo/api' }
+ * // { appUrl: 'https://example.com/echo/app', apiUrl: 'https://example.com/echo/api' }
  * ```
  */
 export const parseAppUrls = (baseUri: string): AppUrls => ({
-  APP_URL: new URL('.', baseUri).href.replace(/\/+$/, ''),
-  API_URL: new URL(`..${apiRoutePrefix}`, baseUri).href
+  appUrl: new URL('.', baseUri).href.replace(/\/+$/, ''),
+  apiUrl: new URL(`..${apiRoutePrefix}`, baseUri).href
 })

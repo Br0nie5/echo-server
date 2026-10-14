@@ -7,13 +7,12 @@ export interface WindowSize {
 }
 
 /**
- * Gives the size of the window, kept up to date when it is resized.
- *
- * A window taller than it is wide counts as a small screen.
+ * Gives the size of the window, kept up to date when it is resized, and whether it is taller than
+ * it is wide (`isPortrait`).
  */
 export const useWindowSize = (): {
   windowSize: WindowSize
-  isSmallScreen: boolean
+  isPortrait: boolean
 } => {
   const [windowSize, setWindowSize] = useState<WindowSize>({
     width: window.innerWidth,
@@ -32,5 +31,5 @@ export const useWindowSize = (): {
     return (): void => window.removeEventListener('resize', handleResize)
   }, [])
 
-  return { windowSize, isSmallScreen: windowSize.width < windowSize.height }
+  return { windowSize, isPortrait: windowSize.width < windowSize.height }
 }

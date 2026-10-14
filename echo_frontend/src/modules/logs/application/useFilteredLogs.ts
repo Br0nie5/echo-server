@@ -1,5 +1,5 @@
 import type { Log, LogLevel, LogSearchFilter } from '@echo/utilities'
-import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import { keepPreviousData, useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { useDebounce } from 'use-debounce'
 
@@ -31,6 +31,6 @@ export const useFilteredLogs = (
     queryKey: ['filteredLogs', logsIdsKey, debouncedLevels, debouncedSearch],
     queryFn: ({ signal }) =>
       logsRepository.filterLogs(logs, debouncedLevels, debouncedSearch, signal),
-    placeholderData: (previousFilteredLogs) => previousFilteredLogs
+    placeholderData: keepPreviousData
   })
 }

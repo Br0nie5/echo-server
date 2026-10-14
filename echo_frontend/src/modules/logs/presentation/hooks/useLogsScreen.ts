@@ -4,13 +4,14 @@ import { useMemo } from 'react'
 
 import type { ControlledState } from '../../../../shared/types/controlledState'
 import { useGetLogs } from '../../application/useGetLogs'
-import { sortLogLevels } from '../utils/sortLogLevels'
+import { compareLogLevels } from '../utils/compareLogLevels'
 
 import { useLogsFilters } from './useLogsFilters'
 
 interface UseLogsScreenReturnType {
   logs: Log[] | undefined
   logsStatus: QueryStatus
+  isFetchingLogs: boolean
   refetchLogs: () => void
   logsFromDateState: ControlledState<Date>
   availableLogLevels: LogLevel[] | undefined
@@ -24,6 +25,9 @@ interface UseLogsScreenReturnType {
  *
  * Only the date is given to the API: the levels and the search are applied in the app (see
  * `useFilteredLogs`). The available levels are those of the fetched logs, plus the selected ones.
+ *
+ * While the logs of another date are fetched, `logs` are those of the previous date, and
+ * `isFetchingLogs` is `true`.
  */
 export const useLogsScreen = (): UseLogsScreenReturnType => {
   const { logsFromDateState, logLevelsFiltersState, logSearchState } = useLogsFilters()
@@ -31,6 +35,7 @@ export const useLogsScreen = (): UseLogsScreenReturnType => {
   const {
     data: logs,
     status: logsStatus,
+    isFetching: isFetchingLogs,
     refetch: refetchLogs
   } = useGetLogs({ fromDate: logsFromDateState.value.toISOString() })
 
@@ -43,7 +48,7 @@ export const useLogsScreen = (): UseLogsScreenReturnType => {
 
     const combinedLogLevels = Array.from(
       new Set([...logLevelsFromLogs, ...logLevelsFromFilters])
-    ).sort(sortLogLevels)
+    ).sort(compareLogLevels)
 
     return combinedLogLevels
   }, [logs, logLevelsFiltersState.value])
@@ -55,6 +60,7 @@ export const useLogsScreen = (): UseLogsScreenReturnType => {
   return {
     logs,
     logsStatus,
+    isFetchingLogs,
     refetchLogs,
     logsFromDateState,
     availableLogLevels,

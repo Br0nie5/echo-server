@@ -1,7 +1,7 @@
 import type { LogLevel } from '@echo/utilities'
 import { logSearchableKeys } from '@echo/utilities'
 import { Box, Stack, Typography } from '@mui/material'
-import { memo, useMemo } from 'react'
+import { memo } from 'react'
 
 import { DateSelector } from '../../../../shared/components/DateSelector'
 import { FilterChips } from '../../../../shared/components/FilterChips'
@@ -10,7 +10,6 @@ import { useConfig } from '../../../../shared/config/useConfig'
 import { useWindowSize } from '../../../../shared/hooks/useWindowSize'
 import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
 import type { ControlledState } from '../../../../shared/types/controlledState'
-import { getDateFromDaysAgo } from '../../../../shared/utils/getDateFromDaysAgo'
 
 type LogsScreenHeaderProps = {
   logsFromDateState: ControlledState<Date>
@@ -25,20 +24,10 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
   logLevelsFiltersState,
   logSearchState
 }) => {
-  const { serverName, LOGS_MINIMAL_DATE_DAYS_AGO, LOGS_MAXIMAL_DATE_DAYS_AGO } = useConfig()
+  const { serverName, logsMinimalDate, logsMaximalDate } = useConfig()
 
   const translation = useAppTranslation()
-  const { isSmallScreen } = useWindowSize()
-
-  const minimalDate = useMemo(
-    () => getDateFromDaysAgo(LOGS_MINIMAL_DATE_DAYS_AGO),
-    [LOGS_MINIMAL_DATE_DAYS_AGO]
-  )
-
-  const maximalDate = useMemo(
-    () => getDateFromDaysAgo(LOGS_MAXIMAL_DATE_DAYS_AGO),
-    [LOGS_MAXIMAL_DATE_DAYS_AGO]
-  )
+  const { isPortrait } = useWindowSize()
 
   return (
     <>
@@ -50,8 +39,8 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
       >
         <DateSelector
           label={translation('logs.from')}
-          minimalDate={minimalDate}
-          maximalDate={maximalDate}
+          minimalDate={logsMinimalDate}
+          maximalDate={logsMaximalDate}
           controlledState={logsFromDateState}
         />
       </Box>
@@ -60,22 +49,18 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
       </Typography>
       {!!availableLogLevels && availableLogLevels.length > 0 && (
         <Stack
-          direction={isSmallScreen ? 'column' : 'row'}
-          spacing={isSmallScreen ? 2 : 7}
+          direction={isPortrait ? 'column' : 'row'}
+          spacing={isPortrait ? 2 : 7}
           sx={{
             padding: 2,
-            justifyContent: isSmallScreen ? undefined : 'space-between'
+            justifyContent: isPortrait ? undefined : 'space-between'
           }}
         >
           <Box sx={{ mb: 3 }}>
             <Typography variant="h5" align="center" sx={{ mb: 3 }}>
               {translation('logs.filterByLevel')}
             </Typography>
-            <FilterChips
-              tags={availableLogLevels}
-              mode="multi-select"
-              controlledState={logLevelsFiltersState}
-            />
+            <FilterChips tags={availableLogLevels} controlledState={logLevelsFiltersState} />
           </Box>
           <SearchBar
             suggestions={logSearchableKeys}
@@ -91,8 +76,8 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
 /**
  * The header of the logs screen.
  *
- * It displays the picker of the date the logs start at, limited to the last
- * `LOGS_MINIMAL_DATE_DAYS_AGO` days, the name of the server and, once levels are available, the
+ * It displays the picker of the date the logs start at, between `logsMinimalDate` and
+ * `logsMaximalDate`, the name of the server and, once levels are available, the
  * level chips and the search bar.
  */
 export const LogsScreenHeader = memo(LogsScreenHeaderComponent)

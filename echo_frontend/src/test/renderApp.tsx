@@ -10,7 +10,7 @@ import { configJsonUrl } from '../initializers/config/ConfigProvider.tsx'
 import { AppRouter } from '../initializers/navigation/AppRouter.tsx'
 
 import { RoutePlaceholder } from './components/RoutePlaceholder.tsx'
-import { mockConfig, mockRawConfig } from './mocks/mockConfig.ts'
+import { mockAppUrls, mockRawConfig } from './mocks/mockConfig.ts'
 import { mockUrl } from './mocks/mockUrl.ts'
 
 interface RenderAppParams {
@@ -26,13 +26,13 @@ const openPage = (path: string, params?: RenderAppParams): void => {
     .get(configJsonUrl)
     .reply(params?.configStatus ?? 200, params?.rawConfig ?? mockRawConfig)
 
-  window.history.replaceState(null, '', `${new URL(mockConfig.APP_URL).pathname}${path}`)
+  window.history.replaceState(null, '', `${new URL(mockAppUrls.appUrl).pathname}${path}`)
 }
 
 /**
  * Renders the whole app, as the page does, opened at `path`.
  *
- * `path` is a path below `APP_URL`, with its query string (`'/logs?logSearch=text'`). Everything
+ * `path` is a path below `appUrl`, with its query string (`'/logs?logSearch=text'`). Everything
  * is real, the screens the app navigates to included: only the network is mocked, so mock the
  * requests of every screen it goes through. It is for what must look like the real app, such as a
  * snapshot: to test what a screen does, use `renderFakeRouterApp`.
@@ -41,7 +41,7 @@ const openPage = (path: string, params?: RenderAppParams): void => {
  * with a `findBy…` query.
  *
  * ```tsx
- * nock(mockConfig.API_URL).get('/logs').query(true).reply(200, logs)
+ * nock(mockAppUrls.apiUrl).get('/logs').query(true).reply(200, logs)
  *
  * const screen = renderRealRouterApp('/logs')
  *
@@ -64,7 +64,7 @@ export const renderRealRouterApp = (path: string, params?: RenderAppParams): Ren
  * the app went. Read the path the app is at with `getAppPath`.
  *
  * ```tsx
- * nock(mockConfig.API_URL).get('/auth/status').reply(200, { status: 'authenticated' })
+ * nock(mockAppUrls.apiUrl).get('/auth/status').reply(200, { status: 'authenticated' })
  *
  * const screen = renderFakeRouterApp('/auth')
  *

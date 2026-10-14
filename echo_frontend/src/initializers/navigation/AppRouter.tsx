@@ -5,7 +5,7 @@ import { useConfig } from '../../shared/config/useConfig'
 import { LoadingLayout } from '../../shared/layouts/LoadingLayout'
 import { AppPathNames } from '../../shared/navigation/pathNames'
 
-import { getCleanUrlPathname } from './utils/getCleanUrlPathname'
+import { getPathnameWithoutTrailingSlashes } from './utils/getPathnameWithoutTrailingSlashes'
 
 const AuthScreen = lazy(() =>
   import('../../modules/auth/presentation/AuthScreen').then((module) => ({
@@ -18,7 +18,7 @@ const LogsScreen = lazy(() =>
   }))
 )
 
-/** A route of the app: the path of a screen, below `APP_URL`, and that screen. */
+/** A route of the app: the path of a screen, below `appUrl`, and that screen. */
 interface AppRoute {
   path: string
   screen: React.ReactElement
@@ -34,7 +34,7 @@ const buildScreen = (route: AppRoute): React.ReactElement => route.screen
 /**
  * The routes of the app.
  *
- * They are under the pathname of `APP_URL`, the `basename` of the router: every path the app
+ * They are under the pathname of `appUrl`, the `basename` of the router: every path the app
  * navigates to (`AppPathNames`) is below it. The auth screen only exists with authentication, and
  * a path that is no screen redirects to the default one: the auth screen with authentication, the
  * logs screen without.
@@ -42,11 +42,11 @@ const buildScreen = (route: AppRoute): React.ReactElement => route.screen
  * `buildRouteElement` replaces what a route displays, its screen by default.
  */
 export const AppRouter: React.FC<AppRouterProps> = ({ buildRouteElement = buildScreen }) => {
-  const { APP_URL, hasAuthentication } = useConfig()
+  const { appUrl, hasAuthentication } = useConfig()
 
   const appPathname = useMemo(() => {
-    return getCleanUrlPathname(new URL(APP_URL))
-  }, [APP_URL])
+    return getPathnameWithoutTrailingSlashes(new URL(appUrl))
+  }, [appUrl])
 
   const routes: AppRoute[] = [
     ...(hasAuthentication ? [{ path: AppPathNames.auth, screen: <AuthScreen /> }] : []),

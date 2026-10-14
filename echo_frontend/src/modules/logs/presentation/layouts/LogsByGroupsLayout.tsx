@@ -11,28 +11,26 @@ import { LogsByJobsLayout } from './LogsByJobsLayout'
 
 type LogsByGroupsLayoutProps = {
   logs: Log[]
-  logsByDayId: string
 }
 
-const LogsByGroupsLayoutComponent: React.FC<LogsByGroupsLayoutProps> = ({ logs, logsByDayId }) => {
+const LogsByGroupsLayoutComponent: React.FC<LogsByGroupsLayoutProps> = ({ logs }) => {
   const translation = useAppTranslation()
-  const { windowSize, isSmallScreen } = useWindowSize()
-  const logsByGroups = useMemo(() => groupLogsByGroup(logs, logsByDayId), [logs, logsByDayId])
+  const { windowSize, isPortrait } = useWindowSize()
+  const logsByGroups = useMemo(() => groupLogsByGroup(logs), [logs])
 
   return (
-    <Stack direction={isSmallScreen ? 'column' : 'row'} sx={{ overflowX: 'auto' }} spacing={1}>
+    <Stack direction={isPortrait ? 'column' : 'row'} sx={{ overflowX: 'auto' }} spacing={1}>
       {logsByGroups.map((logsByGroup) => {
         return (
           <CollapsibleBox
             key={logsByGroup.id}
-            id={logsByGroup.id}
             title={
               <Typography variant="h6">
                 {logsByGroup.name ?? translation('logs.noGroupLabel')}
               </Typography>
             }
-            isOpenedAtStart
-            width={isSmallScreen ? undefined : `${windowSize.width / 2.5}px`}
+            isOpenedByParent
+            width={isPortrait ? undefined : `${windowSize.width / 2.5}px`}
           >
             <LogsByJobsLayout logs={logsByGroup.logs} />
           </CollapsibleBox>

@@ -3,10 +3,10 @@ import React, { memo } from 'react'
 
 import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
 import { useAuthForm } from '../hooks/useAuthForm'
-import type { AuthenticationMode } from '../utils/types'
+import type { AuthFormMode } from '../utils/authForm'
 
 type AuthFormLayoutProps = {
-  formMode: AuthenticationMode
+  formMode: AuthFormMode
 }
 
 const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({ formMode }) => {
@@ -70,5 +70,8 @@ const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({ formMode }) =>
   )
 }
 
-/** The credentials form, of the login or of the sign up of the first account depending on `formMode`. */
+/**
+ * The credentials form, of the login or of the sign up of the first account depending on
+ * `formMode`.
+ */
 export const AuthFormLayout = memo(AuthFormLayoutComponent)

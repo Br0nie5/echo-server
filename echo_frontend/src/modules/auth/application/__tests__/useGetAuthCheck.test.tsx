@@ -1,9 +1,8 @@
 import { waitFor } from '@testing-library/react'
 import nock from 'nock'
-import { afterEach, describe, expect, it } from 'vitest'
 
 import { queryClient } from '../../../../initializers/api/queryClient'
-import { mockConfig } from '../../../../test/mocks/mockConfig'
+import { mockAppUrls } from '../../../../test/mocks/mockConfig'
 import { renderAppHook } from '../../../../test/renderAppHook'
 import { useGetAuthCheck } from '../useGetAuthCheck'
 
@@ -22,7 +21,7 @@ describe('useGetAuthCheck', () => {
     queryClient.setDefaultOptions({
       queries: { ...testDefaultOptions.queries, gcTime: undefined }
     })
-    nock(mockConfig.API_URL).get('/auth/status').reply(200, { status: 'authenticated' })
+    nock(mockAppUrls.apiUrl).get('/auth/status').reply(200, { status: 'authenticated' })
 
     const { result } = renderAppHook(() => useGetAuthCheck())
     await waitFor(() => expect(result.current.isSuccess).toBe(true))

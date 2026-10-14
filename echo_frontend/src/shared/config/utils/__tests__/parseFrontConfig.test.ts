@@ -1,40 +1,52 @@
-import { mockConfig } from '../../../../test/mocks/mockConfig'
+import { buildMockConfig, mockAppUrls, mockRawConfig } from '../../../../test/mocks/mockConfig'
 import { parseFrontConfig } from '../parseFrontConfig'
 
-const BASE_URI = `${mockConfig.APP_URL}/`
+const BASE_URI = `${mockAppUrls.appUrl}/`
 
 const rawConfig = {
-  SERVER_NAME: mockConfig.serverName,
+  SERVER_NAME: mockRawConfig.SERVER_NAME,
   HAS_AUTHENTICATION: 'true',
   LOGS_INITIAL_DATE_DAYS_AGO: '2',
   LOGS_MINIMAL_DATE_DAYS_AGO: '14'
 }
 
+const NOW = new Date(2026, 3, 28, 10, 0, 0)
+const config = buildMockConfig(NOW)
+
 describe('parseFrontConfig', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(NOW)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   test('Should parse a fully provided config', () => {
-    expect(parseFrontConfig(rawConfig, BASE_URI)).toStrictEqual(mockConfig)
+    expect(parseFrontConfig(rawConfig, BASE_URI)).toStrictEqual(config)
   })
 
   test('Should read where the app and the API are reached from the base of the page', () => {
     expect(parseFrontConfig(rawConfig, 'https://example.com/echo/app/')).toStrictEqual({
-      ...mockConfig,
-      APP_URL: 'https://example.com/echo/app',
-      API_URL: 'https://example.com/echo/api'
+      ...config,
+      appUrl: 'https://example.com/echo/app',
+      apiUrl: 'https://example.com/echo/api'
     })
   })
 
   test('Should read a number of days ago written as a number', () => {
     expect(
       parseFrontConfig({ ...rawConfig, LOGS_INITIAL_DATE_DAYS_AGO: 2 }, BASE_URI)
-    ).toStrictEqual(mockConfig)
+    ).toStrictEqual(config)
   })
 
   test('Should accept the same initial and minimal number of days ago', () => {
     expect(
       parseFrontConfig({ ...rawConfig, LOGS_INITIAL_DATE_DAYS_AGO: '14' }, BASE_URI)
     ).toStrictEqual({
-      ...mockConfig,
-      LOGS_INITIAL_DATE_DAYS_AGO: 14
+      ...config,
+      logsInitialDate: new Date(2026, 3, 14)
     })
   })
 

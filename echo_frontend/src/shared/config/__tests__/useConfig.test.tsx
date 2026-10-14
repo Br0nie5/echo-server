@@ -1,33 +1,24 @@
-import { Box, Typography } from '@mui/material'
-import { render } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
 
-import { mockConfig } from '../../../test/mocks/mockConfig'
+import { buildMockConfig } from '../../../test/mocks/mockConfig'
 import { ConfigContext } from '../ConfigContext'
 import { useConfig } from '../useConfig'
 
-const TestConfigComponent: React.FC = () => {
-  const { serverName } = useConfig()
-
-  return (
-    <Box>
-      <Typography>{`${serverName}`}</Typography>
-    </Box>
-  )
-}
-
 describe('useConfig', () => {
-  test('Should display the config provided by ConfigContext', () => {
-    const component = render(
-      <ConfigContext.Provider value={{ config: mockConfig }}>
-        <TestConfigComponent />
-      </ConfigContext.Provider>
-    )
+  test('Should give the config of ConfigContext', () => {
+    const config = buildMockConfig(new Date(2026, 3, 28, 10, 0, 0))
 
-    expect(component.getByText(mockConfig.serverName)).toBeInTheDocument()
+    const { result } = renderHook(() => useConfig(), {
+      wrapper: ({ children }) => (
+        <ConfigContext.Provider value={{ config }}>{children}</ConfigContext.Provider>
+      )
+    })
+
+    expect(result.current).toBe(config)
   })
 
-  test('Should throw an error if there is no ConfigContext when trying to access the config', () => {
-    expect(() => render(<TestConfigComponent />)).toThrow(
+  test('Should throw outside of ConfigContext', () => {
+    expect(() => renderHook(() => useConfig())).toThrow(
       'useConfig must be used within ConfigProvider'
     )
   })

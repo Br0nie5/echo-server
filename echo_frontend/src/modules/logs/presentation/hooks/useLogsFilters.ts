@@ -4,7 +4,6 @@ import { useSearchParams } from 'react-router-dom'
 
 import { useConfig } from '../../../../shared/config/useConfig'
 import type { ControlledState } from '../../../../shared/types/controlledState'
-import { getDateFromDaysAgo } from '../../../../shared/utils/getDateFromDaysAgo'
 import { parseDateQueryParam } from '../utils/parseDateQueryParam'
 
 interface UseLogsFiltersReturnType {
@@ -18,16 +17,20 @@ interface UseLogsFiltersReturnType {
  * and written back to them at each change.
  *
  * Without a `fromDate` param, or with one that is not a date, the logs start
- * `LOGS_INITIAL_DATE_DAYS_AGO` days ago. A `logLevels` param that is not a level is left out.
+ * at `logsInitialDate`, and a `fromDate` before `logsMinimalDate` or after
+ * `logsMaximalDate` is moved to the closest one. A `logLevels` param that is not a level is
+ * left out.
  */
 export const useLogsFilters = (): UseLogsFiltersReturnType => {
-  const { LOGS_INITIAL_DATE_DAYS_AGO } = useConfig()
+  const { logsInitialDate, logsMinimalDate, logsMaximalDate } = useConfig()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [logsFromDate, setLogsFromDate] = useState<Date>(
     () =>
-      parseDateQueryParam(searchParams.get('fromDate')) ??
-      getDateFromDaysAgo(LOGS_INITIAL_DATE_DAYS_AGO)
+      parseDateQueryParam(searchParams.get('fromDate'), {
+        minimalDate: logsMinimalDate,
+        maximalDate: logsMaximalDate
+      }) ?? logsInitialDate
   )
   const logsFromDateState = useMemo<ControlledState<Date>>(
     () => ({ value: logsFromDate, setValue: setLogsFromDate }),

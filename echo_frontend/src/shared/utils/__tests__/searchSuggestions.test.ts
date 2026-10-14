@@ -1,5 +1,3 @@
-import { describe, expect, it } from 'vitest'
-
 import { applySearchSuggestion, getSearchSuggestions } from '../searchSuggestions'
 
 const suggestions = ['color', 'count', 'size']

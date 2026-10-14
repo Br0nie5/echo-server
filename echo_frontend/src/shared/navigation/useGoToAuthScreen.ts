@@ -8,7 +8,7 @@ import { AppPathNames } from './pathNames'
  * screen is the current page.
  *
  * The current page, when the function is called, is passed as the `redirect` query param, as a
- * path below `APP_URL`, where the auth screen sends the user back once authenticated.
+ * path below `appUrl`, where the auth screen sends the user back once authenticated.
  *
  * ```ts
  * const goToAuthScreen = useGoToAuthScreen()

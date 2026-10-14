@@ -12,12 +12,13 @@ import { AppRouterWrapper } from './components/AppRouterWrapper'
 
 /**
  * Renders `hook` inside the contexts of the app and a router whose `basename` is the path of
- * `APP_URL`, as `AppRouter` does.
+ * `appUrl`, as `AppRouter` does.
  *
  * It is for a hook that needs the config, the API or the router, tested on its own: the config is
- * `mockConfig`, or `params.configOverride`, given at once, without being loaded.
+ * `params.configOverride`, or the one `buildMockConfig` builds for the current date, given at once,
+ * without being loaded.
  *
- * `params.path` is the path, below `APP_URL`, the router starts at: the logs screen when left out.
+ * `params.path` is the path, below `appUrl`, the router starts at: the logs screen when left out.
  * To check where the hook navigates, give `params.onLocationChange`: it is called with the location
  * at first and each time it changes.
  *
@@ -38,7 +39,7 @@ export const renderAppHook = <Result,>(
       <AppContextsWrapper config={params?.configOverride}>
         <AppRouterWrapper
           initialPath={params?.path ?? AppPathNames.logs}
-          config={params?.configOverride}
+          appUrl={params?.configOverride?.appUrl}
           onLocationChange={params?.onLocationChange}
         >
           {children}

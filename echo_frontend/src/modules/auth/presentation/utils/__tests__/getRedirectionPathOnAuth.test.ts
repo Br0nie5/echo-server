@@ -1,5 +1,3 @@
-import { describe, expect, test } from 'vitest'
-
 import { getRedirectionPathOnAuth } from '../getRedirectionPathOnAuth'
 
 const appUrl = 'https://example.com/echo/app'

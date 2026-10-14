@@ -2,7 +2,10 @@ import { isLogMatchingLevels, isLogMatchingSearch, type Log } from '@echo/utilit
 
 import type { FilterWorkerAnswer, FilterWorkerRequest } from './filterWorkerMessages'
 
-/** Handles one request of the filter worker, giving the answer to send back, if the request has one. */
+/**
+ * Handles one request of the filter worker, giving the answer to send back, if the request has
+ * one.
+ */
 type FilterWorkerRequestHandler = (request: FilterWorkerRequest) => FilterWorkerAnswer | undefined
 
 /**

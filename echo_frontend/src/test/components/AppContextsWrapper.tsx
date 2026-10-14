@@ -3,10 +3,13 @@ import axios from 'axios'
 import { ApiContext } from '../../shared/api/ApiContext'
 import { ConfigContext } from '../../shared/config/ConfigContext'
 import type { FrontConfig } from '../../shared/config/frontConfig'
-import { mockConfig } from '../mocks/mockConfig'
+import { buildMockConfig } from '../mocks/mockConfig'
 
 interface AppContextsWrapperProps {
-  /** The config given to the children: `mockConfig` when left out. */
+  /**
+   * The config given to the children: when left out, the one `buildMockConfig` builds for the
+   * current date, the fake one when the test sets it.
+   */
   config?: FrontConfig
   children: React.ReactNode
 }
@@ -18,10 +21,10 @@ interface AppContextsWrapperProps {
  * It is for a hook, which cannot wait for the config.
  */
 export const AppContextsWrapper: React.FC<AppContextsWrapperProps> = ({
-  config = mockConfig,
+  config = buildMockConfig(new Date()),
   children
 }) => {
-  const axiosInstance = axios.create({ baseURL: config.API_URL, withCredentials: true })
+  const axiosInstance = axios.create({ baseURL: config.apiUrl, withCredentials: true })
 
   return (
     <ConfigContext.Provider value={{ config }}>

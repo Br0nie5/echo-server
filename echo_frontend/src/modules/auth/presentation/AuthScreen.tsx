@@ -33,7 +33,7 @@ const AuthScreenComponent: React.FC = () => {
     )
   }
 
-  if (authCheckResult === 'redirect') {
+  if (authCheckResult === 'loggedIn') {
     return (
       <PageLayout header={title}>
         <RedirectLayout />
@@ -43,7 +43,7 @@ const AuthScreenComponent: React.FC = () => {
 
   return (
     <PageLayout header={title}>
-      <AuthFormLayout formMode={authCheckResult} />
+      <AuthFormLayout formMode={authCheckResult === 'needsLogin' ? 'login' : 'signUp'} />
     </PageLayout>
   )
 }

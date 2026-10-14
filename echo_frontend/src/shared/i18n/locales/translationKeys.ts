@@ -32,10 +32,12 @@ export interface TranslationKeys {
     error: string
     refetchButton: string
   }
-  utils: {
+  date: {
     today: string
     yesterday: string
-    searchPlaceholder: string
-    searchButton: string
+  }
+  search: {
+    placeholder: string
+    button: string
   }
 }

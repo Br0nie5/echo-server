@@ -3,7 +3,7 @@ import { act, cleanup, waitFor, type RenderResult } from '@testing-library/react
 import userEvent from '@testing-library/user-event'
 import nock from 'nock'
 
-import { mockConfig } from '../../../../test/mocks/mockConfig'
+import { mockAppUrls } from '../../../../test/mocks/mockConfig'
 import { stubFilterWorker } from '../../../../test/mocks/stubFilterWorker'
 import { renderFakeRouterApp, renderRealRouterApp } from '../../../../test/renderApp'
 import { appTranslation } from '../../../../test/utils/appTranslation'
@@ -23,11 +23,13 @@ const TWO_DAYS_AGO = '2026-04-26T00:00:00.000Z'
 const TWO_DAYS_AGO_TITLE = 'Sunday, 26 April 2026'
 
 const mockLogsRequest = (fromDate: string): nock.Interceptor =>
-  nock(mockConfig.API_URL).get('/logs').query({ fromDate })
+  nock(mockAppUrls.apiUrl).get('/logs').query({ fromDate })
 
 const getLogsFrom = (fromDate: string): Log[] => logsMock.filter((log) => log.date >= fromDate)
 
-/** The path of the logs screen with `query`, its query params in the order the screen writes them. */
+/**
+ * The path of the logs screen with `query`, its query params in the order the screen writes them.
+ */
 const getLogsPath = (query: string[][]): string => `/logs?${new URLSearchParams(query)}`
 
 /**
@@ -121,7 +123,7 @@ describe('LogsScreen', () => {
       )
     })
 
-    test('Should filter the logs by the search', async () => {
+    test('Should filter the logs by the search, and say when none matches', async () => {
       const user = userEvent.setup()
 
       const shopGroupSearch = 'groupName:shop'
@@ -155,6 +157,16 @@ describe('LogsScreen', () => {
           ['logSearch', `${shopGroupSearch} ${withoutCouldNotSearch}`]
         ])
       )
+
+      await user.clear(screen.getByDisplayValue(`${shopGroupSearch} ${withoutCouldNotSearch}`))
+      await user.type(
+        screen.getByPlaceholderText(appTranslation('logs.searchPlaceholder')),
+        'groupName:payroll'
+      )
+      await user.keyboard('{Enter}')
+
+      expect(await screen.findByText(appTranslation('query.noData'))).toBeInTheDocument()
+      expect(screen.queryByText(shopGroupTestLogMessage)).not.toBeInTheDocument()
     })
 
     test('Should filter the logs by the date', async () => {
@@ -170,7 +182,7 @@ describe('LogsScreen', () => {
 
       expectDateToBeSelected(screen, new Date(YESTERDAY))
 
-      expect(screen.getByText(appTranslation('utils.yesterday'))).toBeInTheDocument()
+      expect(screen.getByText(appTranslation('date.yesterday'))).toBeInTheDocument()
       expect(screen.queryByText(TWO_DAYS_AGO_TITLE)).not.toBeInTheDocument()
 
       mockLogsRequest(TODAY).reply(200, [])
@@ -184,7 +196,7 @@ describe('LogsScreen', () => {
       expect(getAppPath()).toBe(getLogsPath([['fromDate', TODAY]]))
 
       expect(screen.queryByText(todayTestLogMessage)).not.toBeInTheDocument()
-      expect(screen.queryByText(appTranslation('utils.yesterday'))).not.toBeInTheDocument()
+      expect(screen.queryByText(appTranslation('date.yesterday'))).not.toBeInTheDocument()
     })
   })
 
@@ -200,11 +212,11 @@ describe('LogsScreen', () => {
 
       expect(screen.queryByText(yesterdayLogMessage)).not.toBeInTheDocument()
 
-      await user.click(screen.getByText(appTranslation('utils.yesterday')))
+      await user.click(screen.getByText(appTranslation('date.yesterday')))
 
       expect(screen.getByText(yesterdayLogMessage)).toBeInTheDocument()
 
-      await user.click(screen.getByText(appTranslation('utils.today')))
+      await user.click(screen.getByText(appTranslation('date.today')))
 
       expect(screen.queryByText(todayLogMessage)).not.toBeInTheDocument()
       expect(screen.queryByText(otherTodayLogMessage)).not.toBeInTheDocument()

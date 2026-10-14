@@ -1,12 +1,11 @@
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, vi } from 'vitest'
 
 import { renderComponent } from '../../../test/renderComponent'
 import { appTranslation } from '../../../test/utils/appTranslation'
 import { QueryFallbackLayout } from '../QueryFallbackLayout'
 
 describe('QueryFallbackLayout', () => {
-  it('Should render a CircularProgress when status is pending', () => {
+  it('Should render a spinner when status is pending', () => {
     const screen = renderComponent(<QueryFallbackLayout status="pending" refetch={() => {}} />)
 
     const spinner = screen.getByRole('progressbar')

@@ -279,7 +279,7 @@ The logs are filtered in a **Web Worker**, so typing a search never freezes the 
 ### The `auth` module
 
 - **`domain/`**: `AuthRepository` (`checkAuthentication`, `login`, `signUp`), with what it gives and throws, `AuthCheckResult` and `InvalidCredentialsError`.
-- **`infra/`**: `useAuthRepository`, on top of the auth endpoints. It turns the status the API answers into the `AuthCheckResult` of the auth check (`redirect`, `login` or `signUp`) and the 401 of a refused login into the `InvalidCredentialsError`, so no layer above it reads an HTTP status or an axios error.
+- **`infra/`**: `useAuthRepository`, on top of the auth endpoints. It turns the status the API answers into the `AuthCheckResult` of the auth check (`loggedIn`, `needsLogin` or `needsSignUp`) and the 401 of a refused login into the `InvalidCredentialsError`, so no layer above it reads an HTTP status or an axios error.
 - **`application/`**: `useGetAuthCheck`, and the two mutations, `usePostLogin` and `usePostSignUp`.
 - **`presentation/`**: `AuthScreen` shows one of two layouts after the auth check. `AuthFormLayout` is the credentials form, of the login or of the sign-up. `RedirectLayout`, when the user is already authenticated, redirects at once.
 
@@ -291,7 +291,7 @@ Once authenticated, the user goes to the `redirect` query param, only when it is
 
 `initializers/` sets them up: `ConfigProvider` loads the config, `ApiProvider` creates the API client, `queryClient` is the TanStack Query client, `AppProviders` nests them in the theme, and `AppRouter` holds the routes. With `App.tsx`, the one file importing them, they are the composition root, which only `main.tsx` imports.
 
-**Navigation.** The app only navigates inside itself, with React Router, whose `basename` is the path of `APP_URL`. When the API answers a 401, the user is not authenticated: `useSendApiRequest` navigates to the auth screen, whatever the request, with the page it was on as the `redirect` query param. It does not on the auth screen itself, where a 401 is the answer the auth endpoints give.
+**Navigation.** The app only navigates inside itself, with React Router, whose `basename` is the path of `appUrl`. When the API answers a 401, the user is not authenticated: `useSendApiRequest` navigates to the auth screen, whatever the request, with the page it was on as the `redirect` query param. It does not on the auth screen itself, where a 401 is the answer the auth endpoints give.
 
 **Configuration.** The app reads its variables from `env.<mode>.json`, fetched when it loads, and where it is reached from the `<base>` of its page (`parseAppUrls`). See [Frontend variables](configuration.md#frontend-variables).
 

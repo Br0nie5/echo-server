@@ -18,15 +18,15 @@ interface UseRedirectionOnAuthReturnType {
  * app, otherwise the logs screen.
  */
 export const useRedirectionOnAuth = (): UseRedirectionOnAuthReturnType => {
-  const { APP_URL } = useConfig()
+  const { appUrl } = useConfig()
   const navigate = useNavigate()
 
   const [searchParams] = useSearchParams()
-  const redirectionPath = getRedirectionPathOnAuth(searchParams.get('redirect'), APP_URL)
+  const redirectionPath = getRedirectionPathOnAuth(searchParams.get('redirect'), appUrl)
 
   const redirectOnAuth = useCallback((): void => {
     void navigate(redirectionPath, { replace: true })
   }, [navigate, redirectionPath])
 
-  return { redirectOnAuth, redirectionUrl: `${APP_URL}${redirectionPath}` }
+  return { redirectOnAuth, redirectionUrl: `${appUrl}${redirectionPath}` }
 }

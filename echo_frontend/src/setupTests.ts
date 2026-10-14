@@ -2,12 +2,12 @@ import '@testing-library/jest-dom/vitest'
 import nock from 'nock'
 
 import { queryClient } from './initializers/api/queryClient'
-import { mockConfig } from './test/mocks/mockConfig'
+import { mockAppUrls } from './test/mocks/mockConfig'
 
 // Whatever serves index.html gives it the <base> the app reads where it is reached from: the page
 // of the tests gets the one of the test config.
 const base = document.createElement('base')
-base.href = `${mockConfig.APP_URL}/`
+base.href = `${mockAppUrls.appUrl}/`
 document.head.append(base)
 
 // A request no nock mock answers fails, instead of reaching the network.

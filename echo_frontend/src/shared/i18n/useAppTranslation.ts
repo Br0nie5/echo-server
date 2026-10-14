@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import type { TranslationKeys } from './locales/types'
+import type { TranslationKeys } from './locales/translationKeys'
 
 type DotPrefix<T extends string> = T extends '' ? '' : `${T}.`
 

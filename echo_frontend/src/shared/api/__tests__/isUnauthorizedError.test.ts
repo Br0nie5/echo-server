@@ -1,5 +1,4 @@
 import { AxiosError, AxiosHeaders } from 'axios'
-import { describe, expect, test } from 'vitest'
 
 import { isUnauthorizedError } from '../isUnauthorizedError'
 

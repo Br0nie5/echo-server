@@ -1,10 +1,8 @@
-import { describe, it, expect } from 'vitest'
-
 import { renderComponent } from '../../../test/renderComponent'
 import { PageLayout } from '../PageLayout'
 
 describe('PageLayout', () => {
-  it('Should render the title element', () => {
+  it('Should render the header', () => {
     const title = 'My Title'
     const screen = renderComponent(<PageLayout header={<h1>{title}</h1>} />)
 

@@ -4,7 +4,7 @@ import userEvent, { type UserEvent } from '@testing-library/user-event'
 import nock from 'nock'
 
 import type { TranslationKey } from '../../../../shared/i18n/useAppTranslation'
-import { mockConfig } from '../../../../test/mocks/mockConfig'
+import { mockAppUrls } from '../../../../test/mocks/mockConfig'
 import { renderFakeRouterApp, renderRealRouterApp } from '../../../../test/renderApp'
 import { appTranslation } from '../../../../test/utils/appTranslation'
 import { getRouteTestId } from '../../../../test/utils/getRouteTestId'
@@ -17,15 +17,15 @@ const notLoggedInStatus: AuthStatus = { status: 'unauthenticated' }
 const noAccountYetStatus: AuthStatus = { status: 'needsSignUp' }
 
 const mockAuthStatusRequest = (statusCode: number, answer: unknown): void => {
-  nock(mockConfig.API_URL).get('/auth/status').reply(statusCode, answer)
+  nock(mockAppUrls.apiUrl).get('/auth/status').reply(statusCode, answer)
 }
 
 const mockLoginRequest = (statusCode: number, answer?: object): void => {
-  nock(mockConfig.API_URL).post('/auth/login', credentials).reply(statusCode, answer)
+  nock(mockAppUrls.apiUrl).post('/auth/login', credentials).reply(statusCode, answer)
 }
 
 const mockSignUpRequest = (statusCode: number, answer?: object): void => {
-  nock(mockConfig.API_URL).post('/auth/signup', credentials).reply(statusCode, answer)
+  nock(mockAppUrls.apiUrl).post('/auth/signup', credentials).reply(statusCode, answer)
 }
 
 const typeCredentials = async (user: UserEvent, screen: RenderResult): Promise<void> => {
@@ -124,5 +124,19 @@ describe('AuthScreen', () => {
     await submit(user, screen, 'auth.signUp.button')
 
     expect(await screen.findByTestId(getRouteTestId('/logs'))).toBeInTheDocument()
+  })
+
+  test('Should tell the user their sign up was refused when an account already exists', async () => {
+    const user = userEvent.setup()
+    mockAuthStatusRequest(200, noAccountYetStatus)
+
+    const screen = renderFakeRouterApp('/auth')
+
+    mockSignUpRequest(403, { statusCode: 403, message: 'An account already exists.' })
+    await typeCredentials(user, screen)
+    await submit(user, screen, 'auth.signUp.button')
+
+    expect(await screen.findByText(appTranslation('auth.error'))).toBeInTheDocument()
+    expect(screen.queryByTestId(getRouteTestId('/logs'))).not.toBeInTheDocument()
   })
 })

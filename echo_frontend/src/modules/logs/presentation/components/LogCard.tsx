@@ -1,22 +1,8 @@
-import type { Log, LogLevel } from '@echo/utilities'
-import { Card, CardContent, Typography, useTheme, type Theme } from '@mui/material'
+import type { Log } from '@echo/utilities'
+import { Card, CardContent, Typography, useTheme } from '@mui/material'
 import React, { memo } from 'react'
 
-import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
-import { formatDate } from '../../../../shared/utils/formatDate'
-
-const getLogLevelBackgroundColor = (logLevel: LogLevel, theme: Theme): string => {
-  switch (logLevel) {
-    case 'SUCCESS':
-      return theme.palette.success.main
-    case 'INFO':
-      return theme.palette.info.main
-    case 'WARNING':
-      return theme.palette.warning.main
-    case 'ERROR':
-      return theme.palette.error.main
-  }
-}
+import { formatDateTime } from '../../../../shared/utils/formatDates'
 
 interface LogCardProps {
   log: Log
@@ -24,16 +10,15 @@ interface LogCardProps {
 
 const LogCardComponent: React.FC<LogCardProps> = ({ log }) => {
   const theme = useTheme()
-  const translation = useAppTranslation()
 
-  const formattedDate = formatDate(new Date(log.date), 'dateTime', translation)
+  const formattedDate = formatDateTime(new Date(log.date))
   const entryLogTitle = `${formattedDate} - ${log.level}`
 
   return (
     <Card sx={{ marginBottom: 2 }}>
       <CardContent
         sx={{
-          backgroundColor: getLogLevelBackgroundColor(log.level, theme),
+          backgroundColor: theme.palette.logLevelBackground[log.level],
           color: theme.palette.text.primary,
           borderRadius: 2,
           padding: 2

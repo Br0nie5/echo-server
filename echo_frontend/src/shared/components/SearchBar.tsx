@@ -9,7 +9,7 @@ import {
   Stack,
   TextField
 } from '@mui/material'
-import React, { memo } from 'react'
+import React, { memo, useState } from 'react'
 
 import { useSearchBar } from '../hooks/useSearchBar'
 import { useWindowSize } from '../hooks/useWindowSize'
@@ -31,33 +31,30 @@ const SearchBarComponent: React.FC<SearchBarProps> = ({
   controlledState
 }) => {
   const translation = useAppTranslation()
-  const { isSmallScreen } = useWindowSize()
+  const { isPortrait } = useWindowSize()
+
+  const [anchorElement, setAnchorElement] = useState<HTMLDivElement | null>(null)
 
   const {
-    anchorElement,
-    setAnchorElement,
-    handleSubmit,
-    updateShowSuggestions,
     inputValue,
     setInputValue,
+    submit,
     handleKeyDown,
-    showSuggestions,
-    filteredSuggestions,
-    setShowSuggestions,
-    suggestionIndex,
+    matchingSuggestions,
+    areSuggestionsOpen,
+    highlightedSuggestionIndex,
+    openSuggestions,
+    closeSuggestions,
     applySuggestion
   } = useSearchBar({ suggestions, controlledState })
 
   return (
     <Box sx={{ flex: 1, alignContent: 'center' }}>
-      <form
-        onSubmit={handleSubmit}
-        onClick={() => updateShowSuggestions(filteredSuggestions.length)}
-      >
+      <form onSubmit={submit} onClick={openSuggestions}>
         <Stack
-          direction={isSmallScreen ? 'column' : 'row'}
-          spacing={isSmallScreen ? 2 : 7}
-          sx={{ justifyContent: isSmallScreen ? undefined : 'space-between' }}
+          direction={isPortrait ? 'column' : 'row'}
+          spacing={isPortrait ? 2 : 7}
+          sx={{ justifyContent: isPortrait ? undefined : 'space-between' }}
         >
           <Box ref={setAnchorElement} sx={{ flex: 1 }}>
             <TextField
@@ -65,7 +62,7 @@ const SearchBarComponent: React.FC<SearchBarProps> = ({
               value={inputValue}
               onChange={(event) => setInputValue(event.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={placeholder ?? translation('utils.searchPlaceholder')}
+              placeholder={placeholder ?? translation('search.placeholder')}
             />
           </Box>
           <Button
@@ -76,26 +73,26 @@ const SearchBarComponent: React.FC<SearchBarProps> = ({
               alignSelf: 'center'
             }}
           >
-            {translation('utils.searchButton')}
+            {translation('search.button')}
           </Button>
         </Stack>
       </form>
       <Popper
-        open={showSuggestions}
+        open={areSuggestionsOpen}
         anchorEl={anchorElement}
         placement="bottom-start"
         style={{ width: anchorElement?.offsetWidth }}
       >
-        <ClickAwayListener onClickAway={() => setShowSuggestions(false)}>
+        <ClickAwayListener onClickAway={closeSuggestions}>
           <Paper>
             <MenuList>
-              {filteredSuggestions.map((option, index) => (
+              {matchingSuggestions.map((suggestion, index) => (
                 <MenuItem
-                  key={option}
-                  selected={index === suggestionIndex}
-                  onClick={() => applySuggestion(option)}
+                  key={suggestion}
+                  selected={index === highlightedSuggestionIndex}
+                  onClick={() => applySuggestion(suggestion)}
                 >
-                  {option}:
+                  {suggestion}:
                 </MenuItem>
               ))}
             </MenuList>

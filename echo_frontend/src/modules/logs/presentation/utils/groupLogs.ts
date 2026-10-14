@@ -1,6 +1,6 @@
 import type { Log } from '@echo/utilities'
 
-import type { LogsByDay, LogsByGroup, LogsByJob } from './types'
+import type { LogsByDay, LogsByGroup, LogsByJob } from './logsGroups'
 
 /** Groups the logs sharing the same id, in order of first appearance. */
 const groupLogs = <TGroup extends { logs: Log[] }>(
@@ -51,14 +51,13 @@ export const groupLogsByDay = (logs: Log[]): LogsByDay[] =>
 /**
  * Groups the logs by group name, newest first.
  *
- * `parentId` keeps the ids of the groups unique across the boxes they are displayed in, the days
- * for example. The logs without group name make one group, whose `name` is `undefined`.
+ * The logs without group name make one group, whose `name` is `undefined`.
  */
-export const groupLogsByGroup = (logs: Log[], parentId: string): LogsByGroup[] =>
+export const groupLogsByGroup = (logs: Log[]): LogsByGroup[] =>
   sortGroupsByNewestFirstLog(
     groupLogs<LogsByGroup>(
       logs,
-      (log) => `${parentId} - ${log.groupName ?? ''}`,
+      (log) => log.groupName ?? '',
       (id, log) => ({ id, name: log.groupName, logs: [log] })
     )
   )
@@ -66,12 +65,13 @@ export const groupLogsByGroup = (logs: Log[], parentId: string): LogsByGroup[] =
 /**
  * Groups the logs by job, newest first.
  *
- * A job is a run of consecutive logs with the same job id and the same location name.
+ * A job is a run of consecutive logs with the same job id and the same location name. Its id is
+ * the one of its first log.
  */
 export const groupLogsByJob = (logs: Log[]): LogsByJob[] => {
   const logsByJobs: LogsByJob[] = []
 
-  logs.forEach((log, logIndex) => {
+  logs.forEach((log) => {
     const previousLogsByJob = logsByJobs.at(-1)
 
     if (
@@ -84,7 +84,7 @@ export const groupLogsByJob = (logs: Log[]): LogsByJob[] => {
     }
 
     logsByJobs.push({
-      id: `${logIndex} - ${log.locationName} - ${log.jobId}`,
+      id: log.id,
       locationName: log.locationName,
       jobId: log.jobId,
       logs: [log]

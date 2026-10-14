@@ -13,6 +13,7 @@ const LogsScreenComponent: React.FC = () => {
   const {
     logs,
     logsStatus,
+    isFetchingLogs,
     refetchLogs,
     logsFromDateState,
     availableLogLevels,
@@ -46,6 +47,7 @@ const LogsScreenComponent: React.FC = () => {
     <PageLayout header={header}>
       <FilteredLogsLayout
         logs={logs}
+        isFetchingLogs={isFetchingLogs}
         logLevelsFilters={logLevelsFiltersState.value}
         logSearchFilters={logSearchFilters}
       />

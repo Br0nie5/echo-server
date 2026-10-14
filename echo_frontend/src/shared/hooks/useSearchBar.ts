@@ -1,4 +1,4 @@
-import { useMemo, useState, type Dispatch, type SetStateAction } from 'react'
+import { useMemo, useState } from 'react'
 
 import type { ControlledState } from '../types/controlledState'
 import { applySearchSuggestion, getSearchSuggestions } from '../utils/searchSuggestions'
@@ -6,121 +6,137 @@ import { applySearchSuggestion, getSearchSuggestions } from '../utils/searchSugg
 import { useSyncedState } from './useSyncedState'
 
 /** No suggestion highlighted. */
-const SUGGESTION_DEFAULT_INDEX = -1
+const NO_HIGHLIGHTED_SUGGESTION_INDEX = -1
 
 interface UseSearchBarParams {
+  /** The keys to suggest, as `SearchBar` takes them. */
   suggestions?: readonly string[]
+  /** The submitted search, held by the parent. */
   controlledState?: ControlledState<string>
 }
 
 interface UseSearchBarReturnType {
-  anchorElement: HTMLDivElement | null
-  setAnchorElement: (node: HTMLDivElement | null) => void
-  handleSubmit: (event: React.FormEvent) => void
-  updateShowSuggestions: (filteredSuggestionsLength: number) => void
+  /** The text being typed. */
   inputValue: string
-  setInputValue: Dispatch<SetStateAction<string>>
+  /** Replaces the text being typed. */
+  setInputValue: (inputValue: string) => void
+  /** Gives the text being typed to `controlledState`, and closes the suggestions. */
+  submit: (event: React.FormEvent) => void
+  /**
+   * Moves through the suggestions with the arrows, applies one with Enter, closes them with
+   * Escape.
+   */
   handleKeyDown: (event: React.KeyboardEvent) => void
-  showSuggestions: boolean
-  filteredSuggestions: string[]
-  setShowSuggestions: Dispatch<SetStateAction<boolean>>
-  suggestionIndex: number
-  applySuggestion: (option: string) => void
+  /** The suggestions matching the last word of the text being typed. */
+  matchingSuggestions: string[]
+  /** Whether the suggestions are displayed. */
+  areSuggestionsOpen: boolean
+  /** The position of the highlighted suggestion, -1 when none is. */
+  highlightedSuggestionIndex: number
+  /** Displays the suggestions, when some match. */
+  openSuggestions: () => void
+  /** Hides the suggestions. */
+  closeSuggestions: () => void
+  /**
+   * Replaces the last word of the text being typed with `suggestion`, and closes the
+   * suggestions.
+   */
+  applySuggestion: (suggestion: string) => void
 }
 
 /**
- * Gives the state and the keyboard handling of the search bar: the input, the list of suggestions
- * (arrows to move, Enter to apply, Escape to close), and the submit.
+ * Gives the state and the keyboard handling of the search bar: the text being typed, its
+ * suggestions and the submit.
  *
- * The input holds the text being typed. `controlledState` is the submitted search: submitting gives
- * it the text of the input, and the input takes its value back whenever it changes.
+ * The suggestions open each time the ones matching the text change, as long as there are some, and
+ * none is highlighted then. `controlledState` is the submitted search: submitting gives it the text
+ * being typed, and that text takes its value back whenever it changes.
+ *
+ * ```ts
+ * const { inputValue, setInputValue, submit, handleKeyDown } = useSearchBar({ controlledState })
+ * ```
  */
 export const useSearchBar = ({
   suggestions,
   controlledState
 }: UseSearchBarParams): UseSearchBarReturnType => {
-  const submittedSearch = controlledState?.value ?? ''
+  const [inputValue, setInputValue] = useSyncedState(controlledState?.value ?? '')
 
-  const [inputValue, setInputValue] = useSyncedState(submittedSearch)
+  const matchingSuggestions = useMemo(
+    () => (suggestions ? getSearchSuggestions(inputValue, suggestions) : []),
+    [inputValue, suggestions]
+  )
 
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const updateShowSuggestions = (filteredSuggestionsLength: number): void =>
-    setShowSuggestions(filteredSuggestionsLength > 0)
+  const [areSuggestionsOpen, setAreSuggestionsOpen] = useState(false)
+  const [highlightedSuggestionIndex, setHighlightedSuggestionIndex] = useState(
+    NO_HIGHLIGHTED_SUGGESTION_INDEX
+  )
 
-  const [suggestionIndex, setSuggestionIndex] = useState(SUGGESTION_DEFAULT_INDEX)
+  const openSuggestions = (): void => setAreSuggestionsOpen(matchingSuggestions.length > 0)
+  const closeSuggestions = (): void => setAreSuggestionsOpen(false)
 
-  const [anchorElement, setAnchorElement] = useState<HTMLDivElement | null>(null)
+  const [previousMatchingSuggestions, setPreviousMatchingSuggestions] =
+    useState(matchingSuggestions)
 
-  const filteredSuggestions = useMemo(() => {
-    return suggestions ? getSearchSuggestions(inputValue, suggestions) : []
-  }, [inputValue, suggestions])
-
-  const [previousFilteredSuggestions, setPreviousFilteredSuggestions] =
-    useState(filteredSuggestions)
-
-  if (filteredSuggestions !== previousFilteredSuggestions) {
-    setPreviousFilteredSuggestions(filteredSuggestions)
-    setSuggestionIndex(SUGGESTION_DEFAULT_INDEX)
-    updateShowSuggestions(filteredSuggestions.length)
+  if (matchingSuggestions !== previousMatchingSuggestions) {
+    setPreviousMatchingSuggestions(matchingSuggestions)
+    setHighlightedSuggestionIndex(NO_HIGHLIGHTED_SUGGESTION_INDEX)
+    setAreSuggestionsOpen(matchingSuggestions.length > 0)
   }
 
-  const handleSubmit = (event: React.FormEvent): void => {
+  const submit = (event: React.FormEvent): void => {
     event.preventDefault()
-    setShowSuggestions(false)
+    closeSuggestions()
 
     controlledState?.setValue(inputValue)
   }
 
-  const applySuggestion = (option: string): void => {
-    setInputValue(applySearchSuggestion(inputValue, option))
-    setShowSuggestions(false)
+  const applySuggestion = (suggestion: string): void => {
+    setInputValue(applySearchSuggestion(inputValue, suggestion))
+    closeSuggestions()
   }
 
   const handleKeyDown = (event: React.KeyboardEvent): void => {
-    if (!showSuggestions) return
+    if (!areSuggestionsOpen) return
 
     if (event.key === 'ArrowDown') {
       event.preventDefault()
-      setSuggestionIndex((previousActiveIndex) =>
-        previousActiveIndex < filteredSuggestions.length - 1
-          ? previousActiveIndex + 1
-          : SUGGESTION_DEFAULT_INDEX
+      setHighlightedSuggestionIndex((previousIndex) =>
+        previousIndex < matchingSuggestions.length - 1
+          ? previousIndex + 1
+          : NO_HIGHLIGHTED_SUGGESTION_INDEX
       )
     }
 
     if (event.key === 'ArrowUp') {
       event.preventDefault()
-      setSuggestionIndex((previousActiveIndex) =>
-        previousActiveIndex > SUGGESTION_DEFAULT_INDEX
-          ? previousActiveIndex - 1
-          : filteredSuggestions.length - 1
+      setHighlightedSuggestionIndex((previousIndex) =>
+        previousIndex > NO_HIGHLIGHTED_SUGGESTION_INDEX
+          ? previousIndex - 1
+          : matchingSuggestions.length - 1
       )
     }
 
-    if (event.key === 'Enter') {
-      if (suggestionIndex !== SUGGESTION_DEFAULT_INDEX) {
-        event.preventDefault()
-        applySuggestion(filteredSuggestions[suggestionIndex])
-      }
+    if (event.key === 'Enter' && highlightedSuggestionIndex !== NO_HIGHLIGHTED_SUGGESTION_INDEX) {
+      event.preventDefault()
+      applySuggestion(matchingSuggestions[highlightedSuggestionIndex])
     }
 
     if (event.key === 'Escape') {
-      setShowSuggestions(false)
+      closeSuggestions()
     }
   }
 
   return {
-    anchorElement,
-    setAnchorElement,
-    handleSubmit,
-    updateShowSuggestions,
     inputValue,
     setInputValue,
+    submit,
     handleKeyDown,
-    showSuggestions,
-    filteredSuggestions,
-    setShowSuggestions,
-    suggestionIndex,
+    matchingSuggestions,
+    areSuggestionsOpen,
+    highlightedSuggestionIndex,
+    openSuggestions,
+    closeSuggestions,
     applySuggestion
   }
 }

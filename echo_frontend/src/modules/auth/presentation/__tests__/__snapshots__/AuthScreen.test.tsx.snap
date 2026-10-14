@@ -3,7 +3,7 @@
 exports[`AuthScreen > Should display the login form to the user who is not logged in 1`] = `
 <DocumentFragment>
   <div
-    class="MuiBox-root css-5aboy8"
+    class="MuiBox-root css-17z20ds"
   >
     <h4
       class="MuiTypography-root MuiTypography-h4 MuiTypography-alignCenter MuiTypography-gutterBottom css-1o2hbqe-MuiTypography-root"

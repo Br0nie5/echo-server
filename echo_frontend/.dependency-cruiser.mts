@@ -1,7 +1,4 @@
-/**
- * Architecture rules of `echo_frontend`, checked by `npm run arch:check`.
- * See docs/architecture.md for the conventions these rules enforce.
- */
+/** Architecture rules of `echo_frontend`, checked by `npm run arch:check`. */
 
 import type { IConfiguration, IForbiddenRuleType } from 'dependency-cruiser'
 
@@ -15,7 +12,10 @@ const LAYERS = 'domain|application|infra|presentation'
 const TEST_HELPERS = '^src/test/'
 const TESTS = '(^|/)__tests__/|\\.test\\.tsx?$'
 
-/** Folders of one layer of a module split into `domain/`, `application/`, `infra/` and `presentation/`. */
+/**
+ * Folders of one layer of a module split into `domain/`, `application/`, `infra/` and
+ * `presentation/`.
+ */
 const layer = (names: string): string => `${MODULES}/[^/]+/(${names})/`
 
 /**
@@ -217,7 +217,7 @@ const config: IConfiguration = {
       name: 'prod-not-to-tests',
       severity: 'error',
       comment: 'Production code must not import test files or test helpers.',
-      from: { pathNot: [TESTS, TEST_HELPERS, '^src/setupTests\\.ts$'] },
+      from: { pathNot: [TESTS, TEST_HELPERS, SETUP_TESTS] },
       to: { path: [TESTS, TEST_HELPERS] }
     }
   ],

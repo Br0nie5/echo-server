@@ -4,7 +4,7 @@ import { memo, useMemo } from 'react'
 
 import { CollapsibleBox } from '../../../../shared/components/CollapsibleBox'
 import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
-import { formatDate } from '../../../../shared/utils/formatDate'
+import { formatDay } from '../../../../shared/utils/formatDates'
 import { groupLogsByDay } from '../utils/groupLogs'
 
 import { LogsByGroupsLayout } from './LogsByGroupsLayout'
@@ -22,13 +22,10 @@ const LogsByDaysLayoutComponent: React.FC<LogsByDaysLayoutProps> = ({ filteredLo
       {logsByDays.map((logsByDay, dayLogsIndex) => (
         <CollapsibleBox
           key={logsByDay.id}
-          id={logsByDay.id}
-          title={
-            <Typography variant="h5">{formatDate(logsByDay.date, 'day', translation)}</Typography>
-          }
-          isOpenedAtStart={dayLogsIndex === 0}
+          title={<Typography variant="h5">{formatDay(logsByDay.date, translation)}</Typography>}
+          isOpenedByParent={dayLogsIndex === 0}
         >
-          <LogsByGroupsLayout logs={logsByDay.logs} logsByDayId={logsByDay.id} />
+          <LogsByGroupsLayout logs={logsByDay.logs} />
         </CollapsibleBox>
       ))}
     </Stack>
