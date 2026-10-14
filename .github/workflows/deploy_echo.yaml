@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0 # all tags, to know whether this version is the highest one
 
       # Setup Node.js, at the version pinned in .tool-versions
-      - uses: actions/setup-node@v7.0.0
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version-file: .tool-versions
           cache: npm
