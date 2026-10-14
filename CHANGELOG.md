@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-10-14
+
 ### Added
 
 - `LOGS_INITIAL_DATE_DAYS_AGO` (default `2`) and `LOGS_MINIMAL_DATE_DAYS_AGO` (default `14`) set how many days back the logs start by default in the UI, and how far back their start date can be set.
@@ -119,7 +121,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[Unreleased]: https://github.com/br0nie5/echo-server/compare/1.2.0...HEAD
+[Unreleased]: https://github.com/br0nie5/echo-server/compare/2.0.0...HEAD
+[2.0.0]: https://github.com/br0nie5/echo-server/compare/1.2.0...2.0.0
 [1.2.0]: https://github.com/br0nie5/echo-server/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/br0nie5/echo-server/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/br0nie5/echo-server/releases/tag/1.0.0

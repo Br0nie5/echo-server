@@ -82,7 +82,7 @@ docker run -d \
 
 `--init` is optional: without it, Node.js ignores the stop signal of Docker, which waits 10 seconds before killing the container each time it is stopped or restarted.
 
-`ghcr.io/br0nie5/echo:latest` is the highest stable version, for `amd64` and `arm64`: Docker pulls the image of your platform. Each version also has its own tag (`ghcr.io/br0nie5/echo:1.2.0`).
+`ghcr.io/br0nie5/echo:latest` is the highest stable version, for `amd64` and `arm64`: Docker pulls the image of your platform. Each version also has its own tag (`ghcr.io/br0nie5/echo:2.0.0`).
 
 [examples/](examples/) holds a complete deployment for each common setup: on its own, behind an HTTP or an HTTPS reverse proxy, on a subdomain, under a path.
 
