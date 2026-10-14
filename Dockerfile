@@ -1,8 +1,11 @@
-FROM node:24-slim AS deps
+# The version of .tool-versions, which the CI tests with: change both together.
+FROM node:24.21.0-slim AS deps
 WORKDIR /app
 
-# better-sqlite3 has no prebuilt binary for this platform/Node version yet,
-# so it needs to be compiled from source with node-gyp (requires Python + a C++ toolchain).
+# The native dependencies come with binaries built for linux-x64 and linux-arm64 (glibc):
+# better-sqlite3 has no build step, and bcrypt compiles itself with node-gyp, which needs Python and
+# a C++ toolchain, only when none of its binaries fits the platform or the version of Node.js. The
+# toolchain is that fallback.
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
   && rm -rf /var/lib/apt/lists/*
 
@@ -14,7 +17,7 @@ COPY echo_backend/ ./echo_backend/
 
 RUN npm ci --omit=dev --workspace=echo_backend
 
-FROM node:24-slim
+FROM node:24.21.0-slim
 
 LABEL org.opencontainers.image.source="https://github.com/Br0nie5/echo-server"
 

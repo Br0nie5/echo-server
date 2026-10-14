@@ -1,5 +1,9 @@
 pre-commit:
   parallel: false
+  # The commit holds the files as they were staged: a file the format or the lint fixes would go in
+  # without its fix, so the commit stops, showing the fix to stage.
+  fail_on_changes: always
+  fail_on_changes_diff: true
   commands:
     format:
       run: npm run format

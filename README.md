@@ -222,7 +222,7 @@ By default, a line Echo cannot read is silently left out. With `INCLUDE_SELF_REP
 
 | File            | Reports                                                  | Level     | Message                                    | `origin`                                                                                                         |
 | --------------- | -------------------------------------------------------- | --------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| `parseLogs`     | A line of a log file that holds no log.                  | `WARNING` | The line itself.                           | The path of the log file and the position of the line among its non-blank lines, from 1: `…/nightly.log.jsonl:3` |
+| `logFiles`      | A line of a log file that holds no log.                  | `WARNING` | The line itself.                           | The path of the log file and the position of the line among its non-blank lines, from 1: `…/nightly.log.jsonl:3` |
 | `notifications` | A Telegram message that could not be sent, when enabled. | `ERROR`   | `The notification was not sent: <reason>`. | `notificationsTelegramService`                                                                                   |
 
 Both are in the group `self_reports_<server name>`, the server name being `SERVER_NAME` with every character other than a letter, a digit, `-`, `_` or a space replaced with `_`, then in lower case with its spaces replaced with `_` (`self_reports_shop_prod` for `Shop Prod`).

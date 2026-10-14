@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.build.json",
+    "types:check": "tsc --noEmit",
     "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "start": "NODE_ENV=production node dist/main.js",
     "dev": "tsx watch src/main.ts",
@@ -39,7 +40,6 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.5",
     "@types/bcrypt": "^6.0.0",
     "@types/better-sqlite3": "^9.6.0",
     "@types/luxon": "^3.7.6",
@@ -47,18 +47,11 @@
     "@vitest/coverage-v8": "^5.0.3",
     "dependency-cruiser": "^18.5.0",
     "eslint": "^9.39.5",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-import-resolver-typescript": "^4.4.5",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-jsdoc": "^65.2.0",
     "eslint-plugin-n": "^18.4.1",
-    "eslint-plugin-prettier": "^5.5.6",
-    "eslint-plugin-tsdoc": "^0.5.4",
     "fastify-tsconfig": "^3.0.0",
     "globals": "^17.13.0",
     "tsx": "^4.23.15",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.71.1",
     "vitest": "^5.0.3"
   }
 }

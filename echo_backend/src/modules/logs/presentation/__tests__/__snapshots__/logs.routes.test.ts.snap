@@ -5,7 +5,7 @@ exports[`GET /logs > Should answer the logs of every log file, from the newest t
   {
     "date": "2026-04-28T09:42:09.000Z",
     "groupName": "billing",
-    "id": "{"idNumber":2,"date":"2026-04-28T09:42:09.000Z","jobId":12,"location":"/logs/server/billing/logs/send_invoices.jsonl","level":"INFO","message":"Invoices sent."}",
+    "id": "15165984d3b86906add1c5f974c1",
     "jobId": 12,
     "level": "INFO",
     "location": "/logs/server/billing/logs/send_invoices.jsonl",
@@ -15,7 +15,7 @@ exports[`GET /logs > Should answer the logs of every log file, from the newest t
   {
     "date": "2026-04-28T09:42:01.000Z",
     "groupName": "billing",
-    "id": "{"idNumber":1,"date":"2026-04-28T09:42:01.000Z","jobId":12,"location":"/logs/server/billing/logs/send_invoices.jsonl","level":"WARNING","message":"Invoice 41 sent on attempt 2."}",
+    "id": "1c243c0c0f62cd16b1ddb5bffef9",
     "jobId": 12,
     "level": "WARNING",
     "location": "/logs/server/billing/logs/send_invoices.jsonl",
@@ -24,7 +24,7 @@ exports[`GET /logs > Should answer the logs of every log file, from the newest t
   },
   {
     "date": "2026-04-28T07:00:00.000Z",
-    "id": "{"idNumber":0,"date":"2026-04-28T07:00:00.000Z","jobId":3,"location":"/logs/ping.jsonl","level":"ERROR","message":"Ping not answered."}",
+    "id": "0799242716b45c175a8f1eb65df7",
     "jobId": 3,
     "level": "ERROR",
     "location": "/logs/ping.jsonl",
@@ -34,7 +34,7 @@ exports[`GET /logs > Should answer the logs of every log file, from the newest t
   {
     "date": "2026-04-27T09:40:00.000Z",
     "groupName": "billing",
-    "id": "{"idNumber":0,"date":"2026-04-27T09:40:00.000Z","jobId":11,"location":"/logs/server/billing/logs/send_invoices.jsonl","level":"INFO","message":"Nothing to send.","origin":"send_invoices.sh:12"}",
+    "id": "0b657111d29e1e10f6a737125560",
     "jobId": 11,
     "level": "INFO",
     "location": "/logs/server/billing/logs/send_invoices.jsonl",

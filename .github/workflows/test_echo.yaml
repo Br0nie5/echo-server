@@ -9,12 +9,12 @@ on:
       - main
   schedule:
     # Weekly, to catch newly published vulnerabilities in the dependencies
-    - cron: "30 12 * * 0"
+    - cron: '30 12 * * 0'
   workflow_call:
 
 jobs:
   test:
-    name: "Test Echo"
+    name: 'Test Echo'
     runs-on: ubuntu-26.04-arm
 
     steps:
@@ -33,6 +33,10 @@ jobs:
       # utilities must be built before backend and frontend can type-check against it
       - name: Build
         run: npm run build
+
+      # The builds leave out the tests of the backend: this checks the types of every file
+      - name: Types check
+        run: npm run types:check
 
       # The scripts fix what they find, so a change in the working tree means the commit was not
       # formatted / linted.

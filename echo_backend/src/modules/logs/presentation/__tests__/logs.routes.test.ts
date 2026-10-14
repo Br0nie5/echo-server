@@ -200,7 +200,7 @@ describe('GET /logs', () => {
     const selfReportsFilePath = `${selfReportsSettings.dirPath}/${selfReportsSettings.fileName}`
 
     const { server, fileSystem } = await buildTestServer({
-      settings: { auth: undefined, parseLogsSelfReports: selfReportsSettings },
+      settings: { auth: undefined, logFilesSelfReports: selfReportsSettings },
       files: { [sendInvoicesLogFilePath]: `${notALogLine}\n` }
     })
     const query = { fromDate: '2026-04-26T00:00:00.000Z' }
@@ -223,7 +223,7 @@ describe('GET /logs', () => {
       {
         groupName: 'self_reports_echo',
         location: selfReportsFilePath,
-        locationName: 'parseLogs',
+        locationName: 'logFiles',
         jobId: 1,
         level: 'WARNING',
         message: notALogLine,

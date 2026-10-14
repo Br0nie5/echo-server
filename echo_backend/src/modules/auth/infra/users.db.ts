@@ -10,7 +10,8 @@ import type { FilesService } from '../../../shared/services/files.service.js'
  * journal the permissions of the file. Throws when the directory or the file cannot be created.
  *
  * ```ts
- * const authRepository = createAuthUsersDbRepository(await createUsersDb({ usersDbFilePath }, filesService))
+ * const usersDb = await createUsersDb({ usersDbFilePath }, filesService)
+ * const authRepository = createAuthUsersDbRepository(usersDb)
  * ```
  */
 export const createUsersDb = async (

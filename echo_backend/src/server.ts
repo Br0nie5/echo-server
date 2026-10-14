@@ -100,8 +100,8 @@ export const buildServer = async (
       logger: server.log
     })
 
-  const parseLogsSelfReportRepository = await createSelfReportRepository(
-    settings.parseLogsSelfReports
+  const logFilesSelfReportRepository = await createSelfReportRepository(
+    settings.logFilesSelfReports
   )
   const notificationsSelfReportRepository = await createSelfReportRepository(
     settings.notificationsSelfReports
@@ -112,9 +112,9 @@ export const buildServer = async (
     logFileExtension: settings.logs.logFileExtension,
     logFilesDirName: settings.logs.logFilesDirName,
     filesService,
-    parseLogsSelfReportRepository,
+    logFilesSelfReportRepository,
     selfReportRepositoriesToShow: [
-      parseLogsSelfReportRepository,
+      logFilesSelfReportRepository,
       notificationsSelfReportRepository
     ].filter((selfReportRepository) => selfReportRepository !== undefined)
   })

@@ -17,23 +17,23 @@ import type { LogsFilesApi } from './logsFiles.api.js'
  * the file.
  *
  * The lines that hold no valid log are left out of the logs. Each time the logs are read, they are
- * saved to `parseLogsSelfReportRepository` as warning self reports, all in a single save, before
+ * saved to `logFilesSelfReportRepository` as warning self reports, all in a single save, before
  * the logs are given: the message is the line itself, and the `origin` the path of its file
  * followed by its position among the non-blank lines of that file, starting at 1
  * (`/watched_logs/export_orders.jsonl:3`). Each is dated from when its line was found to hold no
- * log. Without a `parseLogsSelfReportRepository`, that is when the self reports are disabled, these
+ * log. Without a `logFilesSelfReportRepository`, that is when the self reports are disabled, these
  * lines are only left out.
  *
  * ```ts
  * const logsRepository = createLogsFilesRepository(
  *   createLogsFilesApi(logsFilesLocation, filesService),
- *   parseLogsSelfReportRepository
+ *   logFilesSelfReportRepository
  * )
  * ```
  */
 export const createLogsFilesRepository = (
   logsFilesApi: LogsFilesApi,
-  parseLogsSelfReportRepository: SelfReportRepository | undefined
+  logFilesSelfReportRepository: SelfReportRepository | undefined
 ): LogsRepository => {
   const parseLogFile = async (
     logFile: LogFileDto
@@ -66,7 +66,7 @@ export const createLogsFilesRepository = (
       const logFiles = await logsFilesApi.getAllLogFiles()
       const parsedLogFiles = await Promise.all(logFiles.map(parseLogFile))
 
-      await parseLogsSelfReportRepository?.saveSelfReports(
+      await logFilesSelfReportRepository?.saveSelfReports(
         parsedLogFiles.flatMap(({ selfReports }) => selfReports)
       )
 

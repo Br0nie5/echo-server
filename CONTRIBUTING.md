@@ -18,10 +18,10 @@ Then read the [development guide](docs/development.md), to run the project, and 
 4. Run the checks, which the CI runs too:
 
    ```bash
-   npm run build && npm run format && npm run lint && npm run arch:check && npm run dead-code:check && npm run test:coverage
+   npm run build && npm run types:check && npm run format && npm run lint && npm run arch:check && npm run dead-code:check && npm run test:coverage
    ```
 
-   The pre-commit hook only runs the format and the lint.
+   The pre-commit hook only runs the format and the lint, and stops the commit when they change a file: stage the fix and commit again.
 
 5. Update the documentation, and add an entry to `CHANGELOG.md` under `[Unreleased]` for anything a user can notice. Start it with `**Breaking:**` when an existing deployment has something to change, and say what.
 6. Open a pull request and fill in its template: what changed and why, the issue it closes, how to test it. Its title is a Conventional Commit, like the commits of the repository: `type(scope): summary`.

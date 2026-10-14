@@ -39,7 +39,8 @@ export const registerSecurity = async (
       sign: { expiresIn: `${authSettings.config.sessionDurationSeconds}s` },
       cookie: {
         cookieName: authSettings.config.cookieName,
-        signed: false // We verify via JWT signature, so the cookie itself doesn't need a secondary signature
+        // The JWT it holds is signed already: the cookie needs no signature of its own
+        signed: false
       }
     })
   }

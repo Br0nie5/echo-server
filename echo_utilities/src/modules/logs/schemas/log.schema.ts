@@ -22,13 +22,22 @@ import { LogLevelSchema } from './logLevel.schema.js'
 export const LogSchema = z.strictObject({
   /** Identifies the log among all the stored ones (see `createLogId`). */
   id: z.string(),
-  /** When the log was emitted, as an ISO 8601 date and time in UTC, the way `Date.toISOString` writes it: any other text is refused. */
+  /**
+   * When the log was emitted, as an ISO 8601 date and time in UTC, the way `Date.toISOString`
+   * writes it: any other text is refused.
+   */
   date: z.iso.datetime(),
   /** The group the log belongs to, when it has one: usually a group of scripts. */
   groupName: z.string().optional(),
-  /** Where the log is stored, whatever the storage is: the path of a file, the address of another server... */
+  /**
+   * Where the log is stored, whatever the storage is: the path of a file, the address of another
+   * server...
+   */
   location: z.string(),
-  /** Short name of `location`, the one shown to the user: usually the name of the script the log comes from. */
+  /**
+   * Short name of `location`, the one shown to the user: usually the name of the script the log
+   * comes from.
+   */
   locationName: z.string(),
   /** The run the log was emitted during: usually the one of a script. */
   jobId: z.int(),
@@ -36,7 +45,10 @@ export const LogSchema = z.strictObject({
   level: LogLevelSchema,
   /** What was reported, as it was written. */
   message: z.string(),
-  /** Where the log was emitted from, in any form but an empty one, when it was said: `send_invoices.sh:12`. */
+  /**
+   * Where the log was emitted from, in any form but an empty one, when it was said:
+   * `send_invoices.sh:12`.
+   */
   origin: z.string().min(1).optional()
 })
 

@@ -12,7 +12,7 @@
 
 - Node.js 24, at the version pinned in [.tool-versions](../.tool-versions) (read by asdf and mise), with the npm it comes with
 - Docker, only to build and run the image
-- A C++ toolchain and Python, only if `better-sqlite3` has no prebuilt binary for your platform
+- A C++ toolchain and Python, only if `bcrypt` has no prebuilt binary for your platform (`better-sqlite3` comes with binaries for macOS, Linux and Windows, on x64 and arm64)
 
 ## Setup
 
@@ -50,6 +50,7 @@ Run from the root.
 | `npm run dev`                        | The utilities (watched), the backend and the frontend together.                                                                                                                                      |
 | `npm run build`                      | Builds the three workspaces, the utilities first, then type-checks the files at the root. It starts with `npm install`, see below.                                                                   |
 | `npm start`                          | Builds, then runs the backend in production mode, serving the built frontend, with `echo_backend/.env.production`: over HTTPS, at `https://localhost:4000/app`, with the certificate of `certs/`.    |
+| `npm run types:check`                | TypeScript on every file of each workspace, the tests included, which the build of the backend leaves out, then on the files at the root.                                                            |
 | `npm run lint`                       | ESLint, fixing what it can, in every workspace then on the files at the root.                                                                                                                        |
 | `npm run format`                     | Prettier, in every workspace then on the files at the root, `docs/` and `examples/`.                                                                                                                 |
 | `npm run test:coverage`              | Vitest in every workspace, with a 100% coverage threshold.                                                                                                                                           |
@@ -64,7 +65,7 @@ Run from the root.
 
 Target one workspace with `--workspace=echo_backend` (or `echo_frontend`, `echo_utilities`): `npm run lint --workspace=echo_frontend`.
 
-`npm run build` runs `npm install` first: when `node_modules` is shared between two platforms, macOS and a Linux container for instance, it brings back the packages built for the one running the build.
+`npm run build` runs `npm install` first, except in CI (when `CI` is set), where `npm ci` just installed the lockfile: when `node_modules` is shared between two platforms, macOS and a Linux container for instance, it brings back the packages built for the one running the build.
 
 ## Testing
 
@@ -115,20 +116,20 @@ Invent the data of a test: `billing`, `send_invoices`, `Quota almost reached`. N
 
 ## Code quality
 
-| Tool               | Config                                                                                                                                                                 |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Prettier           | One config for the whole repository, [prettier.config.js](../prettier.config.js), with the root [.gitignore](../.gitignore) and [.prettierignore](../.prettierignore). |
-| ESLint             | One config per workspace. [eslint.config.js](../eslint.config.js), at the root, only covers the files at the root, such as the health check.                           |
-| TypeScript         | One `tsconfig.json` per workspace, and one at the root for the files at the root.                                                                                      |
-| dependency-cruiser | One `.dependency-cruiser.mts` per workspace.                                                                                                                           |
-| Knip               | [knip.json](../knip.json), for the three workspaces at once.                                                                                                           |
+| Tool               | Config                                                                                                                                                                                                                                                                                                                               |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Prettier           | One config for the whole repository, [prettier.config.js](../prettier.config.js), with the root [.gitignore](../.gitignore) and [.prettierignore](../.prettierignore).                                                                                                                                                               |
+| ESLint             | One config per workspace, and [eslint.config.js](../eslint.config.js) at the root for the files at the root, such as the health check. Each starts from `createEslintConfig` of [eslint.shared.js](../eslint.shared.js), the rules they share, Prettier included, and adds its own: React for the frontend, Node.js for the backend. |
+| TypeScript         | One `tsconfig.json` per workspace, and one at the root for the files at the root.                                                                                                                                                                                                                                                    |
+| dependency-cruiser | One `.dependency-cruiser.mts` per workspace.                                                                                                                                                                                                                                                                                         |
+| Knip               | [knip.json](../knip.json), for the three workspaces at once.                                                                                                                                                                                                                                                                         |
 
 **Documentation comments are linted.** Every exported function, interface, type and component of `src/` has a TSDoc comment, whose syntax is checked. `@param` and `@returns` are not required, since the types already say what goes in and out: add them when a parameter or the result has a rule the types do not show.
 
-**The pre-commit hook** ([lefthook.yml](../lefthook.yml)) runs the format, then the lint. It runs neither the build, the tests nor the architecture check: run them yourself before committing.
+**The pre-commit hook** ([lefthook.yml](../lefthook.yml)) runs the format, then the lint, on the whole repository. When they change a file, the commit stops and shows the change: the commit would hold the staged file without its fix. Stage the fix, and commit again. It runs neither the build, the type check, the tests nor the architecture check: run them yourself before committing.
 
 ```bash
-npm run build && npm run arch:check && npm run dead-code:check && npm run test:coverage
+npm run build && npm run types:check && npm run arch:check && npm run dead-code:check && npm run test:coverage
 ```
 
 ## Docker
@@ -139,7 +140,7 @@ npm run start:docker                      # both, then one of the examples with 
 npm run start:docker -- proxy-https       # the same, naming the example
 ```
 
-**The image** ([Dockerfile](../Dockerfile)) is built on `node:24-slim` from the workspaces already built: a first stage installs the production dependencies of the backend, compiling `better-sqlite3`, and the second one copies the result. It runs as the unprivileged `node` user (uid `1000`), creates `/watched_logs`, `/self_reports` and `/app/data`, and starts through the entrypoint.
+**The image** ([Dockerfile](../Dockerfile)) is built on `node:24.21.0-slim`, the version of `.tool-versions`, which the CI tests with (change both together), from the workspaces already built: a first stage installs the production dependencies of the backend, with the binaries their native dependencies come with (a C++ toolchain is there for `bcrypt` to compile itself when none fits), and the second one copies the result. It runs as the unprivileged `node` user (uid `1000`), creates `/watched_logs`, `/self_reports` and `/app/data`, and starts through the entrypoint.
 
 **The entrypoint** ([docker-entrypoint.sh](../docker-entrypoint.sh)) forces `NODE_ENV` to `production`, refuses a `LOGS_DIR_PATH` or a `SELF_REPORTS_DIR_PATH` that is not the directory the image creates, gives every other variable its default, and writes `env.production.json`, the variables of the frontend, into its build.
 
@@ -149,7 +150,7 @@ npm run start:docker -- proxy-https       # the same, naming the example
 
 ## Continuous integration and releases
 
-**[Test Echo](../.github/workflows/test_echo.yaml)** runs on each pull request to `main`, on each push to it, and once a week, to catch the vulnerabilities published since. It builds, then runs the format and the lint (failing when either changes a file), the architecture check, the dead-code check, the tests and `npm audit`.
+**[Test Echo](../.github/workflows/test_echo.yaml)** runs on each pull request to `main`, on each push to it, and once a week, to catch the vulnerabilities published since. It builds, checks the types, then runs the format and the lint (failing when either changes a file), the architecture check, the dead-code check, the tests and `npm audit`.
 
 **[Deploy Echo](../.github/workflows/deploy_echo.yaml)** runs when a version tag is pushed (`1.2.3`, `1.2.3-rc.1`). It runs the tests, then `npm run deploy:server -- <tag>`.
 

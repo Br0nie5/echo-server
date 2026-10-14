@@ -14,13 +14,13 @@ import type { EchoServer } from './types/echoServer.js'
  * database, only when authentication is enabled.
  *
  * The users database is opened at the `usersDbFilePath` of the auth settings, its file prepared
- * through `filesService` and closed with the server, and the routes are only given the auth config. `@fastify/rate-limit` is
- * registered for the routes that ask for it only: those receiving credentials, limited to the
- * `credentialsAttemptsLimit` of the auth config. The attempts are counted per client address when
- * the `trustedProxies` of the server settings say which proxies to believe. When there are none,
- * whatever sends the request being trusted, a client could name any address in `X-Forwarded-For`
- * to never reach the limit, so they are counted per connecting address instead: the one of the
- * reverse proxy, shared by all its clients, when there is one.
+ * through `filesService` and closed with the server, and the routes are only given the auth
+ * config. `@fastify/rate-limit` is registered for the routes that ask for it only: those receiving
+ * credentials, limited to the `credentialsAttemptsLimit` of the auth config. The attempts are
+ * counted per client address when the `trustedProxies` of the server settings say which proxies to
+ * believe. When there are none, whatever sends the request being trusted, a client could name any
+ * address in `X-Forwarded-For` to never reach the limit, so they are counted per connecting address
+ * instead: the one of the reverse proxy, shared by all its clients, when there is one.
  */
 export const registerAuthRoutes = async (
   server: EchoServer,

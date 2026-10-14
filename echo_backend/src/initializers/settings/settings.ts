@@ -136,11 +136,14 @@ export type NotificationSettings = {
  *
  * ```ts
  * const settings = await loadSettings(filesService)
- * const usersDb = await createUsersDb({ usersDbFilePath: settings.auth.usersDbFilePath }, filesService)
+ * const usersDb = await createUsersDb(
+ *   { usersDbFilePath: settings.auth.usersDbFilePath },
+ *   filesService
+ * )
  * const controller = createAuthController(authRepository, settings.auth.config)
  * ```
  *
- * `auth`, `parseLogsSelfReports`, `notificationsSelfReports` and `notification` are missing when
+ * `auth`, `logFilesSelfReports`, `notificationsSelfReports` and `notification` are missing when
  * what they set up is disabled: whoever takes one is only built when it is there.
  */
 export type Settings = {
@@ -158,10 +161,10 @@ export type Settings = {
    * only when they are shown among the logs (`INCLUDE_SELF_REPORTS_IN_LOGS`), as logs of their
    * own. A line is reported at each read of its file, so it is stored once.
    */
-  parseLogsSelfReports?: SelfReportsSettings
+  logFilesSelfReports?: SelfReportsSettings
   /**
    * Where the notifications that could not be sent are reported. It has the directory and the
-   * retention of `parseLogsSelfReports`, and a file and a session file of its own. Each failure is
+   * retention of `logFilesSelfReports`, and a file and a session file of its own. Each failure is
    * stored, even one that already happened.
    *
    * Missing when the self reports are disabled, or when the notifications are (`notification`).

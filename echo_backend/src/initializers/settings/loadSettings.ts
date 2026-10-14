@@ -181,10 +181,10 @@ export const loadSettings = async (
           lastLogsCheckFilePath: path.join(DATA_DIR_PATH, 'last_logs_check.json')
         })
     },
-    parseLogsSelfReports: sharedSelfReportsSettings && {
+    logFilesSelfReports: sharedSelfReportsSettings && {
       ...sharedSelfReportsSettings,
-      fileName: `parseLogs${LOG_FILE_EXTENSION}`,
-      sessionFilePath: path.join(DATA_DIR_PATH, 'parse_logs_self_reports_session.json'),
+      fileName: `logFiles${LOG_FILE_EXTENSION}`,
+      sessionFilePath: path.join(DATA_DIR_PATH, 'log_files_self_reports_session.json'),
       isEachProblemStoredOnce: true
     },
     notificationsSelfReports: notification &&

@@ -3,7 +3,8 @@
  * date.
  *
  * ```ts
- * getInvalidDateFieldMessage('fromDate') // 'Field fromDate is not a valid date, it should be an ISO string'
+ * getInvalidDateFieldMessage('fromDate')
+ * // 'Field fromDate is not a valid date, it should be an ISO string'
  * ```
  */
 export const getInvalidDateFieldMessage = (fieldName: string): string =>

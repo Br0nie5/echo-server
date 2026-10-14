@@ -34,7 +34,10 @@ const buildFileSystem = ({
    * other one is an `ENOENT` error.
    */
   links?: Record<string, { type: 'file' | 'directory'; realPath: string }>
-  /** The files that exist, each path given its content: reading any other one is an `ENOENT` error. */
+  /**
+   * The files that exist, each path given its content: reading any other one is an `ENOENT`
+   * error.
+   */
   files?: Record<string, string>
   /** Files whose path goes through something that is not a directory. */
   unreachable?: string[]

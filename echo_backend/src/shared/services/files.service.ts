@@ -64,9 +64,10 @@ export interface FilesService {
    * has to exist.
    *
    * ```ts
-   * filesService.getRelativeFilePath('/logs/billing/send_invoices.jsonl', '/logs') // 'billing/send_invoices.jsonl'
-   * filesService.getRelativeFilePath('/logs/billing/send_invoices.jsonl') // 'logs/billing/send_invoices.jsonl'
-   * filesService.getRelativeFilePath('/logs/billing/send_invoices.jsonl', '/data') // undefined
+   * const filePath = '/logs/billing/send_invoices.jsonl'
+   * filesService.getRelativeFilePath(filePath, '/logs') // 'billing/send_invoices.jsonl'
+   * filesService.getRelativeFilePath(filePath) // 'logs/billing/send_invoices.jsonl'
+   * filesService.getRelativeFilePath(filePath, '/data') // undefined
    * ```
    */
   getRelativeFilePath: (filePath: string, rootDirPath?: string) => string | undefined

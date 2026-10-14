@@ -71,7 +71,9 @@ export const convertSelfReportLineToSelfReport = (
  * file it is read back from.
  *
  * ```ts
- * const lines = selfReports.map((selfReport) => convertSelfReportToSelfReportLine({ ...selfReport, sessionId }))
+ * const lines = selfReports.map((selfReport) =>
+ *   convertSelfReportToSelfReportLine({ ...selfReport, sessionId })
+ * )
  * ```
  */
 export const convertSelfReportToSelfReportLine = ({

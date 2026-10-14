@@ -15,7 +15,7 @@ import type { LogsRepository } from '../domain/logs.repository.js'
  *
  * ```ts
  * const logsRepository = createLogsSelfReportsRepository([
- *   parseLogsSelfReportRepository,
+ *   logFilesSelfReportRepository,
  *   notificationsSelfReportRepository
  * ])
  * const selfReportsLogs = await logsRepository.getAllLogs()

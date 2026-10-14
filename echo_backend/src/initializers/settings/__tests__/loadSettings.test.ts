@@ -158,7 +158,7 @@ describe('loadSettings', () => {
         logFilesDirName: 'logs',
         logsNotifier: undefined
       },
-      parseLogsSelfReports: undefined,
+      logFilesSelfReports: undefined,
       notificationsSelfReports: undefined,
       notification: undefined
     })
@@ -229,12 +229,12 @@ describe('loadSettings', () => {
           lastLogsCheckFilePath: path.join(DATA_DIR_PATH, 'last_logs_check.json')
         }
       },
-      parseLogsSelfReports: {
+      logFilesSelfReports: {
         retentionDays: 30,
         rootDirPath: '/self_reports',
         dirPath: '/self_reports/Shop Prod',
-        fileName: 'parseLogs.jsonl',
-        sessionFilePath: path.join(DATA_DIR_PATH, 'parse_logs_self_reports_session.json'),
+        fileName: 'logFiles.jsonl',
+        sessionFilePath: path.join(DATA_DIR_PATH, 'log_files_self_reports_session.json'),
         isEachProblemStoredOnce: true
       },
       notificationsSelfReports: {
@@ -262,7 +262,7 @@ describe('loadSettings', () => {
       SELF_REPORTS_RETENTION_DAYS: '0'
     })
 
-    expect(settings.parseLogsSelfReports).toBeUndefined()
+    expect(settings.logFilesSelfReports).toBeUndefined()
     expect(settings.notificationsSelfReports).toBeUndefined()
   })
 
@@ -279,6 +279,6 @@ describe('loadSettings', () => {
     expect(settings.notification).toBeUndefined()
     expect(settings.logs.logsNotifier).toBeUndefined()
     expect(settings.notificationsSelfReports).toBeUndefined()
-    expect(settings.parseLogsSelfReports).toBeDefined()
+    expect(settings.logFilesSelfReports).toBeDefined()
   })
 })

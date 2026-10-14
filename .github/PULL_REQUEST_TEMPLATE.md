@@ -42,7 +42,7 @@ Closes #
 
 ## Checklist
 
-- [ ] `npm run build`, `npm run lint`, `npm run format`, `npm run arch:check`, `npm run dead-code:check` and `npm run test:coverage` pass (100% coverage)
+- [ ] `npm run build`, `npm run types:check`, `npm run lint`, `npm run format`, `npm run arch:check`, `npm run dead-code:check` and `npm run test:coverage` pass (100% coverage)
 - [ ] The change is covered by tests
 - [ ] The documentation is up to date (`README.md`, `docs/`, the `schema` of the routes for the API docs)
 - [ ] `CHANGELOG.md` has an entry under `[Unreleased]` for anything a user can notice

@@ -80,8 +80,8 @@ const filterOutStoredProblems = (
  *   filesService,
  *   selfReportsDirPath: '/self_reports/Echo',
  *   groupRootDirPath: '/self_reports',
- *   selfReportFileName: 'parseLogs.jsonl',
- *   sessionFilePath: '/data/parse_logs_self_reports_session.json',
+ *   selfReportFileName: 'logFiles.jsonl',
+ *   sessionFilePath: '/data/log_files_self_reports_session.json',
  *   retentionDays: 30,
  *   isEachProblemStoredOnce: true,
  *   logger: server.log
@@ -116,7 +116,7 @@ const filterOutStoredProblems = (
  * file, its location name, the name of the file without its extension, and its group name, made of
  * the directory at `groupRootDirPath` and of every directory below it down to the file, each in
  * lower case with its spaces replaced with `_`, joined with `_` (`self_reports_echo` for
- * `/srv/self_reports/Echo/parseLogs.jsonl` below `/srv/self_reports`), or none when the file is not
+ * `/srv/self_reports/Echo/logFiles.jsonl` below `/srv/self_reports`), or none when the file is not
  * below `groupRootDirPath`. A failure to read goes to `logger`, and gives none.
  */
 export const createSelfReportFilesRepository = async ({

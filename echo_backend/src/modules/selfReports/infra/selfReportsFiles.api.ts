@@ -38,7 +38,7 @@ export interface SelfReportsFilesApi {
  *
  * ```ts
  * const selfReportsFilesApi = createSelfReportsFilesApi(filesService)
- * const lines = await selfReportsFilesApi.getSelfReportLines('/self_reports/Echo/parseLogs.jsonl')
+ * const lines = await selfReportsFilesApi.getSelfReportLines('/self_reports/Echo/logFiles.jsonl')
  * ```
  */
 export const createSelfReportsFilesApi = (filesService: FilesService): SelfReportsFilesApi => ({

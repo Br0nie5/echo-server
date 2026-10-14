@@ -18,6 +18,7 @@ Run from this directory.
 npm run dev             # tsx watch src/main.ts, with .env.development
 npm run build           # empties dist/, then tsc to it, the tests left out (tsconfig.build.json)
 npm run clean           # empties dist/
+npm run types:check     # tsc on the sources, the tests and the test helpers (tsconfig.json), emitting nothing
 npm run start           # NODE_ENV=production node dist/main.js, with .env.production
 npm run lint            # eslint --fix, Prettier included
 npm run format          # prettier --write
@@ -28,7 +29,7 @@ npm run test:watch
 npm run open:coverage   # serves coverage/ on port 9002, until stopped, the cache off so a reload shows the latest run
 ```
 
-The build does not type-check the tests: `npx tsc --noEmit` does, with `tsconfig.json`.
+The build does not type-check the tests: `npm run types:check` does.
 
 ## Configuration
 
@@ -42,13 +43,13 @@ Environment variables, read and validated once, when the server starts, by `load
 
 `Settings` are split by what uses them:
 
-| Part                                               | Holds                                                                                                                                                                                      | Missing when                                                                                                                                 |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `server`                                           | The port, the base path, the route prefixes, the trusted proxies, the TLS certificate, the directory of the web app.                                                                       | Never.                                                                                                                                       |
-| `logs`                                             | The directory the logs are read from, the extension of a log file, the name of the directories left out of the groups, and `logsNotifier`: the config of the cron and its last-check file. | Never. `logsNotifier` is missing without `notification`.                                                                                     |
-| `auth`                                             | Its config (the length of a session, its cookie, the limit of the login attempts) and the file of the users database.                                                                      | `HAS_AUTHENTICATION` is `false`.                                                                                                             |
-| `parseLogsSelfReports`, `notificationsSelfReports` | Where one part of the server stores its self reports: the retention and the directory, the same in both, its own file and session file, and whether a problem is stored once.              | Nothing uses the self reports: `INCLUDE_SELF_REPORTS_IN_LOGS` is `false`. `notificationsSelfReports` is also missing without `notification`. |
-| `notification`                                     | The Telegram chat and bot.                                                                                                                                                                 | Neither `TELEGRAM_CHAT_ID` nor `TELEGRAM_BOT_TOKEN` is set. Only one of them stops the server.                                               |
+| Part                                              | Holds                                                                                                                                                                                      | Missing when                                                                                                                                 |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `server`                                          | The port, the base path, the route prefixes, the trusted proxies, the TLS certificate, the directory of the web app.                                                                       | Never.                                                                                                                                       |
+| `logs`                                            | The directory the logs are read from, the extension of a log file, the name of the directories left out of the groups, and `logsNotifier`: the config of the cron and its last-check file. | Never. `logsNotifier` is missing without `notification`.                                                                                     |
+| `auth`                                            | Its config (the length of a session, its cookie, the limit of the login attempts) and the file of the users database.                                                                      | `HAS_AUTHENTICATION` is `false`.                                                                                                             |
+| `logFilesSelfReports`, `notificationsSelfReports` | Where one part of the server stores its self reports: the retention and the directory, the same in both, its own file and session file, and whether a problem is stored once.              | Nothing uses the self reports: `INCLUDE_SELF_REPORTS_IN_LOGS` is `false`. `notificationsSelfReports` is also missing without `notification`. |
+| `notification`                                    | The Telegram chat and bot.                                                                                                                                                                 | Neither `TELEGRAM_CHAT_ID` nor `TELEGRAM_BOT_TOKEN` is set. Only one of them stops the server.                                               |
 
 A part that is missing is disabled, and its variables are not read: without `auth`, the server has no auth route and the logs are open.
 

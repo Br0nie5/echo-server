@@ -5,8 +5,8 @@ import type { SelfReport } from '../../domain/selfReport.js'
 import type { SelfReportRepository } from '../../domain/selfReport.repository.js'
 import { createSelfReportFilesRepository } from '../selfReportFiles.repository.js'
 
-const SELF_REPORTS_FILE_PATH = '/self_reports/Echo/parseLogs.jsonl'
-const SESSION_FILE_PATH = '/fake/data/parse_logs_self_reports_session.json'
+const SELF_REPORTS_FILE_PATH = '/self_reports/Echo/logFiles.jsonl'
+const SESSION_FILE_PATH = '/fake/data/log_files_self_reports_session.json'
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
 
@@ -17,7 +17,7 @@ const options = {
   filesService,
   selfReportsDirPath: '/self_reports/Echo',
   groupRootDirPath: '/self_reports',
-  selfReportFileName: 'parseLogs.jsonl',
+  selfReportFileName: 'logFiles.jsonl',
   sessionFilePath: SESSION_FILE_PATH,
   retentionDays: 10,
   isEachProblemStoredOnce: true,
@@ -265,7 +265,7 @@ describe('createSelfReportFilesRepository', () => {
 
   describe('getSelfReports', () => {
     it.each([
-      { reason: 'is in no directory', relativeFilePath: 'parseLogs.jsonl' },
+      { reason: 'is in no directory', relativeFilePath: 'logFiles.jsonl' },
       { reason: 'is not below groupRootDirPath', relativeFilePath: undefined }
     ])(
       'Should give no group name to the self reports of a file that $reason',

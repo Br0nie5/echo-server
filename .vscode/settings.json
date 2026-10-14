@@ -1,12 +1,10 @@
 {
-  "cSpell.ignorePaths": [
-    "**/*.mock.*",
-    "**/*.snap"
-  ],
+  "cSpell.ignorePaths": ["**/*.mock.*", "**/*.snap"],
   "cSpell.words": [
     "addext",
     "autoload",
     "buildx",
+    "cyrb",
     "dbaeumer",
     "depcruise",
     "dscacheutil",

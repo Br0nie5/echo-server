@@ -12,8 +12,10 @@ import { createSelfReportsDirPath } from './createSelfReportsDirPath.js'
  * log, would be reported again, at every read of the logs.
  *
  * ```ts
- * parseSelfReportsRootDirPath('/self_reports', { serverName: 'Echo', logsDirPath: '/watched_logs' })
- * // '/self_reports'
+ * parseSelfReportsRootDirPath('/self_reports', {
+ *   serverName: 'Echo',
+ *   logsDirPath: '/watched_logs'
+ * }) // '/self_reports'
  * parseSelfReportsRootDirPath('/watched_logs/self_reports', {
  *   serverName: 'Echo',
  *   logsDirPath: '/watched_logs'

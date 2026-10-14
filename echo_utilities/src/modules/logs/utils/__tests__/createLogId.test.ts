@@ -17,16 +17,10 @@ const noIdLog: Omit<Log, 'id'> = {
 
 describe('createLogId', () => {
   it.each([
-    {
-      origin: 'send_invoices.sh:12',
-      id: '{"idNumber":3,"date":"2026-04-28T10:00:00.000Z","jobId":66,"location":"/storage/send_invoices","level":"WARNING","message":"Quota almost reached","origin":"send_invoices.sh:12"}'
-    },
-    {
-      origin: undefined,
-      id: '{"idNumber":3,"date":"2026-04-28T10:00:00.000Z","jobId":66,"location":"/storage/send_invoices","level":"WARNING","message":"Quota almost reached"}'
-    }
+    { origin: 'send_invoices.sh:12', id: '158d14df5324931c0da46985e672' },
+    { origin: undefined, id: '0e00780de588ed0be8534ab520fc' }
   ])(
-    'Should be made of the id number, the date, the job, the location, the level, the message and the origin, which is $origin',
+    'Should be the hash, in 28 hexadecimal characters, of the id number, the date, the job, the location, the level, the message and the origin, which is $origin',
     ({ origin, id }) => {
       expect(createLogId({ ...noIdLog, origin }, 3)).toBe(id)
     }

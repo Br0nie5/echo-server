@@ -18,6 +18,7 @@ Run from this directory.
 ```bash
 npm run dev             # Vite dev server on http://localhost:5173
 npm run build           # type-check, then production build to dist/
+npm run types:check     # tsc -b on the sources, the tests and the config files, emitting nothing
 npm run preview         # serves the build
 npm run lint            # eslint --fix, Prettier included
 npm run format          # prettier --write

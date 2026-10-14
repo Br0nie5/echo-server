@@ -97,7 +97,7 @@ curl --cookie cookies.txt \
 
 ```json
 {
-  "id": "{\"idNumber\":0,\"date\":\"2026-09-19T14:41:09.669Z\",\"jobId\":1,\"location\":\"/watched_logs/scripts/docker/utils/logs/prune.log.jsonl\",\"level\":\"INFO\",\"message\":\"Pruning the unused Docker images.\",\"origin\":\"prune.sh:12\"}",
+  "id": "07d1a27c31f939059011209dbb78",
   "date": "2026-09-19T14:41:09.669Z",
   "groupName": "docker_utils",
   "location": "/watched_logs/scripts/docker/utils/logs/prune.log.jsonl",

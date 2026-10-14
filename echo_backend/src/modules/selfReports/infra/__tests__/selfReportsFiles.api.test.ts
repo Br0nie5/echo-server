@@ -14,12 +14,12 @@ describe('SelfReportsFilesApi', () => {
   describe('getSelfReportLines', () => {
     it('Should give no line for a file removed since it was set up', async () => {
       filesService.getFileLines.mockRejectedValue(
-        new FileDoesNotExistError('/self_reports/Echo/parseLogs.jsonl')
+        new FileDoesNotExistError('/self_reports/Echo/logFiles.jsonl')
       )
 
       await expect(
         createSelfReportsFilesApi(filesService).getSelfReportLines(
-          '/self_reports/Echo/parseLogs.jsonl'
+          '/self_reports/Echo/logFiles.jsonl'
         )
       ).resolves.toEqual([])
     })
@@ -30,7 +30,7 @@ describe('SelfReportsFilesApi', () => {
 
       await expect(
         createSelfReportsFilesApi(filesService).getSelfReportLines(
-          '/self_reports/Echo/parseLogs.jsonl'
+          '/self_reports/Echo/logFiles.jsonl'
         )
       ).rejects.toBe(readError)
     })

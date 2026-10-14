@@ -402,7 +402,7 @@ describe('startServer', () => {
   const settings = getMockSettings({
     server: getMockServerSettings({ host: '127.0.0.1', port: 4000, basePath: '/echo' }),
     auth: getMockAuthSettings({ usersDbFilePath: IN_MEMORY_DATABASE_PATH }),
-    parseLogsSelfReports: undefined,
+    logFilesSelfReports: undefined,
     notificationsSelfReports: undefined
   })
 

@@ -8,10 +8,10 @@ const escapableCharacters = [' ', '"', '\\']
  * Reads the text a term looks for, from `startIndex` of `searchInput` to the space ending the term,
  * and gives it with the index the next term starts at.
  *
- * A double quote is dropped, and the spaces up to the next one belong to the text: an unclosed quote
- * runs to the end of the input. A backslash before a space, a double quote or another backslash is
- * dropped too, and that character belongs to the text. A backslash before anything else is kept as
- * it is.
+ * A double quote is dropped, and the spaces up to the next one belong to the text: an unclosed
+ * quote runs to the end of the input. A backslash before a space, a double quote or another
+ * backslash is dropped too, and that character belongs to the text. A backslash before anything
+ * else is kept as it is.
  *
  * ```ts
  * readSearch('"disk full" timeout', 0) // { search: 'disk full', nextTermIndex: 12 }
@@ -46,7 +46,10 @@ const readSearch = (
   return { search, nextTermIndex: inputIndex }
 }
 
-/** Tells whether `searchableKey` followed by `:` is at `keyIndex` of `searchInput`, whatever its case. */
+/**
+ * Tells whether `searchableKey` followed by `:` is at `keyIndex` of `searchInput`, whatever its
+ * case.
+ */
 const isKeyAt = (searchInput: string, keyIndex: number, searchableKey: string): boolean => {
   const keyPrefix = `${searchableKey}:`
 

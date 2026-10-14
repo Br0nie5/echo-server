@@ -4,8 +4,8 @@ import { convertSelfReportLineToSelfReport } from '../selfReportLine.dto.js'
 
 /** Where the lines of the tests are stored. */
 const lineLocation = {
-  location: '/self_reports/Echo/parseLogs.jsonl',
-  locationName: 'parseLogs',
+  location: '/self_reports/Echo/logFiles.jsonl',
+  locationName: 'logFiles',
   groupName: 'self_reports_echo'
 }
 
