@@ -9,18 +9,18 @@ interface PageLayoutProps {
 const PageLayoutComponent: React.FC<PageLayoutProps> = ({ header, children }) => {
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         display: 'flex',
         flexDirection: 'column',
         height: '100vh',
         width: '100%',
-        padding: 2
-      }}
+        padding: theme.dimensions.page.padding
+      })}
     >
       {header && (
         <>
           {header}
-          <Box sx={{ mt: 1 }} />
+          <Box sx={(theme) => ({ mt: theme.dimensions.page.headerGap })} />
         </>
       )}
       {children}

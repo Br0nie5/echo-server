@@ -16,20 +16,20 @@ const LogsByJobsLayoutComponent: React.FC<LogsByJobsLayoutProps> = ({ logs }) =>
   const logsByJobs = useMemo(() => groupLogsByJob(logs), [logs])
 
   return (
-    <Stack spacing={2} sx={{ overflowX: 'auto' }}>
+    <Stack spacing={theme.dimensions.logs.jobsGap} sx={{ overflowX: 'auto' }}>
       {logsByJobs.map((logsByJob) => {
         return (
           <Box
             key={logsByJob.id}
             sx={{
-              border: `1px solid ${theme.palette.secondary.main}`,
-              borderRadius: 4,
-              padding: 1
+              border: `${theme.dimensions.logs.jobBorderWidth} solid ${theme.palette.logJobBorder}`,
+              borderRadius: theme.shape.logJobRadius,
+              padding: theme.dimensions.logs.jobPadding
             }}
           >
             <CollapsibleBox
               title={
-                <Typography variant="body1" align="center" sx={{ fontWeight: 'bold' }}>
+                <Typography variant="logJobTitle" align="center">
                   {`[${logsByJob.locationName}] > [${logsByJob.jobId}]`}
                 </Typography>
               }

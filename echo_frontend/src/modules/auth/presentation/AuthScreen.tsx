@@ -18,7 +18,12 @@ const AuthScreenComponent: React.FC = () => {
 
   const title = useMemo(
     () => (
-      <Typography variant="h4" gutterBottom align="center" sx={{ mt: 3 }}>
+      <Typography
+        variant="h4"
+        gutterBottom
+        align="center"
+        sx={(theme) => ({ mt: theme.dimensions.screenTitle.topMargin })}
+      >
         {`${config.serverName}: ${translation('auth.title')}`}
       </Typography>
     ),

@@ -32,13 +32,13 @@ const FilteredLogsLayoutComponent: React.FC<FilteredLogsLayoutProps> = ({
 
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         flex: 1,
-        paddingTop: isLoading ? '5px' : '0px'
-      }}
+        paddingTop: isLoading ? theme.dimensions.logs.progressBarGap : 0
+      })}
     >
       {isLoading && (
         <LinearProgress

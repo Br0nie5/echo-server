@@ -86,6 +86,10 @@ Both modules have these four layers, `domain/` at the center:
 
 **The texts are translations.** `useAppTranslation` gives the function translating a key, an unknown key being a compile error (`shared/i18n/`).
 
+**Data stays on screen while it reloads.** When the start date or the filters change, the logs already displayed stay, under a progress bar, until the new ones are ready (`keepPreviousData`). The auth check is the exception: it is fetched fresh each time the auth screen opens.
+
+**The look is in the theme.** Every color, text style, spacing and shape a component uses is a role of `shared/theme.ts`, named after where it is used: `palette` (`logLevelBackground`, `logJobBorder`), the `typography` variants (`logJobTitle`, `logMessage`), `shape` (`logCardRadius`, `logJobRadius`) and `dimensions`, grouped by the place that uses them. Only the layout (`flex`, alignment, overflow) is written in the components.
+
 **Dates are those of the user.** The logs are grouped by day and their dates formatted in the time zone and the locale of the browser.
 
 ## Tests

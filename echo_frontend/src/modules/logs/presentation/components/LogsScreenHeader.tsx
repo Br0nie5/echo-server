@@ -1,6 +1,6 @@
 import type { LogLevel } from '@echo/utilities'
 import { logSearchableKeys } from '@echo/utilities'
-import { Box, Stack, Typography } from '@mui/material'
+import { Box, Stack, Typography, useTheme } from '@mui/material'
 import { memo } from 'react'
 
 import { DateSelector } from '../../../../shared/components/DateSelector'
@@ -27,6 +27,7 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
   const { serverName, logsMinimalDate, logsMaximalDate } = useConfig()
 
   const translation = useAppTranslation()
+  const theme = useTheme()
   const { isPortrait } = useWindowSize()
 
   return (
@@ -44,20 +45,33 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
           controlledState={logsFromDateState}
         />
       </Box>
-      <Typography variant="h4" gutterBottom align="center" sx={{ mt: 3 }}>
+      <Typography
+        variant="h4"
+        gutterBottom
+        align="center"
+        sx={{ mt: theme.dimensions.screenTitle.topMargin }}
+      >
         {`${serverName}: ${translation('logs.title')}`}
       </Typography>
       {!!availableLogLevels && availableLogLevels.length > 0 && (
         <Stack
           direction={isPortrait ? 'column' : 'row'}
-          spacing={isPortrait ? 2 : 7}
+          spacing={
+            isPortrait
+              ? theme.dimensions.logsFilters.portraitGap
+              : theme.dimensions.logsFilters.landscapeGap
+          }
           sx={{
-            padding: 2,
+            padding: theme.dimensions.logsFilters.padding,
             justifyContent: isPortrait ? undefined : 'space-between'
           }}
         >
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h5" align="center" sx={{ mb: 3 }}>
+          <Box sx={{ mb: theme.dimensions.logsFilters.levelsBottomMargin }}>
+            <Typography
+              variant="h5"
+              align="center"
+              sx={{ mb: theme.dimensions.logsFilters.levelsTitleBottomMargin }}
+            >
               {translation('logs.filterByLevel')}
             </Typography>
             <FilterChips tags={availableLogLevels} controlledState={logLevelsFiltersState} />

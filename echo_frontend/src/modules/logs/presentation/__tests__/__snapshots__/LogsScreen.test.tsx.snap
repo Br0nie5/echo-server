@@ -457,7 +457,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                     class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
                                                   >
                                                     <p
-                                                      class="MuiTypography-root MuiTypography-body1 MuiTypography-alignCenter css-1nwwubv-MuiTypography-root"
+                                                      class="MuiTypography-root MuiTypography-logJobTitle MuiTypography-alignCenter css-bailee-MuiTypography-root"
                                                       style="--Typography-textAlign: center;"
                                                     >
                                                       [send_invoices] &gt; [12]
@@ -512,7 +512,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                               28/04/2026, 09:42:09 - INFO
                                                             </p>
                                                             <p
-                                                              class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
                                                             >
                                                               Invoices sent.
                                                             </p>
@@ -531,7 +531,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                               28/04/2026, 09:42:05 - SUCCESS
                                                             </p>
                                                             <p
-                                                              class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
                                                             >
                                                               Invoice 41 sent on attempt 1.
                                                             </p>
@@ -644,7 +644,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                     class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
                                                   >
                                                     <p
-                                                      class="MuiTypography-root MuiTypography-body1 MuiTypography-alignCenter css-1nwwubv-MuiTypography-root"
+                                                      class="MuiTypography-root MuiTypography-logJobTitle MuiTypography-alignCenter css-bailee-MuiTypography-root"
                                                       style="--Typography-textAlign: center;"
                                                     >
                                                       [sync_stock] &gt; [7]
@@ -699,7 +699,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                               28/04/2026, 08:15:30 - ERROR
                                                             </p>
                                                             <p
-                                                              class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
                                                             >
                                                               Stock could not be read.
                                                             </p>
@@ -718,7 +718,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                               28/04/2026, 08:15:00 - WARNING
                                                             </p>
                                                             <p
-                                                              class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
                                                             >
                                                               Stock file is older than a day.
                                                             </p>
@@ -831,7 +831,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                     class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
                                                   >
                                                     <p
-                                                      class="MuiTypography-root MuiTypography-body1 MuiTypography-alignCenter css-1nwwubv-MuiTypography-root"
+                                                      class="MuiTypography-root MuiTypography-logJobTitle MuiTypography-alignCenter css-bailee-MuiTypography-root"
                                                       style="--Typography-textAlign: center;"
                                                     >
                                                       [ping] &gt; [3]
@@ -886,7 +886,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                               28/04/2026, 07:00:00 - INFO
                                                             </p>
                                                             <p
-                                                              class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
                                                             >
                                                               Ping answered.
                                                             </p>
@@ -1517,7 +1517,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                     class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
                                                   >
                                                     <p
-                                                      class="MuiTypography-root MuiTypography-body1 MuiTypography-alignCenter css-1nwwubv-MuiTypography-root"
+                                                      class="MuiTypography-root MuiTypography-logJobTitle MuiTypography-alignCenter css-bailee-MuiTypography-root"
                                                       style="--Typography-textAlign: center;"
                                                     >
                                                       [send_invoices] &gt; [12]
@@ -1572,7 +1572,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                               28/04/2026, 09:42:09 - INFO
                                                             </p>
                                                             <p
-                                                              class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
                                                             >
                                                               Invoices sent.
                                                             </p>
@@ -1591,7 +1591,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                               28/04/2026, 09:42:05 - SUCCESS
                                                             </p>
                                                             <p
-                                                              class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
                                                             >
                                                               Invoice 41 sent on attempt 1.
                                                             </p>
@@ -1704,7 +1704,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                     class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
                                                   >
                                                     <p
-                                                      class="MuiTypography-root MuiTypography-body1 MuiTypography-alignCenter css-1nwwubv-MuiTypography-root"
+                                                      class="MuiTypography-root MuiTypography-logJobTitle MuiTypography-alignCenter css-bailee-MuiTypography-root"
                                                       style="--Typography-textAlign: center;"
                                                     >
                                                       [sync_stock] &gt; [7]
@@ -1759,7 +1759,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                               28/04/2026, 08:15:30 - ERROR
                                                             </p>
                                                             <p
-                                                              class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
                                                             >
                                                               Stock could not be read.
                                                             </p>
@@ -1778,7 +1778,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                               28/04/2026, 08:15:00 - WARNING
                                                             </p>
                                                             <p
-                                                              class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
                                                             >
                                                               Stock file is older than a day.
                                                             </p>
@@ -1891,7 +1891,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                     class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
                                                   >
                                                     <p
-                                                      class="MuiTypography-root MuiTypography-body1 MuiTypography-alignCenter css-1nwwubv-MuiTypography-root"
+                                                      class="MuiTypography-root MuiTypography-logJobTitle MuiTypography-alignCenter css-bailee-MuiTypography-root"
                                                       style="--Typography-textAlign: center;"
                                                     >
                                                       [ping] &gt; [3]
@@ -1946,7 +1946,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                                                               28/04/2026, 07:00:00 - INFO
                                                             </p>
                                                             <p
-                                                              class="MuiTypography-root MuiTypography-body1 css-1es2qm-MuiTypography-root"
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
                                                             >
                                                               Ping answered.
                                                             </p>

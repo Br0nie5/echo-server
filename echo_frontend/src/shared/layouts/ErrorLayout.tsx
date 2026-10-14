@@ -23,7 +23,7 @@ const ErrorLayoutComponent: React.FC<ErrorLayoutProps> = ({ button }) => {
       <Typography variant="body1">{translation('query.error')}</Typography>
       {button && (
         <>
-          <Box sx={{ padding: 1 }} />
+          <Box sx={(theme) => ({ padding: theme.dimensions.errorLayout.buttonGap })} />
           {button}
         </>
       )}

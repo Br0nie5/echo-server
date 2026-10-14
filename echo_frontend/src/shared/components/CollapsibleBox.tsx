@@ -33,11 +33,15 @@ const CollapsibleBoxComponent: React.FC<CollapsibleBoxProps> = ({
           expandIcon={<ExpandMoreIcon />}
           aria-controls={`${id}-content`}
           id={`${id}-header`}
-          sx={{ height: '80px', width }}
+          sx={(theme) => ({ height: theme.dimensions.collapsibleBox.headerHeight, width })}
         >
           {title}
         </AccordionSummary>
-        <AccordionDetails sx={{ padding: 1 }}>{isOpen && children}</AccordionDetails>
+        <AccordionDetails
+          sx={(theme) => ({ padding: theme.dimensions.collapsibleBox.contentPadding })}
+        >
+          {isOpen && children}
+        </AccordionDetails>
       </Accordion>
     </Box>
   )

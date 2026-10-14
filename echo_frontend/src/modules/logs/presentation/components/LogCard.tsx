@@ -15,26 +15,17 @@ const LogCardComponent: React.FC<LogCardProps> = ({ log }) => {
   const entryLogTitle = `${formattedDate} - ${log.level}`
 
   return (
-    <Card sx={{ marginBottom: 2 }}>
+    <Card sx={{ marginBottom: theme.dimensions.logs.cardGap }}>
       <CardContent
         sx={{
           backgroundColor: theme.palette.logLevelBackground[log.level],
           color: theme.palette.text.primary,
-          borderRadius: 2,
-          padding: 2
+          borderRadius: theme.shape.logCardRadius,
+          padding: theme.dimensions.logs.cardPadding
         }}
       >
         <Typography variant="body2">{entryLogTitle}</Typography>
-        <Typography
-          variant="body1"
-          sx={{
-            fontWeight: 'bold',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word'
-          }}
-        >
-          {log.message}
-        </Typography>
+        <Typography variant="logMessage">{log.message}</Typography>
       </CardContent>
     </Card>
   )

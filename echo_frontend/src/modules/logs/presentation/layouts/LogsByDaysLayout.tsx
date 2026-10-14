@@ -1,5 +1,5 @@
 import type { Log } from '@echo/utilities'
-import { Stack, Typography } from '@mui/material'
+import { Stack, Typography, useTheme } from '@mui/material'
 import { memo, useMemo } from 'react'
 
 import { CollapsibleBox } from '../../../../shared/components/CollapsibleBox'
@@ -15,10 +15,11 @@ type LogsByDaysLayoutProps = {
 
 const LogsByDaysLayoutComponent: React.FC<LogsByDaysLayoutProps> = ({ filteredLogs }) => {
   const translation = useAppTranslation()
+  const theme = useTheme()
   const logsByDays = useMemo(() => groupLogsByDay(filteredLogs), [filteredLogs])
 
   return (
-    <Stack spacing={2} sx={{ overflowX: 'auto' }}>
+    <Stack spacing={theme.dimensions.logs.daysGap} sx={{ overflowX: 'auto' }}>
       {logsByDays.map((logsByDay, dayLogsIndex) => (
         <CollapsibleBox
           key={logsByDay.id}

@@ -7,7 +7,8 @@ import {
   Paper,
   Popper,
   Stack,
-  TextField
+  TextField,
+  useTheme
 } from '@mui/material'
 import React, { memo, useState } from 'react'
 
@@ -31,6 +32,7 @@ const SearchBarComponent: React.FC<SearchBarProps> = ({
   controlledState
 }) => {
   const translation = useAppTranslation()
+  const theme = useTheme()
   const { isPortrait } = useWindowSize()
 
   const [anchorElement, setAnchorElement] = useState<HTMLDivElement | null>(null)
@@ -53,7 +55,11 @@ const SearchBarComponent: React.FC<SearchBarProps> = ({
       <form onSubmit={submit} onClick={openSuggestions}>
         <Stack
           direction={isPortrait ? 'column' : 'row'}
-          spacing={isPortrait ? 2 : 7}
+          spacing={
+            isPortrait
+              ? theme.dimensions.searchBar.portraitGap
+              : theme.dimensions.searchBar.landscapeGap
+          }
           sx={{ justifyContent: isPortrait ? undefined : 'space-between' }}
         >
           <Box ref={setAnchorElement} sx={{ flex: 1 }}>
@@ -69,7 +75,7 @@ const SearchBarComponent: React.FC<SearchBarProps> = ({
             type="submit"
             variant="contained"
             sx={{
-              mt: 1,
+              mt: theme.dimensions.searchBar.buttonTopMargin,
               alignSelf: 'center'
             }}
           >

@@ -32,14 +32,14 @@ const FilterChipsComponent = <TTag extends string>({
 
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         display: 'flex',
         flexWrap: 'wrap',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: 1,
-        mb: 3
-      }}
+        gap: theme.dimensions.filterChips.gap,
+        mb: theme.dimensions.filterChips.bottomMargin
+      })}
     >
       {tags.map((tag) => (
         <Chip

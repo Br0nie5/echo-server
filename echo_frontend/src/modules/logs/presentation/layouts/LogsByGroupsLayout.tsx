@@ -1,5 +1,5 @@
 import type { Log } from '@echo/utilities'
-import { Stack, Typography } from '@mui/material'
+import { Stack, Typography, useTheme } from '@mui/material'
 import { memo, useMemo } from 'react'
 
 import { CollapsibleBox } from '../../../../shared/components/CollapsibleBox'
@@ -15,11 +15,16 @@ type LogsByGroupsLayoutProps = {
 
 const LogsByGroupsLayoutComponent: React.FC<LogsByGroupsLayoutProps> = ({ logs }) => {
   const translation = useAppTranslation()
+  const theme = useTheme()
   const { windowSize, isPortrait } = useWindowSize()
   const logsByGroups = useMemo(() => groupLogsByGroup(logs), [logs])
 
   return (
-    <Stack direction={isPortrait ? 'column' : 'row'} sx={{ overflowX: 'auto' }} spacing={1}>
+    <Stack
+      direction={isPortrait ? 'column' : 'row'}
+      sx={{ overflowX: 'auto' }}
+      spacing={theme.dimensions.logs.groupsGap}
+    >
       {logsByGroups.map((logsByGroup) => {
         return (
           <CollapsibleBox
@@ -30,7 +35,11 @@ const LogsByGroupsLayoutComponent: React.FC<LogsByGroupsLayoutProps> = ({ logs }
               </Typography>
             }
             isOpenedByParent
-            width={isPortrait ? undefined : `${windowSize.width / 2.5}px`}
+            width={
+              isPortrait
+                ? undefined
+                : `${windowSize.width * theme.dimensions.logs.groupWidthShareOfWindow}px`
+            }
           >
             <LogsByJobsLayout logs={logsByGroup.logs} />
           </CollapsibleBox>

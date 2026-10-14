@@ -1,4 +1,12 @@
-import { Typography, TextField, Button, Box, CircularProgress, Alert } from '@mui/material'
+import {
+  Typography,
+  TextField,
+  Button,
+  Box,
+  CircularProgress,
+  Alert,
+  useTheme
+} from '@mui/material'
 import React, { memo } from 'react'
 
 import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
@@ -11,6 +19,7 @@ type AuthFormLayoutProps = {
 
 const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({ formMode }) => {
   const translation = useAppTranslation()
+  const theme = useTheme()
   const {
     onSubmit,
     isSubmitting,
@@ -23,12 +32,24 @@ const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({ formMode }) =>
   } = useAuthForm(formMode)
 
   return (
-    <Box component="form" onSubmit={onSubmit} sx={{ maxWidth: 400, mx: 'auto', p: 3 }}>
-      <Typography variant="body1" align="center" sx={{ mb: 3 }}>
+    <Box
+      component="form"
+      onSubmit={onSubmit}
+      sx={{
+        maxWidth: theme.dimensions.authForm.maxWidth,
+        mx: 'auto',
+        p: theme.dimensions.authForm.padding
+      }}
+    >
+      <Typography
+        variant="body1"
+        align="center"
+        sx={{ mb: theme.dimensions.authForm.introBottomMargin }}
+      >
         {translation('auth.form.enterCredentials')}
       </Typography>
       {alert && (
-        <Alert severity={alert.severity} sx={{ mb: 2 }}>
+        <Alert severity={alert.severity} sx={{ mb: theme.dimensions.authForm.alertBottomMargin }}>
           {translation(alert.messageKey)}
         </Alert>
       )}
@@ -58,9 +79,13 @@ const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({ formMode }) =>
         variant="contained"
         color="primary"
         fullWidth
-        sx={{ mt: 3 }}
+        sx={{ mt: theme.dimensions.authForm.buttonTopMargin }}
         disabled={isSubmitting || isAuthenticated}
-        startIcon={isSubmitting && <CircularProgress size={20} color="inherit" />}
+        startIcon={
+          isSubmitting && (
+            <CircularProgress size={theme.dimensions.authForm.buttonSpinnerSize} color="inherit" />
+          )
+        }
       >
         {formMode === 'login'
           ? translation('auth.login.button')

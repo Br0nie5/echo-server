@@ -26,7 +26,7 @@ const RedirectLayoutComponent: React.FC = () => {
       <Typography variant="body1" align="center">
         {translation('auth.redirect.message')}
       </Typography>
-      <Box sx={{ padding: 1 }} />
+      <Box sx={(theme) => ({ padding: theme.dimensions.redirectLayout.urlGap })} />
       <Typography variant="body1" align="center" sx={{ wordBreak: 'break-all' }}>
         {redirectionUrl}
       </Typography>
