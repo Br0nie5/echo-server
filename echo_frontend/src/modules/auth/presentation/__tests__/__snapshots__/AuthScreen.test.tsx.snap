@@ -96,7 +96,7 @@ exports[`AuthScreen > Should display the login form to the user who is not logge
         </div>
       </div>
       <button
-        class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-sizeMedium MuiButton-colorPrimary MuiButton-fullWidth css-1jv3qp3-MuiButtonBase-root-MuiButton-root"
+        class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-sizeMedium MuiButton-colorPrimary MuiButton-fullWidth css-1dbijuk-MuiButtonBase-root-MuiButton-root"
         tabindex="0"
         type="submit"
       >

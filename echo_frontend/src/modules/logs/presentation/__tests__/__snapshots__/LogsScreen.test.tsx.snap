@@ -281,7 +281,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
               </div>
             </div>
             <button
-              class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-sizeMedium MuiButton-colorPrimary css-vgdju5-MuiButtonBase-root-MuiButton-root"
+              class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-sizeMedium MuiButton-colorPrimary css-14tnvd1-MuiButtonBase-root-MuiButton-root"
               tabindex="0"
               type="submit"
             >
@@ -1341,7 +1341,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
               </div>
             </div>
             <button
-              class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-sizeMedium MuiButton-colorPrimary css-vgdju5-MuiButtonBase-root-MuiButton-root"
+              class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-sizeMedium MuiButton-colorPrimary css-14tnvd1-MuiButtonBase-root-MuiButton-root"
               tabindex="0"
               type="submit"
             >
