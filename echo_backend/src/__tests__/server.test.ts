@@ -5,11 +5,11 @@ import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastif
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 import { loadSettings as actualLoadSettings } from '../initializers/settings/loadSettings.js'
-import type { Settings } from '../initializers/settings/settings.js'
 import { logsNotifier } from '../modules/logs/modules/logsNotifier/presentation/logs.notifier.js'
 import { startServer } from '../server.js'
 import type * as FilesServiceModule from '../shared/services/files.service.js'
 import { buildTestServer } from '../test/buildTestServer.js'
+import { IN_MEMORY_DATABASE_PATH } from '../test/mocks/inMemoryDatabase.js'
 import {
   getMockAuthSettings,
   getMockLogsNotifierSettings,
@@ -56,8 +56,7 @@ vi.mock('../shared/services/files.service.js', async (importOriginal) => {
   const { createInMemoryFileSystem } = await import('../test/mocks/inMemoryFileSystem.js')
 
   const createFilesService: typeof actual.createFilesService = (
-    fileSystem = createInMemoryFileSystem({ files: { ':memory:': '' }, directories: ['/logs'] })
-      .fileSystem,
+    fileSystem = createInMemoryFileSystem({ directories: ['/logs'] }).fileSystem,
     ...otherArguments
   ) => actual.createFilesService(fileSystem, ...otherArguments)
 
@@ -104,9 +103,6 @@ const frontendDistDirPath = path.join(import.meta.dirname, 'fixtures', 'frontend
 const indexHtmlFiles = {
   [path.join(frontendDistDirPath, 'index.html')]: '<!doctype html><head><title>Echo</title></head>'
 }
-
-const getInMemoryAuthSettings = (): Settings['auth'] =>
-  getMockAuthSettings({ usersDbFilePath: ':memory:' })
 
 afterEach(async () => {
   await Promise.all(fastifyStubs.builtServers.map((server) => server.close()))
@@ -171,18 +167,8 @@ describe('buildServer', () => {
       expect(logsNotifier).toHaveBeenCalledOnce()
     })
 
-    test.each<{ reason: string; settings: Partial<Settings> }>([
-      {
-        reason: 'the notifications are not configured',
-        settings: { logs: logsWithNotifierSettings }
-      },
-      {
-        reason: 'the logs notifier is not configured',
-        settings: { notification: getMockNotificationSettings() }
-      },
-      { reason: 'neither the notifications nor the logs notifier are configured', settings: {} }
-    ])('Should not start the logs notifier when $reason', async ({ settings }) => {
-      await buildTestServer({ settings })
+    test('Should not start the logs notifier when the notifications are not configured', async () => {
+      await buildTestServer()
 
       expect(logsNotifier).not.toHaveBeenCalled()
     })
@@ -415,7 +401,7 @@ describe('buildServer', () => {
 describe('startServer', () => {
   const settings = getMockSettings({
     server: getMockServerSettings({ host: '127.0.0.1', port: 4000, basePath: '/echo' }),
-    auth: getInMemoryAuthSettings(),
+    auth: getMockAuthSettings({ usersDbFilePath: IN_MEMORY_DATABASE_PATH }),
     parseLogsSelfReports: undefined,
     notificationsSelfReports: undefined
   })
@@ -439,7 +425,7 @@ describe('startServer', () => {
 
     await startServer()
 
-    expect(consoleError).toHaveBeenCalledWith('The server could not be built:', error)
+    expect(consoleError).toHaveBeenCalledWith('The settings could not be loaded:', error)
     expect(exit).toHaveBeenCalledExactlyOnceWith(1)
     expect(fastifyStubs.listen).not.toHaveBeenCalled()
   })

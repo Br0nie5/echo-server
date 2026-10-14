@@ -5,6 +5,9 @@
  * server (`server.log`) is one.
  */
 export interface Logger {
-  /** Writes `message` as an error, along with `context`, the values that tell it apart (`{ err: error }`). */
+  /**
+   * Writes `message` as an error, along with `context`, the values that tell it apart
+   * (`{ err: error }`).
+   */
   error: (context: object, message: string) => void
 }

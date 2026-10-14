@@ -6,8 +6,7 @@ import { createAuthUsersDbRepository } from '../authUsersDb.repository.js'
 
 const get = vi.fn()
 const run = vi.fn()
-const usersDb = { prepare: vi.fn(() => ({ get, run })) }
-const AuthRepository = createAuthUsersDbRepository(usersDb as unknown as Database)
+const usersDb = { prepare: vi.fn(() => ({ get, run })) } as unknown as Database
 
 describe('createAuthUsersDbRepository', () => {
   beforeEach(() => {
@@ -20,7 +19,9 @@ describe('createAuthUsersDbRepository', () => {
 
   describe('createUser', () => {
     it('Should store a user who is not an admin as such', async () => {
-      await AuthRepository.createUser({ username: 'reader', password: 'secret', isAdmin: false })
+      const authRepository = createAuthUsersDbRepository(usersDb)
+
+      await authRepository.createUser({ username: 'reader', password: 'secret', isAdmin: false })
 
       const [username, , isAdminColumn] = run.mock.calls[0]
       expect(username).toBe('reader')
@@ -30,10 +31,11 @@ describe('createAuthUsersDbRepository', () => {
 
   describe('areCredentialsValid', () => {
     it('Should be false for an unknown user, after comparing the password to a hash of the same cost', async () => {
+      const authRepository = createAuthUsersDbRepository(usersDb)
       const compare = vi.spyOn(bcrypt, 'compare')
       get.mockReturnValueOnce(undefined)
 
-      expect(await AuthRepository.areCredentialsValid('ghost', 'secret')).toBe(false)
+      expect(await authRepository.areCredentialsValid('ghost', 'secret')).toBe(false)
       expect(compare).toHaveBeenCalledExactlyOnceWith(
         'secret',
         expect.stringMatching(/^\$2b\$12\$/)
@@ -42,7 +44,7 @@ describe('createAuthUsersDbRepository', () => {
 
     it('Should make the hash an unknown user is compared to once', async () => {
       const hash = vi.spyOn(bcrypt, 'hash')
-      const authRepository = createAuthUsersDbRepository(usersDb as unknown as Database)
+      const authRepository = createAuthUsersDbRepository(usersDb)
       get.mockReturnValueOnce(undefined).mockReturnValueOnce(undefined)
 
       await authRepository.areCredentialsValid('ghost', 'secret')

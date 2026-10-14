@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { convertToDateFromISO } from '../../../../../../shared/utils/convertToDateFromISO.js'
+
 /** Validates the JSON of the last-check file. */
 const LastCheckDateDtoSchema = z.object({
   lastCheck: z.string()
@@ -12,7 +14,7 @@ type LastCheckDateDto = z.infer<typeof LastCheckDateDtoSchema>
  * Converts the content of the last-check file to the date of the last check it holds.
  *
  * Returns `undefined` when the content holds none: it is not JSON, does not have the shape of a
- * `LastCheckDateDto`, or its `lastCheck` is not a date.
+ * `LastCheckDateDto`, or its `lastCheck` is not an ISO date.
  */
 export const convertRawLastCheckDateToLastCheckDate = (
   rawLastCheckDate: string
@@ -31,13 +33,7 @@ export const convertRawLastCheckDateToLastCheckDate = (
     return
   }
 
-  const lastCheckDate = new Date(lastCheckDateDto.data.lastCheck)
-
-  if (isNaN(lastCheckDate.getTime())) {
-    return
-  }
-
-  return lastCheckDate
+  return convertToDateFromISO(lastCheckDateDto.data.lastCheck)
 }
 
 /** Converts the date of the last check to the content the last-check file stores it as. */

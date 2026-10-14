@@ -8,7 +8,7 @@ import type { SelfReportRepository } from '../domain/selfReport.repository.js'
 import {
   convertSelfReportLineToSelfReport,
   convertSelfReportToSelfReportLine,
-  type SelfReportLineStorage
+  type SelfReportLineLocation
 } from './dto/selfReportLine.dto.js'
 import { createSelfReportsFilesApi } from './selfReportsFiles.api.js'
 import { createSessionIdFileApi } from './sessionIdFile.api.js'
@@ -21,7 +21,9 @@ export interface CreateSelfReportFilesRepositoryOptions {
   filesService: FilesService
   /** Directory holding the self-report file. */
   selfReportsDirPath: string
-  /** Name, with its extension, of the file of `selfReportsDirPath` the self reports are stored in. */
+  /**
+   * Name, with its extension, of the file of `selfReportsDirPath` the self reports are stored in.
+   */
   selfReportFileName: string
   /** File the session of the repository is remembered in. */
   sessionFilePath: string
@@ -40,7 +42,10 @@ export interface CreateSelfReportFilesRepositoryOptions {
 const createSelfReportContentKey = ({ level, message, origin }: SelfReport): string =>
   JSON.stringify({ level, message, origin })
 
-/** Gives the `selfReports` that say something neither one of `storedSelfReports` nor one before them says. */
+/**
+ * Gives the `selfReports` that say something neither one of `storedSelfReports` nor one before
+ * them says.
+ */
 const filterOutStoredProblems = (
   selfReports: SelfReport[],
   storedSelfReports: SelfReport[]
@@ -88,11 +93,12 @@ const filterOutStoredProblems = (
  *
  * Saving self reports writes the file again, with the stored ones that are not older than
  * `retentionDays` first, as they are, then the new ones, in the order they are given, with the
- * session id of the repository. When `isEachProblemStoredOnce` is `true`, a new one with the
- * `level`, the `message` and the `origin` of one that is kept, or of a new one before it, is left
- * out; a problem that is still there once its self report is too old to be kept is therefore
- * stored again, with its new date. The file is not written when no new one is left. A failure to
- * save goes to `logger`, and is not thrown.
+ * session id of the repository. The file is read and written as one update of `filesService`, so
+ * two saves at once never lose each other's self reports. When `isEachProblemStoredOnce` is
+ * `true`, a new one with the `level`, the `message` and the `origin` of one that is kept, or of a
+ * new one before it, is left out; a problem that is still there once its self report is too old to
+ * be kept is therefore stored again, with its new date. The file is not written when no new one is
+ * left. A failure to save goes to `logger`, and is not thrown.
  *
  * The lines of the file that hold no self report are not read, so they are gone once it is written
  * again.
@@ -117,42 +123,27 @@ export const createSelfReportFilesRepository = async ({
   const sessionIdApi = createSessionIdFileApi(sessionFilePath, filesService)
   const selfReportsFilePath = path.join(selfReportsDirPath, selfReportFileName)
 
-  const getSelfReportLineStorage = (): SelfReportLineStorage => {
-    const groupName = selfReportsFilesApi
-      .getSelfReportFilePathFromRoot(selfReportsFilePath)
-      ?.split('/')
-      .slice(0, -1)
-      .join('_')
-
-    return {
-      location: selfReportsFilePath,
-      locationName: path.parse(selfReportsFilePath).name,
-      groupName: groupName === '' ? undefined : groupName
-    }
+  const groupName = selfReportsFilesApi
+    .getSelfReportFilePathFromRoot(selfReportsFilePath)
+    ?.split('/')
+    .slice(0, -1)
+    .join('_')
+  const lineLocation: SelfReportLineLocation = {
+    location: selfReportsFilePath,
+    locationName: path.parse(selfReportsFilePath).name,
+    groupName: groupName === '' ? undefined : groupName
   }
 
-  const getStoredSelfReports = async (): Promise<Array<SelfReport & SelfReportsSession>> => {
-    const lines = await selfReportsFilesApi.getSelfReportLines(selfReportsFilePath)
-    const storage = getSelfReportLineStorage()
-
-    return lines
-      .map((line) => convertSelfReportLineToSelfReport(line, storage))
+  const convertLinesToSelfReports = (lines: string[]): Array<SelfReport & SelfReportsSession> =>
+    lines
+      .map((line) => convertSelfReportLineToSelfReport(line, lineLocation))
       .filter((selfReport) => selfReport !== undefined)
-  }
 
-  const getKeptSelfReports = async (): Promise<Array<SelfReport & SelfReportsSession>> => {
-    const retentionTime = Date.now() - retentionDays * MILLISECONDS_PER_DAY
+  const isKept = ({ date }: SelfReport): boolean =>
+    date.getTime() >= Date.now() - retentionDays * MILLISECONDS_PER_DAY
 
-    return (await getStoredSelfReports()).filter(({ date }) => date.getTime() >= retentionTime)
-  }
-
-  const storeSelfReports = (
-    selfReports: Array<SelfReport & Pick<SelfReportsSession, 'sessionId'>>
-  ): Promise<void> =>
-    selfReportsFilesApi.saveSelfReportLines(
-      selfReportsFilePath,
-      selfReports.map(convertSelfReportToSelfReportLine)
-    )
+  const getKeptSelfReports = (lines: string[]): Array<SelfReport & SelfReportsSession> =>
+    convertLinesToSelfReports(lines).filter(isKept)
 
   let sessionId: number
 
@@ -160,14 +151,13 @@ export const createSelfReportFilesRepository = async ({
     const lastSessionId = await sessionIdApi.getLastSessionId().catch(() => 0)
     sessionId = lastSessionId + 1
 
-    await storeSelfReports(await getKeptSelfReports())
+    await selfReportsFilesApi.updateSelfReportLines(selfReportsFilePath, (lines) =>
+      getKeptSelfReports(lines).map(convertSelfReportToSelfReportLine)
+    )
 
     await sessionIdApi.saveLastSessionId(sessionId)
   } catch (error) {
-    logger.error(
-      { err: error, selfReportsFilePath },
-      'Failed to set up self reports, disabling them for this session'
-    )
+    logger.error({ err: error, selfReportsFilePath }, 'Failed to set up self reports')
 
     return undefined
   }
@@ -179,17 +169,21 @@ export const createSelfReportFilesRepository = async ({
       }
 
       try {
-        const keptSelfReports = await getKeptSelfReports()
-        const newSelfReports = isEachProblemStoredOnce
-          ? filterOutStoredProblems(selfReports, keptSelfReports)
-          : selfReports
+        await selfReportsFilesApi.updateSelfReportLines(selfReportsFilePath, (lines) => {
+          const keptSelfReports = getKeptSelfReports(lines)
+          const newSelfReports = isEachProblemStoredOnce
+            ? filterOutStoredProblems(selfReports, keptSelfReports)
+            : selfReports
 
-        if (newSelfReports.length > 0) {
-          await storeSelfReports([
+          if (newSelfReports.length === 0) {
+            return undefined
+          }
+
+          return [
             ...keptSelfReports,
             ...newSelfReports.map((newSelfReport) => ({ ...newSelfReport, sessionId }))
-          ])
-        }
+          ].map(convertSelfReportToSelfReportLine)
+        })
       } catch (error) {
         logger.error({ err: error, selfReportsFilePath }, 'Failed to write self reports')
       }
@@ -197,7 +191,9 @@ export const createSelfReportFilesRepository = async ({
 
     getSelfReports: async (): Promise<Array<SelfReport & SelfReportsSession>> => {
       try {
-        return await getStoredSelfReports()
+        return convertLinesToSelfReports(
+          await selfReportsFilesApi.getSelfReportLines(selfReportsFilePath)
+        )
       } catch (error) {
         logger.error({ err: error, selfReportsFilePath }, 'Failed to read self reports')
 

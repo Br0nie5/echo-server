@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import { convertSelfReportLineToSelfReport } from '../selfReportLine.dto.js'
 
-const storage = {
+/** Where the lines of the tests are stored. */
+const lineLocation = {
   location: '/self_reports/Echo/parseLogs.jsonl',
   locationName: 'parseLogs',
   groupName: 'self_reports_Echo'
@@ -41,6 +42,6 @@ describe('convertSelfReportLineToSelfReport', () => {
       '{"sessionId":4,"date":"2026-10-01T08:00:00.000Z","level":"WARNING","message":"bad line"}'
     ]
   ])('Should return undefined for a line that %s', (_, invalidLine) => {
-    expect(convertSelfReportLineToSelfReport(invalidLine, storage)).toBeUndefined()
+    expect(convertSelfReportLineToSelfReport(invalidLine, lineLocation)).toBeUndefined()
   })
 })

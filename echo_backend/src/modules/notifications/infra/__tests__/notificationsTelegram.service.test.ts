@@ -9,7 +9,8 @@ const telegramOptions = {
   telegramChatId: 'chat-123',
   telegramBotToken: 'bot-token',
   telegramBaseUrl: 'https://telegram.test',
-  telegramMessageSizeLimit: 120
+  telegramMessageSizeLimit: 120,
+  telegramRequestTimeoutMilliseconds: 3000
 }
 
 beforeEach(() => {
@@ -21,10 +22,28 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
+  vi.restoreAllMocks()
 })
 
 describe('createNotificationsTelegramService', () => {
   describe('notify', () => {
+    // Without a timeout, a request Telegram never answers would hold the notifier, whose checks do
+    // not overlap, for as long as Node.js waits. The tests of the notifier stub `fetch`, which
+    // answers at once, so they cannot see it.
+    it('Should give up a request to Telegram after telegramRequestTimeoutMilliseconds', async () => {
+      const timeoutSignal = AbortSignal.abort()
+      const createTimeoutSignal = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(timeoutSignal)
+      vi.mocked(fetch).mockResolvedValueOnce(new Response('{}', { status: 200 }))
+
+      await createNotificationsTelegramService(telegramOptions).notify(() => 'Hello')
+
+      expect(createTimeoutSignal).toHaveBeenCalledExactlyOnceWith(3000)
+      expect(fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ signal: timeoutSignal })
+      )
+    })
+
     it('Should throw the error of the network when Telegram cannot be reached', async () => {
       const networkError = new Error('Network down')
       vi.mocked(fetch).mockRejectedValueOnce(networkError)

@@ -5,7 +5,7 @@ import { convertRawLogLineToLog, type RawLogLineDto } from '../rawLogLine.dto.js
 const rawLogLine = (content: string): RawLogLineDto => ({
   logFile: {
     path: '/server/billing/logs/count_stock.jsonl',
-    fileName: 'count_stock',
+    locationName: 'count_stock',
     groupName: 'billing'
   },
   index: 0,

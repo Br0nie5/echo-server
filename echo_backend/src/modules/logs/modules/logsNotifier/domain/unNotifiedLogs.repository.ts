@@ -25,7 +25,7 @@ export interface UnNotifiedLogs {
  * ```ts
  * const { logs, markAsNotified } = await unNotifiedLogsRepository.getUnNotifiedLogs()
  *
- * await notificationsService.notify(buildMessage(logs))
+ * await notificationsService.notify((messageSizeLimit) => buildMessage(logs, messageSizeLimit))
  * await markAsNotified()
  * ```
  */

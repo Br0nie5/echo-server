@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { convertToDateFromISO } from '../../../../shared/utils/convertToDate.js'
+import { convertToDateFromISO } from '../../../../shared/utils/convertToDateFromISO.js'
 import type { SelfReport, SelfReportsSession } from '../../domain/selfReport.js'
 
 /**
@@ -19,25 +19,25 @@ const SelfReportLineDtoSchema = z.object({
 /** A self report as a line of a self-report file holds it. */
 type SelfReportLineDto = z.infer<typeof SelfReportLineDtoSchema>
 
-/** What the session of a self report says that its line does not hold: where the line is stored, and in which group. */
-export type SelfReportLineStorage = Omit<SelfReportsSession, 'sessionId'>
+/** Where the line of a self report is stored, which the line does not hold, and in which group. */
+export type SelfReportLineLocation = Omit<SelfReportsSession, 'sessionId'>
 
 /**
- * Converts a line of a self-report file to the self report it holds, with its session: the
- * `sessionId` of the line, stored at `storage`.
+ * Converts a line of a self-report file, stored at `lineLocation`, to the self report it holds,
+ * reported during the `sessionId` of the line.
  *
  * Returns `undefined` when the line holds none: its content is not JSON, does not have the shape
  * of a line, or has a date that is not an ISO one.
  *
  * ```ts
  * const selfReports = lines
- *   .map((line) => convertSelfReportLineToSelfReport(line, storage))
+ *   .map((line) => convertSelfReportLineToSelfReport(line, lineLocation))
  *   .filter((selfReport) => selfReport !== undefined)
  * ```
  */
 export const convertSelfReportLineToSelfReport = (
   line: string,
-  storage: SelfReportLineStorage
+  lineLocation: SelfReportLineLocation
 ): (SelfReport & SelfReportsSession) | undefined => {
   let json: unknown
 
@@ -60,7 +60,7 @@ export const convertSelfReportLineToSelfReport = (
     return
   }
 
-  return { ...storage, sessionId, date, level, message, origin }
+  return { ...lineLocation, sessionId, date, level, message, origin }
 }
 
 /**

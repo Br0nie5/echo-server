@@ -12,7 +12,10 @@ import type { EchoServer } from './types/echoServer.js'
 /** What `buildServer` already built that the cron notifying the watched logs is built with. */
 export interface LogsNotifierDependencies {
   logsRepository: LogsRepository
-  /** Where the notifications that could not be sent are reported. Missing when the self reports are disabled. */
+  /**
+   * Where the notifications that could not be sent are reported. Missing when the self reports are
+   * disabled.
+   */
   notificationsSelfReportRepository: SelfReportRepository | undefined
   /** What the last-check file is read and written with. */
   filesService: FilesService
@@ -47,7 +50,13 @@ export const registerLogsNotifier = async (
       createCheckDateFileApi({ lastLogsCheckFilePath }, filesService)
     ),
     notificationsService: createNotificationsTelegramService(
-      notificationSettings,
+      {
+        telegramChatId: notificationSettings.telegramChatId,
+        telegramBotToken: notificationSettings.telegramBotToken,
+        telegramBaseUrl: notificationSettings.telegramBaseUrl,
+        telegramMessageSizeLimit: notificationSettings.telegramMessageSizeLimit,
+        telegramRequestTimeoutMilliseconds: notificationSettings.telegramRequestTimeoutMilliseconds
+      },
       notificationsSelfReportRepository
     )
   })

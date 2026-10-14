@@ -11,7 +11,10 @@ import type { LogsRepository } from '../domain/logs.repository.js'
 /** Filters of a logs lookup. An empty `levels` or `searchFilters` matches everything. */
 interface LogsFilters {
   fromDate: Date
-  /** When given, only the logs logged before it match: it is left out of the period, `fromDate` is not. */
+  /**
+   * When given, only the logs logged before it match: it is left out of the period, `fromDate` is
+   * not.
+   */
   toDate?: Date
   levels: LogLevel[]
   searchFilters: LogSearchFilter[]

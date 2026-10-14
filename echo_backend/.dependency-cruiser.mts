@@ -1,7 +1,4 @@
-/**
- * Architecture rules of `echo_backend`, checked by `npm run arch:check`.
- * See docs/architecture.md for the conventions these rules enforce.
- */
+/** Architecture rules of `echo_backend`, checked by `npm run arch:check`. */
 
 import type { IConfiguration, IForbiddenRuleType } from 'dependency-cruiser'
 

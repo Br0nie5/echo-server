@@ -9,7 +9,8 @@ const NOTIFICATION_ENV: NodeJS.ProcessEnv = {
 
 const NOTIFICATION_CONSTANTS = {
   telegramBaseUrl: 'https://api.telegram.org',
-  telegramMessageSizeLimit: 4096
+  telegramMessageSizeLimit: 4096,
+  telegramRequestTimeoutMilliseconds: 10000
 }
 
 describe('parseNotificationSettings', () => {
@@ -18,7 +19,8 @@ describe('parseNotificationSettings', () => {
       telegramChatId: '123456789',
       telegramBotToken: '123456:ABC-DEF',
       telegramBaseUrl: 'https://api.telegram.org',
-      telegramMessageSizeLimit: 4096
+      telegramMessageSizeLimit: 4096,
+      telegramRequestTimeoutMilliseconds: 10000
     })
   })
 

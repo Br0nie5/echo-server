@@ -22,5 +22,5 @@ export const getMockFilesService = (): MockFilesService => ({
   getRelativeFilePath: vi.fn(),
   replaceFileContent: vi.fn(),
   replaceFileLines: vi.fn(),
-  restrictFileAccessToOwner: vi.fn()
+  createOwnerOnlyFile: vi.fn()
 })

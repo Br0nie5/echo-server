@@ -42,8 +42,8 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
 }
 
 /**
- * Fastify plugin running `checkWatchedLogsAndNotify` on the `schedule` of `logsNotifierConfig`, read
- * in its `timezone`, and stopping when the server closes.
+ * Fastify plugin running `checkWatchedLogsAndNotify` on the `schedule` of `logsNotifierConfig`,
+ * read in its `timezone`, and stopping when the server closes.
  *
  * A failing run is logged, not thrown, so it does not stop the schedule. A run that is due while
  * the previous one is still going is skipped: two runs at once would read the same unnotified logs

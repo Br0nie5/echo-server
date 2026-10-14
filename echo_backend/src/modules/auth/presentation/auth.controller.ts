@@ -6,7 +6,9 @@ import { canSignUp, createSignUpFirstAdmin } from '../application/signUpFirstAdm
 import type { AuthRepository } from '../domain/auth.repository.js'
 import { SignUpRefusedError } from '../domain/signUpRefusedError.js'
 
-/** What the sign up, the login and the logout answer, by status code: nothing, or why they refuse. */
+/**
+ * What the sign up, the login and the logout answer, by status code: nothing, or why they refuse.
+ */
 export type SessionReply = { 204: undefined; 401: EchoError; 403: EchoError }
 
 type AuthReply = FastifyReply<{ Reply: SessionReply }>

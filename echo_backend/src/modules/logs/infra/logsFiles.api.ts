@@ -11,7 +11,7 @@ export interface LogsFilesApi {
   /**
    * Every log file of the logs directory, at any depth.
    *
-   * The name of a log file is the name of the file without its extension. Its group is made of the
+   * The location name of a log file is its name without its extension. Its group is made of the
    * directories between the logs directory and the file, joined with `_`, without those named
    * `logFilesDirName` nor the first of the others: it has none when no directory is left.
    *
@@ -74,7 +74,7 @@ export const createLogsFilesApi = (
 
       return logFilesPaths.map((filePath) => ({
         path: filePath,
-        fileName: path.basename(filePath, path.extname(filePath)),
+        locationName: path.basename(filePath, path.extname(filePath)),
         groupName: createGroupName(filePath)
       }))
     },

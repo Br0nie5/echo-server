@@ -21,7 +21,10 @@ export interface NewUser {
 export interface AuthRepository {
   /** Whether at least one account is stored. */
   hasAnyUser: () => Promise<boolean>
-  /** Stores the account of `newUser`. Throws when it cannot be stored, such as when its username is taken. */
+  /**
+   * Stores the account of `newUser`. Throws when it cannot be stored, such as when its username is
+   * taken.
+   */
   createUser: (newUser: NewUser) => Promise<void>
   /** Whether the password is the one of that user. False for an unknown user. */
   areCredentialsValid: (username: string, password: string) => Promise<boolean>

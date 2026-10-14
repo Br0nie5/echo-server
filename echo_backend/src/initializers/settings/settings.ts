@@ -7,7 +7,10 @@ export type TlsSettings = {
   key: string
 }
 
-/** What the HTTP server needs to listen, to know the paths it is reached under and to serve the frontend. */
+/**
+ * What the HTTP server needs to listen, to know the paths it is reached under and to serve the
+ * frontend.
+ */
 export type ServerSettings = {
   /** Display name of the server (`SERVER_NAME`). */
   serverName: string
@@ -58,11 +61,17 @@ export type AuthSettings = {
 export type SelfReportsSettings = {
   /** Number of days a stored self report is kept (`SELF_REPORTS_RETENTION_DAYS`). */
   retentionDays: number
-  /** Directory holding the self-report files, inside `SELF_REPORTS_DIR_PATH` and named after the server (`SERVER_NAME`). */
+  /**
+   * Directory holding the self-report files, inside `SELF_REPORTS_DIR_PATH` and named after the
+   * server (`SERVER_NAME`).
+   */
   dirPath: string
   /** Name, with its extension, of the file of `dirPath` the self reports are stored in. */
   fileName: string
-  /** File remembering the id of the last session the self reports of `fileName` were written during. */
+  /**
+   * File remembering the id of the last session the self reports of `fileName` were written
+   * during.
+   */
   sessionFilePath: string
   /**
    * Whether a problem is stored once, as it was first reported, for as long as its self report is
@@ -91,8 +100,8 @@ export type LogsSettings = {
    */
   logFilesDirName: string
   /**
-   * Missing when the cron notifying the watched logs is not configured, or when there are no
-   * `NotificationSettings` to notify with, which disables it.
+   * Missing when there are no `NotificationSettings` to notify with, which disables the cron
+   * notifying the watched logs.
    */
   logsNotifier?: LogsNotifierSettings
 }
@@ -107,6 +116,8 @@ export type NotificationSettings = {
   telegramBaseUrl: string
   /** Maximum length of a Telegram message. */
   telegramMessageSizeLimit: number
+  /** How long a request to the Telegram bot API may take before it is given up, in milliseconds. */
+  telegramRequestTimeoutMilliseconds: number
 }
 
 /**
@@ -129,7 +140,10 @@ export type NotificationSettings = {
  */
 export type Settings = {
   server: ServerSettings
-  /** Missing when the authentication is disabled (`HAS_AUTHENTICATION`): the routes are then open to anyone. */
+  /**
+   * Missing when the authentication is disabled (`HAS_AUTHENTICATION`): the routes are then open to
+   * anyone.
+   */
   auth?: AuthSettings
   logs: LogsSettings
   /**
@@ -145,7 +159,7 @@ export type Settings = {
    * retention of `parseLogsSelfReports`, and a file and a session file of its own. Each failure is
    * stored, even one that already happened.
    *
-   * Missing when the self reports are disabled.
+   * Missing when the self reports are disabled, or when the notifications are (`notification`).
    */
   notificationsSelfReports?: SelfReportsSettings
   /** Missing when Telegram is not configured: the backend then has no channel to notify through. */

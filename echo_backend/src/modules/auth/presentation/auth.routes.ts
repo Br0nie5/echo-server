@@ -21,7 +21,8 @@ export interface AuthRoutesOptions extends FastifyPluginOptions {
  * Registers the `/auth/*` routes, and the schemas of `auth.schemas.ts` they refer to.
  *
  * The routes receiving credentials, the sign up and the login, answer a 429 once the
- * `credentialsAttemptsLimit` of `authConfig` is reached, when `@fastify/rate-limit` is registered on the server.
+ * `credentialsAttemptsLimit` of `authConfig` is reached, when `@fastify/rate-limit` is registered
+ * on the server.
  */
 export const authRoutes: FastifyPluginAsync<AuthRoutesOptions> = async (
   server: FastifyInstance,

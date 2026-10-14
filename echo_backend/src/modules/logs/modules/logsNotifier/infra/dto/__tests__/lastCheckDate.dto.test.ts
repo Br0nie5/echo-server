@@ -17,9 +17,10 @@ describe('convertRawLastCheckDateToLastCheckDate', () => {
     ).toBeUndefined()
   })
 
-  it('Should return undefined when the lastCheck field is not a date', () => {
-    expect(
-      convertRawLastCheckDateToLastCheckDate(JSON.stringify({ lastCheck: 'not-a-date' }))
-    ).toBeUndefined()
-  })
+  it.each(['not-a-date', 'May 1, 2026 10:00'])(
+    'Should return undefined when the lastCheck field is not an ISO date ("%s")',
+    (lastCheck) => {
+      expect(convertRawLastCheckDateToLastCheckDate(JSON.stringify({ lastCheck }))).toBeUndefined()
+    }
+  )
 })

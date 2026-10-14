@@ -9,9 +9,9 @@ import { FileDoesNotExistError } from './fileDoesNotExistError.js'
  * It is the one part of the backend's own code that reaches the file system (`arch:check` refuses
  * `fs` anywhere else), shared by whatever stores in files. Some libraries reach it on their own,
  * from a path the config gives them: `better-sqlite3` (the users database), `dotenv` (the
- * `.env.<mode>` file) and `@fastify/static` (the built frontend). It knows nothing of what the files hold nor
- * of how they are named: which files to look for, and what to make of their paths, is said by
- * whoever asks.
+ * `.env.<mode>` file) and `@fastify/static` (the built frontend). It knows nothing of what the
+ * files hold nor of how they are named: which files to look for, and what to make of their paths,
+ * is said by whoever asks.
  */
 export interface FilesService {
   /** Creates the directory at `directoryPath`, and its parents, when they do not exist yet. */
@@ -76,18 +76,36 @@ export interface FilesService {
    */
   replaceFileContent: (filePath: string, content: string) => Promise<void>
   /**
-   * Makes `lines` the whole content of the file at `filePath`, one line each.
+   * Makes the lines `getLines` returns the whole content of the file at `filePath`, one line each.
    *
-   * The file changes in one step, after the previous write of the file, as with
-   * `replaceFileContent`, and throws in the same cases.
+   * `getLines` is given the current lines of the file, its non-blank lines in order, none when it
+   * does not exist, which it ignores to replace them all. It is one write, done after the previous
+   * write of the file as with `replaceFileContent`: `getLines` is given the lines that write left,
+   * and no other write of the file happens until its own lines are written, so two writes never
+   * lose each other's lines. The file changes in one step, and is left as it is when `getLines`
+   * returns `undefined`.
+   *
+   * Throws in the cases of `replaceFileContent`, and, writing nothing, when `getLines` throws or
+   * the current lines cannot be read.
+   *
+   * ```ts
+   * await filesService.replaceFileLines(filePath, (currentLines) => [...currentLines, newLine])
+   * await filesService.replaceFileLines(filePath, () => newLines)
+   * ```
    */
-  replaceFileLines: (filePath: string, lines: string[]) => Promise<void>
+  replaceFileLines: (
+    filePath: string,
+    getLines: (currentLines: string[]) => string[] | undefined
+  ) => Promise<void>
   /**
-   * Makes the file at `filePath` readable and writable by its owner only.
+   * Makes the file at `filePath` readable and writable by its owner only, creating it empty, and
+   * its directory, when they do not exist.
    *
-   * Throws when the file does not exist or its permissions cannot be changed.
+   * A file it creates is never readable by anyone else, not even for a moment. The content of an
+   * existing file is left as it is. Throws when the directory cannot be created, when the file can
+   * neither be opened nor created, or when its permissions cannot be changed.
    */
-  restrictFileAccessToOwner: (filePath: string) => Promise<void>
+  createOwnerOnlyFile: (filePath: string) => Promise<void>
 }
 
 /** The subset of `fs/promises` used, so it can be replaced in tests. */
@@ -98,6 +116,9 @@ export type FileSystem = Pick<
 
 /** How long a write waits for the previous write of the same file by default, in milliseconds. */
 const DEFAULT_WRITE_WAIT_TIMEOUT_MILLISECONDS = 10_000
+
+/** Permissions letting the owner of a file read and write it, and nobody else. */
+const OWNER_ONLY_FILE_MODE = 0o600
 
 /**
  * Builds the files service, on top of `fileSystem` (the real file system by default).
@@ -152,6 +173,20 @@ export const createFilesService = (
     }
   }
 
+  const getFileLines = async (filePath: string): Promise<string[]> =>
+    (await getFileContent(filePath)).split('\n').filter((line) => line.trim() !== '')
+
+  const getExistingFileLines = async (filePath: string): Promise<string[]> => {
+    try {
+      return await getFileLines(filePath)
+    } catch (error) {
+      if (error instanceof FileDoesNotExistError) {
+        return []
+      }
+      throw error
+    }
+  }
+
   const waitForPreviousWrite = (
     previousWritePromise: Promise<void>,
     filePath: string
@@ -187,14 +222,14 @@ export const createFilesService = (
     }
   }
 
-  const replaceFileContent = (filePath: string, content: string): Promise<void> => {
+  const queueWrite = (filePath: string, write: () => Promise<void>): Promise<void> => {
     const previousWritePromise = lastWritePromiseByFilePath.get(filePath)
 
     const newWritePromise = (
       previousWritePromise
         ? waitForPreviousWrite(previousWritePromise, filePath)
         : Promise.resolve()
-    ).then(() => writeThroughTemporaryFile(filePath, content))
+    ).then(write)
 
     // `newWritePromise` stops waiting for the previous write at the timeout, while that write may
     // still be going on: the next write waits for both, so it never shares the temporary file with
@@ -222,8 +257,7 @@ export const createFilesService = (
 
     getFileContent,
 
-    getFileLines: async (filePath): Promise<string[]> =>
-      (await getFileContent(filePath)).split('\n').filter((line) => line.trim() !== ''),
+    getFileLines,
 
     getFilesPaths: async (directoryPath, isFileIncluded): Promise<string[]> =>
       (await getAllFilesPaths(directoryPath)).filter(isFileIncluded),
@@ -238,13 +272,24 @@ export const createFilesService = (
       return isBelowRootDir ? relativeFilePath.split(path.sep).join('/') : undefined
     },
 
-    replaceFileContent,
+    replaceFileContent: (filePath, content): Promise<void> =>
+      queueWrite(filePath, () => writeThroughTemporaryFile(filePath, content)),
 
-    replaceFileLines: (filePath, lines): Promise<void> =>
-      replaceFileContent(filePath, joinLines(lines)),
+    replaceFileLines: (filePath, getLines): Promise<void> =>
+      queueWrite(filePath, async () => {
+        const newLines = getLines(await getExistingFileLines(filePath))
 
-    restrictFileAccessToOwner: async (filePath): Promise<void> => {
-      await fileSystem.chmod(filePath, 0o600)
+        if (newLines !== undefined) {
+          await writeThroughTemporaryFile(filePath, joinLines(newLines))
+        }
+      }),
+
+    createOwnerOnlyFile: async (filePath): Promise<void> => {
+      await fileSystem.mkdir(path.dirname(filePath), { recursive: true })
+      // Appending nothing creates a missing file, with these permissions from the start, and
+      // leaves an existing one as it is.
+      await fileSystem.writeFile(filePath, '', { flag: 'a', mode: OWNER_ONLY_FILE_MODE })
+      await fileSystem.chmod(filePath, OWNER_ONLY_FILE_MODE)
     }
   }
 }

@@ -8,7 +8,10 @@ const ADDRESS_RANGE_NAMES = ['loopback', 'linklocal', 'uniquelocal']
 
 const HIGHEST_PREFIX_LENGTH_BY_IP_VERSION: Record<number, number> = { 4: 32, 6: 128 }
 
-/** Whether `entry` is an IP address (`10.0.0.1`, `::1`) or a range of them in CIDR notation (`10.0.0.0/8`). */
+/**
+ * Whether `entry` is an IP address (`10.0.0.1`, `::1`) or a range of them in CIDR notation
+ * (`10.0.0.0/8`).
+ */
 const isAddressOrAddressRange = (entry: string): boolean => {
   const [address, prefixLength, ...unexpectedParts] = entry.split('/')
   const ipVersion = isIP(address)

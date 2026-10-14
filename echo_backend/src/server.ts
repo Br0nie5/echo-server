@@ -27,10 +27,10 @@ import { createFilesService, type FilesService } from './shared/services/files.s
  * The settings stop here: a module is given its config as it is, and what implements its storage
  * the values it needs, one by one. Whatever reads or writes files is given `filesService`, the one
  * access to the file system. Each part of the backend that reports is given a self-report
- * repository of its own, built here when its settings are there (the one of the notifications only
- * along with the notifications), and the logs are given every one of them to show. A request is routed the same whether the reverse proxy forwarded it
- * with the `basePath` of the settings or without it, and a redirection to a path of the server is
- * sent below `basePath`, where the browser reaches it. The protocol, the host and the address of a
+ * repository of its own, built here when its settings are there, and the logs are given every one
+ * of them to show. A request is routed the same whether the reverse proxy forwarded it with the
+ * `basePath` of the settings or without it, and a redirection to a path of the server is sent
+ * below `basePath`, where the browser reaches it. The protocol, the host and the address of a
  * request are those its `X-Forwarded-*` headers give when it comes from one of the
  * `trustedProxies` of the settings, or from anything when the settings have none.
  *
@@ -103,7 +103,7 @@ export const buildServer = async (
     settings.parseLogsSelfReports
   )
   const notificationsSelfReportRepository = await createSelfReportRepository(
-    settings.notification && settings.notificationsSelfReports
+    settings.notificationsSelfReports
   )
 
   const logsRepository = createLogsRepository({
@@ -137,14 +137,16 @@ export const buildServer = async (
  * failure.
  *
  * The files service both are given is built here, once. A failure is logged before exiting: by the
- * logger of the server once it is built, to the error output of the process before.
+ * logger of the server once it is built, before that to the error output of the process, saying
+ * whether the settings could not be loaded or the server could not be built.
  */
 export const startServer = async (): Promise<void> => {
   const filesService = createFilesService()
+  let settings: Settings | undefined
   let server: EchoServer | undefined
 
   try {
-    const settings = await loadSettings(filesService)
+    settings = await loadSettings(filesService)
     server = await buildServer(settings, filesService)
 
     await server.listen({ port: settings.server.port, host: settings.server.host })
@@ -153,10 +155,12 @@ export const startServer = async (): Promise<void> => {
     server.log.info(`Api is served under ${basePath}${apiRoutePrefix}`)
     server.log.info(`App is served under ${basePath}${appRoutePrefix}`)
   } catch (error) {
-    if (server) {
-      server.log.error(error)
-    } else {
+    if (!settings) {
+      console.error('The settings could not be loaded:', error)
+    } else if (!server) {
       console.error('The server could not be built:', error)
+    } else {
+      server.log.error(error)
     }
     process.exit(1)
   }

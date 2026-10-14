@@ -43,7 +43,10 @@ const REQUIRED_ENV: NodeJS.ProcessEnv = {
   LOGS_DIR_PATH: '/some/path'
 }
 
-/** Makes `dotenv` load `variables` when it is asked for the env file found at `envFilePath`, and nothing for any other file. */
+/**
+ * Makes `dotenv` load `variables` when it is asked for the env file found at `envFilePath`, and
+ * nothing for any other file.
+ */
 const stubEnvFile = (envFilePath: string, variables: NodeJS.ProcessEnv): void => {
   vi.mocked(dotenv.config).mockImplementation((options?: DotenvConfigOptions) => {
     if (options?.path === envFilePath && options.processEnv && options.override === false) {
@@ -119,7 +122,7 @@ describe('loadSettings', () => {
     { variable: 'LOGS_NOTIFIER_TIMEZONE', value: '' },
     { variable: 'LOGS_NOTIFIER_TIMEZONE', value: 'Mars/Olympus' }
   ])(
-    'Should throw when the parser of $variable throws on "$value"',
+    'Should throw the error of the parser of $variable, which names it, on "$value"',
     async ({ variable, value }) => {
       await expect(
         loadSettings(filesService, {
@@ -127,11 +130,11 @@ describe('loadSettings', () => {
           ...ENABLED_PARTS_ENV,
           [variable]: value
         })
-      ).rejects.toThrow()
+      ).rejects.toThrow(variable)
     }
   )
 
-  it('Should build all the settings, with their defaults, from the required variables alone', async () => {
+  it('Should build all the settings from the required variables alone', async () => {
     expect(await loadSettings(filesService, { ...REQUIRED_ENV })).toStrictEqual({
       server: {
         serverName: 'Echo',
@@ -242,7 +245,8 @@ describe('loadSettings', () => {
         telegramChatId: '123456789',
         telegramBotToken: '123456:ABC-DEF',
         telegramBaseUrl: 'https://api.telegram.org',
-        telegramMessageSizeLimit: 4096
+        telegramMessageSizeLimit: 4096,
+        telegramRequestTimeoutMilliseconds: 10 * 1000
       }
     })
   })
@@ -258,14 +262,19 @@ describe('loadSettings', () => {
     expect(settings.notificationsSelfReports).toBeUndefined()
   })
 
-  it('Should leave the logs notifier out when there are no notification settings', async () => {
+  it('Should leave the logs notifier and the self reports of the notifications out when there are no notification settings', async () => {
     const settings = await loadSettings(filesService, {
       ...REQUIRED_ENV,
+      INCLUDE_SELF_REPORTS_IN_LOGS: 'true',
+      SELF_REPORTS_RETENTION_DAYS: '10',
+      SELF_REPORTS_DIR_PATH: '/self_reports',
       LOGS_NOTIFIER_SCHEDULE: 'not-a-cron-expression',
       LOGS_NOTIFIER_TIMEZONE: 'Mars/Olympus'
     })
 
     expect(settings.notification).toBeUndefined()
     expect(settings.logs.logsNotifier).toBeUndefined()
+    expect(settings.notificationsSelfReports).toBeUndefined()
+    expect(settings.parseLogsSelfReports).toBeDefined()
   })
 })

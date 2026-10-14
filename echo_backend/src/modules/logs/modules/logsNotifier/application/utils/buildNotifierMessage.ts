@@ -1,8 +1,11 @@
 import type { Log } from '@echo/utilities'
 import { DateTime } from 'luxon'
 
-/** One line of the message: `[jobId] [date UTC±offset] [level] - locationName > message`, the date shown in `timezone`. */
-export const formatLogLine = (log: Log, timezone: string): string => {
+/**
+ * One line of the message: `[jobId] [date UTC±offset] [level] - locationName > message`, the date
+ * shown in `timezone`.
+ */
+const formatLogLine = (log: Log, timezone: string): string => {
   const date = DateTime.fromISO(log.date).setZone(timezone)
   const offsetLabel = date.offset === 0 ? 'UTC' : `UTC${date.toFormat('Z')}`
 
@@ -11,6 +14,9 @@ export const formatLogLine = (log: Log, timezone: string): string => {
     ` [${log.level}] - ${log.locationName} > ${log.message}`
   )
 }
+
+/** The word naming `count` logs: `log` when it is 1, `logs` otherwise. */
+const pluralizeLog = (count: number): string => (count === 1 ? 'log' : 'logs')
 
 /** What {@link buildNotifierMessage} needs. */
 export interface NotifierMessageContent {
@@ -27,9 +33,10 @@ export interface NotifierMessageContent {
 /**
  * Builds the message telling about `watchedLogs`, never longer than `messageSizeLimit`.
  *
- * The message lists the logs, in order, under a header naming `serverName`. The logs that do not
- * fit are replaced by a footer counting them. When not even the first log fits, the message only
- * says how many logs there are.
+ * The message lists the logs, in order, under a header naming `serverName`, one line each:
+ * `[jobId] [date UTC±offset] [level] - locationName > message`, the date shown in `timezone`. The
+ * logs that do not fit are replaced by a footer counting them. When not even the first log fits,
+ * the message only says how many logs there are.
  *
  * Throws when `messageSizeLimit` is too small for the shortest of these messages, the one counting
  * the logs.
@@ -55,12 +62,16 @@ export const buildNotifierMessage = ({
   const buildMessageListingLogs = (listedLogsCount: number): string => {
     const otherLogsCount = lines.length - listedLogsCount
     const footer =
-      otherLogsCount > 0 ? `\n\n\n${otherLogsCount} other logs to see inside the app` : ''
+      otherLogsCount > 0
+        ? `\n\n\n${otherLogsCount} other ${pluralizeLog(otherLogsCount)} to see inside the app`
+        : ''
 
     return `${header}${lines.slice(0, listedLogsCount).join('\n\n')}${footer}`
   }
 
-  let message = `${lines.length} logs from device ${serverName} to see inside the app`
+  let message =
+    `${lines.length} ${pluralizeLog(lines.length)} from device ${serverName} ` +
+    'to see inside the app'
 
   if (message.length > messageSizeLimit) {
     throw new Error(

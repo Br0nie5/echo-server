@@ -32,7 +32,8 @@ export const LogLevelJsonSchema = schemas.LogLevel
 export const LogJsonSchema = schemas.Log
 
 /**
- * JSON schema of the query of `GET /logs`, generated from `GetLogsParamsSchema` of `@echo/utilities`.
+ * JSON schema of the query of `GET /logs`, generated from `GetLogsParamsSchema` of
+ * `@echo/utilities`.
  *
  * It refers to `LogLevelJsonSchema`, which has to be registered with `addSchema`.
  */

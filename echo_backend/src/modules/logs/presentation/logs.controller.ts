@@ -41,7 +41,6 @@ export const createLogsController = (logsRepository: LogsRepository): LogsContro
       levels: logLevels,
       searchFilters: logSearchFilters
     })
-    reply.status(200).send(logs)
-    return
+    return reply.status(200).send(logs)
   }
 })

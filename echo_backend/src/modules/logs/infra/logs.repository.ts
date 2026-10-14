@@ -55,14 +55,12 @@ export const createLogsRepository = ({
     createLogsFilesApi({ logsDirPath, logFileExtension, logFilesDirName }, filesService),
     parseLogsSelfReportRepository
   )
-  const logsSelfReportsRepository =
-    selfReportRepositoriesToShow.length > 0
-      ? createLogsSelfReportsRepository(selfReportRepositoriesToShow)
-      : undefined
 
-  if (logsSelfReportsRepository === undefined) {
+  if (selfReportRepositoriesToShow.length === 0) {
     return logsFilesRepository
   }
+
+  const logsSelfReportsRepository = createLogsSelfReportsRepository(selfReportRepositoriesToShow)
 
   return {
     getAllLogs: async (): Promise<Log[]> => {

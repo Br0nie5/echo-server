@@ -12,7 +12,7 @@ export interface InMemoryFileSystem {
   setFile: (filePath: string, content: string) => void
   /** The paths of every file, in the order they were created. */
   getFilesPaths: () => string[]
-  /** The permissions given to the file at `filePath`, or `undefined` when none were. */
+  /** The permissions the file at `filePath` was given, or `undefined` when none were. */
   getFileMode: (filePath: string) => number | undefined
 }
 
@@ -34,7 +34,8 @@ const createDoesNotExistError = (missingPath: string): NodeJS.ErrnoException =>
  *
  * It starts with `files`, each path given its content, and with the empty `directories`. It
  * behaves like the one of Node.js for what the files service uses: a file or a directory that does
- * not exist is an `ENOENT` error, and a file is only written in a directory that exists.
+ * not exist is an `ENOENT` error, a file is only written in a directory that exists, the `a` flag
+ * of a write appends to the file, and the `mode` of a write is given to the file it creates.
  *
  * ```ts
  * const inMemoryFileSystem = createInMemoryFileSystem({
@@ -115,14 +116,25 @@ export const createInMemoryFileSystem = ({
       createDirectory(directoryPath)
     },
 
-    writeFile: async (filePath: string, content: string): Promise<void> => {
-      const directoryPath = path.dirname(path.resolve('/', filePath))
+    writeFile: async (
+      filePath: string,
+      content: string,
+      options?: BufferEncoding | { flag?: string; mode?: number }
+    ): Promise<void> => {
+      const resolvedFilePath = path.resolve('/', filePath)
 
-      if (!directories.has(directoryPath)) {
+      if (!directories.has(path.dirname(resolvedFilePath))) {
         throw createDoesNotExistError(filePath)
       }
 
-      files.set(path.resolve('/', filePath), content)
+      const { flag, mode } = typeof options === 'object' ? options : {}
+      const previousContent = files.get(resolvedFilePath)
+
+      if (previousContent === undefined && mode !== undefined) {
+        fileModes.set(resolvedFilePath, mode)
+      }
+
+      files.set(resolvedFilePath, flag === 'a' ? `${previousContent ?? ''}${content}` : content)
     },
 
     rename: async (oldPath: string, newPath: string): Promise<void> => {

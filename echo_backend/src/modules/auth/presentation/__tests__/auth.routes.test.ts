@@ -23,7 +23,7 @@ const getAuthStatus = (
 ): Promise<LightMyRequestResponse> =>
   server.inject({ method: 'GET', url: '/api/auth/status', cookies })
 
-describe('auth routes', () => {
+describe('/auth/*', () => {
   test('Should let the first user sign up, which logs them in, and nobody after them', async () => {
     const { server, settings } = await buildTestServer()
     const cookieName = settings.auth!.config.cookieName

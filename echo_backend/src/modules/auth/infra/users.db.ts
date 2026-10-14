@@ -1,5 +1,3 @@
-import path from 'path'
-
 import Database from 'better-sqlite3'
 
 import type { FilesService } from '../../../shared/services/files.service.js'
@@ -7,9 +5,9 @@ import type { FilesService } from '../../../shared/services/files.service.js'
 /**
  * Opens the users SQLite database at `usersDbFilePath`.
  *
- * The file, its directory and the `users` table are created if needed, and the file is made
- * readable and writable by its owner only, through `filesService`. Throws when the directory or
- * the file cannot be created.
+ * The file, its directory and the `users` table are created if needed. The file is readable and
+ * writable by its owner only before SQLite opens it, through `filesService`, and SQLite gives its
+ * journal the permissions of the file. Throws when the directory or the file cannot be created.
  *
  * ```ts
  * const authRepository = createAuthUsersDbRepository(await createUsersDb({ usersDbFilePath }, filesService))
@@ -19,11 +17,9 @@ export const createUsersDb = async (
   { usersDbFilePath }: { usersDbFilePath: string },
   filesService: FilesService
 ): Promise<Database.Database> => {
-  await filesService.createDirectory(path.dirname(usersDbFilePath))
+  await filesService.createOwnerOnlyFile(usersDbFilePath)
 
   const usersDb = new Database(usersDbFilePath)
-
-  await filesService.restrictFileAccessToOwner(usersDbFilePath)
 
   usersDb.exec(`
     CREATE TABLE IF NOT EXISTS users (

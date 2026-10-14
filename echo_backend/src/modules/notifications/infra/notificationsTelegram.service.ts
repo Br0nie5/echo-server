@@ -11,6 +11,8 @@ export interface CreateNotificationsTelegramServiceOptions {
   telegramBaseUrl: string
   /** Maximum length of a Telegram message. */
   telegramMessageSizeLimit: number
+  /** How long a request to the Telegram bot API may take before it is given up, in milliseconds. */
+  telegramRequestTimeoutMilliseconds: number
 }
 
 /**
@@ -18,10 +20,10 @@ export interface CreateNotificationsTelegramServiceOptions {
  * `telegramChatId`, from the bot of `telegramBotToken`, through the Telegram bot API at
  * `telegramBaseUrl`. The function writing a message is given `telegramMessageSizeLimit`.
  *
- * Notifying throws when the message cannot be written, when Telegram cannot be reached or when it
- * answers with an error status. The error is first saved as an error self report to
- * `notificationsSelfReportRepository`, when there is one, then thrown as it is: leave the
- * repository out when the self reports are disabled.
+ * Notifying throws when the message cannot be written, when Telegram cannot be reached, does not
+ * answer within `telegramRequestTimeoutMilliseconds` or answers with an error status. The error is
+ * first saved as an error self report to `notificationsSelfReportRepository`, when there is one,
+ * then thrown as it is: leave the repository out when the self reports are disabled.
  *
  * It is meant to be built once, when the notifications are set up, and handed to whatever
  * notifies:
@@ -32,7 +34,8 @@ export interface CreateNotificationsTelegramServiceOptions {
  *     telegramChatId: '123456789',
  *     telegramBotToken: '123456:ABC-DEF',
  *     telegramBaseUrl: 'https://api.telegram.org',
- *     telegramMessageSizeLimit: 4096
+ *     telegramMessageSizeLimit: 4096,
+ *     telegramRequestTimeoutMilliseconds: 10000
  *   },
  *   notificationsSelfReportRepository
  * )
@@ -44,7 +47,8 @@ export const createNotificationsTelegramService = (
     telegramChatId,
     telegramBotToken,
     telegramBaseUrl,
-    telegramMessageSizeLimit
+    telegramMessageSizeLimit,
+    telegramRequestTimeoutMilliseconds
   }: CreateNotificationsTelegramServiceOptions,
   notificationsSelfReportRepository?: SelfReportRepository
 ): NotificationsService => {
@@ -52,7 +56,8 @@ export const createNotificationsTelegramService = (
     const response = await fetch(`${telegramBaseUrl}/bot${telegramBotToken}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: telegramChatId, text: message })
+      body: JSON.stringify({ chat_id: telegramChatId, text: message }),
+      signal: AbortSignal.timeout(telegramRequestTimeoutMilliseconds)
     })
 
     if (!response.ok) {

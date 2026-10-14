@@ -4,7 +4,10 @@ import type { FilesService } from '../../../shared/services/files.service.js'
 
 import { SessionIdDtoSchema, type SessionIdDto } from './dto/sessionId.dto.js'
 
-/** Access to a session file, the data source the last session id of one self-report file is stored in. */
+/**
+ * Access to a session file, the data source the last session id of one self-report file is stored
+ * in.
+ */
 export interface SessionIdApi {
   /**
    * The session id the session file holds, an integer.

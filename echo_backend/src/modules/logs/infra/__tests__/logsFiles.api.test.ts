@@ -70,10 +70,7 @@ describe('LogsFilesApi', () => {
         filesService.getFilesPaths.mockResolvedValue(['/logs/sync_stock.jsonl'])
         filesService.getRelativeFilePath.mockReturnValue(relativeFilePath)
 
-        const [logFile] = await createLogsFilesApi(
-          { logsDirPath: '/logs', logFileExtension: '.jsonl', logFilesDirName: 'logs' },
-          filesService
-        ).getAllLogFiles()
+        const [logFile] = await createLogsFilesApi(logsFilesLocation, filesService).getAllLogFiles()
 
         expect(logFile.groupName).toBe(groupName)
         expect(filesService.getRelativeFilePath).toHaveBeenCalledWith(
@@ -91,7 +88,7 @@ describe('LogsFilesApi', () => {
       await expect(
         createLogsFilesApi(logsFilesLocation, filesService).getRawLogLines({
           path: '/logs/ping.jsonl',
-          fileName: 'ping',
+          locationName: 'ping',
           groupName: undefined
         })
       ).resolves.toEqual([])
@@ -104,7 +101,7 @@ describe('LogsFilesApi', () => {
       await expect(
         createLogsFilesApi(logsFilesLocation, filesService).getRawLogLines({
           path: '/logs/ping.jsonl',
-          fileName: 'ping',
+          locationName: 'ping',
           groupName: undefined
         })
       ).rejects.toBe(readError)

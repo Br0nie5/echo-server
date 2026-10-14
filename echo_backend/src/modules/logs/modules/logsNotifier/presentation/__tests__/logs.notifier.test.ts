@@ -7,7 +7,7 @@ import {
   getMockLogsNotifierSettings,
   getMockLogsSettings,
   getMockNotificationSettings,
-  getMockSelfReportsSettings
+  getMockNotificationsSelfReportsSettings
 } from '../../../../../../test/mocks/mockSettings.js'
 import { toJsonLinesFileContent } from '../../../../../../test/utils/toJsonLinesFileContent.js'
 
@@ -31,7 +31,10 @@ const telegramUrl = `${telegramBaseUrl}/bot${telegramBotToken}/sendMessage`
 const toLastCheckFileContent = (lastCheck: Date): string =>
   JSON.stringify({ lastCheck: lastCheck.toISOString() }, null, 2)
 
-/** A log file with a watched log before the previous check, and two logs after it, one of them watched. */
+/**
+ * A log file with a watched log before the previous check, and two logs after it, one of them
+ * watched.
+ */
 const logFileContent = toJsonLinesFileContent([
   {
     jobId: 11,
@@ -80,7 +83,7 @@ afterEach(() => {
   fetchMock.mockReset()
 })
 
-describe('logs notifier', () => {
+describe('logsNotifier', () => {
   test('Should notify every watched log at its first check, and save its date', async () => {
     const { fileSystem } = await buildServerWithLogsNotifier({ [logFilePath]: logFileContent })
 
@@ -106,7 +109,8 @@ describe('logs notifier', () => {
     expect(fetchMock).toHaveBeenCalledExactlyOnceWith(telegramUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: expect.stringContaining(`"chat_id":"${notificationSettings.telegramChatId}"`)
+      body: expect.stringContaining(`"chat_id":"${notificationSettings.telegramChatId}"`),
+      signal: expect.any(AbortSignal)
     })
     expect(getSentMessages()).toMatchSnapshot()
     expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
@@ -167,11 +171,7 @@ describe('logs notifier', () => {
   })
 
   test('Should save a self report for each notification that is too long for the channel', async () => {
-    const selfReportsSettings = getMockSelfReportsSettings({
-      fileName: 'notifications.jsonl',
-      sessionFilePath: '/fake/data/notifications_self_reports_session.json',
-      isEachProblemStoredOnce: false
-    })
+    const selfReportsSettings = getMockNotificationsSelfReportsSettings()
     const selfReportsFilePath = `${selfReportsSettings.dirPath}/${selfReportsSettings.fileName}`
 
     const { fileSystem } = await buildServerWithLogsNotifier(

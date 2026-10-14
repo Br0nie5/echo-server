@@ -2,9 +2,12 @@ import type { GetLogsParams } from '@echo/utilities'
 import { GetLogsParamsSchema, getInvalidDateFieldMessage } from '@echo/utilities'
 import { z } from 'zod'
 
-import { convertToDateFromISO } from '../../../../shared/utils/convertToDate.js'
+import { convertToDateFromISO } from '../../../../shared/utils/convertToDateFromISO.js'
 
-/** Converts `value`, the date field `fieldName` of the query, to a `Date`, adding an issue to `context` when it is not an ISO date. */
+/**
+ * Converts `value`, the date field `fieldName` of the query, to a `Date`, adding an issue to
+ * `context` when it is not an ISO date.
+ */
 const parseQueryDate = (value: string, fieldName: string, context: z.RefinementCtx): Date => {
   const date = convertToDateFromISO(value)
 

@@ -55,14 +55,7 @@ export const buildTestServer = async ({
   })
 
   const fileSystem = createInMemoryFileSystem({
-    files: {
-      // SQLite creates no file for a database it keeps in memory, and the server restricts the
-      // access to the file of its database once it is open.
-      ...(settings.auth?.usersDbFilePath === IN_MEMORY_DATABASE_PATH && {
-        [IN_MEMORY_DATABASE_PATH]: ''
-      }),
-      ...files
-    },
+    files,
     directories: [settings.logs.logsDirPath]
   })
 

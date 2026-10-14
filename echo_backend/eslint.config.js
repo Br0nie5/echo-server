@@ -96,14 +96,8 @@ export default defineConfig([
     // Documentation (TSDoc): every exported function, interface and type has a comment. `@param` and
     // `@returns` are not required, since the types already say what goes in and out: add them when
     // a parameter or the result has a rule the types do not show. They are validated when present.
-    files: ['src/**/*.{ts,tsx}'],
-    ignores: [
-      '**/__tests__/**',
-      '**/*.test.{ts,tsx}',
-      'src/test/**',
-      'src/setupTests.ts',
-      'src/vite-env.d.ts'
-    ],
+    files: ['src/**/*.ts'],
+    ignores: ['**/__tests__/**', 'src/test/**'],
     plugins: { jsdoc, tsdoc },
     rules: {
       'tsdoc/syntax': 'error',
@@ -115,7 +109,8 @@ export default defineConfig([
           contexts: [
             'TSInterfaceDeclaration',
             'TSTypeAliasDeclaration',
-            // Exported components wrapped in memo(...), which the function selectors do not see
+            // Exported values made by a call, such as a plugin wrapped in fastifyPlugin(...),
+            // which the function selectors do not see
             "ExportNamedDeclaration > VariableDeclaration[declarations.0.init.type='CallExpression']"
           ]
         }

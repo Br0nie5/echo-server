@@ -1,9 +1,9 @@
 import { createLogId, isLogLevel, type Log } from '@echo/utilities'
 
-import { convertToDateFromISO } from '../../../../shared/utils/convertToDate.js'
+import { convertToDateFromISO } from '../../../../shared/utils/convertToDateFromISO.js'
 
 import type { LogFileDto } from './logFile.dto.js'
-import { RawJsonLogLineSchema } from './rawJsonLog.dto.js'
+import { RawJsonLogLineSchema } from './rawJsonLogLine.dto.js'
 
 /** A line of a log file as it is stored, before it is known to hold a valid log. */
 export interface RawLogLineDto {
@@ -18,9 +18,9 @@ export interface RawLogLineDto {
  * Converts a stored line to the `Log` it holds.
  *
  * Returns `undefined` when the line does not hold a log: its content is not JSON, does not have
- * the shape `RawJsonLogLineSchema` describes, has an unknown level or a timestamp that is not a date.
- * The `id` of the log is the one `createLogId` gives it, with the position of the line as its id
- * number.
+ * the shape `RawJsonLogLineSchema` describes, has an unknown level or a timestamp that is not an
+ * ISO date. The `id` of the log is the one `createLogId` gives it, with the position of the line as
+ * its id number.
  *
  * ```ts
  * const logs = rawLogLines.map(convertRawLogLineToLog).filter((log) => log !== undefined)
@@ -56,7 +56,7 @@ export const convertRawLogLineToLog = ({
     date,
     groupName: logFile.groupName,
     location: logFile.path,
-    locationName: logFile.fileName,
+    locationName: logFile.locationName,
     jobId,
     level,
     message,

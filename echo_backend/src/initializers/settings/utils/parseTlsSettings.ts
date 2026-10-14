@@ -12,20 +12,20 @@ export const parseTlsSettings = async (
   processEnv: NodeJS.ProcessEnv,
   filesService: FilesService
 ): Promise<TlsSettings | undefined> => {
-  const TLS_CERT_PATH = processEnv.TLS_CERT_PATH
-  const TLS_KEY_PATH = processEnv.TLS_KEY_PATH
+  const certificatePath = processEnv.TLS_CERT_PATH
+  const privateKeyPath = processEnv.TLS_KEY_PATH
 
-  if (!TLS_CERT_PATH && !TLS_KEY_PATH) {
+  if (!certificatePath && !privateKeyPath) {
     return undefined
   }
 
-  if (!TLS_CERT_PATH || !TLS_KEY_PATH) {
+  if (!certificatePath || !privateKeyPath) {
     throw new Error('TLS_CERT_PATH and TLS_KEY_PATH must both be set to enable HTTPS')
   }
 
   const [cert, key] = await Promise.all([
-    filesService.getFileContent(TLS_CERT_PATH),
-    filesService.getFileContent(TLS_KEY_PATH)
+    filesService.getFileContent(certificatePath),
+    filesService.getFileContent(privateKeyPath)
   ])
 
   return { cert, key }

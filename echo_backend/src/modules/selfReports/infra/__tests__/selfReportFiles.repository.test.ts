@@ -1,53 +1,46 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../sessionIdFile.api.js')
-vi.mock('../selfReportsFiles.api.js')
-
 import { getMockFilesService } from '../../../../test/mocks/mockFilesService.js'
 import type { SelfReport } from '../../domain/selfReport.js'
 import type { SelfReportRepository } from '../../domain/selfReport.repository.js'
 import { createSelfReportFilesRepository } from '../selfReportFiles.repository.js'
-import { createSelfReportsFilesApi as actualCreateSelfReportsFilesApi } from '../selfReportsFiles.api.js'
-import { createSessionIdFileApi as actualCreateSessionIdFileApi } from '../sessionIdFile.api.js'
-
-const createSessionIdFileApi = vi.mocked(actualCreateSessionIdFileApi)
-const createSelfReportsFilesApi = vi.mocked(actualCreateSelfReportsFilesApi)
 
 const SELF_REPORTS_FILE_PATH = '/self_reports/Echo/parseLogs.jsonl'
+const SESSION_FILE_PATH = '/fake/data/parse_logs_self_reports_session.json'
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
 
 const logger = { error: vi.fn() }
 const filesService = getMockFilesService()
 
-const selfReportsFilesApi = {
-  getSelfReportFilePathFromRoot: vi.fn(),
-  getSelfReportLines: vi.fn(),
-  saveSelfReportLines: vi.fn()
-}
-
-const sessionIdApi = {
-  getLastSessionId: vi.fn(),
-  saveLastSessionId: vi.fn()
-}
-
 const options = {
   filesService,
   selfReportsDirPath: '/self_reports/Echo',
   selfReportFileName: 'parseLogs.jsonl',
-  sessionFilePath: '/fake/data/parse_logs_self_reports_session.json',
+  sessionFilePath: SESSION_FILE_PATH,
   retentionDays: 10,
   isEachProblemStoredOnce: true,
   logger
 }
 
-/** Creates the repository of `options`, with `overrides` on top, whose set up the tests of its methods do not make fail. */
+/** The lines of the self-report file, which its updates are given and replace. */
+let storedLines: string[]
+/** The lines each write of the self-report file made its content, in order. */
+let writtenLines: string[][]
+
+/**
+ * Creates the repository of `options`, with `overrides` on top, whose set up the tests of its
+ * methods do not make fail.
+ */
 const createRepository = async (
   overrides: Partial<typeof options> = {}
 ): Promise<SelfReportRepository> =>
   (await createSelfReportFilesRepository({ ...options, ...overrides }))!
 
-/** A self report to save, which the repository stores with its session, the 5, unless `overrides` says otherwise. */
+/**
+ * A self report to save, which the repository stores with its session, the 5, unless `overrides`
+ * says otherwise.
+ */
 const selfReport = (overrides: Partial<SelfReport> = {}): SelfReport => ({
   date: new Date('2026-10-01T08:00:00.000Z'),
   message: 'bad line',
@@ -62,7 +55,10 @@ const NOW = new Date('2026-10-01T00:00:00.000Z')
 const daysAgo = (days: number): string =>
   new Date(NOW.getTime() - days * MILLISECONDS_PER_DAY).toISOString()
 
-/** A line of a self-report file, reported a day ago during the session 1 unless `overrides` says otherwise. */
+/**
+ * A line of a self-report file, reported a day ago during the session 1 unless `overrides` says
+ * otherwise.
+ */
 const storedLine = (
   overrides: Partial<{
     sessionId: number
@@ -81,22 +77,23 @@ const storedLine = (
     ...overrides
   })
 
-const lastSavedLines = (): string[] =>
-  selfReportsFilesApi.saveSelfReportLines.mock.lastCall?.[1] as string[]
-
 beforeEach(() => {
   vi.resetAllMocks()
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(NOW)
-  createSelfReportsFilesApi.mockReturnValue(selfReportsFilesApi)
-  createSessionIdFileApi.mockReturnValue(sessionIdApi)
-  sessionIdApi.getLastSessionId.mockResolvedValue(4)
-  sessionIdApi.saveLastSessionId.mockResolvedValue(undefined)
-  selfReportsFilesApi.getSelfReportFilePathFromRoot.mockImplementation((filePath: string) =>
-    filePath.slice(1)
-  )
-  selfReportsFilesApi.getSelfReportLines.mockResolvedValue([])
-  selfReportsFilesApi.saveSelfReportLines.mockResolvedValue(undefined)
+  storedLines = []
+  writtenLines = []
+  filesService.getFileContent.mockResolvedValue(JSON.stringify({ lastSessionId: 4 }))
+  filesService.getRelativeFilePath.mockImplementation((filePath: string) => filePath.slice(1))
+  filesService.getFileLines.mockImplementation(async () => storedLines)
+  filesService.replaceFileLines.mockImplementation(async (_filePath, getLines) => {
+    const newLines = getLines(storedLines)
+
+    if (newLines !== undefined) {
+      storedLines = newLines
+      writtenLines.push(newLines)
+    }
+  })
 })
 
 afterEach(() => {
@@ -107,71 +104,57 @@ describe('createSelfReportFilesRepository', () => {
   it('Should write its file again without the self reports older than retentionDays, nor the lines that hold none', async () => {
     const retentionLimitLine = storedLine({ date: '2026-09-21T00:00:00.000Z' })
     const recentLine = storedLine({ date: daysAgo(1) })
-    selfReportsFilesApi.getSelfReportLines.mockResolvedValueOnce([
+    storedLines = [
       storedLine({ date: daysAgo(20) }),
       storedLine({ date: '2026-09-20T23:59:59.999Z' }),
       retentionLimitLine,
       'not a self report',
       recentLine
-    ])
+    ]
 
     await createSelfReportFilesRepository(options)
 
-    expect(selfReportsFilesApi.getSelfReportLines).toHaveBeenCalledWith(SELF_REPORTS_FILE_PATH)
-    expect(selfReportsFilesApi.saveSelfReportLines).toHaveBeenCalledExactlyOnceWith(
+    expect(filesService.replaceFileLines).toHaveBeenCalledWith(
       SELF_REPORTS_FILE_PATH,
-      [retentionLimitLine, recentLine]
+      expect.any(Function)
     )
+    expect(writtenLines).toEqual([[retentionLimitLine, recentLine]])
   })
 
   it('Should save the last session id plus one, once its file is written', async () => {
     const steps: string[] = []
-    selfReportsFilesApi.saveSelfReportLines.mockImplementationOnce(async () => {
-      steps.push('saveSelfReportLines')
+    filesService.replaceFileLines.mockImplementationOnce(async () => {
+      steps.push('replaceFileLines')
     })
-    sessionIdApi.saveLastSessionId.mockImplementationOnce(async () => {
-      steps.push('saveLastSessionId')
+    filesService.replaceFileContent.mockImplementationOnce(async () => {
+      steps.push('replaceFileContent')
     })
 
     await createSelfReportFilesRepository(options)
 
-    expect(sessionIdApi.saveLastSessionId).toHaveBeenCalledExactlyOnceWith(5)
-    expect(steps).toEqual(['saveSelfReportLines', 'saveLastSessionId'])
+    expect(filesService.replaceFileContent).toHaveBeenCalledExactlyOnceWith(
+      SESSION_FILE_PATH,
+      JSON.stringify({ lastSessionId: 5 }, null, 2)
+    )
+    expect(steps).toEqual(['replaceFileLines', 'replaceFileContent'])
   })
 
-  it.each([
-    [
-      'its file cannot be read',
-      (): unknown =>
-        selfReportsFilesApi.getSelfReportLines.mockRejectedValueOnce(new Error('EACCES'))
-    ],
-    [
-      'its file cannot be written',
-      (): unknown =>
-        selfReportsFilesApi.saveSelfReportLines.mockRejectedValueOnce(new Error('EACCES'))
-    ]
-  ])('Should not save its session id when %s', async (_, failSetup) => {
-    failSetup()
+  it('Should not save its session id when its file cannot be written', async () => {
+    filesService.replaceFileLines.mockRejectedValueOnce(new Error('EACCES'))
 
     await createSelfReportFilesRepository(options)
 
-    expect(sessionIdApi.saveLastSessionId).not.toHaveBeenCalled()
+    expect(filesService.replaceFileContent).not.toHaveBeenCalled()
   })
 
   it.each([
     [
-      'its file cannot be read',
-      (): unknown =>
-        selfReportsFilesApi.getSelfReportLines.mockRejectedValueOnce(new Error('EACCES'))
-    ],
-    [
       'its file cannot be written',
-      (): unknown =>
-        selfReportsFilesApi.saveSelfReportLines.mockRejectedValueOnce(new Error('EACCES'))
+      (): unknown => filesService.replaceFileLines.mockRejectedValueOnce(new Error('EACCES'))
     ],
     [
       'the session id cannot be saved',
-      (): unknown => sessionIdApi.saveLastSessionId.mockRejectedValueOnce(new Error('EACCES'))
+      (): unknown => filesService.replaceFileContent.mockRejectedValueOnce(new Error('EACCES'))
     ]
   ])('Should create no repository and log the error when %s', async (_, failSetup) => {
     failSetup()
@@ -181,52 +164,43 @@ describe('createSelfReportFilesRepository', () => {
     expect(selfReportRepository).toBeUndefined()
     expect(logger.error).toHaveBeenCalledWith(
       { err: expect.any(Error), selfReportsFilePath: SELF_REPORTS_FILE_PATH },
-      'Failed to set up self reports, disabling them for this session'
+      'Failed to set up self reports'
     )
   })
 
   describe('saveSelfReports', () => {
     it('Should do nothing when there is no self report', async () => {
       const selfReportRepository = await createRepository()
-      selfReportsFilesApi.getSelfReportLines.mockClear()
-      selfReportsFilesApi.saveSelfReportLines.mockClear()
+      filesService.replaceFileLines.mockClear()
 
       await selfReportRepository.saveSelfReports([])
 
-      expect(selfReportsFilesApi.getSelfReportLines).not.toHaveBeenCalled()
-      expect(selfReportsFilesApi.saveSelfReportLines).not.toHaveBeenCalled()
+      expect(filesService.replaceFileLines).not.toHaveBeenCalled()
     })
 
     it('Should store the self reports after the stored ones, in the order they are given, whatever their dates', async () => {
       const selfReportRepository = await createRepository()
       const storedTodayLine = storedLine({ date: daysAgo(0), message: 'stored today' })
       const storedTwoDaysAgoLine = storedLine({ date: daysAgo(2), message: 'stored two days ago' })
-      selfReportsFilesApi.getSelfReportLines.mockResolvedValueOnce([
-        storedTodayLine,
-        'not a self report',
-        storedTwoDaysAgoLine
-      ])
+      storedLines = [storedTodayLine, 'not a self report', storedTwoDaysAgoLine]
 
       await selfReportRepository.saveSelfReports([
         selfReport({ date: new Date(daysAgo(0)), message: 'reported now' }),
         selfReport({ date: new Date(daysAgo(3)), message: 'reported three days ago' })
       ])
 
-      expect(selfReportsFilesApi.saveSelfReportLines).toHaveBeenLastCalledWith(
-        SELF_REPORTS_FILE_PATH,
-        [
-          storedTodayLine,
-          storedTwoDaysAgoLine,
-          storedLine({ sessionId: 5, date: daysAgo(0), message: 'reported now' }),
-          storedLine({ sessionId: 5, date: daysAgo(3), message: 'reported three days ago' })
-        ]
-      )
+      expect(storedLines).toEqual([
+        storedTodayLine,
+        storedTwoDaysAgoLine,
+        storedLine({ sessionId: 5, date: daysAgo(0), message: 'reported now' }),
+        storedLine({ sessionId: 5, date: daysAgo(3), message: 'reported three days ago' })
+      ])
     })
 
     it('Should leave out the self reports with the level, the message and the origin of a stored one, or of one given before', async () => {
       const selfReportRepository = await createRepository()
       const storedSameContentLine = storedLine({ sessionId: 2, date: daysAgo(4) })
-      selfReportsFilesApi.getSelfReportLines.mockResolvedValueOnce([storedSameContentLine])
+      storedLines = [storedSameContentLine]
 
       await selfReportRepository.saveSelfReports([
         selfReport(),
@@ -236,7 +210,7 @@ describe('createSelfReportFilesRepository', () => {
         selfReport({ message: 'other message', date: new Date('2026-10-01T09:00:00.000Z') })
       ])
 
-      expect(lastSavedLines()).toEqual([
+      expect(storedLines).toEqual([
         storedSameContentLine,
         storedLine({ sessionId: 5, date: '2026-10-01T08:00:00.000Z', message: 'other message' }),
         storedLine({ sessionId: 5, date: '2026-10-01T08:00:00.000Z', level: 'ERROR' }),
@@ -251,14 +225,11 @@ describe('createSelfReportFilesRepository', () => {
     it('Should store again a problem whose self report is older than retentionDays, and leave the old one out', async () => {
       const selfReportRepository = await createRepository()
       const recentLine = storedLine({ date: daysAgo(10), message: 'kept line' })
-      selfReportsFilesApi.getSelfReportLines.mockResolvedValueOnce([
-        storedLine({ date: daysAgo(11) }),
-        recentLine
-      ])
+      storedLines = [storedLine({ date: daysAgo(11) }), recentLine]
 
       await selfReportRepository.saveSelfReports([selfReport()])
 
-      expect(lastSavedLines()).toEqual([
+      expect(storedLines).toEqual([
         recentLine,
         storedLine({ sessionId: 5, date: '2026-10-01T08:00:00.000Z' })
       ])
@@ -266,43 +237,29 @@ describe('createSelfReportFilesRepository', () => {
 
     it('Should not write its file when every self report is already stored', async () => {
       const selfReportRepository = await createRepository()
-      selfReportsFilesApi.getSelfReportLines.mockResolvedValueOnce([storedLine()])
-      selfReportsFilesApi.saveSelfReportLines.mockClear()
+      storedLines = [storedLine()]
+      writtenLines = []
 
       await selfReportRepository.saveSelfReports([selfReport()])
 
-      expect(selfReportsFilesApi.saveSelfReportLines).not.toHaveBeenCalled()
+      expect(writtenLines).toEqual([])
     })
 
-    it.each([
-      [
-        'its file cannot be read',
-        (): unknown =>
-          selfReportsFilesApi.getSelfReportLines.mockRejectedValueOnce(new Error('EACCES'))
-      ],
-      [
-        'its file cannot be written',
-        (): unknown =>
-          selfReportsFilesApi.saveSelfReportLines.mockRejectedValueOnce(new Error('EACCES'))
-      ]
-    ])(
-      'Should log the error and not throw when %s, and still run the next save',
-      async (_, failSave) => {
-        const selfReportRepository = await createRepository()
-        failSave()
+    it('Should log the error and not throw when its file cannot be updated, and still run the next save', async () => {
+      const selfReportRepository = await createRepository()
+      filesService.replaceFileLines.mockRejectedValueOnce(new Error('EACCES'))
 
-        await expect(selfReportRepository.saveSelfReports([selfReport()])).resolves.toBeUndefined()
+      await expect(selfReportRepository.saveSelfReports([selfReport()])).resolves.toBeUndefined()
 
-        expect(logger.error).toHaveBeenCalledWith(
-          { err: expect.any(Error), selfReportsFilePath: SELF_REPORTS_FILE_PATH },
-          'Failed to write self reports'
-        )
+      expect(logger.error).toHaveBeenCalledWith(
+        { err: expect.any(Error), selfReportsFilePath: SELF_REPORTS_FILE_PATH },
+        'Failed to write self reports'
+      )
 
-        selfReportsFilesApi.saveSelfReportLines.mockClear()
-        await selfReportRepository.saveSelfReports([selfReport()])
-        expect(selfReportsFilesApi.saveSelfReportLines).toHaveBeenCalledTimes(1)
-      }
-    )
+      writtenLines = []
+      await selfReportRepository.saveSelfReports([selfReport()])
+      expect(writtenLines).toHaveLength(1)
+    })
   })
 
   describe('getSelfReports', () => {
@@ -312,9 +269,9 @@ describe('createSelfReportFilesRepository', () => {
     ])(
       'Should give no group name to the self reports of a file that $reason',
       async ({ filePathFromRoot }) => {
+        filesService.getRelativeFilePath.mockReturnValue(filePathFromRoot)
         const selfReportRepository = await createRepository()
-        selfReportsFilesApi.getSelfReportFilePathFromRoot.mockReturnValue(filePathFromRoot)
-        selfReportsFilesApi.getSelfReportLines.mockResolvedValueOnce([storedLine()])
+        storedLines = [storedLine()]
 
         const [storedSelfReport] = await selfReportRepository.getSelfReports()
 
@@ -324,7 +281,7 @@ describe('createSelfReportFilesRepository', () => {
 
     it('Should log the error and give no self report when its file cannot be read', async () => {
       const selfReportRepository = await createRepository()
-      selfReportsFilesApi.getSelfReportLines.mockRejectedValueOnce(new Error('EACCES'))
+      filesService.getFileLines.mockRejectedValueOnce(new Error('EACCES'))
 
       await expect(selfReportRepository.getSelfReports()).resolves.toEqual([])
 

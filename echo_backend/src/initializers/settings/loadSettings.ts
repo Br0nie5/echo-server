@@ -30,10 +30,16 @@ import { parseTrustedProxies } from './utils/parseTrustedProxies.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const REPOSITORY_ROOT_PATH = path.join(__dirname, '../../../..')
-/** Directory holding the persistent data of the backend (users database, cron checkpoint, self-reports sessions). */
+/**
+ * Directory holding the persistent data of the backend (users database, cron checkpoint,
+ * self-reports sessions).
+ */
 const DATA_DIR_PATH = path.join(REPOSITORY_ROOT_PATH, 'data')
 
-/** Extension of the files the logs are read from, and of the files the self reports are written to. */
+/**
+ * Extension of the files the logs are read from, and of the files the self reports are written
+ * to.
+ */
 const LOG_FILE_EXTENSION = '.jsonl'
 
 /** Name of the directory scripts put their log files in. */
@@ -54,6 +60,9 @@ const TELEGRAM_BASE_URL = 'https://api.telegram.org'
 /** Maximum length of a message, set by the Telegram bot API. */
 const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
 
+/** How long a request to the Telegram bot API may take: 10 seconds. */
+const TELEGRAM_REQUEST_TIMEOUT_MILLISECONDS = 10 * 1000
+
 /**
  * Builds the settings of the backend, the configs of its modules included, from `processEnv` (the
  * environment of the process by default), from the constants of the backend (paths, file names,
@@ -71,13 +80,13 @@ const TELEGRAM_MESSAGE_SIZE_LIMIT = 4096
  * `LOGS_DIR_PATH`, only when `INCLUDE_SELF_REPORTS_IN_LOGS` is `true`. They are stored only when
  * something uses them, so they are left out unless it is: `SELF_REPORTS_RETENTION_DAYS` and
  * `SELF_REPORTS_DIR_PATH` are then required, and they are stored in
- * `<SELF_REPORTS_DIR_PATH>/<SERVER_NAME>`. The documentation of the API is
- * served only when `HAS_DOCUMENTATION_ROUTE` is `true`.
+ * `<SELF_REPORTS_DIR_PATH>/<SERVER_NAME>`. The documentation of the API is served only when
+ * `HAS_DOCUMENTATION_ROUTE` is `true`.
  *
  * The notifications have no switch: they are left out, hence disabled, unless `TELEGRAM_CHAT_ID`
- * and `TELEGRAM_BOT_TOKEN` are both set. The cron notifying the watched logs is left out with
- * them, since it would have no channel to notify through, and its three `LOGS_NOTIFIER_*`
- * variables are required only when they are set.
+ * and `TELEGRAM_BOT_TOKEN` are both set. The cron notifying the watched logs and the self reports
+ * of the notifications are left out with them, since there would be nothing to notify through,
+ * and the three `LOGS_NOTIFIER_*` variables of the cron are required only when they are set.
  *
  * It is meant to be called once, when the server starts, the settings then being handed to what
  * builds it:
@@ -125,7 +134,8 @@ export const loadSettings = async (
 
   const notification = parseNotificationSettings(processEnv, {
     telegramBaseUrl: TELEGRAM_BASE_URL,
-    telegramMessageSizeLimit: TELEGRAM_MESSAGE_SIZE_LIMIT
+    telegramMessageSizeLimit: TELEGRAM_MESSAGE_SIZE_LIMIT,
+    telegramRequestTimeoutMilliseconds: TELEGRAM_REQUEST_TIMEOUT_MILLISECONDS
   })
 
   return {
@@ -172,12 +182,13 @@ export const loadSettings = async (
       sessionFilePath: path.join(DATA_DIR_PATH, 'parse_logs_self_reports_session.json'),
       isEachProblemStoredOnce: true
     },
-    notificationsSelfReports: sharedSelfReportsSettings && {
-      ...sharedSelfReportsSettings,
-      fileName: `notifications${LOG_FILE_EXTENSION}`,
-      sessionFilePath: path.join(DATA_DIR_PATH, 'notifications_self_reports_session.json'),
-      isEachProblemStoredOnce: false
-    },
+    notificationsSelfReports: notification &&
+      sharedSelfReportsSettings && {
+        ...sharedSelfReportsSettings,
+        fileName: `notifications${LOG_FILE_EXTENSION}`,
+        sessionFilePath: path.join(DATA_DIR_PATH, 'notifications_self_reports_session.json'),
+        isEachProblemStoredOnce: false
+      },
     notification
   }
 }

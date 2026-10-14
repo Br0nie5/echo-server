@@ -151,6 +151,6 @@ In development, the Vite dev server forwards the `Host` header as it is, so the 
 
 ## Time zones
 
-The backend does not depend on the time zone of its machine. The `timestamp` of a log line is read as UTC unless it carries an offset ([convertToDate.ts](../echo_backend/src/shared/utils/convertToDate.ts)), the API gives dates in UTC, and the Telegram messages show them in `LOGS_NOTIFIER_TIMEZONE` ([buildNotifierMessage.ts](../echo_backend/src/modules/logs/modules/logsNotifier/application/utils/buildNotifierMessage.ts)).
+The backend does not depend on the time zone of its machine. The `timestamp` of a log line is read as UTC unless it carries an offset ([convertToDateFromISO.ts](../echo_backend/src/shared/utils/convertToDateFromISO.ts)), the API gives dates in UTC, and the Telegram messages show them in `LOGS_NOTIFIER_TIMEZONE` ([buildNotifierMessage.ts](../echo_backend/src/modules/logs/modules/logsNotifier/application/utils/buildNotifierMessage.ts)).
 
 The frontend shows the dates, and groups the logs by day, in the time zone of the browser.

@@ -17,14 +17,14 @@ export type SelfReport = {
 }
 
 /**
- * What a storage knows about a self report it holds: the session it was reported during, and where
- * it is stored.
+ * What the self reports of one session, stored in one place, all share: the session and where it
+ * is stored.
  *
- * `sessionId`, an integer, identifies the run of the backend the self report was reported during.
- * `location` says where it is stored, which means something to the storage only (the path of a
- * file, the address of another server...), and `locationName` is the short name of that location,
- * the one to show to a user. `groupName` names the group the storage puts it in, when it puts it
- * in one.
+ * A storage gives it to each self report it holds. `sessionId`, an integer, identifies the run of
+ * the backend the self reports were reported during. `location` says where they are stored, which
+ * means something to the storage only (the path of a file, the address of another server...), and
+ * `locationName` is the short name of that location, the one to show to a user. `groupName` names
+ * the group the storage puts them in, when it puts them in one.
  */
 export type SelfReportsSession = {
   sessionId: number

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { convertToDateFromISO } from '../convertToDate.js'
+import { convertToDateFromISO } from '../convertToDateFromISO.js'
 
 // Dates without an offset are read as UTC, so the expectations use the UTC getters: the local
 // getters would depend on the timezone of the machine running the tests.

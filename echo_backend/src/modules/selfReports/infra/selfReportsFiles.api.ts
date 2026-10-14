@@ -19,13 +19,18 @@ export interface SelfReportsFilesApi {
    */
   getSelfReportLines: (filePath: string) => Promise<string[]>
   /**
-   * Makes `lines` the lines of the self-report file at `filePath`, in the order they are given,
-   * creating the file and its directory when they do not exist yet.
+   * Makes the lines of the self-report file at `filePath` those `update` makes of its current ones,
+   * none for a missing file, creating the file and its directory when they do not exist yet.
    *
-   * The file changes in one step: whoever reads it meanwhile gets either its previous lines or the
-   * new ones. Throws when the file cannot be written.
+   * No other update of the file happens until the lines of this one are written, so none loses the
+   * lines of another. `update` leaves the file as it is by returning `undefined`. The file changes
+   * in one step: whoever reads it meanwhile gets either its previous lines or the new ones. Throws
+   * when the file cannot be read or written, or when `update` throws.
    */
-  saveSelfReportLines: (filePath: string, lines: string[]) => Promise<void>
+  updateSelfReportLines: (
+    filePath: string,
+    update: (currentLines: string[]) => string[] | undefined
+  ) => Promise<void>
 }
 
 /**
@@ -51,8 +56,8 @@ export const createSelfReportsFilesApi = (filesService: FilesService): SelfRepor
     }
   },
 
-  saveSelfReportLines: async (filePath, lines): Promise<void> => {
+  updateSelfReportLines: async (filePath, update): Promise<void> => {
     await filesService.createDirectory(path.dirname(filePath))
-    await filesService.replaceFileLines(filePath, lines)
+    await filesService.replaceFileLines(filePath, update)
   }
 })
