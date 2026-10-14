@@ -1,11 +1,9 @@
 import { useMemo, useState, type Dispatch, type SetStateAction } from 'react'
 
-import { useAppTranslation, type AppTranslation } from '../i18n/useAppTranslation'
 import type { ControlledState } from '../types/controlledState'
 import { applySearchSuggestion, getSearchSuggestions } from '../utils/searchSuggestions'
 
 import { useSyncedState } from './useSyncedState'
-import { useWindowSize } from './useWindowSize'
 
 /** No suggestion highlighted. */
 const SUGGESTION_DEFAULT_INDEX = -1
@@ -16,8 +14,6 @@ interface UseSearchBarParams {
 }
 
 interface UseSearchBarReturnType {
-  translation: AppTranslation
-  isSmallScreen: boolean
   anchorElement: HTMLDivElement | null
   setAnchorElement: (node: HTMLDivElement | null) => void
   handleSubmit: (event: React.FormEvent) => void
@@ -43,8 +39,6 @@ export const useSearchBar = ({
   suggestions,
   controlledState
 }: UseSearchBarParams): UseSearchBarReturnType => {
-  const translation = useAppTranslation()
-
   const submittedSearch = controlledState?.value ?? ''
 
   const [inputValue, setInputValue] = useSyncedState(submittedSearch)
@@ -54,8 +48,6 @@ export const useSearchBar = ({
     setShowSuggestions(filteredSuggestionsLength > 0)
 
   const [suggestionIndex, setSuggestionIndex] = useState(SUGGESTION_DEFAULT_INDEX)
-
-  const { isSmallScreen } = useWindowSize()
 
   const [anchorElement, setAnchorElement] = useState<HTMLDivElement | null>(null)
 
@@ -118,8 +110,6 @@ export const useSearchBar = ({
   }
 
   return {
-    translation,
-    isSmallScreen,
     anchorElement,
     setAnchorElement,
     handleSubmit,

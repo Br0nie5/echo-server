@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`LogsScreen > Displaying the logs > Should display the logs of the last days on a phone screen 1`] = `
+exports[`LogsScreen > Displaying the logs > Should display the logs of the last days > phone screen 1`] = `
 <DocumentFragment>
   <div
     class="MuiBox-root css-5aboy8"
@@ -14,14 +14,14 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
         <label
           class="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined css-9oe75v-MuiFormLabel-root-MuiInputLabel-root"
           data-shrink="true"
-          for="_r_7_"
-          id="_r_7_-label"
+          for="_r_1_"
+          id="_r_1_-label"
         >
           From
         </label>
         <div
           aria-invalid="false"
-          aria-labelledby="_r_7_-label"
+          aria-labelledby="_r_1_-label"
           class="MuiPickersInputBase-root MuiPickersOutlinedInput-root MuiPickersInputBase-colorPrimary MuiPickersInputBase-adornedEnd css-17k9pf-MuiPickersInputBase-root-MuiPickersOutlinedInput-root"
           role="group"
         >
@@ -164,7 +164,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
           <input
             aria-hidden="true"
             class="MuiPickersInputBase-input MuiPickersOutlinedInput-input css-7bxtqs-MuiPickersInputBase-input"
-            id="_r_7_"
+            id="_r_1_"
             tabindex="-1"
             value="04/26/2026"
           />
@@ -175,7 +175,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
       class="MuiTypography-root MuiTypography-h4 MuiTypography-alignCenter MuiTypography-gutterBottom css-1o2hbqe-MuiTypography-root"
       style="--Typography-textAlign: center;"
     >
-      Test: Logs Viewer
+      Test: Logs
     </h4>
     <div
       class="MuiStack-root css-lkr0zo-MuiStack-root"
@@ -187,7 +187,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
           class="MuiTypography-root MuiTypography-h5 MuiTypography-alignCenter css-m08qag-MuiTypography-root"
           style="--Typography-textAlign: center;"
         >
-          Filter Logs by Level:
+          Levels
         </h5>
         <div
           class="MuiBox-root css-3e2rqj"
@@ -257,8 +257,8 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                   <input
                     aria-invalid="false"
                     class="MuiInputBase-input MuiOutlinedInput-input css-j3jqhj-MuiInputBase-input-MuiOutlinedInput-input"
-                    id="_r_a_"
-                    placeholder="Search... (ex: jobId:123 message:"My wanted message")"
+                    id="_r_4_"
+                    placeholder="Search… (e.g. jobId:123 message:"disk full")"
                     type="text"
                     value=""
                   />
@@ -1061,7 +1061,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
 </DocumentFragment>
 `;
 
-exports[`LogsScreen > Displaying the logs > Should display the logs of the last days on a wide screen 1`] = `
+exports[`LogsScreen > Displaying the logs > Should display the logs of the last days > wide screen 1`] = `
 <DocumentFragment>
   <div
     class="MuiBox-root css-5aboy8"
@@ -1236,7 +1236,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
       class="MuiTypography-root MuiTypography-h4 MuiTypography-alignCenter MuiTypography-gutterBottom css-1o2hbqe-MuiTypography-root"
       style="--Typography-textAlign: center;"
     >
-      Test: Logs Viewer
+      Test: Logs
     </h4>
     <div
       class="MuiStack-root css-1slq5cp-MuiStack-root"
@@ -1248,7 +1248,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
           class="MuiTypography-root MuiTypography-h5 MuiTypography-alignCenter css-m08qag-MuiTypography-root"
           style="--Typography-textAlign: center;"
         >
-          Filter Logs by Level:
+          Levels
         </h5>
         <div
           class="MuiBox-root css-3e2rqj"
@@ -1319,7 +1319,7 @@ exports[`LogsScreen > Displaying the logs > Should display the logs of the last 
                     aria-invalid="false"
                     class="MuiInputBase-input MuiOutlinedInput-input css-j3jqhj-MuiInputBase-input-MuiOutlinedInput-input"
                     id="_r_4_"
-                    placeholder="Search... (ex: jobId:123 message:"My wanted message")"
+                    placeholder="Search… (e.g. jobId:123 message:"disk full")"
                     type="text"
                     value=""
                   />

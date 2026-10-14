@@ -32,8 +32,8 @@ class SameThreadFilterWorker {
  * afterwards.
  *
  * ```ts
- * beforeAll(() => stubFilterWorker())
- * afterAll(() => vi.unstubAllGlobals())
+ * beforeEach(() => stubFilterWorker())
+ * afterEach(() => vi.unstubAllGlobals())
  * ```
  */
 export const stubFilterWorker = (): void => {

@@ -30,8 +30,7 @@ export const useLogsRepository = (): LogsRepository => {
         url: logsUrl,
         method: 'GET',
         params,
-        signal,
-        withCredentials: true
+        signal
       })
 
       return LogArraySchema.parse(data)

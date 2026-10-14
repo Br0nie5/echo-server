@@ -12,7 +12,7 @@ beforeEach(() => {
 })
 
 describe('SearchBar', () => {
-  test('Should display the text a user enter', async () => {
+  test('Should display the text the user types', async () => {
     const component = renderComponent(<SearchBar />)
 
     const input = component.getByPlaceholderText(appTranslation('utils.searchPlaceholder'))
@@ -35,7 +35,7 @@ describe('SearchBar', () => {
   })
 
   describe('controlledState', () => {
-    test('Should display values from controlledState if given', async () => {
+    test('Should display the value of controlledState, and give it the submitted text', async () => {
       const initialSearch = 'initial search'
       const typedSearch = 'some text'
       const resetSearch = 'reset search'
@@ -84,7 +84,7 @@ describe('SearchBar', () => {
       expect(component.getByDisplayValue(resetSearch)).toBeInTheDocument()
     })
 
-    test('Should give the input to setValue when pressing enter after writing my input', async () => {
+    test('Should give the typed text to setValue when the user presses Enter', async () => {
       const setValue = vi.fn()
 
       const component = renderComponent(<SearchBar controlledState={{ value: '', setValue }} />)
@@ -103,8 +103,8 @@ describe('SearchBar', () => {
   })
 
   describe('Suggestions', () => {
-    test('Should show suggestions when using ":" writing helper', async () => {
-      const suggestion = 'My super suggestion'
+    test('Should show the suggestions once the user types a colon', async () => {
+      const suggestion = 'color'
 
       const component = renderComponent(<SearchBar suggestions={[suggestion]} />)
 
@@ -115,8 +115,8 @@ describe('SearchBar', () => {
       expect(component.getByText(`${suggestion}:`)).toBeInTheDocument()
     })
 
-    test('Should show filtered suggestions continuing writing after using ":" writing helper', async () => {
-      const suggestions = ['1 suggestion', '2 suggestions', '3 suggestions']
+    test('Should only show the suggestions starting with what the user types after the colon', async () => {
+      const suggestions = ['color', 'count', 'size']
 
       const component = renderComponent(<SearchBar suggestions={suggestions} />)
 
@@ -128,10 +128,10 @@ describe('SearchBar', () => {
         expect(component.getByText(`${suggestion}:`)).toBeInTheDocument()
       })
 
-      await user.type(input, '1')
+      await user.type(input, 'co')
 
       suggestions.forEach((suggestion) => {
-        if (suggestion.startsWith('1')) {
+        if (suggestion.startsWith('co')) {
           expect(component.getByText(`${suggestion}:`)).toBeInTheDocument()
         } else {
           expect(component.queryByText(`${suggestion}:`)).not.toBeInTheDocument()
@@ -139,8 +139,8 @@ describe('SearchBar', () => {
       })
     })
 
-    test('Should replace the writing helper ":" with the correct suggestion when clicking on one of the suggestions', async () => {
-      const suggestions = ['1 suggestion', '2 suggestions', '3 suggestions']
+    test('Should replace the colon with the suggestion the user clicks, and hide the suggestions', async () => {
+      const suggestions = ['color', 'count', 'size']
 
       const component = renderComponent(<SearchBar suggestions={suggestions} />)
 
@@ -156,10 +156,11 @@ describe('SearchBar', () => {
       expect(
         component.getByDisplayValue(`${userInputBaseText}${suggestions[0]}:`)
       ).toBeInTheDocument()
+      expect(component.queryByRole('menuitem')).not.toBeInTheDocument()
     })
 
-    test('Should replace the writing helper ":" alongside the word preceding it with the correct suggestion', async () => {
-      const suggestions = ['1 suggestion', '2 suggestions', '3 suggestions']
+    test('Should replace the word before the colon too with the suggestion', async () => {
+      const suggestions = ['color', 'count', 'size']
 
       const component = renderComponent(<SearchBar suggestions={suggestions} />)
 
@@ -178,8 +179,8 @@ describe('SearchBar', () => {
       ).toBeInTheDocument()
     })
 
-    test('Should keep the hyphen "-" when replacing the writing helper ":" alongside the word preceding it with the correct suggestion', async () => {
-      const suggestions = ['1 suggestion', '2 suggestions', '3 suggestions']
+    test('Should keep the hyphen the word starts with when replacing it with the suggestion', async () => {
+      const suggestions = ['color', 'count', 'size']
 
       const component = renderComponent(<SearchBar suggestions={suggestions} />)
 
@@ -198,8 +199,8 @@ describe('SearchBar', () => {
       ).toBeInTheDocument()
     })
 
-    test('Should replace the writing helper ":" with the correct suggestion when selecting a suggestion though the keyboard', async () => {
-      const suggestions = ['1 suggestion', '2 suggestions', '3 suggestions']
+    test('Should replace the colon with the suggestion the user selects with the keyboard', async () => {
+      const suggestions = ['color', 'count', 'size']
 
       const component = renderComponent(<SearchBar suggestions={suggestions} />)
 
@@ -235,8 +236,8 @@ describe('SearchBar', () => {
       ).toBeInTheDocument()
     })
 
-    test('Should loop though the suggestions when going up or down to much', async () => {
-      const suggestions = ['1 suggestion', '2 suggestions', '3 suggestions']
+    test('Should loop through the suggestions when the user goes past the first or the last one', async () => {
+      const suggestions = ['color', 'count', 'size']
 
       const component = renderComponent(<SearchBar suggestions={suggestions} />)
 
@@ -268,7 +269,7 @@ describe('SearchBar', () => {
     })
 
     test('Should not apply a suggestion when pressing Enter before selecting one', async () => {
-      const suggestions = ['1 suggestion', '2 suggestions', '3 suggestions']
+      const suggestions = ['color', 'count', 'size']
 
       const component = renderComponent(<SearchBar suggestions={suggestions} />)
 
@@ -284,8 +285,8 @@ describe('SearchBar', () => {
       expect(component.getByDisplayValue(`${userInputBaseText}:`)).toBeInTheDocument()
     })
 
-    test('Should hide suggestions when typing on Escape button', async () => {
-      const suggestion = 'My super suggestion'
+    test('Should hide the suggestions when the user presses Escape', async () => {
+      const suggestion = 'color'
 
       const component = renderComponent(<SearchBar suggestions={[suggestion]} />)
 

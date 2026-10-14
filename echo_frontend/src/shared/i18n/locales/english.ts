@@ -2,41 +2,41 @@ import type { TranslationKeys } from './types'
 
 export const english: TranslationKeys = {
   auth: {
-    wall: 'Auth Wall',
+    title: 'Authentication',
     form: {
-      username: 'username',
-      password: 'password',
-      enterCredentials: 'Please enter your credentials',
-      fieldsRequired: 'Parameters `username` and `password` are required'
+      username: 'Username',
+      password: 'Password',
+      enterCredentials: 'Enter your username and password.',
+      fieldsRequired: 'Enter both a username and a password.'
     },
     login: {
-      button: 'Login',
-      invalidCredentials: 'Either `username` or/and `password` are incorrect'
+      button: 'Log in',
+      invalidCredentials: 'Incorrect username or password.'
     },
     signUp: {
       button: 'Sign up'
     },
     redirect: {
-      message: 'You are already logged in, you should be redirected to:'
+      message: 'You are already logged in. If nothing happens, go to:'
     },
-    error: 'An error occurred'
+    error: 'The request failed. Please try again.'
   },
   logs: {
-    viewer: 'Logs Viewer',
+    title: 'Logs',
     from: 'From',
-    filterByLevel: 'Filter Logs by Level:',
-    searchPlaceholder: 'Search... (ex: jobId:123 message:"My wanted message")',
+    filterByLevel: 'Levels',
+    searchPlaceholder: 'Search… (e.g. jobId:123 message:"disk full")',
     noGroupLabel: 'No group'
   },
   query: {
-    noData: 'No data has been found',
-    error: 'An error occurred.',
-    refetchButton: 'Click to refresh.'
+    noData: 'Nothing found.',
+    error: 'Something went wrong.',
+    refetchButton: 'Try again'
   },
   utils: {
     today: 'Today',
     yesterday: 'Yesterday',
-    searchPlaceholder: 'Type your search here...',
+    searchPlaceholder: 'Search…',
     searchButton: 'Search'
   }
 }

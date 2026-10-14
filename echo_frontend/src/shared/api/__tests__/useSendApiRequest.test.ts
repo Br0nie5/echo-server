@@ -1,3 +1,4 @@
+import { act } from '@testing-library/react'
 import nock from 'nock'
 import type { Location } from 'react-router-dom'
 import { describe, expect, test, vi } from 'vitest'
@@ -22,7 +23,8 @@ describe('useSendApiRequest', () => {
 
     const { result } = renderAppHook(() => useSendApiRequest(), { onLocationChange })
 
-    await expect(result.current({ url: '/failing', method: 'GET' })).rejects.toThrow()
+    await act(() => expect(result.current({ url: '/failing', method: 'GET' })).rejects.toThrow())
+
     expect(onLocationChange).toHaveBeenCalledTimes(1)
   })
 
@@ -35,13 +37,12 @@ describe('useSendApiRequest', () => {
       onLocationChange
     })
 
-    await expect(result.current({ url: '/protected', method: 'GET' })).rejects.toThrow()
-    await vi.waitFor(() =>
-      expect(onLocationChange.mock.lastCall?.[0]).toMatchObject({
-        pathname: AppPathNames.auth,
-        search: `?${new URLSearchParams({ redirect: `${AppPathNames.logs}?logSearch=text` })}`
-      })
-    )
+    await act(() => expect(result.current({ url: '/protected', method: 'GET' })).rejects.toThrow())
+
+    expect(onLocationChange.mock.lastCall?.[0]).toMatchObject({
+      pathname: AppPathNames.auth,
+      search: `?${new URLSearchParams({ redirect: `${AppPathNames.logs}?logSearch=text` })}`
+    })
   })
 
   test('Should throw, and stay on the auth screen, when the API answers a 401 there', async () => {
@@ -53,7 +54,10 @@ describe('useSendApiRequest', () => {
       onLocationChange
     })
 
-    await expect(result.current({ url: '/auth/login', method: 'POST' })).rejects.toThrow()
+    await act(() =>
+      expect(result.current({ url: '/auth/login', method: 'POST' })).rejects.toThrow()
+    )
+
     expect(onLocationChange).toHaveBeenCalledTimes(1)
   })
 })

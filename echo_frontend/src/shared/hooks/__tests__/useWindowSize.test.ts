@@ -4,22 +4,23 @@ import { resizeWindow } from '../../../test/utils/resizeWindow'
 import { useWindowSize } from '../useWindowSize'
 
 describe('useWindowSize', () => {
-  describe('windowSize', () => {
-    it('Should return the width and height of the window', () => {
-      resizeWindow(400, 800)
-      const { result } = renderHook(() => useWindowSize())
-      expect(result.current.windowSize).toStrictEqual({ width: 400, height: 800 })
+  it('Should return the width and height of the window', () => {
+    resizeWindow(400, 800)
+    const { result } = renderHook(() => useWindowSize())
+    expect(result.current.windowSize).toStrictEqual({ width: 400, height: 800 })
+  })
+
+  it('Should update the size, and whether the screen is small, when the window is resized', () => {
+    resizeWindow(400, 800)
+    const { result } = renderHook(() => useWindowSize())
+
+    act(() => {
+      resizeWindow(1500, 600)
     })
 
-    it('Should update when the window is resized', () => {
-      resizeWindow(400, 800)
-      const { result } = renderHook(() => useWindowSize())
-
-      act(() => {
-        resizeWindow(500, 900)
-      })
-
-      expect(result.current.windowSize).toStrictEqual({ width: 500, height: 900 })
+    expect(result.current).toStrictEqual({
+      windowSize: { width: 1500, height: 600 },
+      isSmallScreen: false
     })
   })
 
@@ -39,18 +40,6 @@ describe('useWindowSize', () => {
     it('Should return false when width = height (landscape)', () => {
       resizeWindow(600, 600)
       const { result } = renderHook(() => useWindowSize())
-      expect(result.current.isSmallScreen).toBe(false)
-    })
-
-    it('Should update when window is resized', () => {
-      resizeWindow(500, 1000)
-      const { result } = renderHook(() => useWindowSize())
-      expect(result.current.isSmallScreen).toBe(true)
-
-      act(() => {
-        resizeWindow(1500, 600)
-      })
-
       expect(result.current.isSmallScreen).toBe(false)
     })
   })

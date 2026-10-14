@@ -1,11 +1,13 @@
 import type { AlertColor } from '@mui/material'
 
+import type { TranslationKey } from '../../../../shared/i18n/useAppTranslation'
 import type { AuthCheckResult } from '../../domain/auth.repository'
 
 /** A message displayed above the auth form. */
 export interface AuthAlert {
   severity: AlertColor
-  message: string
+  /** The key of the text of the message. */
+  messageKey: TranslationKey
 }
 
 /**

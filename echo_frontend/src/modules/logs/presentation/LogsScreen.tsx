@@ -23,7 +23,7 @@ const LogsScreenComponent: React.FC = () => {
 
   const translation = useAppTranslation()
 
-  useScreenTitle(translation('logs.viewer'))
+  useScreenTitle(translation('logs.title'))
 
   const header = (
     <LogsScreenHeader

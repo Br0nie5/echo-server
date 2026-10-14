@@ -1,6 +1,6 @@
 import { DatePicker } from '@mui/x-date-pickers'
 import dayjs from 'dayjs'
-import { memo, useState, type JSX } from 'react'
+import React, { memo, useState } from 'react'
 
 import type { ControlledState } from '../types/controlledState'
 
@@ -15,12 +15,12 @@ type DateSelectorProps = {
   controlledState?: ControlledState<Date>
 }
 
-const DateSelectorComponent = ({
+const DateSelectorComponent: React.FC<DateSelectorProps> = ({
   label,
   minimalDate,
   maximalDate,
   controlledState
-}: DateSelectorProps): JSX.Element => {
+}) => {
   const [uncontrolledSelectedDate, setUncontrolledSelectedDate] = useState<Date>()
 
   const selectedDate =

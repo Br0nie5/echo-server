@@ -31,7 +31,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const rawConfig = await response.json()
       return parseFrontConfig(rawConfig, document.baseURI)
     },
-    staleTime: Infinity, // never refetch
+    staleTime: Infinity,
     retry: false
   })
 

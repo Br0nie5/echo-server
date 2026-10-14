@@ -9,9 +9,11 @@ import {
   Stack,
   TextField
 } from '@mui/material'
-import { memo, type JSX } from 'react'
+import React, { memo } from 'react'
 
 import { useSearchBar } from '../hooks/useSearchBar'
+import { useWindowSize } from '../hooks/useWindowSize'
+import { useAppTranslation } from '../i18n/useAppTranslation'
 import type { ControlledState } from '../types/controlledState'
 
 interface SearchBarProps {
@@ -23,14 +25,15 @@ interface SearchBarProps {
   controlledState?: ControlledState<string>
 }
 
-const SearchBarComponent = ({
+const SearchBarComponent: React.FC<SearchBarProps> = ({
   suggestions,
   placeholder,
   controlledState
-}: SearchBarProps): JSX.Element => {
+}) => {
+  const translation = useAppTranslation()
+  const { isSmallScreen } = useWindowSize()
+
   const {
-    translation,
-    isSmallScreen,
     anchorElement,
     setAnchorElement,
     handleSubmit,
@@ -130,4 +133,4 @@ const SearchBarComponent = ({
  * />
  * ```
  */
-export const SearchBar = memo(SearchBarComponent) as (props: SearchBarProps) => JSX.Element
+export const SearchBar = memo(SearchBarComponent)

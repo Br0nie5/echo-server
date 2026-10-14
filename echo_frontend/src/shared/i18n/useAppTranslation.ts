@@ -12,10 +12,11 @@ type FlattenKeys<T, P extends string = ''> = {
     : `${DotPrefix<P>}${K}`
 }[keyof T & string]
 
-type TranslationKeyPaths = FlattenKeys<TranslationKeys>
+/** The key of a text of the app, the dot-separated path to it in the locales (`auth.title`). */
+export type TranslationKey = FlattenKeys<TranslationKeys>
 
 /** Translates a key, which is type-checked against the locale keys. */
-export type AppTranslation = (key: TranslationKeyPaths) => string
+export type AppTranslation = (key: TranslationKey) => string
 
 /**
  * Gives the function translating a key, an unknown key being a compile error.
@@ -24,5 +25,5 @@ export type AppTranslation = (key: TranslationKeyPaths) => string
  */
 export const useAppTranslation = (): AppTranslation => {
   const { t: translate } = useTranslation()
-  return useCallback((key: TranslationKeyPaths) => translate(key), [translate])
+  return useCallback((key: TranslationKey) => translate(key), [translate])
 }

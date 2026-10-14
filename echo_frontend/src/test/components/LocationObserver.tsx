@@ -11,7 +11,7 @@ type LocationObserverProps = {
  * It displays nothing, and calls `onLocationChange` with the location at first and each time it
  * changes. `AppRouterWrapper` renders it when it is given an `onLocationChange`.
  */
-export const LocationObserver = ({ onLocationChange }: LocationObserverProps): null => {
+export const LocationObserver: React.FC<LocationObserverProps> = ({ onLocationChange }) => {
   const location = useLocation()
 
   useEffect(() => {

@@ -1,10 +1,13 @@
 import type { AppTranslation } from '../i18n/useAppTranslation'
 
-/** Available date formats, named after what they render. */
-type FormatType = 'year/month/day - hour:minutes:seconds' | 'dayName day monthName year'
+/**
+ * What a date is formatted for: `dateTime` for an instant (`15/05/2020, 13:45:30` in British
+ * English), `day` for the day it is in (`Friday, 15 May 2020`).
+ */
+type DateFormat = 'dateTime' | 'day'
 
-const formatOptions: Record<FormatType, Intl.DateTimeFormatOptions> = {
-  'year/month/day - hour:minutes:seconds': {
+const formatOptions: Record<DateFormat, Intl.DateTimeFormatOptions> = {
+  dateTime: {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -13,7 +16,7 @@ const formatOptions: Record<FormatType, Intl.DateTimeFormatOptions> = {
     second: '2-digit',
     hour12: false
   },
-  'dayName day monthName year': {
+  day: {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -22,22 +25,21 @@ const formatOptions: Record<FormatType, Intl.DateTimeFormatOptions> = {
 }
 
 /**
- * Formats `date` the way `formatType` names, in the locale of the user (the language of their
- * browser), which orders the parts and names the days and months.
+ * Formats `date` in `dateFormat`, in the locale of the user (the language of their browser),
+ * which orders the parts and names the days and months.
  *
- * `dayName day monthName year` renders today and yesterday as such instead, with `translation`.
+ * The `day` format gives today and yesterday as such instead, translated with `translation`.
  *
  * ```ts
- * formatDate(new Date(2020, 4, 15), 'dayName day monthName year', translation)
- * // 'Friday, 15 May 2020' in British English
+ * formatDate(new Date(2020, 4, 15), 'day', translation) // 'Friday, 15 May 2020' in British English
  * ```
  */
 export const formatDate = (
   date: Date,
-  formatType: FormatType,
+  dateFormat: DateFormat,
   translation: AppTranslation
 ): string => {
-  if (formatType === 'dayName day monthName year') {
+  if (dateFormat === 'day') {
     const today = new Date()
     const yesterday = new Date(today)
     yesterday.setDate(today.getDate() - 1)
@@ -51,5 +53,5 @@ export const formatDate = (
     }
   }
 
-  return date.toLocaleString(undefined, formatOptions[formatType])
+  return date.toLocaleString(undefined, formatOptions[dateFormat])
 }

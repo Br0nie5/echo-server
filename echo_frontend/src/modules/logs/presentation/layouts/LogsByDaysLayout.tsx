@@ -24,9 +24,7 @@ const LogsByDaysLayoutComponent: React.FC<LogsByDaysLayoutProps> = ({ filteredLo
           key={logsByDay.id}
           id={logsByDay.id}
           title={
-            <Typography variant="h5">
-              {formatDate(logsByDay.date, 'dayName day monthName year', translation)}
-            </Typography>
+            <Typography variant="h5">{formatDate(logsByDay.date, 'day', translation)}</Typography>
           }
           isOpenedAtStart={dayLogsIndex === 0}
         >

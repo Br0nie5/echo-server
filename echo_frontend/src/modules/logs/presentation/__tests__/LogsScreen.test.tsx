@@ -1,5 +1,5 @@
 import type { Log } from '@echo/utilities'
-import { waitFor, type RenderResult } from '@testing-library/react'
+import { act, cleanup, waitFor, type RenderResult } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import nock from 'nock'
 
@@ -54,25 +54,23 @@ const renderLogsScreen = async (
   return screen
 }
 
-beforeAll(() => {
+beforeEach(() => {
   // Only the date is set, and it goes on from there: the timers of the app are the real ones, and
   // the debounce of the filters measures the time that passes with the date.
   vi.useFakeTimers({ now: NOW, toFake: ['Date'], shouldAdvanceTime: true })
   stubFilterWorker()
+  resizeWindow(1200, 600)
 })
 
-afterAll(() => {
+afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
-})
-
-beforeEach(() => {
-  resizeWindow(1200, 600)
+  cleanup()
 })
 
 describe('LogsScreen', () => {
   describe('Displaying the logs', () => {
-    test('Should display the logs of the last days on a wide screen', async () => {
+    test('Should display the logs of the last days', async () => {
       const todayLogMessage = 'Invoices sent.'
 
       const screen = await renderLogsScreen('/logs', {
@@ -80,20 +78,11 @@ describe('LogsScreen', () => {
         isRealRouter: true
       })
 
-      expect(screen.asFragment()).toMatchSnapshot()
-    })
+      expect(screen.asFragment()).toMatchSnapshot('wide screen')
 
-    test('Should display the logs of the last days on a phone screen', async () => {
-      resizeWindow(600, 1200)
+      act(() => resizeWindow(600, 1200))
 
-      const todayLogMessage = 'Invoices sent.'
-
-      const screen = await renderLogsScreen('/logs', {
-        messageToWaitFor: todayLogMessage,
-        isRealRouter: true
-      })
-
-      expect(screen.asFragment()).toMatchSnapshot()
+      expect(screen.asFragment()).toMatchSnapshot('phone screen')
     })
   })
 

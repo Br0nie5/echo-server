@@ -1,11 +1,13 @@
 /**
  * Gives the suggestions to offer for the last word of `inputValue`, the text of a search input.
  *
- * None before the last word holds a `:`. After it, those of `suggestions` starting with what
- * follows the `:`, whatever the case.
+ * None before the last word holds a `:`, nor once what precedes its `:`, without a leading `-`, is
+ * one of `suggestions`: the user then types what that key looks for. Otherwise, those of
+ * `suggestions` starting with what follows the `:`, whatever the case.
  *
  * ```ts
  * getSearchSuggestions('error :co', ['color', 'count', 'size']) // ['color', 'count']
+ * getSearchSuggestions('error color:co', ['color', 'count', 'size']) // []
  * ```
  */
 export const getSearchSuggestions = (
@@ -18,7 +20,11 @@ export const getSearchSuggestions = (
     return []
   }
 
-  const suggestionWord = lastWord.split(':')[1] || ''
+  const [typedKey, suggestionWord] = lastWord.replace(/^-/, '').split(':')
+
+  if (suggestions.includes(typedKey)) {
+    return []
+  }
 
   return suggestions.filter((option) =>
     option.toLowerCase().startsWith(suggestionWord.toLowerCase())

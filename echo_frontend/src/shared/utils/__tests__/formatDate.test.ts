@@ -15,38 +15,31 @@ describe('formatDate', () => {
     vi.useRealTimers()
   })
 
-  it('Should return "Today" if date is today', () => {
-    const result = formatDate(
-      new Date(2026, 3, 28, 23, 59),
-      'dayName day monthName year',
-      appTranslation
-    )
-    expect(result).toBe('Today')
+  describe('day', () => {
+    it('Should give today for a date of today', () => {
+      const result = formatDate(new Date(2026, 3, 28, 23, 59), 'day', appTranslation)
+
+      expect(result).toBe(appTranslation('utils.today'))
+    })
+
+    it('Should give yesterday for a date of yesterday', () => {
+      const result = formatDate(new Date(2026, 3, 27, 0, 0), 'day', appTranslation)
+
+      expect(result).toBe(appTranslation('utils.yesterday'))
+    })
+
+    it('Should give the name of the day, the day, the month and the year of an older date', () => {
+      const result = formatDate(new Date(2026, 3, 26, 23, 59), 'day', appTranslation)
+
+      expect(result).toBe('Sunday, 26 April 2026')
+    })
   })
 
-  it('Should return "Yesterday" if date is yesterday', () => {
-    const result = formatDate(
-      new Date(2026, 3, 27, 0, 0),
-      'dayName day monthName year',
-      appTranslation
-    )
-    expect(result).toBe('Yesterday')
-  })
+  describe('dateTime', () => {
+    it('Should give the date and the time, to the second, even for a date of today', () => {
+      const result = formatDate(new Date(2026, 3, 28, 9, 45, 30), 'dateTime', appTranslation)
 
-  it('Should format date with default format if not today or yesterday', () => {
-    const result = formatDate(
-      new Date(2026, 3, 26, 23, 59),
-      'dayName day monthName year',
-      appTranslation
-    )
-
-    expect(result).toBe('Sunday, 26 April 2026')
-  })
-
-  it('Should format date with custom format if given', () => {
-    const someDate = new Date('2020-05-15T13:45:30')
-    const result = formatDate(someDate, 'year/month/day - hour:minutes:seconds', appTranslation)
-
-    expect(result).toBe('15/05/2020, 13:45:30')
+      expect(result).toBe('28/04/2026, 09:45:30')
+    })
   })
 })

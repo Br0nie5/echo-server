@@ -15,4 +15,6 @@ export type FrontConfig = Config &
     LOGS_INITIAL_DATE_DAYS_AGO: number
     /** How many days back the logs can start at most. */
     LOGS_MINIMAL_DATE_DAYS_AGO: number
+    /** How many days back the logs start at the latest: always 0, today. */
+    LOGS_MAXIMAL_DATE_DAYS_AGO: number
   }

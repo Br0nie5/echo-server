@@ -7,7 +7,7 @@ import { getRouteTestId } from '../utils/getRouteTestId'
  *
  * It is an empty box, whose test id `getRouteTestId` gives for the path the app is at.
  */
-export const RoutePlaceholder = (): React.ReactElement => {
+export const RoutePlaceholder: React.FC = () => {
   const { pathname, search } = useLocation()
 
   return <div data-testid={getRouteTestId(`${pathname}${search}`)} />

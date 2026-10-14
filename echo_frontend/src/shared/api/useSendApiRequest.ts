@@ -17,7 +17,6 @@ interface ApiRequest<TParams = unknown, TBody = unknown> {
   responseType?: ResponseType
   /** Aborting it cancels the request. */
   signal?: AbortSignal
-  withCredentials?: boolean
 }
 
 /**
@@ -45,8 +44,7 @@ export const useSendApiRequest = () => {
     params,
     data,
     responseType,
-    signal,
-    withCredentials
+    signal
   }: ApiRequest<TParams, TBody>): Promise<TData> => {
     try {
       const response = await axiosInstance.request<TData, AxiosResponse<TData, TBody>, TBody>({
@@ -55,8 +53,7 @@ export const useSendApiRequest = () => {
         params,
         data,
         responseType,
-        signal,
-        withCredentials
+        signal
       })
 
       return response.data

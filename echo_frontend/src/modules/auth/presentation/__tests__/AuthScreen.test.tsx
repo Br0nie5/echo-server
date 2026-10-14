@@ -3,6 +3,7 @@ import type { RenderResult } from '@testing-library/react'
 import userEvent, { type UserEvent } from '@testing-library/user-event'
 import nock from 'nock'
 
+import type { TranslationKey } from '../../../../shared/i18n/useAppTranslation'
 import { mockConfig } from '../../../../test/mocks/mockConfig'
 import { renderFakeRouterApp, renderRealRouterApp } from '../../../../test/renderApp'
 import { appTranslation } from '../../../../test/utils/appTranslation'
@@ -15,18 +16,16 @@ const authenticatedStatus: AuthStatus = { status: 'authenticated' }
 const notLoggedInStatus: AuthStatus = { status: 'unauthenticated' }
 const noAccountYetStatus: AuthStatus = { status: 'needsSignUp' }
 
-type TranslationKey = Parameters<typeof appTranslation>[0]
-
 const mockAuthStatusRequest = (statusCode: number, answer: unknown): void => {
   nock(mockConfig.API_URL).get('/auth/status').reply(statusCode, answer)
 }
 
-const mockLoginRequest = (status: number, answer?: object): void => {
-  nock(mockConfig.API_URL).post('/auth/login', credentials).reply(status, answer)
+const mockLoginRequest = (statusCode: number, answer?: object): void => {
+  nock(mockConfig.API_URL).post('/auth/login', credentials).reply(statusCode, answer)
 }
 
-const mockSignUpRequest = (status: number, answer?: object): void => {
-  nock(mockConfig.API_URL).post('/auth/signup', credentials).reply(status, answer)
+const mockSignUpRequest = (statusCode: number, answer?: object): void => {
+  nock(mockConfig.API_URL).post('/auth/signup', credentials).reply(statusCode, answer)
 }
 
 const typeCredentials = async (user: UserEvent, screen: RenderResult): Promise<void> => {
@@ -75,7 +74,7 @@ describe('AuthScreen', () => {
     expect(await screen.findByText(appTranslation('auth.login.button'))).toBeInTheDocument()
   })
 
-  test('Should redirect the user if he is already authenticated', async () => {
+  test('Should redirect the user who is already authenticated', async () => {
     mockAuthStatusRequest(200, authenticatedStatus)
 
     const screen = renderFakeRouterApp(
@@ -85,7 +84,7 @@ describe('AuthScreen', () => {
     expect(await screen.findByTestId(getRouteTestId('/logs?logSearch=stock'))).toBeInTheDocument()
   })
 
-  test('Should show the user whether its login was successful', async () => {
+  test('Should tell the user whether their login was successful', async () => {
     const user = userEvent.setup()
     mockAuthStatusRequest(200, notLoggedInStatus)
 
@@ -110,7 +109,7 @@ describe('AuthScreen', () => {
     expect(await screen.findByTestId(getRouteTestId('/logs'))).toBeInTheDocument()
   })
 
-  test('Should let the user create an account and tell him whether its signup was successful', async () => {
+  test('Should let the user create an account, and tell them whether their sign up was successful', async () => {
     const user = userEvent.setup()
     mockAuthStatusRequest(200, noAccountYetStatus)
 

@@ -26,11 +26,7 @@ const LogCardComponent: React.FC<LogCardProps> = ({ log }) => {
   const theme = useTheme()
   const translation = useAppTranslation()
 
-  const formattedDate = formatDate(
-    new Date(log.date),
-    'year/month/day - hour:minutes:seconds',
-    translation
-  )
+  const formattedDate = formatDate(new Date(log.date), 'dateTime', translation)
   const entryLogTitle = `${formattedDate} - ${log.level}`
 
   return (

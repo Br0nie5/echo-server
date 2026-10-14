@@ -1,6 +1,7 @@
 import { Typography, TextField, Button, Box, CircularProgress, Alert } from '@mui/material'
 import React, { memo } from 'react'
 
+import { useAppTranslation } from '../../../../shared/i18n/useAppTranslation'
 import { useAuthForm } from '../hooks/useAuthForm'
 import type { AuthenticationMode } from '../utils/types'
 
@@ -9,8 +10,8 @@ type AuthFormLayoutProps = {
 }
 
 const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({ formMode }) => {
+  const translation = useAppTranslation()
   const {
-    translation,
     onSubmit,
     isSubmitting,
     isAuthenticated,
@@ -28,7 +29,7 @@ const AuthFormLayoutComponent: React.FC<AuthFormLayoutProps> = ({ formMode }) =>
       </Typography>
       {alert && (
         <Alert severity={alert.severity} sx={{ mb: 2 }}>
-          {alert.message}
+          {translation(alert.messageKey)}
         </Alert>
       )}
       <TextField

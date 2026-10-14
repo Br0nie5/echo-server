@@ -47,6 +47,7 @@ export const parseFrontConfig = (
     ...parseConfig(rawConfig),
     ...parseAppUrls(baseUri),
     LOGS_INITIAL_DATE_DAYS_AGO,
-    LOGS_MINIMAL_DATE_DAYS_AGO
+    LOGS_MINIMAL_DATE_DAYS_AGO,
+    LOGS_MAXIMAL_DATE_DAYS_AGO: 0
   }
 }

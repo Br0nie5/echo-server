@@ -2,6 +2,7 @@ import { Typography } from '@mui/material'
 import React, { memo, useMemo } from 'react'
 
 import { useScreenTitle } from '../../../shared/hooks/useScreenTitle'
+import { useAppTranslation } from '../../../shared/i18n/useAppTranslation'
 import { PageLayout } from '../../../shared/layouts/PageLayout'
 import { QueryFallbackLayout } from '../../../shared/layouts/QueryFallbackLayout'
 
@@ -10,15 +11,15 @@ import { AuthFormLayout } from './layouts/AuthFormLayout'
 import { RedirectLayout } from './layouts/RedirectLayout'
 
 const AuthScreenComponent: React.FC = () => {
-  const { translation, config, authCheckResult, authCheckResultStatus, refetchAuthResultCheck } =
-    useAuthScreen()
+  const translation = useAppTranslation()
+  const { config, authCheckResult, authCheckStatus, refetchAuthCheck } = useAuthScreen()
 
-  useScreenTitle(translation('auth.wall'))
+  useScreenTitle(translation('auth.title'))
 
   const title = useMemo(
     () => (
       <Typography variant="h4" gutterBottom align="center" sx={{ mt: 3 }}>
-        {`${config.SERVER_NAME}: ${translation('auth.wall')}`}
+        {`${config.SERVER_NAME}: ${translation('auth.title')}`}
       </Typography>
     ),
     [config.SERVER_NAME, translation]
@@ -27,7 +28,7 @@ const AuthScreenComponent: React.FC = () => {
   if (!authCheckResult) {
     return (
       <PageLayout header={title}>
-        <QueryFallbackLayout status={authCheckResultStatus} refetch={refetchAuthResultCheck} />
+        <QueryFallbackLayout status={authCheckStatus} refetch={refetchAuthCheck} />
       </PageLayout>
     )
   }

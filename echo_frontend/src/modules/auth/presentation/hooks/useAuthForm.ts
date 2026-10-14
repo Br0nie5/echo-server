@@ -1,6 +1,5 @@
 import { useCallback, useState, type SubmitEvent } from 'react'
 
-import { useAppTranslation, type AppTranslation } from '../../../../shared/i18n/useAppTranslation'
 import { usePostLogin } from '../../application/usePostLogin'
 import { usePostSignUp } from '../../application/usePostSignUp'
 import { InvalidCredentialsError } from '../../domain/auth.repository'
@@ -9,7 +8,6 @@ import type { AuthAlert, AuthenticationMode } from '../utils/types'
 import { useRedirectionOnAuth } from './useRedirectionOnAuth'
 
 interface UseAuthFormReturnType {
-  translation: AppTranslation
   onSubmit: (event: SubmitEvent<Element>) => void
   isSubmitting: boolean
   isAuthenticated: boolean
@@ -30,8 +28,6 @@ interface UseAuthFormReturnType {
  * request that failed. It is emptied by the next submit.
  */
 export const useAuthForm = (formMode: AuthenticationMode): UseAuthFormReturnType => {
-  const translation = useAppTranslation()
-
   const { redirectOnAuth } = useRedirectionOnAuth()
 
   const postLogin = usePostLogin()
@@ -52,7 +48,7 @@ export const useAuthForm = (formMode: AuthenticationMode): UseAuthFormReturnType
       setAlert(null)
 
       if (!username || !password) {
-        setAlert({ severity: 'warning', message: translation('auth.form.fieldsRequired') })
+        setAlert({ severity: 'warning', messageKey: 'auth.form.fieldsRequired' })
         return
       }
 
@@ -61,20 +57,21 @@ export const useAuthForm = (formMode: AuthenticationMode): UseAuthFormReturnType
         {
           onSuccess: redirectOnAuth,
           onError: (error) => {
-            const errorMessageKey =
-              error instanceof InvalidCredentialsError
-                ? 'auth.login.invalidCredentials'
-                : 'auth.error'
-            setAlert({ severity: 'error', message: translation(errorMessageKey) })
+            setAlert({
+              severity: 'error',
+              messageKey:
+                error instanceof InvalidCredentialsError
+                  ? 'auth.login.invalidCredentials'
+                  : 'auth.error'
+            })
           }
         }
       )
     },
-    [username, password, translation, sendCredentials, redirectOnAuth]
+    [username, password, sendCredentials, redirectOnAuth]
   )
 
   return {
-    translation,
     onSubmit,
     isSubmitting,
     isAuthenticated,

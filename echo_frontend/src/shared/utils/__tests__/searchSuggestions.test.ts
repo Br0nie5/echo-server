@@ -19,6 +19,13 @@ describe('getSearchSuggestions', () => {
     }
   )
 
+  it.each(['color:', 'error color:co', '-size:', 'count:12'])(
+    'Should give no suggestion for "%s", whose last word starts with a suggestion and the colon',
+    (inputValue) => {
+      expect(getSearchSuggestions(inputValue, suggestions)).toEqual([])
+    }
+  )
+
   it.each([
     { inputValue: 'error :co', matchingSuggestions: ['color', 'count'] },
     { inputValue: 'error :COL', matchingSuggestions: ['color'] },

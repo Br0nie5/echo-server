@@ -12,8 +12,8 @@ import { useLogsRepository } from '../infra/useLogsRepository'
  * filtering whose filters changed before it ended is cancelled. The previous result stays until
  * the new one is ready.
  *
- * The query key holds the ids of the logs rather than the logs, which TanStack Query would hash
- * whole each time it compares the keys.
+ * The logs are in the query key through their ids, so logs fetched again, as new objects but the
+ * same logs, keep their result.
  */
 export const useFilteredLogs = (
   logs: Log[],

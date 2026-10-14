@@ -47,8 +47,7 @@ export const useAuthRepository = (): AuthRepository => {
       const data = await sendApiRequest<AuthStatus>({
         url: authStatusUrl,
         method: 'GET',
-        signal,
-        withCredentials: true
+        signal
       })
 
       return authCheckResultsByStatus[AuthStatusSchema.parse(data).status]

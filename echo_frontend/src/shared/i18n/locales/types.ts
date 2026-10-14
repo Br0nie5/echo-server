@@ -1,7 +1,7 @@
 /** The shape every locale implements, which also defines the valid translation keys. */
 export interface TranslationKeys {
   auth: {
-    wall: string
+    title: string
     form: {
       username: string
       password: string
@@ -21,7 +21,7 @@ export interface TranslationKeys {
     error: string
   }
   logs: {
-    viewer: string
+    title: string
     from: string
     filterByLevel: string
     searchPlaceholder: string
