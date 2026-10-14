@@ -23,7 +23,7 @@
     "format": "npm run format --workspaces && prettier --write \"*.{ts,js,json,md}\" \"docs/**/*.md\" \"examples/**/*.{md,yaml}\"",
     "lint": "npm run lint --workspaces && eslint . --fix",
     "test:coverage": "npm run test:coverage --workspaces",
-    "open:coverage": "npm run open:coverage --workspaces",
+    "open:coverage": "concurrently --names \"utilities,backend,frontend\" \"npm run open:coverage --workspace=echo_utilities\" \"npm run open:coverage --workspace=echo_backend\" \"npm run open:coverage --workspace=echo_frontend\"",
     "arch:check": "npm run arch:check --workspaces",
     "vulnerabilities:scan": "npm audit",
     "dead-code:check": "knip"
@@ -35,6 +35,7 @@
     "eslint": "^9.39.5",
     "eslint-plugin-prettier": "^5.5.6",
     "globals": "^17.13.0",
+    "http-server": "^14.1.1",
     "knip": "^6.41.0",
     "lefthook": "^2.2.1",
     "prettier": "^3.9.10",

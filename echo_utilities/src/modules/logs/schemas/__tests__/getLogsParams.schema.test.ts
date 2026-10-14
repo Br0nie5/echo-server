@@ -28,11 +28,14 @@ describe('GetLogsParamsSchema', () => {
     expect(GetLogsParamsSchema.parse(query)).toEqual(query)
   })
 
-  it('Should accept a date that is a text without checking that it is a date', () => {
-    const query: GetLogsParams = { fromDate: 'yesterday', toDate: 'tomorrow' }
+  it.each(['2026-04-28T10:00:00Z', '2026-04-28T12:00:00.000+02:00'])(
+    'Should accept the date %s, an ISO one with its time zone',
+    (date) => {
+      const query: GetLogsParams = { fromDate: date, toDate: date }
 
-    expect(GetLogsParamsSchema.parse(query)).toEqual(query)
-  })
+      expect(GetLogsParamsSchema.parse(query)).toEqual(query)
+    }
+  )
 
   it.each([
     { reason: 'fromDate is missing', query: {}, message: missingFromDateMessage },
@@ -43,8 +46,33 @@ describe('GetLogsParamsSchema', () => {
     },
     { reason: 'fromDate is null', query: { fromDate: null }, message: invalidFromDateMessage },
     {
+      reason: 'fromDate is no date',
+      query: { fromDate: 'yesterday' },
+      message: invalidFromDateMessage
+    },
+    {
+      reason: 'fromDate has no time',
+      query: { fromDate: '2026-04-28' },
+      message: invalidFromDateMessage
+    },
+    {
+      reason: 'fromDate has no time zone',
+      query: { fromDate: '2026-04-28T10:00:00.000' },
+      message: invalidFromDateMessage
+    },
+    {
+      reason: 'fromDate is a day that does not exist',
+      query: { fromDate: '2026-02-30T10:00:00.000Z' },
+      message: invalidFromDateMessage
+    },
+    {
       reason: 'toDate is not a text',
       query: { fromDate, toDate: 12345 },
+      message: invalidToDateMessage
+    },
+    {
+      reason: 'toDate is no date',
+      query: { fromDate, toDate: 'tomorrow' },
       message: invalidToDateMessage
     },
     {

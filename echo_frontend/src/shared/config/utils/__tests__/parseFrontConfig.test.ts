@@ -4,7 +4,7 @@ import { parseFrontConfig } from '../parseFrontConfig'
 const BASE_URI = `${mockConfig.APP_URL}/`
 
 const rawConfig = {
-  SERVER_NAME: mockConfig.SERVER_NAME,
+  SERVER_NAME: mockConfig.serverName,
   HAS_AUTHENTICATION: 'true',
   LOGS_INITIAL_DATE_DAYS_AGO: '2',
   LOGS_MINIMAL_DATE_DAYS_AGO: '14'

@@ -40,7 +40,7 @@ The backend and the frontend never import each other. Both import `@echo/utiliti
 
 There is no database of logs: every request reads the files again.
 
-Both sides filter with the same two functions of `@echo/utilities`, `filterLogByLevels` and `filterLogBySearch`, so the API and the app always agree on what a filter keeps.
+Both sides filter with the same two functions of `@echo/utilities`, `isLogMatchingLevels` and `isLogMatchingSearch`, so the API and the app always agree on what a filter keeps.
 
 ## Type flow
 
@@ -60,7 +60,7 @@ echo_utilities/…/schemas/*.schema.ts ─┼─► parse / safeParse ─► the
                                       └─► z.toJSONSchema ───► echo_backend/…/*.schemas.ts ─► the routes ─► /documentation
 ```
 
-- **The type** is inferred, never declared again. What a TypeScript type cannot say is in the schema: `z.int()` for a number without decimals, `.meta({ format: 'date-time' })` for the format of a string.
+- **The type** is inferred, never declared again. What a TypeScript type cannot say is in the schema: `z.int()` for a number without decimals, `z.iso.datetime()` for a text that must be a date.
 - **At runtime**, the frontend validates each answer of the API against its schema, and the backend the query of `GET /logs` and the errors it answers.
 - **The JSON schemas of the routes** are converted from the zod schemas when the server starts, in the `*.schemas.ts` files of the backend: [logs.schemas.ts](../echo_backend/src/modules/logs/presentation/logs.schemas.ts), [auth.schemas.ts](../echo_backend/src/modules/auth/presentation/auth.schemas.ts) and [errors.schemas.ts](../echo_backend/src/shared/schemas/errors.schemas.ts). To expose another zod schema, add it to the registry of one of them. They validate the requests and are what Swagger documents.
 

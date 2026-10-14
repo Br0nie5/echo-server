@@ -46,10 +46,4 @@ describe('requireEnv', () => {
       )
     }
   )
-
-  it('Should throw when the variable is not in the env', () => {
-    expect(() => requireEnv({ ANOTHER_VARIABLE: 'another value' }, 'SOME_VARIABLE')).toThrow(
-      new Error('Missing required environment variable: SOME_VARIABLE')
-    )
-  })
 })

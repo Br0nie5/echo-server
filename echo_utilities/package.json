@@ -20,7 +20,7 @@
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest run --coverage --coverage.thresholds.100",
-    "open:coverage": "open coverage/index.html",
+    "open:coverage": "http-server coverage -p 9001 -c-1",
     "arch:check": "depcruise src --config .dependency-cruiser.mts"
   },
   "dependencies": {
@@ -38,6 +38,7 @@
     "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-tsdoc": "^0.5.4",
     "globals": "^17.13.0",
+    "prettier": "^3.9.10",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.1",
     "vitest": "^5.0.3"

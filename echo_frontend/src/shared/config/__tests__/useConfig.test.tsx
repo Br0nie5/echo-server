@@ -6,11 +6,11 @@ import { ConfigContext } from '../ConfigContext'
 import { useConfig } from '../useConfig'
 
 const TestConfigComponent: React.FC = () => {
-  const { SERVER_NAME } = useConfig()
+  const { serverName } = useConfig()
 
   return (
     <Box>
-      <Typography>{`${SERVER_NAME}`}</Typography>
+      <Typography>{`${serverName}`}</Typography>
     </Box>
   )
 }
@@ -23,7 +23,7 @@ describe('useConfig', () => {
       </ConfigContext.Provider>
     )
 
-    expect(component.getByText(mockConfig.SERVER_NAME)).toBeInTheDocument()
+    expect(component.getByText(mockConfig.serverName)).toBeInTheDocument()
   })
 
   test('Should throw an error if there is no ConfigContext when trying to access the config', () => {

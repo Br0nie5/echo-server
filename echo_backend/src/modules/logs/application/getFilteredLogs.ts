@@ -1,6 +1,6 @@
 import {
-  filterLogByLevels,
-  filterLogBySearch,
+  isLogMatchingLevels,
+  isLogMatchingSearch,
   type Log,
   type LogLevel,
   type LogSearchFilter
@@ -26,7 +26,7 @@ interface LogsFilters {
  * A log matches when it was logged at `fromDate` or later, before `toDate` when it is given, is in
  * one of the `levels` and passes every one of the `searchFilters`. Two lookups where the
  * `toDate` of the first is the `fromDate` of the second therefore never give the same log. The
- * filtering is done in memory, with `filterLogByLevels` and `filterLogBySearch`.
+ * filtering is done in memory, with `isLogMatchingLevels` and `isLogMatchingSearch`.
  *
  * ```ts
  * const logs = await getFilteredLogs(logsRepository, {
@@ -45,8 +45,8 @@ export const getFilteredLogs = async (
   return logs
     .filter((log) => new Date(log.date).getTime() >= fromDate.getTime())
     .filter((log) => toDate === undefined || new Date(log.date).getTime() < toDate.getTime())
-    .filter((log) => filterLogByLevels(log, levels))
-    .filter((log) => filterLogBySearch(log, searchFilters))
+    .filter((log) => isLogMatchingLevels(log, levels))
+    .filter((log) => isLogMatchingSearch(log, searchFilters))
     .sort(
       (firstLog, secondLog) =>
         new Date(secondLog.date).getTime() - new Date(firstLog.date).getTime()

@@ -12,7 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest run --coverage --coverage.thresholds.100",
-    "open:coverage": "open coverage/index.html",
+    "open:coverage": "http-server coverage -p 9003 -c-1",
     "arch:check": "depcruise src --config .dependency-cruiser.mts"
   },
   "dependencies": {

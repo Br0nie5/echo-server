@@ -42,18 +42,18 @@ const buildScreen = (route: AppRoute): React.ReactElement => route.screen
  * `buildRouteElement` replaces what a route displays, its screen by default.
  */
 export const AppRouter: React.FC<AppRouterProps> = ({ buildRouteElement = buildScreen }) => {
-  const { APP_URL, HAS_AUTHENTICATION } = useConfig()
+  const { APP_URL, hasAuthentication } = useConfig()
 
   const appPathname = useMemo(() => {
     return getCleanUrlPathname(new URL(APP_URL))
   }, [APP_URL])
 
   const routes: AppRoute[] = [
-    ...(HAS_AUTHENTICATION ? [{ path: AppPathNames.auth, screen: <AuthScreen /> }] : []),
+    ...(hasAuthentication ? [{ path: AppPathNames.auth, screen: <AuthScreen /> }] : []),
     { path: AppPathNames.logs, screen: <LogsScreen /> }
   ]
 
-  const defaultRoute = HAS_AUTHENTICATION ? AppPathNames.auth : AppPathNames.logs
+  const defaultRoute = hasAuthentication ? AppPathNames.auth : AppPathNames.logs
 
   return (
     <BrowserRouter basename={appPathname}>

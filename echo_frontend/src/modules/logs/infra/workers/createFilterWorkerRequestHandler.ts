@@ -1,4 +1,4 @@
-import { filterLogByLevels, filterLogBySearch, type Log } from '@echo/utilities'
+import { isLogMatchingLevels, isLogMatchingSearch, type Log } from '@echo/utilities'
 
 import type { FilterWorkerAnswer, FilterWorkerRequest } from './filterWorkerMessages'
 
@@ -9,7 +9,7 @@ type FilterWorkerRequestHandler = (request: FilterWorkerRequest) => FilterWorker
  * Creates what the filter worker does with its requests, keeping the logs it was last given.
  *
  * A `setLogs` request has no answer. A `filterLogs` one is answered with the positions of the logs
- * matching both the levels and the search (`filterLogByLevels`, `filterLogBySearch`).
+ * matching both the levels and the search (`isLogMatchingLevels`, `isLogMatchingSearch`).
  *
  * ```ts
  * const handleFilterWorkerRequest = createFilterWorkerRequestHandler()
@@ -34,8 +34,8 @@ export const createFilterWorkerRequestHandler = (): FilterWorkerRequestHandler =
 
     logs.forEach((log, logIndex) => {
       if (
-        filterLogByLevels(log, request.logLevelsFilters) &&
-        filterLogBySearch(log, request.logSearchFilters)
+        isLogMatchingLevels(log, request.logLevelsFilters) &&
+        isLogMatchingSearch(log, request.logSearchFilters)
       ) {
         matchingLogIndexes.push(logIndex)
       }

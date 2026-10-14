@@ -1,4 +1,4 @@
-import { filterLogByLevels } from '@echo/utilities'
+import { isLogMatchingLevels } from '@echo/utilities'
 
 import type { LogsNotifierConfig } from '../../../../../shared/config/logsNotifierConfig.js'
 import type { NotificationsService } from '../../../../notifications/domain/notifications.service.js'
@@ -49,7 +49,7 @@ export const checkWatchedLogsAndNotify = async ({
   const { logs, markAsNotified } = await unNotifiedLogsRepository.getUnNotifiedLogs()
 
   const watchedLogs = logs
-    .filter((log) => filterLogByLevels(log, watchedLogsLevels))
+    .filter((log) => isLogMatchingLevels(log, watchedLogsLevels))
     .sort(
       (firstLog, secondLog) =>
         new Date(secondLog.date).getTime() - new Date(firstLog.date).getTime()

@@ -68,6 +68,20 @@ describe('parseLogSearchInput', () => {
   })
 
   it.each<ParsedInput>([
+    {
+      input: 'foo\\\\ bar',
+      searchFilters: [
+        { mode: 'find', search: 'foo\\' },
+        { mode: 'find', search: 'bar' }
+      ]
+    },
+    { input: '"C:\\\\temp\\\\"', searchFilters: [{ mode: 'find', search: 'C:\\temp\\' }] },
+    { input: 'say\\\\\\"hi', searchFilters: [{ mode: 'find', search: 'say\\"hi' }] }
+  ])('Should search for the escaped backslashes of `$input`', ({ input, searchFilters }) => {
+    expect(parseLogSearchInput(input)).toEqual(searchFilters)
+  })
+
+  it.each<ParsedInput>([
     { input: '"-foo"', searchFilters: [{ mode: 'find', search: '-foo' }] },
     { input: '-"-foo"', searchFilters: [{ mode: 'remove', search: '-foo' }] },
     { input: '"message:foo"', searchFilters: [{ mode: 'find', search: 'message:foo' }] },
@@ -105,6 +119,20 @@ describe('parseLogSearchInput', () => {
   })
 
   it.each<ParsedInput>([
+    { input: 'Message:error', searchFilters: [{ key: 'message', mode: 'find', search: 'error' }] },
+    {
+      input: '-LOCATIONNAME:send_invoices',
+      searchFilters: [{ key: 'locationName', mode: 'remove', search: 'send_invoices' }]
+    },
+    {
+      input: 'groupname:billing',
+      searchFilters: [{ key: 'groupName', mode: 'find', search: 'billing' }]
+    }
+  ])('Should read the key of `$input` whatever its case', ({ input, searchFilters }) => {
+    expect(parseLogSearchInput(input)).toEqual(searchFilters)
+  })
+
+  it.each<ParsedInput>([
     {
       input: 'message:"quota reached"',
       searchFilters: [{ key: 'message', mode: 'find', search: 'quota reached' }]
@@ -117,7 +145,7 @@ describe('parseLogSearchInput', () => {
     expect(parseLogSearchInput(input)).toEqual(searchFilters)
   })
 
-  it.each(['origin:send_invoices', 'Message:error', 'unknown:value'])(
+  it.each(['origin:send_invoices', 'messages:error', 'unknown:value'])(
     'Should search for the whole `%s`, which starts with no searchable key',
     (input) => {
       expect(parseLogSearchInput(input)).toEqual([{ mode: 'find', search: input }])

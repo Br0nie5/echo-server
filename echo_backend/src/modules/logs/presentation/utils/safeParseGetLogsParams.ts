@@ -1,33 +1,11 @@
 import type { GetLogsParams } from '@echo/utilities'
-import { GetLogsParamsSchema, getInvalidDateFieldMessage } from '@echo/utilities'
-import { z } from 'zod'
-
-import { convertToDateFromISO } from '../../../../shared/utils/convertToDateFromISO.js'
-
-/**
- * Converts `value`, the date field `fieldName` of the query, to a `Date`, adding an issue to
- * `context` when it is not an ISO date.
- */
-const parseQueryDate = (value: string, fieldName: string, context: z.RefinementCtx): Date => {
-  const date = convertToDateFromISO(value)
-
-  if (!date) {
-    context.addIssue({
-      code: 'custom',
-      message: getInvalidDateFieldMessage(fieldName)
-    })
-    return z.NEVER
-  }
-
-  return date
-}
+import { GetLogsParamsSchema } from '@echo/utilities'
+import type { z } from 'zod'
 
 const ParsedGetLogsParamsSchema = GetLogsParamsSchema.extend({
-  fromDate: GetLogsParamsSchema.shape.fromDate.transform((value, context) =>
-    parseQueryDate(value, 'fromDate', context)
-  ),
-  toDate: GetLogsParamsSchema.shape.toDate.transform((value, context) =>
-    value === undefined ? undefined : parseQueryDate(value, 'toDate', context)
+  fromDate: GetLogsParamsSchema.shape.fromDate.transform((value) => new Date(value)),
+  toDate: GetLogsParamsSchema.shape.toDate.transform((value) =>
+    value === undefined ? undefined : new Date(value)
   ),
   logLevels: GetLogsParamsSchema.shape.logLevels.transform((value) => (value ? [value].flat() : []))
 })
@@ -35,10 +13,10 @@ const ParsedGetLogsParamsSchema = GetLogsParamsSchema.extend({
 /**
  * Validates the query of `GET /logs` and turns it into what `getFilteredLogs` needs.
  *
- * The validation is the one of `GetLogsParamsSchema`; on top of it, `fromDate`, and `toDate` when
- * it is given, have to be real ISO dates. On success, `data` holds the query with `fromDate` and
- * `toDate` as `Date`s and `logLevels` as an array, empty when the client sent none. On failure,
- * the messages of `error.issues` are meant to be returned to the client as they are.
+ * The validation is the one of `GetLogsParamsSchema`, whose dates always carry their time zone. On
+ * success, `data` holds the query with `fromDate` and `toDate` as `Date`s and `logLevels` as an
+ * array, empty when the client sent none. On failure, the messages of `error.issues` are meant to
+ * be returned to the client as they are.
  *
  * ```ts
  * const parsedParams = safeParseGetLogsParams(request.query)

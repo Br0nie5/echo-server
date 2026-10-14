@@ -1,5 +1,5 @@
 /**
- * Reads the required variable named `key` in `env`, as text, without the spaces around it.
+ * Reads the required variable `envName` of `env`, as text, without the spaces around it.
  *
  * `env` holds the variables as they were written. A value written as a number or a boolean, as a
  * JSON file allows, is given as its text. Throws when the variable is missing, `null` or blank, and
@@ -10,19 +10,19 @@
  * requireEnv({ HAS_AUTHENTICATION: true }, 'HAS_AUTHENTICATION') // 'true'
  * ```
  */
-export const requireEnv = (env: Record<string, unknown>, key: string): string => {
-  const value = env[key] ?? ''
+export const requireEnv = (env: Record<string, unknown>, envName: string): string => {
+  const value = env[envName] ?? ''
 
   if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') {
     throw new Error(
-      `Invalid environment variable: ${key} is neither a text, a number nor a boolean`
+      `Invalid environment variable: ${envName} is neither a text, a number nor a boolean`
     )
   }
 
   const text = String(value).trim()
 
   if (text === '') {
-    throw new Error(`Missing required environment variable: ${key}`)
+    throw new Error(`Missing required environment variable: ${envName}`)
   }
 
   return text

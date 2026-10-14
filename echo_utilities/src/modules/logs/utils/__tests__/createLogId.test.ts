@@ -16,17 +16,21 @@ const noIdLog: Omit<Log, 'id'> = {
 }
 
 describe('createLogId', () => {
-  it('Should be made of the id number, the date, the job, the location, the level, the message and the origin', () => {
-    expect(createLogId(noIdLog, 3)).toBe(
-      '{"idNumber":3,"date":"2026-04-28T10:00:00.000Z","jobId":66,"location":"/storage/send_invoices","level":"WARNING","message":"Quota almost reached","origin":"send_invoices.sh:12"}'
-    )
-  })
-
-  it('Should leave the origin out when the log has none', () => {
-    expect(createLogId({ ...noIdLog, origin: undefined }, 3)).toBe(
-      '{"idNumber":3,"date":"2026-04-28T10:00:00.000Z","jobId":66,"location":"/storage/send_invoices","level":"WARNING","message":"Quota almost reached"}'
-    )
-  })
+  it.each([
+    {
+      origin: 'send_invoices.sh:12',
+      id: '{"idNumber":3,"date":"2026-04-28T10:00:00.000Z","jobId":66,"location":"/storage/send_invoices","level":"WARNING","message":"Quota almost reached","origin":"send_invoices.sh:12"}'
+    },
+    {
+      origin: undefined,
+      id: '{"idNumber":3,"date":"2026-04-28T10:00:00.000Z","jobId":66,"location":"/storage/send_invoices","level":"WARNING","message":"Quota almost reached"}'
+    }
+  ])(
+    'Should be made of the id number, the date, the job, the location, the level, the message and the origin, which is $origin',
+    ({ origin, id }) => {
+      expect(createLogId({ ...noIdLog, origin }, 3)).toBe(id)
+    }
+  )
 
   it('Should be another one for the same log with another id number', () => {
     expect(createLogId(noIdLog, 4)).not.toBe(createLogId(noIdLog, 3))
@@ -38,8 +42,7 @@ describe('createLogId', () => {
     { location: '/storage/other' },
     { level: LogLevel.ERROR },
     { message: 'Quota reached' },
-    { origin: 'send_invoices.sh:13' },
-    { origin: undefined }
+    { origin: 'send_invoices.sh:13' }
   ])('Should be another one for a log that differs by %o', (difference) => {
     expect(createLogId({ ...noIdLog, ...difference }, 3)).not.toBe(createLogId(noIdLog, 3))
   })

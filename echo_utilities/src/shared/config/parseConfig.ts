@@ -4,17 +4,17 @@ import { parseRequiredEnv } from './utils/parseRequiredEnv.js'
 import { requireEnv } from './utils/requireEnv.js'
 
 /**
- * Builds the `Config` from `rawConfig`, the variables as they were written.
+ * Builds the `Config` from `env`, the variables as they were written.
  *
- * `rawConfig` may hold other variables, which are not read. Throws when `SERVER_NAME` is missing,
- * blank or no text, and when `HAS_AUTHENTICATION` is missing or neither `true` nor `false`.
+ * `env` may hold other variables, which are not read. Throws when `SERVER_NAME` is missing, blank
+ * or no text, and when `HAS_AUTHENTICATION` is missing or neither `true` nor `false`.
  *
  * ```ts
  * const config = parseConfig({ SERVER_NAME: 'my-server', HAS_AUTHENTICATION: 'true' })
- * config.HAS_AUTHENTICATION // true
+ * config.hasAuthentication // true
  * ```
  */
-export const parseConfig = (rawConfig: Record<string, unknown>): Config => ({
-  SERVER_NAME: requireEnv(rawConfig, 'SERVER_NAME'),
-  HAS_AUTHENTICATION: parseRequiredEnv(rawConfig, 'HAS_AUTHENTICATION', parseBoolean)
+export const parseConfig = (env: Record<string, unknown>): Config => ({
+  serverName: requireEnv(env, 'SERVER_NAME'),
+  hasAuthentication: parseRequiredEnv(env, 'HAS_AUTHENTICATION', parseBoolean)
 })

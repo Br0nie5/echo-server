@@ -2,7 +2,7 @@ import js from '@eslint/js'
 import { defineConfig, globalIgnores } from 'eslint/config'
 import importPlugin from 'eslint-plugin-import'
 import jsdoc from 'eslint-plugin-jsdoc'
-import prettierPlugin from 'eslint-plugin-prettier'
+import prettierRecommended from 'eslint-plugin-prettier/recommended'
 import tsdoc from 'eslint-plugin-tsdoc'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
@@ -16,6 +16,8 @@ export default defineConfig([
       ecmaVersion: 2022,
       globals: globals['shared-node-browser'],
       parserOptions: {
+        // Without it, typescript-eslint cannot tell which tsconfig.json of the repository is this
+        // package's when ESLint runs from the root, as the editor does, and fails on every file.
         tsconfigRootDir: import.meta.dirname
       }
     },
@@ -31,34 +33,25 @@ export default defineConfig([
       }
     },
     plugins: {
-      import: importPlugin,
-      prettier: prettierPlugin
+      import: importPlugin
     },
     rules: {
-      // Typescript
+      // TypeScript
       'no-use-before-define': 'off',
       '@typescript-eslint/no-use-before-define': 'error',
       'no-shadow': 'off',
       '@typescript-eslint/no-shadow': 'error',
       '@typescript-eslint/no-redeclare': 'error',
       '@typescript-eslint/explicit-function-return-type': 'error',
-      'max-len': [
-        'warn',
-        {
-          code: 100,
-          ignoreComments: true,
-          ignoreUrls: true,
-          ignoreStrings: true
-        }
-      ],
       '@typescript-eslint/no-unused-vars': ['error'],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/ban-ts-comment': 'error',
       '@typescript-eslint/no-inferrable-types': 'off',
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/array-type': ['error', { default: 'array-simple' }],
+      // JavaScript
       eqeqeq: 'error',
-      // Import
+      // Imports
       'import/order': [
         'error',
         {
@@ -67,20 +60,15 @@ export default defineConfig([
           alphabetize: { order: 'asc', caseInsensitive: true }
         }
       ],
-      'import/no-unresolved': 'error', // ✅ Highlights imports that don't resolve
-      'import/named': 'error', // ✅ Validates named imports actually exist
-      'import/default': 'error', // ✅ Validates default import exists
-      'import/no-named-as-default': 'error', // Optional: catches named as default
-      // Prettier
-      'prettier/prettier': 'error'
+      'import/no-unresolved': 'error',
+      'import/named': 'error',
+      'import/default': 'error',
+      'import/no-named-as-default': 'error'
     }
   },
-  {
-    files: ['eslint.config.js'],
-    rules: {
-      'import/no-unresolved': 'off'
-    }
-  },
+  // Runs Prettier as a rule, and turns off the rules of ESLint that would fight it
+  // (eslint-config-prettier). It comes after the rules above, so that it wins over them.
+  prettierRecommended,
   {
     // Documentation (TSDoc): every exported function, interface and type has a comment. `@param` and
     // `@returns` are not required, since the types already say what goes in and out: add them when

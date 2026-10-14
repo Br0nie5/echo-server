@@ -43,22 +43,22 @@ The backend and the frontend import `echo_utilities` from its build, `echo_utili
 
 Run from the root.
 
-| Command                              | Purpose                                                                                                                                                     |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`                        | The utilities (watched), the backend and the frontend together.                                                                                             |
-| `npm run build`                      | Builds the three workspaces, the utilities first, then type-checks the files at the root. It starts with `npm install`, see below.                          |
-| `npm start`                          | Builds, then runs the backend in production mode, serving the built frontend, with `echo_backend/.env.production`.                                          |
-| `npm run lint`                       | ESLint, fixing what it can, in every workspace then on the files at the root.                                                                               |
-| `npm run format`                     | Prettier, in every workspace then on the files at the root, `docs/` and `examples/`.                                                                        |
-| `npm run test:coverage`              | Vitest in every workspace, with a 100% coverage threshold.                                                                                                  |
-| `npm run open:coverage`              | Opens the coverage report of each workspace.                                                                                                                |
-| `npm run arch:check`                 | The architecture rules, see [Enforcing the architecture](architecture.md#enforcing-the-architecture).                                                       |
-| `npm run dead-code:check`            | Unused files, exports and dependencies, with [Knip](https://knip.dev) ([knip.json](../knip.json)).                                                          |
-| `npm run vulnerabilities:scan`       | `npm audit`.                                                                                                                                                |
-| `npm run start:docker`               | Builds the workspaces and the image, then runs the deployment of [examples/](../examples/) you pick with it.                                                |
-| `npm run dns:enable` / `dns:disable` | Makes the hosts of the examples (`testing.cc`, `local.testing.cc`) resolve to this machine, in `/etc/hosts`, or stops doing so. Asks for the sudo password. |
-| `npm run certs:generate`             | Creates the self-signed certificate of the examples again, in `certs/`.                                                                                     |
-| `npm run deploy:server -- <tag>`     | Builds the image for `amd64` and `arm64` and pushes it to `ghcr.io`, see [releases](#continuous-integration-and-releases).                                  |
+| Command                              | Purpose                                                                                                                                                                                              |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`                        | The utilities (watched), the backend and the frontend together.                                                                                                                                      |
+| `npm run build`                      | Builds the three workspaces, the utilities first, then type-checks the files at the root. It starts with `npm install`, see below.                                                                   |
+| `npm start`                          | Builds, then runs the backend in production mode, serving the built frontend, with `echo_backend/.env.production`.                                                                                   |
+| `npm run lint`                       | ESLint, fixing what it can, in every workspace then on the files at the root.                                                                                                                        |
+| `npm run format`                     | Prettier, in every workspace then on the files at the root, `docs/` and `examples/`.                                                                                                                 |
+| `npm run test:coverage`              | Vitest in every workspace, with a 100% coverage threshold.                                                                                                                                           |
+| `npm run open:coverage`              | Serves the coverage report of each workspace over HTTP, until stopped: utilities on port 9001, the backend on 9002, the frontend on 9003. From the dev container, open the port the editor forwards. |
+| `npm run arch:check`                 | The architecture rules, see [Enforcing the architecture](architecture.md#enforcing-the-architecture).                                                                                                |
+| `npm run dead-code:check`            | Unused files, exports and dependencies, with [Knip](https://knip.dev) ([knip.json](../knip.json)).                                                                                                   |
+| `npm run vulnerabilities:scan`       | `npm audit`.                                                                                                                                                                                         |
+| `npm run start:docker`               | Builds the workspaces and the image, then runs the deployment of [examples/](../examples/) you pick with it.                                                                                         |
+| `npm run dns:enable` / `dns:disable` | Makes the hosts of the examples (`testing.cc`, `local.testing.cc`) resolve to this machine, in `/etc/hosts`, or stops doing so. Asks for the sudo password.                                          |
+| `npm run certs:generate`             | Creates the self-signed certificate of the examples again, in `certs/`.                                                                                                                              |
+| `npm run deploy:server -- <tag>`     | Builds the image for `amd64` and `arm64` and pushes it to `ghcr.io`, see [releases](#continuous-integration-and-releases).                                                                           |
 
 Target one workspace with `--workspace=echo_backend` (or `echo_frontend`, `echo_utilities`): `npm run lint --workspace=echo_frontend`.
 

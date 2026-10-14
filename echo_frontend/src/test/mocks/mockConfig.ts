@@ -10,7 +10,10 @@ export const mockRawConfig = {
 
 /** The config the app builds from `mockRawConfig` and the `<base>` of the page of the tests. */
 export const mockConfig: FrontConfig = {
-  ...mockRawConfig,
+  serverName: 'Test',
+  hasAuthentication: true,
+  LOGS_INITIAL_DATE_DAYS_AGO: 2,
+  LOGS_MINIMAL_DATE_DAYS_AGO: 14,
   LOGS_MAXIMAL_DATE_DAYS_AGO: 0,
   API_URL: 'http://localhost:3000/api',
   APP_URL: 'http://localhost:3000/app'

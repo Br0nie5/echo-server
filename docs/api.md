@@ -71,8 +71,8 @@ Gives the logs matching the query, from the newest to the oldest. With the authe
 
 | Query parameter | Required | Description                                                                                                      |
 | --------------- | :------: | ---------------------------------------------------------------------------------------------------------------- |
-| `fromDate`      |   yes    | ISO 8601 date-time. The logs before it are left out.                                                             |
-| `toDate`        |    no    | ISO 8601 date-time. The logs at that date or after are left out.                                                 |
+| `fromDate`      |   yes    | ISO 8601 date-time with its time zone, `Z` or an offset. The logs before it are left out.                        |
+| `toDate`        |    no    | ISO 8601 date-time with its time zone, `Z` or an offset. The logs at that date or after are left out.            |
 | `logLevels`     |    no    | `SUCCESS`, `INFO`, `WARNING` or `ERROR`. Repeat the parameter to keep several levels. All of them when left out. |
 | `logSearch`     |    no    | A search, in the syntax below.                                                                                   |
 
@@ -83,7 +83,7 @@ curl --cookie cookies.txt \
 
 ### The search
 
-`logSearch` is a list of terms separated by spaces, and a log is kept when it satisfies every one of them. Case is ignored.
+`logSearch` is a list of terms separated by spaces, and a log is kept when it satisfies every one of them. Case is ignored, in the field names as in the text searched for.
 
 | Term              | Satisfied by a log…                                                                    |
 | ----------------- | -------------------------------------------------------------------------------------- |
@@ -91,6 +91,7 @@ curl --cookie cookies.txt \
 | `message:timeout` | holding `timeout` in that field: `message`, `locationName`, `groupName` or `jobId`     |
 | `-timeout`        | **not** holding `timeout`. A field can follow the dash: `-groupName:billing`           |
 | `"disk full"`     | holding these words together. A space can also be escaped with a backslash             |
+| `C:\\temp`        | holding `C:\temp`. A backslash escapes a space, a double quote or another backslash    |
 
 ### A log
 

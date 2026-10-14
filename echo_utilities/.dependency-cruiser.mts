@@ -6,6 +6,7 @@
 import type { IConfiguration } from 'dependency-cruiser'
 
 const SHARED = '^src/shared/'
+const MODULES = '^src/modules/'
 const TESTS = '(^|/)__tests__/'
 
 const config: IConfiguration = {
@@ -39,9 +40,19 @@ const config: IConfiguration = {
       name: 'utilities-not-to-repository-packages',
       severity: 'error',
       comment:
-        '@echo/utilities is a base others build on: it imports installed packages only, and no other package of its repository, even by its name.',
+        '@echo/utilities is a base others build on: it imports installed packages only, and no other package of its repository by its name.',
       from: {},
-      to: { path: '^\\.\\./', pathNot: '(^|/)node_modules/' }
+      to: { path: '^\\.\\./', pathNot: '(^|/)node_modules/', dependencyTypesNot: ['local'] }
+    },
+
+    // ── modules are isolated ───────────────────────────────────────────────
+    {
+      name: 'utilities-modules-isolated',
+      severity: 'error',
+      comment:
+        'A module of src/modules (auth, logs) holds one domain: it imports src/shared and itself, never another module. What two modules need goes in src/shared.',
+      from: { path: `${MODULES}([^/]+)/` },
+      to: { path: MODULES, pathNot: `${MODULES}$1/` }
     },
 
     // ── shared/ is a leaf, and nothing reaches the machine ─────────────────
@@ -76,7 +87,6 @@ const config: IConfiguration = {
     // What is outside the package is in the graph, so the package boundary rules see it, without
     // being cruised itself: its own package checks it.
     doNotFollow: { path: ['node_modules', '^\\.\\./'] },
-    exclude: { path: ['^dist/', '/coverage/'] },
     tsPreCompilationDeps: true,
     tsConfig: { fileName: 'tsconfig.json' },
     enhancedResolveOptions: {

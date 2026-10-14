@@ -25,7 +25,7 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
   logLevelsFiltersState,
   logSearchState
 }) => {
-  const { SERVER_NAME, LOGS_MINIMAL_DATE_DAYS_AGO, LOGS_MAXIMAL_DATE_DAYS_AGO } = useConfig()
+  const { serverName, LOGS_MINIMAL_DATE_DAYS_AGO, LOGS_MAXIMAL_DATE_DAYS_AGO } = useConfig()
 
   const translation = useAppTranslation()
   const { isSmallScreen } = useWindowSize()
@@ -56,7 +56,7 @@ const LogsScreenHeaderComponent: React.FC<LogsScreenHeaderProps> = ({
         />
       </Box>
       <Typography variant="h4" gutterBottom align="center" sx={{ mt: 3 }}>
-        {`${SERVER_NAME}: ${translation('logs.title')}`}
+        {`${serverName}: ${translation('logs.title')}`}
       </Typography>
       {!!availableLogLevels && availableLogLevels.length > 0 && (
         <Stack

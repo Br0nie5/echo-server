@@ -127,7 +127,7 @@ export const loadSettings = async (
         retentionDays: parseRequiredEnv(processEnv, 'SELF_REPORTS_RETENTION_DAYS', parseDaysNumber),
         dirPath: createSelfReportsDirPath(
           requireEnv(processEnv, 'SELF_REPORTS_DIR_PATH'),
-          config.SERVER_NAME
+          config.serverName
         )
       }
     : undefined
@@ -140,7 +140,7 @@ export const loadSettings = async (
 
   return {
     server: {
-      serverName: config.SERVER_NAME,
+      serverName: config.serverName,
       basePath,
       apiRoutePrefix,
       appRoutePrefix,
@@ -154,12 +154,12 @@ export const loadSettings = async (
       tls: await parseTlsSettings(processEnv, filesService),
       frontendDistDirPath: path.join(REPOSITORY_ROOT_PATH, 'echo_frontend', 'dist')
     },
-    auth: config.HAS_AUTHENTICATION
+    auth: config.hasAuthentication
       ? {
           config: {
             sessionDurationSeconds: SESSION_DURATION_SECONDS,
             credentialsAttemptsLimit: CREDENTIALS_ATTEMPTS_LIMIT,
-            cookieName: createSessionCookieName(config.SERVER_NAME),
+            cookieName: createSessionCookieName(config.serverName),
             cookieSerializeOptions: createCookieSerializeOptions(basePath, SESSION_DURATION_SECONDS)
           },
           usersDbFilePath: path.join(DATA_DIR_PATH, 'users.db')
@@ -172,7 +172,7 @@ export const loadSettings = async (
       logsNotifier:
         notification &&
         parseLogsNotifierSettings(processEnv, {
-          serverName: config.SERVER_NAME,
+          serverName: config.serverName,
           lastLogsCheckFilePath: path.join(DATA_DIR_PATH, 'last_logs_check.json')
         })
     },

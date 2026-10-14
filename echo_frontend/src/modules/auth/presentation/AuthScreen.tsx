@@ -19,10 +19,10 @@ const AuthScreenComponent: React.FC = () => {
   const title = useMemo(
     () => (
       <Typography variant="h4" gutterBottom align="center" sx={{ mt: 3 }}>
-        {`${config.SERVER_NAME}: ${translation('auth.title')}`}
+        {`${config.serverName}: ${translation('auth.title')}`}
       </Typography>
     ),
-    [config.SERVER_NAME, translation]
+    [config.serverName, translation]
   )
 
   if (!authCheckResult) {
