@@ -4,7 +4,8 @@
 # Used both locally (`npm run deploy:server -- <tag>`) and by the CD workflow, which only
 # passes release versions (1.2.3).
 # The image is built by a buildx builder of its own, removed when the script ends, whatever
-# the outcome, so no BuildKit container is left running.
+# the outcome, with its build cache, so neither a BuildKit container nor its volume is left
+# behind: each deployment builds from scratch.
 #
 # Usage: deploy_server.sh <tag>
 #   tag  Any valid docker tag but `latest`: a version (1.2.3, 1.2.3-rc.1) or anything for
@@ -82,8 +83,7 @@ fi
 # ── Build & push ───────────────────────────────────────────────────────────────
 
 remove_builder() {
-    # --keep-state keeps the build cache, which the builder of the next deployment reuses
-    docker buildx rm --keep-state "$BUILDER_NAME" > /dev/null 2>&1 || true
+    docker buildx rm "$BUILDER_NAME" > /dev/null 2>&1 || true
 }
 
 npm run build
