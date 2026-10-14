@@ -1,22 +1,11 @@
-import type { Log } from './__generated__/log.js'
+import type { LogSearchableKey } from '../consts/logSearchableKeys.js'
 
-/** The log fields a search can target with `key:`. */
-export type LogSearchableKeys = keyof Omit<
-  Log,
-  'id' | 'date' | 'category' | 'callFile' | 'callLine'
->
-
-/** Keys proposed while typing a search, and recognized by `parseLogSearchInput`. */
-export const logSearchSuggestions: LogSearchableKeys[] = [
-  'jobId',
-  'fileName',
-  'message',
-  'groupName'
-]
-
-/** One term of a search: `find` keeps the matching logs, `remove` drops them. Without `key`, any searchable field may match. */
+/** One term of a search, as `parseLogSearchInput` reads it from what the user typed. */
 export interface LogSearchFilter {
-  key?: LogSearchableKeys
+  /** The only field the term is looked for in. When left out, any searchable field may match. */
+  key?: LogSearchableKey
+  /** `find` keeps the logs matching the term, `remove` drops them. */
   mode: 'find' | 'remove'
+  /** The text looked for, case-insensitively. */
   search: string
 }

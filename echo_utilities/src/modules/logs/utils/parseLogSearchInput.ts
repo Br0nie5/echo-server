@@ -1,94 +1,102 @@
-import { logSearchSuggestions, type LogSearchFilter } from '../types/logSearchFilter.js'
+import { logSearchableKeys } from '../consts/logSearchableKeys.js'
+import type { LogSearchFilter } from '../types/logSearchFilter.js'
+
+/** The characters a backslash makes part of the text of a term. */
+const escapableCharacters = [' ', '"', '\\']
 
 /**
- * Split a search input string into raw parts.
- * Rules:
- *  - Bare spaces split tokens
- *  - `\ ` (backslash-space) is a literal space within a token
- *  - Quoted regions `"..."` are included as-is (quotes stripped), spaces inside don't split
- *  - A backslash before any other char is kept as-is (no special treatment)
+ * Reads the text a term looks for, from `startIndex` of `searchInput` to the space ending the term,
+ * and gives it with the index the next term starts at.
+ *
+ * A double quote is dropped, and the spaces up to the next one belong to the text: an unclosed
+ * quote runs to the end of the input. A backslash before a space, a double quote or another
+ * backslash is dropped too, and that character belongs to the text. A backslash before anything
+ * else is kept as it is.
+ *
+ * ```ts
+ * readSearch('"disk full" timeout', 0) // { search: 'disk full', nextTermIndex: 12 }
+ * ```
  */
-const splitLogSearchInput = (searchInput: string): string[] => {
-  const searchInputParts: string[] = []
-  let currentPart = ''
-  let inputIndex = 0
+const readSearch = (
+  searchInput: string,
+  startIndex: number
+): { search: string; nextTermIndex: number } => {
+  let search = ''
+  let isQuoted = false
+  let inputIndex = startIndex
 
   while (inputIndex < searchInput.length) {
     const character = searchInput[inputIndex]
+    const nextCharacter = searchInput[inputIndex + 1]
 
-    if (character === '\\' && searchInput[inputIndex + 1] === ' ') {
-      // Escaped space → literal space, not a split
-      currentPart += ' '
+    if (character === '\\' && escapableCharacters.includes(nextCharacter)) {
+      search += nextCharacter
       inputIndex += 2
     } else if (character === '"') {
-      // Consume until closing quote (no nesting)
+      isQuoted = !isQuoted
       inputIndex++
-      while (inputIndex < searchInput.length && searchInput[inputIndex] !== '"') {
-        currentPart += searchInput[inputIndex]
-        inputIndex++
-      }
-      inputIndex++ // skip closing quote
-    } else if (character === ' ') {
-      // Bare space → split
-      if (currentPart.length > 0) {
-        searchInputParts.push(currentPart)
-        currentPart = ''
-      }
-      inputIndex++
+    } else if (character === ' ' && !isQuoted) {
+      return { search, nextTermIndex: inputIndex + 1 }
     } else {
-      currentPart += character
+      search += character
       inputIndex++
     }
   }
 
-  if (currentPart.length > 0) {
-    searchInputParts.push(currentPart)
-  }
-
-  return searchInputParts
+  return { search, nextTermIndex: inputIndex }
 }
 
 /**
- * Turns a search input into filters. Each part is `[-][key:]search`:
- * a `-` prefix makes it a `remove` filter and a known `key:` limits it to that field.
- * Parts with nothing to search for (`-`, `message:`) are dropped.
+ * Tells whether `searchableKey` followed by `:` is at `keyIndex` of `searchInput`, whatever its
+ * case.
+ */
+const isKeyAt = (searchInput: string, keyIndex: number, searchableKey: string): boolean => {
+  const keyPrefix = `${searchableKey}:`
+
+  return (
+    searchInput.slice(keyIndex, keyIndex + keyPrefix.length).toLowerCase() ===
+    keyPrefix.toLowerCase()
+  )
+}
+
+/**
+ * Turns what the user typed in the search field into the filters `isLogMatchingSearch` applies.
+ *
+ * The input is made of terms separated by spaces, the space character only, and a term reads
+ * `[-][key:]search`: a leading `-` makes it a `remove` filter, a `find` one otherwise, and one of
+ * the `logSearchableKeys` followed by `:`, whatever its case, limits it to that field. Any other
+ * `word:` is part of the search. A term left with nothing to search for (`-`, `message:`) is
+ * dropped.
+ *
+ * In the search, double quotes hold several words together, and a backslash makes the space, the
+ * double quote or the backslash after it part of the text. The dash and the key are only read as
+ * they are typed: a quoted or escaped one is part of the search, so `"-12"` looks for `-12`.
+ *
+ * ```ts
+ * const [findFilter, removeFilter] = parseLogSearchInput('Message:error -"sent twice"')
+ * findFilter // { key: 'message', mode: 'find', search: 'error' }
+ * removeFilter // { mode: 'remove', search: 'sent twice' }
+ * ```
  */
 export const parseLogSearchInput = (logSearchInput: string): LogSearchFilter[] => {
-  const logSearchInputParts = splitLogSearchInput(logSearchInput)
+  const searchFilters: LogSearchFilter[] = []
+  let inputIndex = 0
 
-  return logSearchInputParts
-    .map((logSearchInputPart): LogSearchFilter | undefined => {
-      const isRemove = logSearchInputPart.startsWith('-')
-      const mode = isRemove ? 'remove' : 'find'
-      const logSearchInputPartWithoutMode = isRemove
-        ? logSearchInputPart.slice(1)
-        : logSearchInputPart
+  while (inputIndex < logSearchInput.length) {
+    const isRemove = logSearchInput.startsWith('-', inputIndex)
+    const keyIndex = isRemove ? inputIndex + 1 : inputIndex
+    const key = logSearchableKeys.find((searchableKey) =>
+      isKeyAt(logSearchInput, keyIndex, searchableKey)
+    )
+    const searchIndex = key === undefined ? keyIndex : keyIndex + `${key}:`.length
+    const { search, nextTermIndex } = readSearch(logSearchInput, searchIndex)
 
-      if (logSearchInputPartWithoutMode.length == 0) {
-        return undefined
-      }
+    if (search.length > 0) {
+      searchFilters.push({ ...(key && { key }), mode: isRemove ? 'remove' : 'find', search })
+    }
 
-      const matchedKey = logSearchSuggestions.find((key) =>
-        logSearchInputPartWithoutMode.startsWith(`${key}:`)
-      )
+    inputIndex = nextTermIndex
+  }
 
-      if (matchedKey !== undefined) {
-        const logSearchInputPartWithoutModeAndKey = logSearchInputPartWithoutMode.slice(
-          matchedKey.length + 1
-        ) // +1 for ":"
-
-        if (logSearchInputPartWithoutModeAndKey.length == 0) {
-          return undefined
-        }
-
-        return {
-          key: matchedKey,
-          mode,
-          search: logSearchInputPartWithoutModeAndKey
-        }
-      }
-
-      return { mode, search: logSearchInputPartWithoutMode }
-    })
-    .filter((searchInputPart) => searchInputPart != undefined)
+  return searchFilters
 }

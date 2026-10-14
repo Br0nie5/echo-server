@@ -1,27 +1,39 @@
 {
-  "cSpell.ignorePaths": [
-    "**/*.mock.*",
-    "**/*.snap"
-  ],
+  "cSpell.ignorePaths": ["**/*.mock.*", "**/*.snap"],
   "cSpell.words": [
+    "addext",
     "autoload",
     "buildx",
+    "cyrb",
     "dbaeumer",
     "depcruise",
+    "dscacheutil",
     "esnext",
+    "flushcache",
+    "GHSA",
     "github",
+    "HEALTHCHECK",
+    "initializers",
+    "keyout",
+    "killall",
+    "lefthook",
+    "linklocal",
     "linux",
     "luxon",
+    "newkey",
     "nodenext",
-    "orval",
+    "openssl",
+    "spinbutton",
     "sqlite",
     "SSSZ",
     "testid",
     "textnodes",
     "tldts",
     "typebox",
+    "uniquelocal",
     "unstub",
     "uuidv",
+    "valuenow",
     "vitest"
   ],
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",
@@ -30,7 +42,6 @@
     "source.fixAll.eslint": "always"
   },
   "js/ts.tsdk.path": "node_modules/typescript/lib",
-  "yaml.schemas": {},
   "files.associations": {
     ".dockerignore": "ignore"
   }

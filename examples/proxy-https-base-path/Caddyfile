@@ -1,0 +1,21 @@
+# Caddy forwards the Host header as it is and adds X-Forwarded-Proto, X-Forwarded-Host and
+# X-Forwarded-For on its own, which is all Echo needs. It redirects HTTP to HTTPS too.
+testing.cc {
+	# The test certificate of this repository. Without this line, Caddy asks Let's Encrypt for one.
+	tls /certs/testing.cc-cert.pem /certs/testing.cc-key.pem
+
+	# The requests are forwarded with their path (/local/app). Echo also answers a proxy that
+	# strips it: replace this block with the one below to try.
+	@echo path /local /local/*
+	handle @echo {
+		reverse_proxy echo:4000
+	}
+
+	# handle_path /local/* {
+	# 	reverse_proxy echo:4000
+	# }
+
+	handle {
+		respond 404
+	}
+}

@@ -5,6 +5,90 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [2.0.0] - 2026-10-14
+
+### Added
+
+- `LOGS_INITIAL_DATE_DAYS_AGO` (default `2`) and `LOGS_MINIMAL_DATE_DAYS_AGO` (default `14`) set how many days back the logs start by default in the UI, and how far back their start date can be set.
+- Echo can be served under a path of its domain behind a reverse proxy (`BASE_PATH=/echo` for `https://example.com/echo`), whether the proxy forwards that path or strips it. The session cookie is then limited to that path, so two instances served at two paths of one domain keep their own session.
+- The container warns in its logs when `NODE_ENV` is set to anything but `production` (it is set back to `production`, as before).
+- `TRUSTED_PROXIES` restricts the reverse proxies whose `X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-For` headers Echo believes (a list, separated by `;`, of IP addresses, CIDR ranges, `loopback`, `linklocal` and `uniquelocal`). It is optional: by default, Echo believes whatever sends a request, so it works behind any reverse proxy. Once it lists your proxy, the login attempts are limited per client instead of being shared by everyone behind the proxy.
+- [examples/](examples/) holds a complete deployment, with its `compose.yaml` and the configuration of its reverse proxy (Caddy), for each common setup: without a proxy, behind an HTTP or an HTTPS proxy, with HTTPS up to Echo, on a subdomain and under a path.
+- The root of the server (`/`) redirects to the app.
+- In a search, a backslash makes the space, the double quote or the backslash after it part of the text (`disk\ full`, `say\"hi`).
+- With the self reports enabled, a Telegram message that could not be sent is shown among the logs, as an `ERROR` of the file `notifications`.
+
+### Changed
+
+- **Breaking:** the documentation of the API (`/documentation`) is no longer served by the container unless `HAS_DOCUMENTATION_ROUTE=true` is set.
+
+- **Breaking:** once `TELEGRAM_CHAT_ID` and `TELEGRAM_BOT_TOKEN` are set, a `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` naming no valid level stops the container, instead of disabling the notifications.
+
+- **Breaking:** `SERVER_URL` is removed. Echo reads the address it is reached at from each request, so remove the variable from the environment of your container. What it carried is now given as follows:
+  - its path, when a reverse proxy serves Echo under one, by `BASE_PATH` (`/echo`);
+  - its scheme, by the request: the session cookie is `secure` when Echo serves HTTPS itself, or when a reverse proxy sends `X-Forwarded-Proto: https`;
+  - its host, by the request: your reverse proxy must forward the host the browser reached, as the `Host` header (`proxy_set_header Host $http_host;` with nginx) or as `X-Forwarded-Host`, otherwise the login is refused with `Not allowed by CORS`.
+
+- **Breaking:** the session cookie is now named after `SERVER_NAME` (`Echo_echo_access_token` by default) and bound to the host that set it, no longer to its whole domain and its subdomains.
+
+- **Breaking:** `SERVER_NAME` now defaults to `Echo` in the container, instead of `Docker Production`. If you never set it, the self reports are now stored under `Echo`: set `SERVER_NAME=Docker Production` to keep the former name.
+
+- **Breaking:** the container no longer starts when `LOGS_DIR_PATH` or `SELF_REPORTS_DIR_PATH` is set to another path than the directory the image creates for it (`/watched_logs`, `/self_reports`). Remove the variable from the environment of your container and mount your volume on that directory.
+
+- **Breaking:** the directory scripts put their log files in, which is left out of the group names, is now named `logs` instead of `log`. Rename the `log` directories of your watched logs, otherwise `log` becomes part of the group names (`docker_utils_log`).
+
+- **Breaking:** the category of a log is now called its level. In the log files, `status` is replaced by `level`, with the same values (`SUCCESS`, `INFO`, `WARNING`, `ERROR`), and `job_id` by `jobId`. A line that still carries `status` or `job_id` is no longer read, so update the scripts writing your logs and the lines they already wrote. In the `Log` returned by `GET /api/logs`, `category` is replaced by `level`, and the `logCategories` query parameter by `logLevels`.
+
+- **Breaking:** `call_file` and `call_line` of a log line are replaced by `origin`, an optional string saying where the line was emitted from, in any form but an empty one (`rotate_logs.sh:12`). A line that still carries `call_file` and `call_line` is read, without them. In the `Log` returned by `GET /api/logs`, `callFile` and `callLine` are replaced by the optional `origin`, and the `id` is now a short hash, of 28 hexadecimal characters, of the position of the line, its date, its job, its `location`, `level`, `message` and `origin`. The `origin` of a self report is the path of the log file followed by the position of the failing line (`/watched_logs/backup/logs/nightly.log.jsonl:3`).
+
+- **Breaking:** the environment variables of the Telegram notifications are renamed. Update the environment of your container:
+
+  | Before                              | After                               |
+  | ----------------------------------- | ----------------------------------- |
+  | `LOGS_CRON_SCHEDULE_REGEX`          | `LOGS_NOTIFIER_SCHEDULE`            |
+  | `LOGS_CRON_WATCHED_LOGS_CATEGORIES` | `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` |
+  | `LOGS_CRON_TELEGRAM_TIMEZONE`       | `LOGS_NOTIFIER_TIMEZONE`            |
+  | `LOGS_CRON_TELEGRAM_CHAT_ID`        | `TELEGRAM_CHAT_ID`                  |
+
+- **Breaking:** `LOGS_CRON_TELEGRAM_BASE_URL`, which held the URL of the Telegram bot API with the token of the bot, is replaced by `TELEGRAM_BOT_TOKEN`, which holds the token alone: set it to what followed `https://api.telegram.org/bot` in the former value. Without it, the Telegram notifications are disabled.
+
+- **Breaking:** the self logs are now called self reports, and their environment variables are renamed. Update the environment of your container, otherwise the self reports are disabled and their retention goes back to its default:
+
+  | Before                     | After                          |
+  | -------------------------- | ------------------------------ |
+  | `SELF_LOGS_ENABLED`        | `INCLUDE_SELF_REPORTS_IN_LOGS` |
+  | `SELF_LOGS_RETENTION_DAYS` | `SELF_REPORTS_RETENTION_DAYS`  |
+
+- **Breaking:** the self reports are no longer stored inside the watched logs, in `/watched_logs/server/<SERVER_NAME>/log`, as log lines, but in a directory of their own, `/self_reports/<SERVER_NAME>`, in a format of their own. Echo only reads its logs from `/watched_logs`, and adds the self reports to them when `INCLUDE_SELF_REPORTS_IN_LOGS=true`, in the group `self_reports_<SERVER_NAME>`. Replace the `/watched_logs/server` sub-mount with a writable `/self_reports` volume; the `server` directory created in your logs for that sub-mount is no longer needed. The self reports stored before are not read any more: a problem that is still there is reported again.
+
+- **Breaking:** the auth routes of the API answer differently, for a client other than the app to update. `GET /api/auth/check` is replaced by `GET /api/auth/status`, which always answers a `200` with `{ "status": "authenticated" | "unauthenticated" | "needsSignUp" }`, instead of a `401` while no account exists. The sign-up, the login and the logout answer a `204` with no body when they succeed, and an `EchoError` (`{ statusCode, message }`) otherwise, instead of `{ success, message }`.
+
+- **Breaking:** an unknown path outside `/app` and `/api` now gets the same error body as the API, `{ "statusCode": 404, "message": "Not found." }`, instead of `{ "error": "Not found" }`.
+
+- The very first check of the Telegram notifications, or one whose `data/last_logs_check.json` cannot be read, now sends every log of the watched levels, instead of only saving its date.
+
+- The last session of the self reports is now remembered in two files, one per self-report file, `data/log_files_self_reports_session.json` and `data/notifications_self_reports_session.json`, in a format of their own: the sessions are numbered from `1` again, and `data/self_logs_session.json` is no longer read, so you can remove it from your `data/` volume.
+
+- **Breaking:** the container runs as the unprivileged `node` user (uid `1000`, gid `1000`) instead of root. The files it wrote as root are no longer writable by it, and `users.db`, which only its owner can read, no longer readable: before upgrading, give the content of your `/app/data` and `/self_reports` volumes to that user, with `sudo chown -R 1000:1000 /path/to/echo/data /path/to/echo/self-reports` for bind mounts, or `docker run --rm -v <volume>:/volume busybox chown -R 1000:1000 /volume` for each named volume. Make the certificate and key of `TLS_CERT_PATH` and `TLS_KEY_PATH` readable by that user too.
+
+### Fixed
+
+- A path that only starts like `/app` (`/application`, `/app-old/…`) now gets a 404 instead of the frontend.
+- The group of a log file no longer includes its first directory when `LOGS_DIR_PATH` ends with a `/` or starts with `./`.
+- The container health check no longer reports a healthy instance as unhealthy when `SERVER_URL` uses `https://` while a reverse proxy handles TLS, nor when the port of `SERVER_URL` is not the one the server listens on (`-p 8080:4000` with `SERVER_URL=http://host:8080`): it now targets `HTTP_PORT` (`4000` by default), over HTTPS only when `TLS_CERT_PATH` is set.
+- A `SERVER_NAME` holding a double quote or a backslash no longer breaks the frontend.
+- A Telegram message is never longer than 4096 characters, its footer included, which Telegram refused before. Its footer now says the other logs are to see `inside the app`.
+
+### Security
+
+- A request to `GET /api/logs` without a valid session gets a `401` before its query is validated, instead of the `400` describing what is wrong with its query.
+- The login and the sign-up are limited to 5 attempts a minute per address.
+- Two sign-ups sent at the same time can no longer both create an admin account.
+- The time a login takes no longer tells whether its username exists.
+- The API no longer accepts cross-origin requests: only the origin a request is itself sent to is allowed. Before, any website was allowed when `SERVER_URL` was `localhost` or an IP address, and every subdomain of its domain otherwise.
+
 ## [1.2.0] - 2026-09-23
 
 ### Changed
@@ -37,6 +121,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
+[Unreleased]: https://github.com/br0nie5/echo-server/compare/2.0.0...HEAD
+[2.0.0]: https://github.com/br0nie5/echo-server/compare/1.2.0...2.0.0
 [1.2.0]: https://github.com/br0nie5/echo-server/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/br0nie5/echo-server/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/br0nie5/echo-server/releases/tag/1.0.0

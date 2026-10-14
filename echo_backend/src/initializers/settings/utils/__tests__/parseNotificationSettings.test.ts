@@ -1,0 +1,47 @@
+import { describe, it, expect } from 'vitest'
+
+import { parseNotificationSettings } from '../parseNotificationSettings.js'
+
+const NOTIFICATION_ENV: NodeJS.ProcessEnv = {
+  TELEGRAM_CHAT_ID: '123456789',
+  TELEGRAM_BOT_TOKEN: '123456:ABC-DEF'
+}
+
+const NOTIFICATION_CONSTANTS = {
+  telegramBaseUrl: 'https://api.telegram.org',
+  telegramMessageSizeLimit: 4096,
+  telegramRequestTimeoutMilliseconds: 10000
+}
+
+describe('parseNotificationSettings', () => {
+  it('Should define the notification settings if all the required variables are set', () => {
+    expect(parseNotificationSettings(NOTIFICATION_ENV, NOTIFICATION_CONSTANTS)).toStrictEqual({
+      telegramChatId: '123456789',
+      telegramBotToken: '123456:ABC-DEF',
+      telegramBaseUrl: 'https://api.telegram.org',
+      telegramMessageSizeLimit: 4096,
+      telegramRequestTimeoutMilliseconds: 10000
+    })
+  })
+
+  it.each([undefined, ''])(
+    'Should not define the notification settings if neither variable is set (%o)',
+    (value) => {
+      expect(
+        parseNotificationSettings(
+          { TELEGRAM_CHAT_ID: value, TELEGRAM_BOT_TOKEN: value },
+          NOTIFICATION_CONSTANTS
+        )
+      ).toBeUndefined()
+    }
+  )
+
+  it.each(['TELEGRAM_CHAT_ID', 'TELEGRAM_BOT_TOKEN'])(
+    'Should throw if only %s is not set',
+    (key) => {
+      expect(() =>
+        parseNotificationSettings({ ...NOTIFICATION_ENV, [key]: undefined }, NOTIFICATION_CONSTANTS)
+      ).toThrow('TELEGRAM_CHAT_ID and TELEGRAM_BOT_TOKEN must both be set to notify')
+    }
+  )
+})

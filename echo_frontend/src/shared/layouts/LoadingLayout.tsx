@@ -14,10 +14,10 @@ const LoadingLayoutComponent: React.FC = () => {
         flexDirection: 'column'
       }}
     >
-      <CircularProgress sx={{ color: theme.palette.primary.main }} size="15%" />
+      <CircularProgress size={theme.dimensions.loadingLayout.spinnerSize} />
     </Box>
   )
 }
 
-/** Centered loading spinner. */
+/** A centered loading spinner. */
 export const LoadingLayout = memo(LoadingLayoutComponent)

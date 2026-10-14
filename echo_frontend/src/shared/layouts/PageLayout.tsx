@@ -9,18 +9,18 @@ interface PageLayoutProps {
 const PageLayoutComponent: React.FC<PageLayoutProps> = ({ header, children }) => {
   return (
     <Box
-      sx={{
+      sx={(theme) => ({
         display: 'flex',
         flexDirection: 'column',
         height: '100vh',
-        width: '100vw',
-        padding: 2
-      }}
+        width: '100%',
+        padding: theme.dimensions.page.padding
+      })}
     >
       {header && (
         <>
           {header}
-          <Box sx={{ mt: 1 }} />
+          <Box sx={(theme) => ({ mt: theme.dimensions.page.headerGap })} />
         </>
       )}
       {children}
@@ -28,5 +28,5 @@ const PageLayoutComponent: React.FC<PageLayoutProps> = ({ header, children }) =>
   )
 }
 
-/** Full-screen page frame with an optional `header` above the content. */
+/** The frame of a page, as large as the screen, with an optional `header` above its content. */
 export const PageLayout = memo(PageLayoutComponent)

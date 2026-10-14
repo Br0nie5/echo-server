@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from '@mui/material'
+import { Button, Typography } from '@mui/material'
 import type { QueryStatus } from '@tanstack/react-query'
 import { memo } from 'react'
 
@@ -6,6 +6,7 @@ import { useAppTranslation } from '../i18n/useAppTranslation'
 
 import { ErrorLayout } from './ErrorLayout'
 import { LoadingLayout } from './LoadingLayout'
+import { NoDataLayout } from './NoDataLayout'
 
 type QueryFallbackLayoutProps = {
   status: QueryStatus
@@ -18,19 +19,7 @@ const QueryFallbackLayoutComponent: React.FC<QueryFallbackLayoutProps> = ({ stat
   if (status === 'pending') {
     return <LoadingLayout />
   } else if (status === 'success') {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column'
-        }}
-      >
-        <Typography variant="body1">{translation('query.noData')}</Typography>
-      </Box>
-    )
+    return <NoDataLayout />
   }
 
   return (
@@ -44,5 +33,10 @@ const QueryFallbackLayoutComponent: React.FC<QueryFallbackLayoutProps> = ({ stat
   )
 }
 
-/** What to show instead of the data of a query: a spinner while pending, a no-data message once successful, an error with a refetch button otherwise. */
+/**
+ * What to display in place of the data of a query that has none.
+ *
+ * A spinner while it is pending, a message saying there is no data once it succeeded, an error
+ * with a button calling `refetch` otherwise.
+ */
 export const QueryFallbackLayout = memo(QueryFallbackLayoutComponent)

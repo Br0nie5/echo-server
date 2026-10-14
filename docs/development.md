@@ -1,73 +1,166 @@
 # Development guide
 
+- [Prerequisites](#prerequisites)
+- [Setup](#setup)
+- [Scripts](#scripts)
+- [Testing](#testing)
+- [Code quality](#code-quality)
+- [Docker](#docker)
+- [Continuous integration and releases](#continuous-integration-and-releases)
+
 ## Prerequisites
 
-- Node.js 24 (version pinned in [.tool-versions](../.tool-versions), works with asdf or mise)
-- npm (bundled with Node)
-- Docker, only for building the image
-- A C++ toolchain and Python if `better-sqlite3` has no prebuilt binary for your platform
+- Node.js 24, at the version pinned in [.tool-versions](../.tool-versions) (read by asdf and mise), with the npm it comes with
+- Docker, only to build and run the image
+- A C++ toolchain and Python, only if `bcrypt` has no prebuilt binary for your platform (`better-sqlite3` comes with binaries for macOS, Linux and Windows, on x64 and arm64)
 
 ## Setup
 
 ```bash
 npm ci
-mkdir -p test_logs   # git-ignored; put some .jsonl files in it, see the README for the format
+npx lefthook install   # once: installs the pre-commit hook
+mkdir -p test_logs     # git-ignored: put some .jsonl files in it, see the README for their format
 npm run dev
 ```
 
-- Backend: `http://localhost:4000` (tsx watch)
-- Frontend: `http://localhost:5173` (Vite). **Use this URL.** Vite proxies `/api` to the backend so `SERVER_URL` stays a single origin.
-- Config: `echo_backend/.env.development` (see [configuration](configuration.md)).
-- `data/` is created on first run and holds the dev SQLite database. It is git-ignored.
+Open **`http://localhost:5173/app`**. `npm run dev` runs three processes together:
 
-`echo_utilities` must be built before backend and frontend can type-check against it. `npm run build` handles the order.
+| Process   | What it does                                                                                                                       |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| utilities | Built once before the others start, then rebuilt at each change (`tsc --watch`), which restarts the backend.                       |
+| backend   | The API, on `http://localhost:4000`, restarted at each change (`tsx watch`). Its variables are in `echo_backend/.env.development`. |
+| frontend  | The Vite dev server, on `http://localhost:5173`. Its variables are in `echo_frontend/public/env.development.json`.                 |
+
+The Vite dev server serves the app under `/app` and proxies `/api` and `/documentation` to the backend, forwarding the `Host` header as it is. The app and the API therefore share one origin, as they do once deployed, which the CORS check of the backend relies on.
+
+That proxy reaches the backend over HTTP only: leave `TLS_CERT_PATH` and `TLS_KEY_PATH` unset in `.env.development`. To try HTTPS, use `npm start` or one of the HTTPS examples of `npm run start:docker`.
+
+`data/`, at the root, is created on the first run and holds the users database of development. It is git-ignored, like `test_logs/` and `self_reports/`.
+
+`SERVER_NAME` and `HAS_AUTHENTICATION` are read by both sides, so outside of a container they are written twice: in the `.env.<mode>` file of the backend and in the `env.<mode>.json` of the frontend. Change them in both.
+
+The backend and the frontend import `echo_utilities` from its build, `echo_utilities/dist/`. `npm run dev` and `npm run build` build it first: on a fresh clone, run one of them before `npm run lint`, `npm run test:coverage` or `npm run arch:check`.
 
 ## Scripts
 
-| Command | Purpose |
-| ------- | ------- |
-| `npm run dev` | Backend and frontend together |
-| `npm run build` | Build all workspaces |
-| `npm start` | Build, then run the backend in production mode |
-| `npm run lint` / `format` | ESLint (with fix) / Prettier |
-| `npm run test:coverage` | Vitest across workspaces, 100% thresholds |
-| `npm run open:coverage` | Open coverage reports |
-| `npm run arch:check` | Architecture rules (import boundaries, cycles), see [architecture](architecture.md#enforcing-the-architecture) |
-| `npm run vulnerabilities:scan` | `npm audit` |
-| `npm run generate:types` | Regenerate shared types |
-| `npm run build:docker` / `start:docker` | Build the image / build and run it on `test_logs/` |
+Run from the root.
 
-Target one workspace with `--workspace=echo_backend` (or `echo_frontend`, `echo_utilities`).
+| Command                              | Purpose                                                                                                                                                                                              |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`                        | The utilities (watched), the backend and the frontend together.                                                                                                                                      |
+| `npm run build`                      | Builds the three workspaces, the utilities first, then type-checks the files at the root. It starts with `npm install`, see below.                                                                   |
+| `npm start`                          | Builds, then runs the backend in production mode, serving the built frontend, with `echo_backend/.env.production`: over HTTPS, at `https://localhost:4000/app`, with the certificate of `certs/`.    |
+| `npm run types:check`                | TypeScript on every file of each workspace, the tests included, which the build of the backend leaves out, then on the files at the root.                                                            |
+| `npm run lint`                       | ESLint, fixing what it can, in every workspace then on the files at the root.                                                                                                                        |
+| `npm run format`                     | Prettier, in every workspace then on the files at the root, `docs/` and `examples/`.                                                                                                                 |
+| `npm run test:coverage`              | Vitest in every workspace, with a 100% coverage threshold.                                                                                                                                           |
+| `npm run open:coverage`              | Serves the coverage report of each workspace over HTTP, until stopped: utilities on port 9001, the backend on 9002, the frontend on 9003. From the dev container, open the port the editor forwards. |
+| `npm run arch:check`                 | The architecture rules, see [Enforcing the architecture](architecture.md#enforcing-the-architecture).                                                                                                |
+| `npm run dead-code:check`            | Unused files, exports and dependencies, with [Knip](https://knip.dev) ([knip.json](../knip.json)).                                                                                                   |
+| `npm run vulnerabilities:scan`       | `npm audit`.                                                                                                                                                                                         |
+| `npm run start:docker`               | Builds the workspaces and the image, then runs the deployment of [examples/](../examples/) you pick with it.                                                                                         |
+| `npm run dns:enable` / `dns:disable` | Makes the hosts of the examples (`testing.cc`, `local.testing.cc`) resolve to this machine, in `/etc/hosts`, or stops doing so. Asks for the sudo password.                                          |
+| `npm run certs:generate`             | Creates the self-signed certificate of the examples again, in `certs/`.                                                                                                                              |
+| `npm run deploy:server -- <tag>`     | Builds the image for `amd64` and `arm64` and pushes it to `ghcr.io`, see [releases](#continuous-integration-and-releases).                                                                           |
+
+Target one workspace with `--workspace=echo_backend` (or `echo_frontend`, `echo_utilities`): `npm run lint --workspace=echo_frontend`.
+
+`npm run build` runs `npm install` first, except in CI (when `CI` is set), where `npm ci` just installed the lockfile: when `node_modules` is shared between two platforms, macOS and a Linux container for instance, it brings back the packages built for the one running the build.
 
 ## Testing
 
-Vitest in every workspace with a **100% coverage threshold**. Tests live in `__tests__` folders next to the code. Generated code and entry points files are excluded (see each `vitest.config.ts`).
+Vitest runs in the three workspaces, with a **100% coverage threshold**. The tests live in `__tests__` folders next to the code they test. Only the entry points and the helpers of the tests are left out of the coverage (see each `vitest.config.ts`, and `vite.config.ts` for the frontend).
 
 ```bash
 cd echo_backend
-npx vitest run src/modules/logs/logs.service.test.ts   # single file
-npx vitest --watch
+npx vitest run src/modules/auth/application/__tests__/signUpFirstAdmin.test.ts   # one file
+npm run test:watch
 ```
 
-## Regenerating shared types
+No test reaches the outside: no network call, no file written, no real clock when the code reads the date.
 
-Run after changing a backend route's request or response schema:
+### What is tested how
+
+| Subject                                                                                                              | Kind of test                                                                                                                                                            |
+| -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A piece outside a module: `echo_utilities`, a `shared/` folder, the `utils/` of the initializers and of the settings | Unit tests, thorough: every case, as a table where the cases share a shape, each file at 100% by its own test file. This is where the edge cases and the coverage live. |
+| An entry of a module: a screen of the frontend, a route or the cron of the backend                                   | A few integration tests of the module behind it, each one telling a whole feature. Only what reaches the outside is replaced.                                           |
+| A piece of a module: a use case, an adapter of `infra/`, a DTO, the `utils/` of a module                             | Tested through its entry first. A unit test only for an edge case the entry tests do not reach (a storage failing, two sign-ups at once), its title saying which.       |
+| An entry point: the app, the server                                                                                  | A unit test of what is its own (its config, its routes, what it does when it cannot start), with the modules mocked.                                                    |
+
+Write them in that order: the pieces outside a module, then the entry tests, then run the coverage with the entry tests alone, and add a unit test for each edge case they left. A unit test of a module that reaches nothing more than the entry tests is a duplicate.
+
+### Backend
+
+- **A route or the cron** is tested on the real server (`logs.routes.test.ts`, `auth.routes.test.ts`, `logs.notifier.test.ts`). `buildTestServer` (`src/test/`) builds it with `buildServer`, from settings with the authentication and nothing optional, which a test completes with the part it is about. Only the outside is replaced: the file system by one kept in memory (`createInMemoryFileSystem`), which the real `FilesService` runs on, the users database by an in-memory SQLite one, and `fetch`, stubbed, for the notifications. A test fills the files, sends requests with `server.inject` and reads the files back. The cron is run by moving the fake clock.
+- **The server itself** (`src/__tests__/server.test.ts`): its paths, its documentation, its frontend, CORS, the proxies, TLS, and `startServer`, whose `listen` is a stub, so no test opens a port. The routes and the cron are mocked there, so a change in a module never changes that file. The initializers have no test of their own.
+- **`shared/` and the `utils/` of the initializers and of the settings** have unit tests of every case. `loadSettings` has a few, for which env file it loads, that the error of a parser is thrown, and the whole settings it builds.
+- **The edge cases of a module** (two sign-ups at once, a storage failing, a stored line that holds nothing valid) have unit tests where they are handled, with a `FilesService` whose methods are mocks (`getMockFilesService`) and a config from `src/test/mocks/mockConfigs.ts`. The settings of a test on the real server come from `src/test/mocks/mockSettings.ts`.
+
+### Frontend
+
+- **A module is tested through its screen** (`LogsScreen.test.tsx`, `AuthScreen.test.tsx`), with about ten tests for a rich screen and five for a simple one. A snapshot shows what the user sees, for each layout. Every other test is an action of the user: a filter read from the address then changed with its chips, a day opened then closed, a login.
+- **Two helpers render the app** at a path, with its real providers and router (`src/test/renderApp.tsx`). `renderFakeRouterApp` is the one a screen test uses: only the screen of that path is real, any other one being an empty box with a test id (`getRouteTestId`), so a test checks where the app navigated without rendering another module nor mocking its requests. `renderRealRouterApp` renders every screen, for the snapshots.
+- **Only the network is mocked**, with `nock`: a request that is mocked but never sent fails its test. The Web Worker, which jsdom cannot start, is replaced by its own code run on the thread of the test (`stubFilterWorker`).
+- **`src/__tests__/App.test.tsx`** is the unit test of the app itself: its config and its routes, with both screens mocked.
+- **`shared/` and the `utils/` folders** have unit tests, a component rendered alone with `renderComponent`, a hook needing the config, the API or the router with `renderAppHook`.
+- A test finds a text of the app by its translation key (`appTranslation`), never by the English text. The tests run in UTC and in British English (`vitest.globalSetup.ts`), since the app formats and groups the logs in the time zone and the locale of the user.
+
+### Utilities
+
+Unit tests only, covering every case of each function and schema.
+
+### Test data
+
+Invent the data of a test: `billing`, `send_invoices`, `Quota almost reached`. Nothing that is committed takes a name, a path or a message from real logs, such as those of `test_logs/` or `self_reports/`.
+
+## Code quality
+
+| Tool               | Config                                                                                                                                                                                                                                                                                                                               |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Prettier           | One config for the whole repository, [prettier.config.js](../prettier.config.js), with the root [.gitignore](../.gitignore) and [.prettierignore](../.prettierignore).                                                                                                                                                               |
+| ESLint             | One config per workspace, and [eslint.config.js](../eslint.config.js) at the root for the files at the root, such as the health check. Each starts from `createEslintConfig` of [eslint.shared.js](../eslint.shared.js), the rules they share, Prettier included, and adds its own: React for the frontend, Node.js for the backend. |
+| TypeScript         | One `tsconfig.json` per workspace, and one at the root for the files at the root.                                                                                                                                                                                                                                                    |
+| dependency-cruiser | One `.dependency-cruiser.mts` per workspace.                                                                                                                                                                                                                                                                                         |
+| Knip               | [knip.json](../knip.json), for the three workspaces at once.                                                                                                                                                                                                                                                                         |
+
+**Documentation comments are linted.** Every exported function, interface, type and component of `src/` has a TSDoc comment, whose syntax is checked. `@param` and `@returns` are not required, since the types already say what goes in and out: add them when a parameter or the result has a rule the types do not show.
+
+**The pre-commit hook** ([lefthook.yml](../lefthook.yml)) runs the format, then the lint, on the whole repository. When they change a file, the commit stops and shows the change: the commit would hold the staged file without its fix. Stage the fix, and commit again. It runs neither the build, the type check, the tests nor the architecture check: run them yourself before committing.
 
 ```bash
-npm run generate:types
+npm run build && npm run types:check && npm run arch:check && npm run dead-code:check && npm run test:coverage
 ```
-
-This exports `openApi.json` (booting the server), runs orval, moves the results into `echo_utilities/src/**/__generated__/`, then lints, formats and builds `echo_utilities`. Commit `openApi.json` and the regenerated files. The script uses macOS-style `sed -i ''`, so on Linux run it from a macOS machine or adapt that line.
-
-## Pre-commit hook
-
-[lefthook.yml](../lefthook.yml) runs build, format, lint, architecture check, coverage and `npm audit` sequentially. Commits are slow and fail if coverage drops below 100%. Install with `npx lefthook install`.
 
 ## Docker
 
 ```bash
-npm run build:docker    # build workspaces, then the image
-npm run start:docker    # run it on test_logs/ with the dev certificates in certs/
+npm run build && docker build -t echo .   # the workspaces, then the image
+npm run start:docker                      # both, then one of the examples with that image
+npm run start:docker -- proxy-https       # the same, naming the example
 ```
 
-The image builds on `node:24-slim`, compiles `better-sqlite3` in a first stage, and starts through [docker-entrypoint.sh](../docker-entrypoint.sh), which applies defaults and writes the frontend's runtime env file. A health check ([docker-health-check.js](../docker-health-check.js)) calls `/api/logs` on localhost and treats `400` or `401` as healthy.
+**The image** ([Dockerfile](../Dockerfile)) is built on `node:24.21.0-slim`, the version of `.tool-versions`, which the CI tests with (change both together), from the workspaces already built: a first stage installs the production dependencies of the backend, with the binaries their native dependencies come with (a C++ toolchain is there for `bcrypt` to compile itself when none fits), and the second one copies the result. It runs as the unprivileged `node` user (uid `1000`), creates `/watched_logs`, `/self_reports` and `/app/data`, and starts through the entrypoint.
+
+**The entrypoint** ([docker-entrypoint.sh](../docker-entrypoint.sh)) forces `NODE_ENV` to `production`, refuses a `LOGS_DIR_PATH` or a `SELF_REPORTS_DIR_PATH` that is not the directory the image creates, gives every other variable its default, and writes `env.production.json`, the variables of the frontend, into its build.
+
+**The health check** ([docker-health-check.ts](../docker-health-check.ts)) is run by Node.js as it is, which removes its types itself: it may only use syntax that can be erased (no enum, no namespace). It calls `/api/logs` on `localhost`, at `HTTP_PORT`, over HTTPS only when `TLS_CERT_PATH` is set, without a session nor a date, and takes a `401` (with the authentication) or a `400` (without it, for the missing date) as healthy.
+
+**`npm run start:docker`** ([start_docker.sh](../scripts/start_docker.sh)) lists the directories of [examples/](../examples/), asks which one to run, runs it with the image it just built (`echo:dev`) on `test_logs/`, `self_reports/` and `data/`, and removes its containers on Ctrl+C. An example is a directory holding a `compose.yaml` whose header gives its address (`# URL: …`): add a directory to add one. See the [README of the examples](../examples/README.md) for their hosts and their certificate.
+
+## Continuous integration and releases
+
+**[Test Echo](../.github/workflows/test_echo.yaml)** runs on each pull request to `main`, on each push to it, and once a week, to catch the vulnerabilities published since. It builds, checks the types, then runs the format and the lint (failing when either changes a file), the architecture check, the dead-code check, the tests and `npm audit`.
+
+**[Deploy Echo](../.github/workflows/deploy_echo.yaml)** runs when a version tag is pushed (`1.2.3`, `1.2.3-rc.1`). It runs the tests, then `npm run deploy:server -- <tag>`.
+
+To release a version:
+
+1. Move the entries of `[Unreleased]` in [CHANGELOG.md](../CHANGELOG.md) under the new version, with its date, and add its link at the bottom of the file.
+2. Tag the commit with the version, without a `v`, and push the tag.
+
+`npm run deploy:server -- <tag>` ([deploy_server.sh](../scripts/deploy_server.sh)) can also be run by hand, logged in to `ghcr.io`, with any tag but `latest`:
+
+- A **version** (`1.2.3`, `1.2.3-rc.1`) is published once: the script stops when the registry already has it.
+- **Any other tag** (`dev`, `issue-531-this-problem`) is replaced by each deployment.
+- **`latest`** is never asked for. A stable version also gets it when it is the highest stable version among the git tags, so releasing a fix for an older line never takes `latest` from a newer one.

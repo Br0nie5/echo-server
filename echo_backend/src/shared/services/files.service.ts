@@ -1,58 +1,348 @@
-import { constants as fsConstants } from 'fs'
+import type { Dirent } from 'fs'
 import nodeFs from 'fs/promises'
 import path from 'path'
 
-import type { EchoError } from '@echo/utilities'
+import { FileDoesNotExistError } from './fileDoesNotExistError.js'
 
-/** Access to the file system used to find and read the log files. */
+/**
+ * Service reading and writing the files of the machine, as text or as lines of text.
+ *
+ * It is the one part of the backend's own code that reaches the file system (`arch:check` refuses
+ * `fs` anywhere else), shared by whatever stores in files. Some libraries reach it on their own,
+ * from a path the config gives them: `better-sqlite3` (the users database), `dotenv` (the
+ * `.env.<mode>` file) and `@fastify/static` (the built frontend). It knows nothing of what the
+ * files hold nor of how they are named: which files to look for, and what to make of their paths,
+ * is said by whoever asks.
+ */
 export interface FilesService {
-  getAllFilesPaths: (directory: string) => Promise<string[]>
-  readFile: (filePath: string) => Promise<string[]>
-  /** Base name of the file, without its directories nor its extension. */
-  getFileNameWithoutExtension: (filePath: string) => string
+  /** Creates the directory at `directoryPath`, and its parents, when they do not exist yet. */
+  createDirectory: (directoryPath: string) => Promise<void>
+  /**
+   * The whole content of the file at `filePath`, as text.
+   *
+   * Throws a `FileDoesNotExistError` when the file does not exist, and the error of the file
+   * system when it cannot be reached for another reason (a directory of its path that cannot be
+   * searched or that is a file) or when it exists but cannot be read.
+   *
+   * ```ts
+   * const lastCheckDate = JSON.parse(await filesService.getFileContent(lastLogsCheckFilePath))
+   * ```
+   */
+  getFileContent: (filePath: string) => Promise<string>
+  /**
+   * The non-blank lines of the file at `filePath`, in the order they were written.
+   *
+   * Throws as `getFileContent` does: a `FileDoesNotExistError` when the file does not exist, and
+   * the error of the file system when it cannot be reached or read.
+   */
+  getFileLines: (filePath: string) => Promise<string[]>
+  /**
+   * The paths of the files of `directoryPath`, at any depth, that `isFileIncluded` returns `true`
+   * for.
+   *
+   * A symbolic link is followed: a link to a file is given as a file, and the files of a link to a
+   * directory are given below the link, unless that directory is one the link is already in. A
+   * link that points to nothing, or to what cannot be reached, is left out.
+   *
+   * Throws when the directory, or one of the directories it holds, cannot be read.
+   *
+   * ```ts
+   * const logFilesPaths = await filesService.getFilesPaths('/logs', (filePath) =>
+   *   filePath.endsWith(logFileExtension)
+   * )
+   * ```
+   */
+  getFilesPaths: (
+    directoryPath: string,
+    isFileIncluded: (filePath: string) => boolean
+  ) => Promise<string[]>
+  /**
+   * The path of the file at `filePath` from the directory at `rootDirPath`, or from the root of the
+   * file system when none is given: its directories, then its name, separated by `/`.
+   *
+   * Returns `undefined` when the file is not below `rootDirPath`. It only reads the paths: neither
+   * has to exist.
+   *
+   * ```ts
+   * const filePath = '/logs/billing/send_invoices.jsonl'
+   * filesService.getRelativeFilePath(filePath, '/logs') // 'billing/send_invoices.jsonl'
+   * filesService.getRelativeFilePath(filePath) // 'logs/billing/send_invoices.jsonl'
+   * filesService.getRelativeFilePath(filePath, '/data') // undefined
+   * ```
+   */
+  getRelativeFilePath: (filePath: string, rootDirPath?: string) => string | undefined
+  /**
+   * Makes `content` the whole content of the file at `filePath`.
+   *
+   * The file changes in one step: whoever reads it meanwhile gets either its previous content or
+   * the new one, never a part of it. The writes of one file are done one after the other, in the
+   * order they are asked for: a write waits for the previous one to end, and throws, writing
+   * nothing, when it waits for longer than the timeout the service is built with. Throws when the
+   * file cannot be written, the file then being left as it was.
+   */
+  replaceFileContent: (filePath: string, content: string) => Promise<void>
+  /**
+   * Makes the lines `getLines` returns the whole content of the file at `filePath`, one line each.
+   *
+   * `getLines` is given the current lines of the file, its non-blank lines in order, none when it
+   * does not exist, which it ignores to replace them all. It is one write, done after the previous
+   * write of the file as with `replaceFileContent`: `getLines` is given the lines that write left,
+   * and no other write of the file happens until its own lines are written, so two writes never
+   * lose each other's lines. The file changes in one step, and is left as it is when `getLines`
+   * returns `undefined`.
+   *
+   * Throws in the cases of `replaceFileContent`, and, writing nothing, when `getLines` throws or
+   * the current lines cannot be read.
+   *
+   * ```ts
+   * await filesService.replaceFileLines(filePath, (currentLines) => [...currentLines, newLine])
+   * await filesService.replaceFileLines(filePath, () => newLines)
+   * ```
+   */
+  replaceFileLines: (
+    filePath: string,
+    getLines: (currentLines: string[]) => string[] | undefined
+  ) => Promise<void>
+  /**
+   * Makes the file at `filePath` readable and writable by its owner only, creating it empty, and
+   * its directory, when they do not exist.
+   *
+   * A file it creates is never readable by anyone else, not even for a moment. The content of an
+   * existing file is left as it is. Throws when the directory cannot be created, when the file can
+   * neither be opened nor created, or when its permissions cannot be changed.
+   */
+  createOwnerOnlyFile: (filePath: string) => Promise<void>
 }
 
 /** The subset of `fs/promises` used, so it can be replaced in tests. */
-export type FileSystem = Pick<typeof nodeFs, 'readdir' | 'access' | 'readFile'>
+export type FileSystem = Pick<
+  typeof nodeFs,
+  'readdir' | 'readFile' | 'mkdir' | 'writeFile' | 'rename' | 'rm' | 'chmod' | 'stat' | 'realpath'
+>
 
-/** Builds the files service on top of `fileSystem` (the real file system by default). */
-export const createFilesService = (fileSystem: FileSystem = nodeFs): FilesService => {
-  const getAllFilesPaths = async (directory: string): Promise<string[]> => {
-    let files: string[] = []
+/** How long a write waits for the previous write of the same file by default, in milliseconds. */
+const DEFAULT_WRITE_WAIT_TIMEOUT_MILLISECONDS = 10_000
 
-    const entries = await fileSystem.readdir(directory, { withFileTypes: true })
+/** Permissions letting the owner of a file read and write it, and nobody else. */
+const OWNER_ONLY_FILE_MODE = 0o600
 
-    for (const entry of entries) {
-      const fullPath = path.join(directory, entry.name)
+/**
+ * Builds the files service, on top of `fileSystem` (the real file system by default).
+ *
+ * A write of a file waits for the previous write of that file to end for
+ * `writeWaitTimeoutMilliseconds` at most (10 seconds by default). The writes are only queued within
+ * this service: it is meant to be built once, when the server starts, and handed to whatever reads
+ * or writes files, so that no two writes of a file overlap:
+ *
+ * ```ts
+ * const filesService = createFilesService()
+ * const lines = await filesService.getFileLines('/logs/export_orders/nightly.jsonl')
+ * ```
+ */
+export const createFilesService = (
+  fileSystem: FileSystem = nodeFs,
+  writeWaitTimeoutMilliseconds: number = DEFAULT_WRITE_WAIT_TIMEOUT_MILLISECONDS
+): FilesService => {
+  /**
+   * The promise of the last write asked for each file being written, which resolves when that write
+   * and the ones before it end, failed or not: it never rejects.
+   */
+  const lastWritePromiseByFilePath = new Map<string, Promise<void>>()
 
-      if (entry.isDirectory()) {
-        files = files.concat(await getAllFilesPaths(fullPath))
-      } else if (entry.isFile()) {
-        files.push(fullPath)
+  /**
+   * What the entry `entry` of the directory whose real path is `realDirectoryPath` is, a symbolic
+   * link being what it points to, with its real path: `undefined` for a link that points to
+   * nothing or to what cannot be reached.
+   */
+  const describeEntry = async (
+    entry: Dirent,
+    entryPath: string,
+    realDirectoryPath: string
+  ): Promise<{ isDirectory: boolean; isFile: boolean; realPath: string } | undefined> => {
+    if (!entry.isSymbolicLink()) {
+      return {
+        isDirectory: entry.isDirectory(),
+        isFile: entry.isFile(),
+        realPath: path.join(realDirectoryPath, entry.name)
       }
     }
 
-    return files
+    try {
+      const [target, realPath] = await Promise.all([
+        fileSystem.stat(entryPath),
+        fileSystem.realpath(entryPath)
+      ])
+
+      return { isDirectory: target.isDirectory(), isFile: target.isFile(), realPath }
+    } catch {
+      return undefined
+    }
+  }
+
+  /**
+   * The paths of the files of `directoryPath`, at any depth, `realDirectoryPaths` being the real
+   * paths of the directories it is in, its own last.
+   */
+  const getAllFilesPaths = async (
+    directoryPath: string,
+    realDirectoryPaths: string[]
+  ): Promise<string[]> => {
+    const entries = await fileSystem.readdir(directoryPath, { withFileTypes: true })
+
+    const filesPathsByEntry = await Promise.all(
+      entries.map(async (entry) => {
+        const entryPath = path.join(directoryPath, entry.name)
+        const describedEntry = await describeEntry(
+          entry,
+          entryPath,
+          realDirectoryPaths[realDirectoryPaths.length - 1]
+        )
+
+        if (describedEntry?.isDirectory) {
+          // A link to a directory being listed would list it again, endlessly.
+          return realDirectoryPaths.includes(describedEntry.realPath)
+            ? []
+            : getAllFilesPaths(entryPath, [...realDirectoryPaths, describedEntry.realPath])
+        }
+
+        return describedEntry?.isFile ? [entryPath] : []
+      })
+    )
+
+    return filesPathsByEntry.flat()
+  }
+
+  const joinLines = (lines: string[]): string => lines.map((line) => `${line}\n`).join('')
+
+  const getFileContent = async (filePath: string): Promise<string> => {
+    try {
+      return await fileSystem.readFile(filePath, 'utf-8')
+    } catch (error) {
+      throw (error as NodeJS.ErrnoException).code === 'ENOENT'
+        ? new FileDoesNotExistError(filePath)
+        : error
+    }
+  }
+
+  const getFileLines = async (filePath: string): Promise<string[]> =>
+    (await getFileContent(filePath)).split('\n').filter((line) => line.trim() !== '')
+
+  const getExistingFileLines = async (filePath: string): Promise<string[]> => {
+    try {
+      return await getFileLines(filePath)
+    } catch (error) {
+      if (error instanceof FileDoesNotExistError) {
+        return []
+      }
+      throw error
+    }
+  }
+
+  const waitForPreviousWrite = (
+    previousWritePromise: Promise<void>,
+    filePath: string
+  ): Promise<void> =>
+    new Promise((resolve, reject) => {
+      const timeoutMessage =
+        `The previous write of ${filePath} ` +
+        `did not end within ${writeWaitTimeoutMilliseconds} ms`
+      const timeout = setTimeout(
+        () => reject(new Error(timeoutMessage)),
+        writeWaitTimeoutMilliseconds
+      )
+
+      void previousWritePromise.then(() => {
+        clearTimeout(timeout)
+        resolve()
+      })
+    })
+
+  const writeThroughTemporaryFile = async (filePath: string, content: string): Promise<void> => {
+    // The files are read at any time: writing into the file itself would let a reader see it
+    // half written, and take its cut line for a line of its own.
+    const temporaryFilePath = `${filePath}.tmp`
+
+    try {
+      await fileSystem.writeFile(temporaryFilePath, content, 'utf-8')
+      await fileSystem.rename(temporaryFilePath, filePath)
+    } catch (error) {
+      // The error of the write is the one to report: a temporary file that cannot be removed
+      // either is left behind, and replaced on the next write.
+      await fileSystem.rm(temporaryFilePath, { force: true }).catch(() => undefined)
+      throw error
+    }
+  }
+
+  const queueWrite = (filePath: string, write: () => Promise<void>): Promise<void> => {
+    const previousWritePromise = lastWritePromiseByFilePath.get(filePath)
+
+    const newWritePromise = (
+      previousWritePromise
+        ? waitForPreviousWrite(previousWritePromise, filePath)
+        : Promise.resolve()
+    ).then(write)
+
+    // `newWritePromise` stops waiting for the previous write at the timeout, while that write may
+    // still be going on: the next write waits for both, so it never shares the temporary file with
+    // a write that is still going on.
+    const writePromises = Promise.all([
+      previousWritePromise,
+      newWritePromise.catch(() => undefined)
+    ]).then(() => undefined)
+
+    lastWritePromiseByFilePath.set(filePath, writePromises)
+
+    void writePromises.then(() => {
+      if (lastWritePromiseByFilePath.get(filePath) === writePromises) {
+        lastWritePromiseByFilePath.delete(filePath)
+      }
+    })
+
+    return newWritePromise
   }
 
   return {
-    getAllFilesPaths,
-
-    readFile: async (filePath): Promise<string[]> => {
-      await fileSystem.access(filePath, fsConstants.F_OK | fsConstants.R_OK).catch(() => {
-        const error: EchoError = {
-          statusCode: 500,
-          message: `The file (${filePath}) does not exist or is not readable`
-        }
-        throw error
-      })
-
-      return (await fileSystem.readFile(filePath, 'utf-8'))
-        .split('\n')
-        .filter((line) => line.trim() !== '')
+    createDirectory: async (directoryPath): Promise<void> => {
+      await fileSystem.mkdir(directoryPath, { recursive: true })
     },
 
-    getFileNameWithoutExtension: (filePath): string =>
-      path.basename(filePath, path.extname(filePath))
+    getFileContent,
+
+    getFileLines,
+
+    getFilesPaths: async (directoryPath, isFileIncluded): Promise<string[]> =>
+      (await getAllFilesPaths(directoryPath, [await fileSystem.realpath(directoryPath)])).filter(
+        isFileIncluded
+      ),
+
+    getRelativeFilePath: (filePath, rootDirPath = path.sep): string | undefined => {
+      const relativeFilePath = path.relative(rootDirPath, filePath)
+      const isBelowRootDir =
+        relativeFilePath !== '' &&
+        relativeFilePath !== '..' &&
+        !relativeFilePath.startsWith(`..${path.sep}`)
+
+      return isBelowRootDir ? relativeFilePath.split(path.sep).join('/') : undefined
+    },
+
+    replaceFileContent: (filePath, content): Promise<void> =>
+      queueWrite(filePath, () => writeThroughTemporaryFile(filePath, content)),
+
+    replaceFileLines: (filePath, getLines): Promise<void> =>
+      queueWrite(filePath, async () => {
+        const newLines = getLines(await getExistingFileLines(filePath))
+
+        if (newLines !== undefined) {
+          await writeThroughTemporaryFile(filePath, joinLines(newLines))
+        }
+      }),
+
+    createOwnerOnlyFile: async (filePath): Promise<void> => {
+      await fileSystem.mkdir(path.dirname(filePath), { recursive: true })
+      // Appending nothing creates a missing file, with these permissions from the start, and
+      // leaves an existing one as it is.
+      await fileSystem.writeFile(filePath, '', { flag: 'a', mode: OWNER_ONLY_FILE_MODE })
+      await fileSystem.chmod(filePath, OWNER_ONLY_FILE_MODE)
+    }
   }
 }

@@ -9,12 +9,12 @@ on:
       - main
   schedule:
     # Weekly, to catch newly published vulnerabilities in the dependencies
-    - cron: "30 12 * * 0"
+    - cron: '30 12 * * 0'
   workflow_call:
 
 jobs:
   test:
-    name: "Test Echo"
+    name: 'Test Echo'
     runs-on: ubuntu-26.04-arm
 
     steps:
@@ -34,11 +34,9 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Regenerates the shared types from the backend routes, and fails if that changed anything
-      - name: Types up to date
-        run: |
-          npm run generate:types
-          git diff --exit-code --stat -- openApi.json ':(glob)echo_utilities/src/**/__generated__/**'
+      # The builds leave out the tests of the backend: this checks the types of every file
+      - name: Types check
+        run: npm run types:check
 
       # The scripts fix what they find, so a change in the working tree means the commit was not
       # formatted / linted.
@@ -54,6 +52,9 @@ jobs:
 
       - name: Architecture check
         run: npm run arch:check
+
+      - name: Dead code check
+        run: npm run dead-code:check
 
       - name: Test
         run: npm run test:coverage

@@ -1,0 +1,2121 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`LogsScreen > Displaying the logs > Should display the logs of the last days > phone screen 1`] = `
+<DocumentFragment>
+  <div
+    class="MuiBox-root css-17z20ds"
+  >
+    <div
+      class="MuiBox-root css-1bvc4cc"
+    >
+      <div
+        class="MuiFormControl-root MuiPickersTextField-root css-s9y2f3-MuiFormControl-root-MuiPickersTextField-root"
+      >
+        <label
+          class="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined css-9oe75v-MuiFormLabel-root-MuiInputLabel-root"
+          data-shrink="true"
+          for="_r_1_"
+          id="_r_1_-label"
+        >
+          From
+        </label>
+        <div
+          aria-invalid="false"
+          aria-labelledby="_r_1_-label"
+          class="MuiPickersInputBase-root MuiPickersOutlinedInput-root MuiPickersInputBase-colorPrimary MuiPickersInputBase-adornedEnd css-17k9pf-MuiPickersInputBase-root-MuiPickersOutlinedInput-root"
+          role="group"
+        >
+          <div
+            class="MuiPickersSectionList-root MuiPickersInputBase-sectionsContainer css-1fb7els-MuiPickersSectionList-root-MuiPickersInputBase-sectionsContainer-MuiPickersOutlinedInput-sectionsContainer"
+            contenteditable="false"
+            tabindex="0"
+          >
+            <span
+              class="MuiPickersSectionList-section css-joz0rk-MuiPickersSectionList-section-MuiPickersInputBase-section"
+              data-sectionindex="0"
+            >
+              <span
+                class="MuiPickersInputBase-sectionBefore css-w1q93y-MuiPickersSectionList-sectionSeparator-MuiPickersInputBase-separator"
+              />
+              <span
+                aria-disabled="false"
+                aria-label="Month"
+                aria-readonly="false"
+                aria-valuemax="12"
+                aria-valuemin="1"
+                aria-valuenow="4"
+                aria-valuetext="April"
+                autocapitalize="none"
+                autocorrect="off"
+                class="MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1udt458-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"
+                contenteditable="true"
+                inputmode="numeric"
+                role="spinbutton"
+                spellcheck="false"
+                tabindex="0"
+              >
+                04
+              </span>
+              <span
+                class="MuiPickersInputBase-sectionAfter css-w1q93y-MuiPickersSectionList-sectionSeparator-MuiPickersInputBase-separator"
+              >
+                /
+              </span>
+            </span>
+            <span
+              class="MuiPickersSectionList-section css-joz0rk-MuiPickersSectionList-section-MuiPickersInputBase-section"
+              data-sectionindex="1"
+            >
+              <span
+                class="MuiPickersInputBase-sectionBefore css-w1q93y-MuiPickersSectionList-sectionSeparator-MuiPickersInputBase-separator"
+              />
+              <span
+                aria-disabled="false"
+                aria-label="Day"
+                aria-readonly="false"
+                aria-valuemax="30"
+                aria-valuemin="1"
+                aria-valuenow="26"
+                aria-valuetext="26"
+                autocapitalize="none"
+                autocorrect="off"
+                class="MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1udt458-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"
+                contenteditable="true"
+                inputmode="numeric"
+                role="spinbutton"
+                spellcheck="false"
+                tabindex="-1"
+              >
+                26
+              </span>
+              <span
+                class="MuiPickersInputBase-sectionAfter css-w1q93y-MuiPickersSectionList-sectionSeparator-MuiPickersInputBase-separator"
+              >
+                /
+              </span>
+            </span>
+            <span
+              class="MuiPickersSectionList-section css-joz0rk-MuiPickersSectionList-section-MuiPickersInputBase-section"
+              data-sectionindex="2"
+            >
+              <span
+                class="MuiPickersInputBase-sectionBefore css-w1q93y-MuiPickersSectionList-sectionSeparator-MuiPickersInputBase-separator"
+              />
+              <span
+                aria-disabled="false"
+                aria-label="Year"
+                aria-readonly="false"
+                aria-valuemax="9999"
+                aria-valuemin="0"
+                aria-valuenow="2026"
+                autocapitalize="none"
+                autocorrect="off"
+                class="MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1udt458-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"
+                contenteditable="true"
+                inputmode="numeric"
+                role="spinbutton"
+                spellcheck="false"
+                tabindex="-1"
+              >
+                2026
+              </span>
+              <span
+                class="MuiPickersInputBase-sectionAfter css-w1q93y-MuiPickersSectionList-sectionSeparator-MuiPickersInputBase-separator"
+              />
+            </span>
+          </div>
+          <div
+            class="MuiInputAdornment-root MuiInputAdornment-positionEnd MuiInputAdornment-outlined MuiInputAdornment-sizeMedium css-z53khj-MuiInputAdornment-root"
+          >
+            <button
+              aria-label="Choose date, selected date is Apr 26, 2026"
+              class="MuiButtonBase-root MuiIconButton-root MuiIconButton-edgeEnd MuiIconButton-sizeMedium css-b7dgqt-MuiButtonBase-root-MuiIconButton-root"
+              data-mui-picker-open-button="true"
+              tabindex="0"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                data-testid="CalendarIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"
+                />
+              </svg>
+            </button>
+          </div>
+          <fieldset
+            aria-hidden="true"
+            class="MuiPickersOutlinedInput-notchedOutline css-1g73m9o-MuiPickersOutlinedInput-notchedOutline"
+          >
+            <legend
+              class="css-kg5swy"
+            >
+              <span
+                class="css-w48gsk"
+              >
+                From
+              </span>
+            </legend>
+          </fieldset>
+          <input
+            aria-hidden="true"
+            class="MuiPickersInputBase-input MuiPickersOutlinedInput-input css-7bxtqs-MuiPickersInputBase-input"
+            id="_r_1_"
+            tabindex="-1"
+            value="04/26/2026"
+          />
+        </div>
+      </div>
+    </div>
+    <h4
+      class="MuiTypography-root MuiTypography-h4 MuiTypography-alignCenter MuiTypography-gutterBottom css-1o2hbqe-MuiTypography-root"
+      style="--Typography-textAlign: center;"
+    >
+      Test: Logs
+    </h4>
+    <div
+      class="MuiStack-root css-lkr0zo-MuiStack-root"
+    >
+      <div
+        class="MuiBox-root css-i3pbo"
+      >
+        <h5
+          class="MuiTypography-root MuiTypography-h5 MuiTypography-alignCenter css-m08qag-MuiTypography-root"
+          style="--Typography-textAlign: center;"
+        >
+          Levels
+        </h5>
+        <div
+          class="MuiBox-root css-3e2rqj"
+        >
+          <div
+            class="MuiButtonBase-root MuiChip-root MuiChip-filled MuiChip-sizeMedium MuiChip-colorDefault MuiChip-clickable css-homzwb-MuiButtonBase-root-MuiChip-root"
+            role="button"
+            tabindex="0"
+          >
+            <span
+              class="MuiChip-label css-1dybbl5-MuiChip-label"
+            >
+              SUCCESS
+            </span>
+          </div>
+          <div
+            class="MuiButtonBase-root MuiChip-root MuiChip-filled MuiChip-sizeMedium MuiChip-colorDefault MuiChip-clickable css-homzwb-MuiButtonBase-root-MuiChip-root"
+            role="button"
+            tabindex="0"
+          >
+            <span
+              class="MuiChip-label css-1dybbl5-MuiChip-label"
+            >
+              INFO
+            </span>
+          </div>
+          <div
+            class="MuiButtonBase-root MuiChip-root MuiChip-filled MuiChip-sizeMedium MuiChip-colorDefault MuiChip-clickable css-homzwb-MuiButtonBase-root-MuiChip-root"
+            role="button"
+            tabindex="0"
+          >
+            <span
+              class="MuiChip-label css-1dybbl5-MuiChip-label"
+            >
+              WARNING
+            </span>
+          </div>
+          <div
+            class="MuiButtonBase-root MuiChip-root MuiChip-filled MuiChip-sizeMedium MuiChip-colorDefault MuiChip-clickable css-homzwb-MuiButtonBase-root-MuiChip-root"
+            role="button"
+            tabindex="0"
+          >
+            <span
+              class="MuiChip-label css-1dybbl5-MuiChip-label"
+            >
+              ERROR
+            </span>
+          </div>
+        </div>
+      </div>
+      <div
+        class="MuiBox-root css-1gqfcct"
+      >
+        <form>
+          <div
+            class="MuiStack-root css-1sazv7p-MuiStack-root"
+          >
+            <div
+              class="MuiBox-root css-1rr4qq7"
+            >
+              <div
+                class="MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"
+              >
+                <div
+                  class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl css-gjo3o-MuiInputBase-root-MuiOutlinedInput-root"
+                >
+                  <input
+                    aria-invalid="false"
+                    class="MuiInputBase-input MuiOutlinedInput-input css-j3jqhj-MuiInputBase-input-MuiOutlinedInput-input"
+                    id="_r_4_"
+                    placeholder="Search… (e.g. jobId:123 message:"disk full")"
+                    type="text"
+                    value=""
+                  />
+                  <fieldset
+                    aria-hidden="true"
+                    class="MuiOutlinedInput-notchedOutline css-vy4cj6-MuiNotchedOutlined-root-MuiOutlinedInput-notchedOutline"
+                  >
+                    <legend
+                      class="css-1nf2c5d-MuiNotchedOutlined-root"
+                    >
+                      <span
+                        aria-hidden="true"
+                        class="notranslate"
+                      >
+                        ​
+                      </span>
+                    </legend>
+                  </fieldset>
+                </div>
+              </div>
+            </div>
+            <button
+              class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-sizeMedium MuiButton-colorPrimary css-14tnvd1-MuiButtonBase-root-MuiButton-root"
+              tabindex="0"
+              type="submit"
+            >
+              Search
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div
+      class="MuiBox-root css-164r41r"
+    />
+    <div
+      class="MuiBox-root css-59e7j"
+    >
+      <div
+        class="MuiStack-root css-12zq4f7-MuiStack-root"
+      >
+        <div
+          class="MuiBox-root css-0"
+        >
+          <div
+            class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+            style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+          >
+            <h3
+              class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+            >
+              <button
+                aria-controls="_r_6_-content"
+                aria-expanded="true"
+                class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                id="_r_6_-header"
+                tabindex="0"
+                type="button"
+              >
+                <span
+                  class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
+                >
+                  <h5
+                    class="MuiTypography-root MuiTypography-h5 css-16xl4zq-MuiTypography-root"
+                  >
+                    Today
+                  </h5>
+                </span>
+                <span
+                  class="MuiAccordionSummary-expandIconWrapper Mui-expanded css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                    data-testid="ExpandMoreIcon"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                    />
+                  </svg>
+                </span>
+              </button>
+            </h3>
+            <div
+              class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-entered css-qr6njo-MuiCollapse-root"
+              style="min-height: 0px;"
+            >
+              <div
+                class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+              >
+                <div
+                  class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                >
+                  <div
+                    aria-labelledby="_r_6_-header"
+                    class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                    id="_r_6_-content"
+                    role="region"
+                  >
+                    <div
+                      class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                    >
+                      <div
+                        class="MuiStack-root css-15o3j4z-MuiStack-root"
+                      >
+                        <div
+                          class="MuiBox-root css-0"
+                        >
+                          <div
+                            class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+                            style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                          >
+                            <h3
+                              class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+                            >
+                              <button
+                                aria-controls="_r_7_-content"
+                                aria-expanded="true"
+                                class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                                id="_r_7_-header"
+                                tabindex="0"
+                                type="button"
+                              >
+                                <span
+                                  class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
+                                >
+                                  <h6
+                                    class="MuiTypography-root MuiTypography-h6 css-1miy0lu-MuiTypography-root"
+                                  >
+                                    billing
+                                  </h6>
+                                </span>
+                                <span
+                                  class="MuiAccordionSummary-expandIconWrapper Mui-expanded css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                                >
+                                  <svg
+                                    aria-hidden="true"
+                                    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                                    data-testid="ExpandMoreIcon"
+                                    focusable="false"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                                    />
+                                  </svg>
+                                </span>
+                              </button>
+                            </h3>
+                            <div
+                              class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-entered css-qr6njo-MuiCollapse-root"
+                              style="min-height: 0px;"
+                            >
+                              <div
+                                class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+                              >
+                                <div
+                                  class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                                >
+                                  <div
+                                    aria-labelledby="_r_7_-header"
+                                    class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                                    id="_r_7_-content"
+                                    role="region"
+                                  >
+                                    <div
+                                      class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                                    >
+                                      <div
+                                        class="MuiStack-root css-12zq4f7-MuiStack-root"
+                                      >
+                                        <div
+                                          class="MuiBox-root css-1uilopm"
+                                        >
+                                          <div
+                                            class="MuiBox-root css-0"
+                                          >
+                                            <div
+                                              class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+                                              style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                            >
+                                              <h3
+                                                class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+                                              >
+                                                <button
+                                                  aria-controls="_r_8_-content"
+                                                  aria-expanded="true"
+                                                  class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                                                  id="_r_8_-header"
+                                                  tabindex="0"
+                                                  type="button"
+                                                >
+                                                  <span
+                                                    class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
+                                                  >
+                                                    <p
+                                                      class="MuiTypography-root MuiTypography-logJobTitle MuiTypography-alignCenter css-bailee-MuiTypography-root"
+                                                      style="--Typography-textAlign: center;"
+                                                    >
+                                                      [send_invoices] &gt; [12]
+                                                    </p>
+                                                  </span>
+                                                  <span
+                                                    class="MuiAccordionSummary-expandIconWrapper Mui-expanded css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                                                  >
+                                                    <svg
+                                                      aria-hidden="true"
+                                                      class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                                                      data-testid="ExpandMoreIcon"
+                                                      focusable="false"
+                                                      viewBox="0 0 24 24"
+                                                    >
+                                                      <path
+                                                        d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                                                      />
+                                                    </svg>
+                                                  </span>
+                                                </button>
+                                              </h3>
+                                              <div
+                                                class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-entered css-qr6njo-MuiCollapse-root"
+                                                style="min-height: 0px;"
+                                              >
+                                                <div
+                                                  class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+                                                >
+                                                  <div
+                                                    class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                                                  >
+                                                    <div
+                                                      aria-labelledby="_r_8_-header"
+                                                      class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                                                      id="_r_8_-content"
+                                                      role="region"
+                                                    >
+                                                      <div
+                                                        class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                                                      >
+                                                        <div
+                                                          class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1facaqf-MuiPaper-root-MuiCard-root"
+                                                          style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                                        >
+                                                          <div
+                                                            class="MuiCardContent-root css-1kybb3q-MuiCardContent-root"
+                                                          >
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
+                                                            >
+                                                              28/04/2026, 09:42:09 - INFO
+                                                            </p>
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
+                                                            >
+                                                              Invoices sent.
+                                                            </p>
+                                                          </div>
+                                                        </div>
+                                                        <div
+                                                          class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1facaqf-MuiPaper-root-MuiCard-root"
+                                                          style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                                        >
+                                                          <div
+                                                            class="MuiCardContent-root css-13tge8h-MuiCardContent-root"
+                                                          >
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
+                                                            >
+                                                              28/04/2026, 09:42:05 - SUCCESS
+                                                            </p>
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
+                                                            >
+                                                              Invoice 41 sent on attempt 1.
+                                                            </p>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          class="MuiBox-root css-0"
+                        >
+                          <div
+                            class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+                            style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                          >
+                            <h3
+                              class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+                            >
+                              <button
+                                aria-controls="_r_9_-content"
+                                aria-expanded="true"
+                                class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                                id="_r_9_-header"
+                                tabindex="0"
+                                type="button"
+                              >
+                                <span
+                                  class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
+                                >
+                                  <h6
+                                    class="MuiTypography-root MuiTypography-h6 css-1miy0lu-MuiTypography-root"
+                                  >
+                                    shop
+                                  </h6>
+                                </span>
+                                <span
+                                  class="MuiAccordionSummary-expandIconWrapper Mui-expanded css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                                >
+                                  <svg
+                                    aria-hidden="true"
+                                    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                                    data-testid="ExpandMoreIcon"
+                                    focusable="false"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                                    />
+                                  </svg>
+                                </span>
+                              </button>
+                            </h3>
+                            <div
+                              class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-entered css-qr6njo-MuiCollapse-root"
+                              style="min-height: 0px;"
+                            >
+                              <div
+                                class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+                              >
+                                <div
+                                  class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                                >
+                                  <div
+                                    aria-labelledby="_r_9_-header"
+                                    class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                                    id="_r_9_-content"
+                                    role="region"
+                                  >
+                                    <div
+                                      class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                                    >
+                                      <div
+                                        class="MuiStack-root css-12zq4f7-MuiStack-root"
+                                      >
+                                        <div
+                                          class="MuiBox-root css-1uilopm"
+                                        >
+                                          <div
+                                            class="MuiBox-root css-0"
+                                          >
+                                            <div
+                                              class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+                                              style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                            >
+                                              <h3
+                                                class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+                                              >
+                                                <button
+                                                  aria-controls="_r_a_-content"
+                                                  aria-expanded="true"
+                                                  class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                                                  id="_r_a_-header"
+                                                  tabindex="0"
+                                                  type="button"
+                                                >
+                                                  <span
+                                                    class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
+                                                  >
+                                                    <p
+                                                      class="MuiTypography-root MuiTypography-logJobTitle MuiTypography-alignCenter css-bailee-MuiTypography-root"
+                                                      style="--Typography-textAlign: center;"
+                                                    >
+                                                      [sync_stock] &gt; [7]
+                                                    </p>
+                                                  </span>
+                                                  <span
+                                                    class="MuiAccordionSummary-expandIconWrapper Mui-expanded css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                                                  >
+                                                    <svg
+                                                      aria-hidden="true"
+                                                      class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                                                      data-testid="ExpandMoreIcon"
+                                                      focusable="false"
+                                                      viewBox="0 0 24 24"
+                                                    >
+                                                      <path
+                                                        d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                                                      />
+                                                    </svg>
+                                                  </span>
+                                                </button>
+                                              </h3>
+                                              <div
+                                                class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-entered css-qr6njo-MuiCollapse-root"
+                                                style="min-height: 0px;"
+                                              >
+                                                <div
+                                                  class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+                                                >
+                                                  <div
+                                                    class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                                                  >
+                                                    <div
+                                                      aria-labelledby="_r_a_-header"
+                                                      class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                                                      id="_r_a_-content"
+                                                      role="region"
+                                                    >
+                                                      <div
+                                                        class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                                                      >
+                                                        <div
+                                                          class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1facaqf-MuiPaper-root-MuiCard-root"
+                                                          style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                                        >
+                                                          <div
+                                                            class="MuiCardContent-root css-18sehlm-MuiCardContent-root"
+                                                          >
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
+                                                            >
+                                                              28/04/2026, 08:15:30 - ERROR
+                                                            </p>
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
+                                                            >
+                                                              Stock could not be read.
+                                                            </p>
+                                                          </div>
+                                                        </div>
+                                                        <div
+                                                          class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1facaqf-MuiPaper-root-MuiCard-root"
+                                                          style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                                        >
+                                                          <div
+                                                            class="MuiCardContent-root css-dnmx27-MuiCardContent-root"
+                                                          >
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
+                                                            >
+                                                              28/04/2026, 08:15:00 - WARNING
+                                                            </p>
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
+                                                            >
+                                                              Stock file is older than a day.
+                                                            </p>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          class="MuiBox-root css-0"
+                        >
+                          <div
+                            class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+                            style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                          >
+                            <h3
+                              class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+                            >
+                              <button
+                                aria-controls="_r_b_-content"
+                                aria-expanded="true"
+                                class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                                id="_r_b_-header"
+                                tabindex="0"
+                                type="button"
+                              >
+                                <span
+                                  class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
+                                >
+                                  <h6
+                                    class="MuiTypography-root MuiTypography-h6 css-1miy0lu-MuiTypography-root"
+                                  >
+                                    No group
+                                  </h6>
+                                </span>
+                                <span
+                                  class="MuiAccordionSummary-expandIconWrapper Mui-expanded css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                                >
+                                  <svg
+                                    aria-hidden="true"
+                                    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                                    data-testid="ExpandMoreIcon"
+                                    focusable="false"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                                    />
+                                  </svg>
+                                </span>
+                              </button>
+                            </h3>
+                            <div
+                              class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-entered css-qr6njo-MuiCollapse-root"
+                              style="min-height: 0px;"
+                            >
+                              <div
+                                class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+                              >
+                                <div
+                                  class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                                >
+                                  <div
+                                    aria-labelledby="_r_b_-header"
+                                    class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                                    id="_r_b_-content"
+                                    role="region"
+                                  >
+                                    <div
+                                      class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                                    >
+                                      <div
+                                        class="MuiStack-root css-12zq4f7-MuiStack-root"
+                                      >
+                                        <div
+                                          class="MuiBox-root css-1uilopm"
+                                        >
+                                          <div
+                                            class="MuiBox-root css-0"
+                                          >
+                                            <div
+                                              class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+                                              style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                            >
+                                              <h3
+                                                class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+                                              >
+                                                <button
+                                                  aria-controls="_r_c_-content"
+                                                  aria-expanded="true"
+                                                  class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                                                  id="_r_c_-header"
+                                                  tabindex="0"
+                                                  type="button"
+                                                >
+                                                  <span
+                                                    class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
+                                                  >
+                                                    <p
+                                                      class="MuiTypography-root MuiTypography-logJobTitle MuiTypography-alignCenter css-bailee-MuiTypography-root"
+                                                      style="--Typography-textAlign: center;"
+                                                    >
+                                                      [ping] &gt; [3]
+                                                    </p>
+                                                  </span>
+                                                  <span
+                                                    class="MuiAccordionSummary-expandIconWrapper Mui-expanded css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                                                  >
+                                                    <svg
+                                                      aria-hidden="true"
+                                                      class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                                                      data-testid="ExpandMoreIcon"
+                                                      focusable="false"
+                                                      viewBox="0 0 24 24"
+                                                    >
+                                                      <path
+                                                        d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                                                      />
+                                                    </svg>
+                                                  </span>
+                                                </button>
+                                              </h3>
+                                              <div
+                                                class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-entered css-qr6njo-MuiCollapse-root"
+                                                style="min-height: 0px;"
+                                              >
+                                                <div
+                                                  class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+                                                >
+                                                  <div
+                                                    class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                                                  >
+                                                    <div
+                                                      aria-labelledby="_r_c_-header"
+                                                      class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                                                      id="_r_c_-content"
+                                                      role="region"
+                                                    >
+                                                      <div
+                                                        class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                                                      >
+                                                        <div
+                                                          class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1facaqf-MuiPaper-root-MuiCard-root"
+                                                          style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                                        >
+                                                          <div
+                                                            class="MuiCardContent-root css-1kybb3q-MuiCardContent-root"
+                                                          >
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
+                                                            >
+                                                              28/04/2026, 07:00:00 - INFO
+                                                            </p>
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
+                                                            >
+                                                              Ping answered.
+                                                            </p>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="MuiBox-root css-0"
+        >
+          <div
+            class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+            style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+          >
+            <h3
+              class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+            >
+              <button
+                aria-controls="_r_d_-content"
+                aria-expanded="false"
+                class="MuiButtonBase-root MuiAccordionSummary-root MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                id="_r_d_-header"
+                tabindex="0"
+                type="button"
+              >
+                <span
+                  class="MuiAccordionSummary-content css-yfrx4k-MuiAccordionSummary-content"
+                >
+                  <h5
+                    class="MuiTypography-root MuiTypography-h5 css-16xl4zq-MuiTypography-root"
+                  >
+                    Yesterday
+                  </h5>
+                </span>
+                <span
+                  class="MuiAccordionSummary-expandIconWrapper css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                    data-testid="ExpandMoreIcon"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                    />
+                  </svg>
+                </span>
+              </button>
+            </h3>
+            <div
+              class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-hidden css-cwrbtg-MuiCollapse-root"
+              style="min-height: 0px;"
+            >
+              <div
+                class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+              >
+                <div
+                  class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                >
+                  <div
+                    aria-labelledby="_r_d_-header"
+                    class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                    id="_r_d_-content"
+                    role="region"
+                  >
+                    <div
+                      class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="MuiBox-root css-0"
+        >
+          <div
+            class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+            style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+          >
+            <h3
+              class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+            >
+              <button
+                aria-controls="_r_e_-content"
+                aria-expanded="false"
+                class="MuiButtonBase-root MuiAccordionSummary-root MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                id="_r_e_-header"
+                tabindex="0"
+                type="button"
+              >
+                <span
+                  class="MuiAccordionSummary-content css-yfrx4k-MuiAccordionSummary-content"
+                >
+                  <h5
+                    class="MuiTypography-root MuiTypography-h5 css-16xl4zq-MuiTypography-root"
+                  >
+                    Sunday, 26 April 2026
+                  </h5>
+                </span>
+                <span
+                  class="MuiAccordionSummary-expandIconWrapper css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                    data-testid="ExpandMoreIcon"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                    />
+                  </svg>
+                </span>
+              </button>
+            </h3>
+            <div
+              class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-hidden css-cwrbtg-MuiCollapse-root"
+              style="min-height: 0px;"
+            >
+              <div
+                class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+              >
+                <div
+                  class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                >
+                  <div
+                    aria-labelledby="_r_e_-header"
+                    class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                    id="_r_e_-content"
+                    role="region"
+                  >
+                    <div
+                      class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`LogsScreen > Displaying the logs > Should display the logs of the last days > wide screen 1`] = `
+<DocumentFragment>
+  <div
+    class="MuiBox-root css-17z20ds"
+  >
+    <div
+      class="MuiBox-root css-1bvc4cc"
+    >
+      <div
+        class="MuiFormControl-root MuiPickersTextField-root css-s9y2f3-MuiFormControl-root-MuiPickersTextField-root"
+      >
+        <label
+          class="MuiFormLabel-root MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined MuiFormLabel-colorPrimary MuiFormLabel-filled MuiInputLabel-root MuiInputLabel-formControl MuiInputLabel-animated MuiInputLabel-shrink MuiInputLabel-outlined css-9oe75v-MuiFormLabel-root-MuiInputLabel-root"
+          data-shrink="true"
+          for="_r_1_"
+          id="_r_1_-label"
+        >
+          From
+        </label>
+        <div
+          aria-invalid="false"
+          aria-labelledby="_r_1_-label"
+          class="MuiPickersInputBase-root MuiPickersOutlinedInput-root MuiPickersInputBase-colorPrimary MuiPickersInputBase-adornedEnd css-17k9pf-MuiPickersInputBase-root-MuiPickersOutlinedInput-root"
+          role="group"
+        >
+          <div
+            class="MuiPickersSectionList-root MuiPickersInputBase-sectionsContainer css-1fb7els-MuiPickersSectionList-root-MuiPickersInputBase-sectionsContainer-MuiPickersOutlinedInput-sectionsContainer"
+            contenteditable="false"
+            tabindex="0"
+          >
+            <span
+              class="MuiPickersSectionList-section css-joz0rk-MuiPickersSectionList-section-MuiPickersInputBase-section"
+              data-sectionindex="0"
+            >
+              <span
+                class="MuiPickersInputBase-sectionBefore css-w1q93y-MuiPickersSectionList-sectionSeparator-MuiPickersInputBase-separator"
+              />
+              <span
+                aria-disabled="false"
+                aria-label="Month"
+                aria-readonly="false"
+                aria-valuemax="12"
+                aria-valuemin="1"
+                aria-valuenow="4"
+                aria-valuetext="April"
+                autocapitalize="none"
+                autocorrect="off"
+                class="MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1udt458-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"
+                contenteditable="true"
+                inputmode="numeric"
+                role="spinbutton"
+                spellcheck="false"
+                tabindex="0"
+              >
+                04
+              </span>
+              <span
+                class="MuiPickersInputBase-sectionAfter css-w1q93y-MuiPickersSectionList-sectionSeparator-MuiPickersInputBase-separator"
+              >
+                /
+              </span>
+            </span>
+            <span
+              class="MuiPickersSectionList-section css-joz0rk-MuiPickersSectionList-section-MuiPickersInputBase-section"
+              data-sectionindex="1"
+            >
+              <span
+                class="MuiPickersInputBase-sectionBefore css-w1q93y-MuiPickersSectionList-sectionSeparator-MuiPickersInputBase-separator"
+              />
+              <span
+                aria-disabled="false"
+                aria-label="Day"
+                aria-readonly="false"
+                aria-valuemax="30"
+                aria-valuemin="1"
+                aria-valuenow="26"
+                aria-valuetext="26"
+                autocapitalize="none"
+                autocorrect="off"
+                class="MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1udt458-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"
+                contenteditable="true"
+                inputmode="numeric"
+                role="spinbutton"
+                spellcheck="false"
+                tabindex="-1"
+              >
+                26
+              </span>
+              <span
+                class="MuiPickersInputBase-sectionAfter css-w1q93y-MuiPickersSectionList-sectionSeparator-MuiPickersInputBase-separator"
+              >
+                /
+              </span>
+            </span>
+            <span
+              class="MuiPickersSectionList-section css-joz0rk-MuiPickersSectionList-section-MuiPickersInputBase-section"
+              data-sectionindex="2"
+            >
+              <span
+                class="MuiPickersInputBase-sectionBefore css-w1q93y-MuiPickersSectionList-sectionSeparator-MuiPickersInputBase-separator"
+              />
+              <span
+                aria-disabled="false"
+                aria-label="Year"
+                aria-readonly="false"
+                aria-valuemax="9999"
+                aria-valuemin="0"
+                aria-valuenow="2026"
+                autocapitalize="none"
+                autocorrect="off"
+                class="MuiPickersSectionList-sectionContent MuiPickersInputBase-sectionContent css-1udt458-MuiPickersSectionList-sectionContent-MuiPickersInputBase-sectionContent"
+                contenteditable="true"
+                inputmode="numeric"
+                role="spinbutton"
+                spellcheck="false"
+                tabindex="-1"
+              >
+                2026
+              </span>
+              <span
+                class="MuiPickersInputBase-sectionAfter css-w1q93y-MuiPickersSectionList-sectionSeparator-MuiPickersInputBase-separator"
+              />
+            </span>
+          </div>
+          <div
+            class="MuiInputAdornment-root MuiInputAdornment-positionEnd MuiInputAdornment-outlined MuiInputAdornment-sizeMedium css-z53khj-MuiInputAdornment-root"
+          >
+            <button
+              aria-label="Choose date, selected date is Apr 26, 2026"
+              class="MuiButtonBase-root MuiIconButton-root MuiIconButton-edgeEnd MuiIconButton-sizeMedium css-b7dgqt-MuiButtonBase-root-MuiIconButton-root"
+              data-mui-picker-open-button="true"
+              tabindex="0"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                data-testid="CalendarIcon"
+                focusable="false"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"
+                />
+              </svg>
+            </button>
+          </div>
+          <fieldset
+            aria-hidden="true"
+            class="MuiPickersOutlinedInput-notchedOutline css-1g73m9o-MuiPickersOutlinedInput-notchedOutline"
+          >
+            <legend
+              class="css-kg5swy"
+            >
+              <span
+                class="css-w48gsk"
+              >
+                From
+              </span>
+            </legend>
+          </fieldset>
+          <input
+            aria-hidden="true"
+            class="MuiPickersInputBase-input MuiPickersOutlinedInput-input css-7bxtqs-MuiPickersInputBase-input"
+            id="_r_1_"
+            tabindex="-1"
+            value="04/26/2026"
+          />
+        </div>
+      </div>
+    </div>
+    <h4
+      class="MuiTypography-root MuiTypography-h4 MuiTypography-alignCenter MuiTypography-gutterBottom css-1o2hbqe-MuiTypography-root"
+      style="--Typography-textAlign: center;"
+    >
+      Test: Logs
+    </h4>
+    <div
+      class="MuiStack-root css-1slq5cp-MuiStack-root"
+    >
+      <div
+        class="MuiBox-root css-i3pbo"
+      >
+        <h5
+          class="MuiTypography-root MuiTypography-h5 MuiTypography-alignCenter css-m08qag-MuiTypography-root"
+          style="--Typography-textAlign: center;"
+        >
+          Levels
+        </h5>
+        <div
+          class="MuiBox-root css-3e2rqj"
+        >
+          <div
+            class="MuiButtonBase-root MuiChip-root MuiChip-filled MuiChip-sizeMedium MuiChip-colorDefault MuiChip-clickable css-homzwb-MuiButtonBase-root-MuiChip-root"
+            role="button"
+            tabindex="0"
+          >
+            <span
+              class="MuiChip-label css-1dybbl5-MuiChip-label"
+            >
+              SUCCESS
+            </span>
+          </div>
+          <div
+            class="MuiButtonBase-root MuiChip-root MuiChip-filled MuiChip-sizeMedium MuiChip-colorDefault MuiChip-clickable css-homzwb-MuiButtonBase-root-MuiChip-root"
+            role="button"
+            tabindex="0"
+          >
+            <span
+              class="MuiChip-label css-1dybbl5-MuiChip-label"
+            >
+              INFO
+            </span>
+          </div>
+          <div
+            class="MuiButtonBase-root MuiChip-root MuiChip-filled MuiChip-sizeMedium MuiChip-colorDefault MuiChip-clickable css-homzwb-MuiButtonBase-root-MuiChip-root"
+            role="button"
+            tabindex="0"
+          >
+            <span
+              class="MuiChip-label css-1dybbl5-MuiChip-label"
+            >
+              WARNING
+            </span>
+          </div>
+          <div
+            class="MuiButtonBase-root MuiChip-root MuiChip-filled MuiChip-sizeMedium MuiChip-colorDefault MuiChip-clickable css-homzwb-MuiButtonBase-root-MuiChip-root"
+            role="button"
+            tabindex="0"
+          >
+            <span
+              class="MuiChip-label css-1dybbl5-MuiChip-label"
+            >
+              ERROR
+            </span>
+          </div>
+        </div>
+      </div>
+      <div
+        class="MuiBox-root css-1gqfcct"
+      >
+        <form>
+          <div
+            class="MuiStack-root css-182zaz-MuiStack-root"
+          >
+            <div
+              class="MuiBox-root css-1rr4qq7"
+            >
+              <div
+                class="MuiFormControl-root MuiFormControl-fullWidth MuiTextField-root css-cmpglg-MuiFormControl-root-MuiTextField-root"
+              >
+                <div
+                  class="MuiInputBase-root MuiOutlinedInput-root MuiInputBase-colorPrimary MuiInputBase-fullWidth MuiInputBase-formControl css-gjo3o-MuiInputBase-root-MuiOutlinedInput-root"
+                >
+                  <input
+                    aria-invalid="false"
+                    class="MuiInputBase-input MuiOutlinedInput-input css-j3jqhj-MuiInputBase-input-MuiOutlinedInput-input"
+                    id="_r_4_"
+                    placeholder="Search… (e.g. jobId:123 message:"disk full")"
+                    type="text"
+                    value=""
+                  />
+                  <fieldset
+                    aria-hidden="true"
+                    class="MuiOutlinedInput-notchedOutline css-vy4cj6-MuiNotchedOutlined-root-MuiOutlinedInput-notchedOutline"
+                  >
+                    <legend
+                      class="css-1nf2c5d-MuiNotchedOutlined-root"
+                    >
+                      <span
+                        aria-hidden="true"
+                        class="notranslate"
+                      >
+                        ​
+                      </span>
+                    </legend>
+                  </fieldset>
+                </div>
+              </div>
+            </div>
+            <button
+              class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-sizeMedium MuiButton-colorPrimary css-14tnvd1-MuiButtonBase-root-MuiButton-root"
+              tabindex="0"
+              type="submit"
+            >
+              Search
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div
+      class="MuiBox-root css-164r41r"
+    />
+    <div
+      class="MuiBox-root css-59e7j"
+    >
+      <div
+        class="MuiStack-root css-12zq4f7-MuiStack-root"
+      >
+        <div
+          class="MuiBox-root css-0"
+        >
+          <div
+            class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+            style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+          >
+            <h3
+              class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+            >
+              <button
+                aria-controls="_r_6_-content"
+                aria-expanded="true"
+                class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                id="_r_6_-header"
+                tabindex="0"
+                type="button"
+              >
+                <span
+                  class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
+                >
+                  <h5
+                    class="MuiTypography-root MuiTypography-h5 css-16xl4zq-MuiTypography-root"
+                  >
+                    Today
+                  </h5>
+                </span>
+                <span
+                  class="MuiAccordionSummary-expandIconWrapper Mui-expanded css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                    data-testid="ExpandMoreIcon"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                    />
+                  </svg>
+                </span>
+              </button>
+            </h3>
+            <div
+              class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-entered css-qr6njo-MuiCollapse-root"
+              style="min-height: 0px;"
+            >
+              <div
+                class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+              >
+                <div
+                  class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                >
+                  <div
+                    aria-labelledby="_r_6_-header"
+                    class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                    id="_r_6_-content"
+                    role="region"
+                  >
+                    <div
+                      class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                    >
+                      <div
+                        class="MuiStack-root css-1c0hc24-MuiStack-root"
+                      >
+                        <div
+                          class="MuiBox-root css-b5wsk5"
+                        >
+                          <div
+                            class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+                            style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                          >
+                            <h3
+                              class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+                            >
+                              <button
+                                aria-controls="_r_7_-content"
+                                aria-expanded="true"
+                                class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-ol0kdg-MuiButtonBase-root-MuiAccordionSummary-root"
+                                id="_r_7_-header"
+                                tabindex="0"
+                                type="button"
+                              >
+                                <span
+                                  class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
+                                >
+                                  <h6
+                                    class="MuiTypography-root MuiTypography-h6 css-1miy0lu-MuiTypography-root"
+                                  >
+                                    billing
+                                  </h6>
+                                </span>
+                                <span
+                                  class="MuiAccordionSummary-expandIconWrapper Mui-expanded css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                                >
+                                  <svg
+                                    aria-hidden="true"
+                                    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                                    data-testid="ExpandMoreIcon"
+                                    focusable="false"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                                    />
+                                  </svg>
+                                </span>
+                              </button>
+                            </h3>
+                            <div
+                              class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-entered css-qr6njo-MuiCollapse-root"
+                              style="min-height: 0px;"
+                            >
+                              <div
+                                class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+                              >
+                                <div
+                                  class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                                >
+                                  <div
+                                    aria-labelledby="_r_7_-header"
+                                    class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                                    id="_r_7_-content"
+                                    role="region"
+                                  >
+                                    <div
+                                      class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                                    >
+                                      <div
+                                        class="MuiStack-root css-12zq4f7-MuiStack-root"
+                                      >
+                                        <div
+                                          class="MuiBox-root css-1uilopm"
+                                        >
+                                          <div
+                                            class="MuiBox-root css-0"
+                                          >
+                                            <div
+                                              class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+                                              style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                            >
+                                              <h3
+                                                class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+                                              >
+                                                <button
+                                                  aria-controls="_r_8_-content"
+                                                  aria-expanded="true"
+                                                  class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                                                  id="_r_8_-header"
+                                                  tabindex="0"
+                                                  type="button"
+                                                >
+                                                  <span
+                                                    class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
+                                                  >
+                                                    <p
+                                                      class="MuiTypography-root MuiTypography-logJobTitle MuiTypography-alignCenter css-bailee-MuiTypography-root"
+                                                      style="--Typography-textAlign: center;"
+                                                    >
+                                                      [send_invoices] &gt; [12]
+                                                    </p>
+                                                  </span>
+                                                  <span
+                                                    class="MuiAccordionSummary-expandIconWrapper Mui-expanded css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                                                  >
+                                                    <svg
+                                                      aria-hidden="true"
+                                                      class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                                                      data-testid="ExpandMoreIcon"
+                                                      focusable="false"
+                                                      viewBox="0 0 24 24"
+                                                    >
+                                                      <path
+                                                        d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                                                      />
+                                                    </svg>
+                                                  </span>
+                                                </button>
+                                              </h3>
+                                              <div
+                                                class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-entered css-qr6njo-MuiCollapse-root"
+                                                style="min-height: 0px;"
+                                              >
+                                                <div
+                                                  class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+                                                >
+                                                  <div
+                                                    class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                                                  >
+                                                    <div
+                                                      aria-labelledby="_r_8_-header"
+                                                      class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                                                      id="_r_8_-content"
+                                                      role="region"
+                                                    >
+                                                      <div
+                                                        class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                                                      >
+                                                        <div
+                                                          class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1facaqf-MuiPaper-root-MuiCard-root"
+                                                          style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                                        >
+                                                          <div
+                                                            class="MuiCardContent-root css-1kybb3q-MuiCardContent-root"
+                                                          >
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
+                                                            >
+                                                              28/04/2026, 09:42:09 - INFO
+                                                            </p>
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
+                                                            >
+                                                              Invoices sent.
+                                                            </p>
+                                                          </div>
+                                                        </div>
+                                                        <div
+                                                          class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1facaqf-MuiPaper-root-MuiCard-root"
+                                                          style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                                        >
+                                                          <div
+                                                            class="MuiCardContent-root css-13tge8h-MuiCardContent-root"
+                                                          >
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
+                                                            >
+                                                              28/04/2026, 09:42:05 - SUCCESS
+                                                            </p>
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
+                                                            >
+                                                              Invoice 41 sent on attempt 1.
+                                                            </p>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          class="MuiBox-root css-b5wsk5"
+                        >
+                          <div
+                            class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+                            style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                          >
+                            <h3
+                              class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+                            >
+                              <button
+                                aria-controls="_r_9_-content"
+                                aria-expanded="true"
+                                class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-ol0kdg-MuiButtonBase-root-MuiAccordionSummary-root"
+                                id="_r_9_-header"
+                                tabindex="0"
+                                type="button"
+                              >
+                                <span
+                                  class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
+                                >
+                                  <h6
+                                    class="MuiTypography-root MuiTypography-h6 css-1miy0lu-MuiTypography-root"
+                                  >
+                                    shop
+                                  </h6>
+                                </span>
+                                <span
+                                  class="MuiAccordionSummary-expandIconWrapper Mui-expanded css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                                >
+                                  <svg
+                                    aria-hidden="true"
+                                    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                                    data-testid="ExpandMoreIcon"
+                                    focusable="false"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                                    />
+                                  </svg>
+                                </span>
+                              </button>
+                            </h3>
+                            <div
+                              class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-entered css-qr6njo-MuiCollapse-root"
+                              style="min-height: 0px;"
+                            >
+                              <div
+                                class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+                              >
+                                <div
+                                  class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                                >
+                                  <div
+                                    aria-labelledby="_r_9_-header"
+                                    class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                                    id="_r_9_-content"
+                                    role="region"
+                                  >
+                                    <div
+                                      class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                                    >
+                                      <div
+                                        class="MuiStack-root css-12zq4f7-MuiStack-root"
+                                      >
+                                        <div
+                                          class="MuiBox-root css-1uilopm"
+                                        >
+                                          <div
+                                            class="MuiBox-root css-0"
+                                          >
+                                            <div
+                                              class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+                                              style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                            >
+                                              <h3
+                                                class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+                                              >
+                                                <button
+                                                  aria-controls="_r_a_-content"
+                                                  aria-expanded="true"
+                                                  class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                                                  id="_r_a_-header"
+                                                  tabindex="0"
+                                                  type="button"
+                                                >
+                                                  <span
+                                                    class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
+                                                  >
+                                                    <p
+                                                      class="MuiTypography-root MuiTypography-logJobTitle MuiTypography-alignCenter css-bailee-MuiTypography-root"
+                                                      style="--Typography-textAlign: center;"
+                                                    >
+                                                      [sync_stock] &gt; [7]
+                                                    </p>
+                                                  </span>
+                                                  <span
+                                                    class="MuiAccordionSummary-expandIconWrapper Mui-expanded css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                                                  >
+                                                    <svg
+                                                      aria-hidden="true"
+                                                      class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                                                      data-testid="ExpandMoreIcon"
+                                                      focusable="false"
+                                                      viewBox="0 0 24 24"
+                                                    >
+                                                      <path
+                                                        d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                                                      />
+                                                    </svg>
+                                                  </span>
+                                                </button>
+                                              </h3>
+                                              <div
+                                                class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-entered css-qr6njo-MuiCollapse-root"
+                                                style="min-height: 0px;"
+                                              >
+                                                <div
+                                                  class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+                                                >
+                                                  <div
+                                                    class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                                                  >
+                                                    <div
+                                                      aria-labelledby="_r_a_-header"
+                                                      class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                                                      id="_r_a_-content"
+                                                      role="region"
+                                                    >
+                                                      <div
+                                                        class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                                                      >
+                                                        <div
+                                                          class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1facaqf-MuiPaper-root-MuiCard-root"
+                                                          style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                                        >
+                                                          <div
+                                                            class="MuiCardContent-root css-18sehlm-MuiCardContent-root"
+                                                          >
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
+                                                            >
+                                                              28/04/2026, 08:15:30 - ERROR
+                                                            </p>
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
+                                                            >
+                                                              Stock could not be read.
+                                                            </p>
+                                                          </div>
+                                                        </div>
+                                                        <div
+                                                          class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1facaqf-MuiPaper-root-MuiCard-root"
+                                                          style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                                        >
+                                                          <div
+                                                            class="MuiCardContent-root css-dnmx27-MuiCardContent-root"
+                                                          >
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
+                                                            >
+                                                              28/04/2026, 08:15:00 - WARNING
+                                                            </p>
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
+                                                            >
+                                                              Stock file is older than a day.
+                                                            </p>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          class="MuiBox-root css-b5wsk5"
+                        >
+                          <div
+                            class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+                            style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                          >
+                            <h3
+                              class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+                            >
+                              <button
+                                aria-controls="_r_b_-content"
+                                aria-expanded="true"
+                                class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-ol0kdg-MuiButtonBase-root-MuiAccordionSummary-root"
+                                id="_r_b_-header"
+                                tabindex="0"
+                                type="button"
+                              >
+                                <span
+                                  class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
+                                >
+                                  <h6
+                                    class="MuiTypography-root MuiTypography-h6 css-1miy0lu-MuiTypography-root"
+                                  >
+                                    No group
+                                  </h6>
+                                </span>
+                                <span
+                                  class="MuiAccordionSummary-expandIconWrapper Mui-expanded css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                                >
+                                  <svg
+                                    aria-hidden="true"
+                                    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                                    data-testid="ExpandMoreIcon"
+                                    focusable="false"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                                    />
+                                  </svg>
+                                </span>
+                              </button>
+                            </h3>
+                            <div
+                              class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-entered css-qr6njo-MuiCollapse-root"
+                              style="min-height: 0px;"
+                            >
+                              <div
+                                class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+                              >
+                                <div
+                                  class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                                >
+                                  <div
+                                    aria-labelledby="_r_b_-header"
+                                    class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                                    id="_r_b_-content"
+                                    role="region"
+                                  >
+                                    <div
+                                      class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                                    >
+                                      <div
+                                        class="MuiStack-root css-12zq4f7-MuiStack-root"
+                                      >
+                                        <div
+                                          class="MuiBox-root css-1uilopm"
+                                        >
+                                          <div
+                                            class="MuiBox-root css-0"
+                                          >
+                                            <div
+                                              class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+                                              style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                            >
+                                              <h3
+                                                class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+                                              >
+                                                <button
+                                                  aria-controls="_r_c_-content"
+                                                  aria-expanded="true"
+                                                  class="MuiButtonBase-root MuiAccordionSummary-root Mui-expanded MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                                                  id="_r_c_-header"
+                                                  tabindex="0"
+                                                  type="button"
+                                                >
+                                                  <span
+                                                    class="MuiAccordionSummary-content Mui-expanded css-yfrx4k-MuiAccordionSummary-content"
+                                                  >
+                                                    <p
+                                                      class="MuiTypography-root MuiTypography-logJobTitle MuiTypography-alignCenter css-bailee-MuiTypography-root"
+                                                      style="--Typography-textAlign: center;"
+                                                    >
+                                                      [ping] &gt; [3]
+                                                    </p>
+                                                  </span>
+                                                  <span
+                                                    class="MuiAccordionSummary-expandIconWrapper Mui-expanded css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                                                  >
+                                                    <svg
+                                                      aria-hidden="true"
+                                                      class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                                                      data-testid="ExpandMoreIcon"
+                                                      focusable="false"
+                                                      viewBox="0 0 24 24"
+                                                    >
+                                                      <path
+                                                        d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                                                      />
+                                                    </svg>
+                                                  </span>
+                                                </button>
+                                              </h3>
+                                              <div
+                                                class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-entered css-qr6njo-MuiCollapse-root"
+                                                style="min-height: 0px;"
+                                              >
+                                                <div
+                                                  class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+                                                >
+                                                  <div
+                                                    class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                                                  >
+                                                    <div
+                                                      aria-labelledby="_r_c_-header"
+                                                      class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                                                      id="_r_c_-content"
+                                                      role="region"
+                                                    >
+                                                      <div
+                                                        class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                                                      >
+                                                        <div
+                                                          class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiCard-root css-1facaqf-MuiPaper-root-MuiCard-root"
+                                                          style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+                                                        >
+                                                          <div
+                                                            class="MuiCardContent-root css-1kybb3q-MuiCardContent-root"
+                                                          >
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-body2 css-7ctihp-MuiTypography-root"
+                                                            >
+                                                              28/04/2026, 07:00:00 - INFO
+                                                            </p>
+                                                            <p
+                                                              class="MuiTypography-root MuiTypography-logMessage css-1hiwpu7-MuiTypography-root"
+                                                            >
+                                                              Ping answered.
+                                                            </p>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="MuiBox-root css-0"
+        >
+          <div
+            class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+            style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+          >
+            <h3
+              class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+            >
+              <button
+                aria-controls="_r_d_-content"
+                aria-expanded="false"
+                class="MuiButtonBase-root MuiAccordionSummary-root MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                id="_r_d_-header"
+                tabindex="0"
+                type="button"
+              >
+                <span
+                  class="MuiAccordionSummary-content css-yfrx4k-MuiAccordionSummary-content"
+                >
+                  <h5
+                    class="MuiTypography-root MuiTypography-h5 css-16xl4zq-MuiTypography-root"
+                  >
+                    Yesterday
+                  </h5>
+                </span>
+                <span
+                  class="MuiAccordionSummary-expandIconWrapper css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                    data-testid="ExpandMoreIcon"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                    />
+                  </svg>
+                </span>
+              </button>
+            </h3>
+            <div
+              class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-hidden css-cwrbtg-MuiCollapse-root"
+              style="min-height: 0px;"
+            >
+              <div
+                class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+              >
+                <div
+                  class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                >
+                  <div
+                    aria-labelledby="_r_d_-header"
+                    class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                    id="_r_d_-content"
+                    role="region"
+                  >
+                    <div
+                      class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="MuiBox-root css-0"
+        >
+          <div
+            class="MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation1 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters css-1qh2co6-MuiPaper-root-MuiAccordion-root"
+            style="--Paper-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12); --Paper-overlay: linear-gradient(rgba(255, 255, 255, 0.051), rgba(255, 255, 255, 0.051));"
+          >
+            <h3
+              class="MuiAccordion-heading css-cy7rkm-MuiAccordion-heading"
+            >
+              <button
+                aria-controls="_r_e_-content"
+                aria-expanded="false"
+                class="MuiButtonBase-root MuiAccordionSummary-root MuiAccordionSummary-gutters css-1wdw36k-MuiButtonBase-root-MuiAccordionSummary-root"
+                id="_r_e_-header"
+                tabindex="0"
+                type="button"
+              >
+                <span
+                  class="MuiAccordionSummary-content css-yfrx4k-MuiAccordionSummary-content"
+                >
+                  <h5
+                    class="MuiTypography-root MuiTypography-h5 css-16xl4zq-MuiTypography-root"
+                  >
+                    Sunday, 26 April 2026
+                  </h5>
+                </span>
+                <span
+                  class="MuiAccordionSummary-expandIconWrapper css-1giso93-MuiAccordionSummary-expandIconWrapper"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium css-1umw9bq-MuiSvgIcon-root"
+                    data-testid="ExpandMoreIcon"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M16.59 8.59 12 13.17 7.41 8.59 6 10l6 6 6-6z"
+                    />
+                  </svg>
+                </span>
+              </button>
+            </h3>
+            <div
+              class="MuiCollapse-root MuiCollapse-vertical MuiCollapse-hidden css-cwrbtg-MuiCollapse-root"
+              style="min-height: 0px;"
+            >
+              <div
+                class="MuiCollapse-wrapper MuiCollapse-vertical css-1x6hinx-MuiCollapse-wrapper"
+              >
+                <div
+                  class="MuiCollapse-wrapperInner MuiCollapse-vertical css-1i4ywhz-MuiCollapse-wrapperInner"
+                >
+                  <div
+                    aria-labelledby="_r_e_-header"
+                    class="MuiAccordion-region css-at4ued-MuiAccordion-region"
+                    id="_r_e_-content"
+                    role="region"
+                  >
+                    <div
+                      class="MuiAccordionDetails-root css-1ke6fu2-MuiAccordionDetails-root"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;

@@ -1,6 +1,7 @@
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import type { TranslationKeys } from './locales/types'
+import type { TranslationKeys } from './locales/translationKeys'
 
 type DotPrefix<T extends string> = T extends '' ? '' : `${T}.`
 
@@ -11,13 +12,18 @@ type FlattenKeys<T, P extends string = ''> = {
     : `${DotPrefix<P>}${K}`
 }[keyof T & string]
 
-type TranslationKeyPaths = FlattenKeys<TranslationKeys>
+/** The key of a text of the app, the dot-separated path to it in the locales (`auth.title`). */
+export type TranslationKey = FlattenKeys<TranslationKeys>
 
 /** Translates a key, which is type-checked against the locale keys. */
-export type AppTranslation = (key: TranslationKeyPaths) => string
+export type AppTranslation = (key: TranslationKey) => string
 
-/** Type-safe `t` function: an unknown translation key is a compile error. */
+/**
+ * Gives the function translating a key, an unknown key being a compile error.
+ *
+ * It stays the same function as long as the language does.
+ */
 export const useAppTranslation = (): AppTranslation => {
-  const { t: tRaw } = useTranslation()
-  return (key: TranslationKeyPaths) => tRaw(key)
+  const { t: translate } = useTranslation()
+  return useCallback((key: TranslationKey) => translate(key), [translate])
 }

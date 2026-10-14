@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`logsNotifier > Should notify the watched logs logged since the previous check, once 1`] = `
+[
+  "Logs from server test-server:
+
+
+[12] [2026-04-28 09:42:01 UTC] [WARNING] - send_invoices > Invoice 41 sent on attempt 2.",
+]
+`;

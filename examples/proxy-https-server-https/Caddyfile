@@ -1,0 +1,16 @@
+# Caddy forwards the Host header as it is and adds X-Forwarded-Proto, X-Forwarded-Host and
+# X-Forwarded-For on its own, which is all Echo needs. It redirects HTTP to HTTPS too.
+testing.cc {
+	# The test certificate of this repository. Without this line, Caddy asks Let's Encrypt for one.
+	tls /certs/testing.cc-cert.pem /certs/testing.cc-key.pem
+
+	reverse_proxy https://echo:4000 {
+		transport http {
+			# The certificate of Echo is issued for the public host, not for the name of its
+			# container, and it is self-signed: Caddy is told which name to expect and to trust that
+			# very certificate. Replace both lines with `tls_insecure_skip_verify` to skip the check.
+			tls_server_name testing.cc
+			tls_trust_pool file /certs/testing.cc-cert.pem
+		}
+	}
+}

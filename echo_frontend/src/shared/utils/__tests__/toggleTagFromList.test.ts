@@ -1,33 +1,30 @@
-import { describe, it, expect } from 'vitest'
-
 import { toggleTagFromList } from '../toggleTagFromList'
 
 describe('toggleTagFromList', () => {
-  it('should add the tag when it is not already in the list', () => {
-    const result = toggleTagFromList(['a', 'b'], 'c')
-    expect(result).toEqual(['a', 'b', 'c'])
+  it.each([
+    { previousTags: [], tags: ['blue'] },
+    { previousTags: ['red'], tags: ['red', 'blue'] },
+    { previousTags: ['red', 'green'], tags: ['red', 'green', 'blue'] }
+  ])(
+    'Should add the tag at the end of $previousTags, which does not hold it',
+    ({ previousTags, tags }) => {
+      expect(toggleTagFromList(previousTags, 'blue')).toEqual(tags)
+    }
+  )
+
+  it.each([
+    { previousTags: ['blue'], tags: [] },
+    { previousTags: ['red', 'blue', 'green'], tags: ['red', 'green'] }
+  ])('Should remove the tag from $previousTags, which holds it', ({ previousTags, tags }) => {
+    expect(toggleTagFromList(previousTags, 'blue')).toEqual(tags)
   })
 
-  it('should remove the tag when it is already in the list', () => {
-    const result = toggleTagFromList(['a', 'b', 'c'], 'b')
-    expect(result).toEqual(['a', 'c'])
-  })
+  it('Should leave the list it is given as it is', () => {
+    const previousTags = ['red', 'blue']
 
-  it('should handle empty list by adding the tag', () => {
-    const result = toggleTagFromList([], 'x')
-    expect(result).toEqual(['x'])
-  })
+    toggleTagFromList(previousTags, 'blue')
+    toggleTagFromList(previousTags, 'green')
 
-  it('should work with string literal types', () => {
-    type MyTags = 'x' | 'y' | 'z'
-    const result = toggleTagFromList<MyTags>(['x'], 'y')
-    expect(result).toEqual(['x', 'y'])
-  })
-
-  it('should return a new array (immutability)', () => {
-    type MyTags = 'a' | 'b' | 'c'
-    const prev: MyTags[] = ['a', 'b'] as const
-    const result = toggleTagFromList<MyTags>(prev, 'c')
-    expect(result).not.toBe(prev) // different reference
+    expect(previousTags).toEqual(['red', 'blue'])
   })
 })

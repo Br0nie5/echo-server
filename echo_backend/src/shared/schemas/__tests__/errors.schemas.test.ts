@@ -1,44 +1,14 @@
-import { Ajv, type ValidateFunction } from 'ajv'
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
-import { EchoErrorSchema } from '../errors.schemas.js'
+import { EchoErrorJsonSchema } from '../errors.schemas.js'
 
-describe('EchoErrorSchema', () => {
-  let validate: ValidateFunction
-
-  beforeAll(() => {
-    const ajv = new Ajv()
-    validate = ajv.compile(EchoErrorSchema)
-  })
-
-  it('should be a valid error object', () => {
-    const data = { statusCode: 500, message: 'Something went wrong' }
-    const isValid = validate(data)
-
-    expect(isValid).toBe(true)
-  })
-
-  it('should reject when statusCode is missing', () => {
-    const data = { message: 'oops' }
-    const isValid = validate(data)
-
-    expect(isValid).toBe(false)
-    expect(validate.errors?.[0].message).toContain('required')
-  })
-
-  it('should reject when message is not a string', () => {
-    const data = { statusCode: 400, message: 123 }
-    const isValid = validate(data)
-
-    expect(isValid).toBe(false)
-    expect(validate.errors?.[0].message).toContain('string')
-  })
-
-  it('should reject when statusCode is not an integer', () => {
-    const data = { statusCode: '400', message: 'bad request' }
-    const isValid = validate(data)
-
-    expect(isValid).toBe(false)
-    expect(validate.errors?.[0].message).toContain('integer')
+describe('EchoErrorJsonSchema', () => {
+  it('Should be a JSON schema of draft 7, named EchoError for the routes to refer to it', () => {
+    expect(EchoErrorJsonSchema).toMatchObject({
+      $schema: 'http://json-schema.org/draft-07/schema#',
+      $id: 'EchoError',
+      type: 'object',
+      required: ['statusCode', 'message']
+    })
   })
 })

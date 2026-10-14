@@ -1,0 +1,134 @@
+name: Bug report
+description: Something in Echo does not work the way the documentation says it should.
+title: 'fix: '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug.
+
+        - A **security vulnerability** does not belong here: [report it privately](https://github.com/Br0nie5/echo-server/security/advisories/new).
+        - **Remove every secret** (`TELEGRAM_BOT_TOKEN`, passwords, private host names) from what you paste. Issues are public.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you report
+      options:
+        - label: I searched the [open and closed issues](https://github.com/Br0nie5/echo-server/issues?q=is%3Aissue) and found no report of this bug.
+          required: true
+        - label: I reproduced it with the [latest version](https://github.com/Br0nie5/echo-server/pkgs/container/echo) of Echo.
+          required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What you see, and the exact text of any error message. Screenshots can be dropped in this field.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: The shortest list of steps that shows the bug, starting from a fresh container when you can. For a log that is missing or shown wrong, add the line of the `.jsonl` file.
+      placeholder: |
+        1. Start Echo with the configuration below
+        2. Open `/app`
+        3. Filter the logs by `ERROR`
+        4. …
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Echo version
+      description: The tag of the image, or the commit when you run it from the sources. `latest` does not say which version you run.
+      placeholder: '1.2.0'
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation
+    attributes:
+      label: How do you run Echo?
+      options:
+        - Docker Compose
+        - Docker CLI
+        - From the sources (npm)
+        - Other (say which below)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: reverse-proxy
+    attributes:
+      label: Reverse proxy
+      description: How the browser reaches Echo. See the [examples](https://github.com/Br0nie5/echo-server/tree/main/examples) for what each setup looks like.
+      options:
+        - No reverse proxy
+        - Reverse proxy, Echo on its own domain or subdomain
+        - Reverse proxy, Echo under a path (BASE_PATH)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: areas
+    attributes:
+      label: Affected parts
+      multiple: true
+      options:
+        - Web UI
+        - API
+        - Authentication
+        - Log files reading
+        - Telegram notifications
+        - Self reports
+        - Docker image or configuration
+        - Documentation
+
+  - type: input
+    id: host
+    attributes:
+      label: Host
+      description: The operating system and the architecture of the machine running Echo.
+      placeholder: Debian 13, arm64
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: Only for a bug of the web UI.
+      placeholder: Firefox 143 on macOS
+
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Configuration
+      description: Your `compose.yaml` or `docker run` command, with its environment variables, and the configuration of your reverse proxy when you have one. Secrets removed.
+      render: yaml
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: The output of `docker logs echo` around the time of the bug, and the errors of the browser console for a bug of the web UI.
+      render: shell
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else?
+      description: What you already tried, since when it happens, a workaround you found.
