@@ -92,6 +92,7 @@ export const buildServer = async (
     createSelfReportFilesRepository({
       filesService,
       selfReportsDirPath: selfReportsSettings.dirPath,
+      groupRootDirPath: selfReportsSettings.rootDirPath,
       selfReportFileName: selfReportsSettings.fileName,
       sessionFilePath: selfReportsSettings.sessionFilePath,
       retentionDays: selfReportsSettings.retentionDays,

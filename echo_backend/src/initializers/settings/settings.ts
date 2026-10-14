@@ -62,6 +62,11 @@ export type SelfReportsSettings = {
   /** Number of days a stored self report is kept (`SELF_REPORTS_RETENTION_DAYS`). */
   retentionDays: number
   /**
+   * Directory holding the self-report files of every server (`SELF_REPORTS_DIR_PATH`), which the
+   * group of the self reports starts at, whatever its path.
+   */
+  rootDirPath: string
+  /**
    * Directory holding the self-report files, inside `SELF_REPORTS_DIR_PATH` and named after the
    * server (`SERVER_NAME`).
    */

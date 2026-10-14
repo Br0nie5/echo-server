@@ -122,13 +122,13 @@ export const loadSettings = async (
   )
   const areSelfReportsEnabled = areSelfReportsIncludedInLogs
 
-  const sharedSelfReportsSettings = areSelfReportsEnabled
+  const selfReportsRootDirPath =
+    areSelfReportsEnabled && requireEnv(processEnv, 'SELF_REPORTS_DIR_PATH')
+  const sharedSelfReportsSettings = selfReportsRootDirPath
     ? {
         retentionDays: parseRequiredEnv(processEnv, 'SELF_REPORTS_RETENTION_DAYS', parseDaysNumber),
-        dirPath: createSelfReportsDirPath(
-          requireEnv(processEnv, 'SELF_REPORTS_DIR_PATH'),
-          config.serverName
-        )
+        rootDirPath: selfReportsRootDirPath,
+        dirPath: createSelfReportsDirPath(selfReportsRootDirPath, config.serverName)
       }
     : undefined
 

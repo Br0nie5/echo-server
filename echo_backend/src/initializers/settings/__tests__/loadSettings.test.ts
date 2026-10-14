@@ -229,6 +229,7 @@ describe('loadSettings', () => {
       },
       parseLogsSelfReports: {
         retentionDays: 30,
+        rootDirPath: '/self_reports',
         dirPath: '/self_reports/Shop Prod',
         fileName: 'parseLogs.jsonl',
         sessionFilePath: path.join(DATA_DIR_PATH, 'parse_logs_self_reports_session.json'),
@@ -236,6 +237,7 @@ describe('loadSettings', () => {
       },
       notificationsSelfReports: {
         retentionDays: 30,
+        rootDirPath: '/self_reports',
         dirPath: '/self_reports/Shop Prod',
         fileName: 'notifications.jsonl',
         sessionFilePath: path.join(DATA_DIR_PATH, 'notifications_self_reports_session.json'),

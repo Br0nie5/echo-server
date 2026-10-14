@@ -2,6 +2,7 @@ import path from 'path'
 
 import { FileDoesNotExistError } from '../../../shared/services/fileDoesNotExistError.js'
 import type { FilesService } from '../../../shared/services/files.service.js'
+import { createSnakeCaseName } from '../../../shared/utils/createSnakeCaseName.js'
 
 import type { LogFileDto } from './dto/logFile.dto.js'
 import type { RawLogLineDto } from './dto/rawLogLine.dto.js'
@@ -12,8 +13,9 @@ export interface LogsFilesApi {
    * Every log file of the logs directory, at any depth.
    *
    * The location name of a log file is its name without its extension. Its group is made of the
-   * directories between the logs directory and the file, joined with `_`, without those named
-   * `logFilesDirName` nor the first of the others: it has none when no directory is left.
+   * directories between the logs directory and the file, without those named `logFilesDirName` nor
+   * the first of the others, each in lower case with its spaces replaced with `_`, joined with `_`:
+   * it has none when no directory is left.
    *
    * Throws when the logs directory cannot be read.
    */
@@ -55,16 +57,14 @@ export const createLogsFilesApi = (
   { logsDirPath, logFileExtension, logFilesDirName }: LogsFilesLocation,
   filesService: FilesService
 ): LogsFilesApi => {
-  const createGroupName = (filePath: string): string | undefined => {
-    const groupName = filesService
-      .getRelativeFilePath(filePath, logsDirPath)
-      ?.split('/')
-      .filter((pathPart) => pathPart !== logFilesDirName)
-      .slice(1, -1)
-      .join('_')
-
-    return groupName === '' ? undefined : groupName
-  }
+  const createLogFileGroupName = (filePath: string): string | undefined =>
+    createSnakeCaseName(
+      filesService
+        .getRelativeFilePath(filePath, logsDirPath)
+        ?.split('/')
+        .filter((pathPart) => pathPart !== logFilesDirName)
+        .slice(1, -1) ?? []
+    )
 
   return {
     getAllLogFiles: async (): Promise<LogFileDto[]> => {
@@ -75,7 +75,7 @@ export const createLogsFilesApi = (
       return logFilesPaths.map((filePath) => ({
         path: filePath,
         locationName: path.basename(filePath, path.extname(filePath)),
-        groupName: createGroupName(filePath)
+        groupName: createLogFileGroupName(filePath)
       }))
     },
 

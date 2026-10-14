@@ -206,12 +206,13 @@ A blank line is ignored. A line that is not JSON, that misses a required field, 
 
 The app shows each log with the name of its file, without its last extension: `nightly.log.jsonl` shows as `nightly.log`.
 
-The group of a log comes from the directories of its file. Below the logs directory, the first directory is left out, every directory named `logs` too, and what is left is joined with `_`:
+The group of a log comes from the directories of its file. Below the logs directory, the first directory is left out, every directory named `logs` too, and what is left is put in lower case, its spaces replaced with `_`, and joined with `_`:
 
-| File                                                      | Group          |
-| --------------------------------------------------------- | -------------- |
-| `/watched_logs/backup/logs/nightly.log.jsonl`             | _(none)_       |
-| `/watched_logs/scripts/docker/utils/logs/prune.log.jsonl` | `docker_utils` |
+| File                                                      | Group             |
+| --------------------------------------------------------- | ----------------- |
+| `/watched_logs/backup/logs/nightly.log.jsonl`             | _(none)_          |
+| `/watched_logs/scripts/docker/utils/logs/prune.log.jsonl` | `docker_utils`    |
+| `/watched_logs/scripts/Docker/Clean Up/prune.log.jsonl`   | `docker_clean_up` |
 
 So scripts can keep their log files in a `logs` directory next to them without `logs` showing up in the group names.
 
@@ -220,7 +221,7 @@ So scripts can keep their log files in a `logs` directory next to them without `
 By default, a line Echo cannot read is silently left out. With `INCLUDE_SELF_REPORTS_IN_LOGS=true`, Echo reports it instead, and shows the report among the logs, like any other log:
 
 - its level is `WARNING`, its message is the line itself, and its `origin` is the path of the log file followed by the position of the line among its non-blank lines, starting at 1: `/watched_logs/backup/logs/nightly.log.jsonl:3`;
-- it is in the group `self_reports_<server name>`, the server name being `SERVER_NAME` with every character other than a letter, a digit, `-`, `_` or a space replaced with `_`, in the file `parseLogs`.
+- it is in the group `self_reports_<server name>`, the server name being `SERVER_NAME` with every character other than a letter, a digit, `-`, `_` or a space replaced with `_`, then in lower case with its spaces replaced with `_` (`self_reports_shop_prod` for `Shop Prod`), in the file `parseLogs`.
 
 The self reports are stored in `/self_reports/<server name>/`, apart from the logs, which are only read from `/watched_logs`. This needs the writable `/self_reports` volume (see [Volumes](#volumes)). When that directory cannot be written, Echo says so in the logs of the container and starts without the self reports.
 

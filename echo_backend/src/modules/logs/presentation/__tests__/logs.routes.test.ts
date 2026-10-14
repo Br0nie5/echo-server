@@ -224,7 +224,7 @@ describe('GET /logs', () => {
     )
     expect(secondResponse.json()).toMatchObject([
       {
-        groupName: 'self_reports_Echo',
+        groupName: 'self_reports_echo',
         location: selfReportsFilePath,
         locationName: 'parseLogs',
         jobId: 1,

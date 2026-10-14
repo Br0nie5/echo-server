@@ -6,12 +6,12 @@ import type { FilesService } from '../../../shared/services/files.service.js'
 /** Access to the self-report files, the data source the self reports are stored in. */
 export interface SelfReportsFilesApi {
   /**
-   * The path of the self-report file at `filePath` from the root of the file system: its
-   * directories, then its name, separated by `/`.
+   * The path of the self-report file at `filePath` from the directory at `dirPath`: the
+   * directories between them, then its name, separated by `/`.
    *
-   * Returns `undefined` when `filePath` is the root of the file system itself.
+   * Returns `undefined` when `filePath` is not below `dirPath`.
    */
-  getSelfReportFilePathFromRoot: (filePath: string) => string | undefined
+  getRelativeSelfReportFilePath: (filePath: string, dirPath: string) => string | undefined
   /**
    * The non-blank lines of the self-report file at `filePath`, in the order they were written.
    *
@@ -42,8 +42,8 @@ export interface SelfReportsFilesApi {
  * ```
  */
 export const createSelfReportsFilesApi = (filesService: FilesService): SelfReportsFilesApi => ({
-  getSelfReportFilePathFromRoot: (filePath): string | undefined =>
-    filesService.getRelativeFilePath(filePath),
+  getRelativeSelfReportFilePath: (filePath, dirPath): string | undefined =>
+    filesService.getRelativeFilePath(filePath, dirPath),
 
   getSelfReportLines: async (filePath): Promise<string[]> => {
     try {

@@ -16,6 +16,7 @@ const filesService = getMockFilesService()
 const options = {
   filesService,
   selfReportsDirPath: '/self_reports/Echo',
+  groupRootDirPath: '/self_reports',
   selfReportFileName: 'parseLogs.jsonl',
   sessionFilePath: SESSION_FILE_PATH,
   retentionDays: 10,
@@ -264,12 +265,12 @@ describe('createSelfReportFilesRepository', () => {
 
   describe('getSelfReports', () => {
     it.each([
-      { reason: 'is in no directory', filePathFromRoot: 'parseLogs.jsonl' },
-      { reason: 'has no path from the root of the file system', filePathFromRoot: undefined }
+      { reason: 'is in no directory', relativeFilePath: 'parseLogs.jsonl' },
+      { reason: 'is not below groupRootDirPath', relativeFilePath: undefined }
     ])(
       'Should give no group name to the self reports of a file that $reason',
-      async ({ filePathFromRoot }) => {
-        filesService.getRelativeFilePath.mockReturnValue(filePathFromRoot)
+      async ({ relativeFilePath }) => {
+        filesService.getRelativeFilePath.mockReturnValue(relativeFilePath)
         const selfReportRepository = await createRepository()
         storedLines = [storedLine()]
 

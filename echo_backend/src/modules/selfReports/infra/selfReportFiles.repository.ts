@@ -2,6 +2,7 @@ import path from 'path'
 
 import type { FilesService } from '../../../shared/services/files.service.js'
 import type { Logger } from '../../../shared/types/logger.js'
+import { createSnakeCaseName } from '../../../shared/utils/createSnakeCaseName.js'
 import type { SelfReport, SelfReportsSession } from '../domain/selfReport.js'
 import type { SelfReportRepository } from '../domain/selfReport.repository.js'
 
@@ -21,6 +22,11 @@ export interface CreateSelfReportFilesRepositoryOptions {
   filesService: FilesService
   /** Directory holding the self-report file. */
   selfReportsDirPath: string
+  /**
+   * Directory the group of the self reports starts at, holding `selfReportsDirPath` at any depth:
+   * the group is made of its name, then of the directories below it, down to the file.
+   */
+  groupRootDirPath: string
   /**
    * Name, with its extension, of the file of `selfReportsDirPath` the self reports are stored in.
    */
@@ -73,6 +79,7 @@ const filterOutStoredProblems = (
  * const selfReportRepository = await createSelfReportFilesRepository({
  *   filesService,
  *   selfReportsDirPath: '/self_reports/Echo',
+ *   groupRootDirPath: '/self_reports',
  *   selfReportFileName: 'parseLogs.jsonl',
  *   sessionFilePath: '/data/parse_logs_self_reports_session.json',
  *   retentionDays: 30,
@@ -105,14 +112,16 @@ const filterOutStoredProblems = (
  *
  * Reading gives the self reports of the file, in the order of its lines, each with its session:
  * the session id of its line, and what the file gives it. That is its location, the path of the
- * file, its location name, the name of the file without its extension, and its group name, every
- * directory of the path of the file from the root of the file system, joined with `_`
- * (`self_reports_Echo` for `/self_reports/Echo/parseLogs.jsonl`), or none when the file is in no
- * directory. A failure to read goes to `logger`, and gives none.
+ * file, its location name, the name of the file without its extension, and its group name, made of
+ * the directory at `groupRootDirPath` and of every directory below it down to the file, each in
+ * lower case with its spaces replaced with `_`, joined with `_` (`self_reports_echo` for
+ * `/srv/self_reports/Echo/parseLogs.jsonl` below `/srv/self_reports`), or none when the file is not
+ * below `groupRootDirPath`. A failure to read goes to `logger`, and gives none.
  */
 export const createSelfReportFilesRepository = async ({
   filesService,
   selfReportsDirPath,
+  groupRootDirPath,
   selfReportFileName,
   sessionFilePath,
   retentionDays,
@@ -123,15 +132,15 @@ export const createSelfReportFilesRepository = async ({
   const sessionIdApi = createSessionIdFileApi(sessionFilePath, filesService)
   const selfReportsFilePath = path.join(selfReportsDirPath, selfReportFileName)
 
-  const groupName = selfReportsFilesApi
-    .getSelfReportFilePathFromRoot(selfReportsFilePath)
-    ?.split('/')
-    .slice(0, -1)
-    .join('_')
   const lineLocation: SelfReportLineLocation = {
     location: selfReportsFilePath,
     locationName: path.parse(selfReportsFilePath).name,
-    groupName: groupName === '' ? undefined : groupName
+    groupName: createSnakeCaseName(
+      selfReportsFilesApi
+        .getRelativeSelfReportFilePath(selfReportsFilePath, path.dirname(groupRootDirPath))
+        ?.split('/')
+        .slice(0, -1) ?? []
+    )
   }
 
   const convertLinesToSelfReports = (lines: string[]): Array<SelfReport & SelfReportsSession> =>

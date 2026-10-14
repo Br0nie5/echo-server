@@ -6,7 +6,7 @@ import { convertSelfReportLineToSelfReport } from '../selfReportLine.dto.js'
 const lineLocation = {
   location: '/self_reports/Echo/parseLogs.jsonl',
   locationName: 'parseLogs',
-  groupName: 'self_reports_Echo'
+  groupName: 'self_reports_echo'
 }
 
 describe('convertSelfReportLineToSelfReport', () => {
