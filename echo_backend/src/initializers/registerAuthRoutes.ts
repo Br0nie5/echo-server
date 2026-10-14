@@ -14,7 +14,7 @@ import type { EchoServer } from './types/echoServer.js'
  * database, only when authentication is enabled.
  *
  * The users database is opened at the `usersDbFilePath` of the auth settings, its file prepared
- * through `filesService`, and the routes are only given the auth config. `@fastify/rate-limit` is
+ * through `filesService` and closed with the server, and the routes are only given the auth config. `@fastify/rate-limit` is
  * registered for the routes that ask for it only: those receiving credentials, limited to the
  * `credentialsAttemptsLimit` of the auth config. The attempts are counted per client address when
  * the `trustedProxies` of the server settings say which proxies to believe. When there are none,
@@ -34,9 +34,12 @@ export const registerAuthRoutes = async (
 
   const { config: authConfig, usersDbFilePath } = authSettings
 
-  const authRepository = createAuthUsersDbRepository(
-    await createUsersDb({ usersDbFilePath }, filesService)
-  )
+  const usersDb = await createUsersDb({ usersDbFilePath }, filesService)
+  server.addHook('onClose', async () => {
+    usersDb.close()
+  })
+
+  const authRepository = createAuthUsersDbRepository(usersDb)
   await server.register(rateLimit, {
     global: false,
     keyGenerator: (request) =>

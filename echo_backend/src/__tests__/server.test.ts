@@ -417,6 +417,36 @@ describe('startServer', () => {
     expect(fastifyStubs.logInfo).toHaveBeenCalledWith('App is served under /echo/app')
   })
 
+  test.each(['SIGTERM', 'SIGINT'] as const)(
+    'Should close the server, then exit the process, when it is asked to stop with %s',
+    async (signal) => {
+      loadSettings.mockResolvedValue(settings)
+      fastifyStubs.listen.mockResolvedValue('http://127.0.0.1:4000')
+      const stopListeners = new Map<string, (signal: NodeJS.Signals) => Promise<void>>()
+      vi.spyOn(process, 'once').mockImplementation(((
+        event: string,
+        listener: (signal: NodeJS.Signals) => Promise<void>
+      ) => {
+        stopListeners.set(event, listener)
+        return process
+      }) as never)
+      const steps: string[] = []
+      vi.spyOn(process, 'exit').mockImplementation(((code: number) => {
+        steps.push(`exit ${code}`)
+      }) as never)
+
+      await startServer()
+      const [server] = fastifyStubs.builtServers
+      server.addHook('onClose', async () => {
+        steps.push('close')
+      })
+      await stopListeners.get(signal)?.(signal)
+
+      expect(fastifyStubs.logInfo).toHaveBeenCalledWith(`${signal} received, closing the server`)
+      expect(steps).toEqual(['close', 'exit 0'])
+    }
+  )
+
   test('Should exit the process when the settings cannot be loaded', async () => {
     const error = new Error('Missing required environment variable: HTTP_PORT')
     loadSettings.mockRejectedValue(error)

@@ -140,34 +140,34 @@ describe('createSelfReportFilesRepository', () => {
     expect(steps).toEqual(['replaceFileLines', 'replaceFileContent'])
   })
 
-  it('Should not save its session id when its file cannot be written', async () => {
-    filesService.replaceFileLines.mockRejectedValueOnce(new Error('EACCES'))
-
-    await createSelfReportFilesRepository(options)
-
-    expect(filesService.replaceFileContent).not.toHaveBeenCalled()
-  })
-
   it.each([
-    [
-      'its file cannot be written',
-      (): unknown => filesService.replaceFileLines.mockRejectedValueOnce(new Error('EACCES'))
-    ],
-    [
-      'the session id cannot be saved',
-      (): unknown => filesService.replaceFileContent.mockRejectedValueOnce(new Error('EACCES'))
-    ]
-  ])('Should create no repository and log the error when %s', async (_, failSetup) => {
-    failSetup()
+    {
+      reason: 'its file cannot be written, without saving its session id',
+      failSetup: (): unknown =>
+        filesService.replaceFileLines.mockRejectedValueOnce(new Error('EACCES')),
+      sessionIdSavesCount: 0
+    },
+    {
+      reason: 'the session id cannot be saved',
+      failSetup: (): unknown =>
+        filesService.replaceFileContent.mockRejectedValueOnce(new Error('EACCES')),
+      sessionIdSavesCount: 1
+    }
+  ])(
+    'Should create no repository and log the error when $reason',
+    async ({ failSetup, sessionIdSavesCount }) => {
+      failSetup()
 
-    const selfReportRepository = await createSelfReportFilesRepository(options)
+      const selfReportRepository = await createSelfReportFilesRepository(options)
 
-    expect(selfReportRepository).toBeUndefined()
-    expect(logger.error).toHaveBeenCalledWith(
-      { err: expect.any(Error), selfReportsFilePath: SELF_REPORTS_FILE_PATH },
-      'Failed to set up self reports'
-    )
-  })
+      expect(selfReportRepository).toBeUndefined()
+      expect(filesService.replaceFileContent).toHaveBeenCalledTimes(sessionIdSavesCount)
+      expect(logger.error).toHaveBeenCalledWith(
+        { err: expect.any(Error), selfReportsFilePath: SELF_REPORTS_FILE_PATH },
+        'Failed to set up self reports'
+      )
+    }
+  )
 
   describe('saveSelfReports', () => {
     it('Should do nothing when there is no self report', async () => {
@@ -279,6 +279,18 @@ describe('createSelfReportFilesRepository', () => {
         expect(storedSelfReport.groupName).toBeUndefined()
       }
     )
+
+    it('Should leave out the self reports that became older than retentionDays since the last write of its file', async () => {
+      const selfReportRepository = await createRepository()
+      const keptLine = storedLine({ date: daysAgo(7), message: 'kept line' })
+      storedLines = [storedLine({ date: daysAgo(9) }), keptLine]
+      vi.setSystemTime(new Date(NOW.getTime() + 2 * MILLISECONDS_PER_DAY))
+
+      const selfReports = await selfReportRepository.getSelfReports()
+
+      expect(selfReports.map(({ message }) => message)).toEqual(['kept line'])
+      expect(storedLines).toHaveLength(2)
+    })
 
     it('Should log the error and give no self report when its file cannot be read', async () => {
       const selfReportRepository = await createRepository()

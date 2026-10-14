@@ -147,33 +147,30 @@ describe('GET /logs', () => {
       expect(getMessages(response.json())).not.toContain(billingGroupWarningLogMessage)
     })
 
-    test.each<{ reason: string; query: Record<string, string>; wrongField: string }>([
-      { reason: 'without fromDate', query: {}, wrongField: 'fromDate' },
+    test.each<{ reason: string; query: Record<string, string>; message: string }>([
+      { reason: 'without fromDate', query: {}, message: 'Missing required field: fromDate' },
       {
         reason: 'with a fromDate that is not a date',
         query: { fromDate: 'yesterday' },
-        wrongField: 'fromDate'
+        message: 'Field fromDate is not a valid date, it should be an ISO string'
       },
       {
-        reason: 'with a fromDate that is a date, but not an ISO one',
-        query: { fromDate: '2026-04-26 00:00:00Z' },
-        wrongField: 'fromDate'
+        reason: 'with a toDate that is a date, but not an ISO one with its time zone',
+        query: { fromDate: '2026-04-26T00:00:00.000Z', toDate: '2026-04-28T00:00:00' },
+        message: 'Field toDate is not a valid date, it should be an ISO string'
       },
       {
         reason: 'with a level that is not one',
         query: { fromDate: '2026-04-26T00:00:00.000Z', logLevels: 'DEBUG' },
-        wrongField: 'logLevels'
+        message: 'DEBUG is not a valid log level, use SUCCESS|INFO|WARNING|ERROR'
       }
-    ])('Should refuse a query $reason, and name the field', async ({ query, wrongField }) => {
+    ])('Should refuse a query $reason, and say what is wrong', async ({ query, message }) => {
       const { server } = await buildTestServer({ settings: { auth: undefined }, files: logFiles })
 
       const response = await server.inject({ method: 'GET', url: '/api/logs', query })
 
       expect(response.statusCode).toBe(400)
-      expect(response.json()).toEqual({
-        statusCode: 400,
-        message: expect.stringContaining(wrongField)
-      })
+      expect(response.json()).toEqual({ statusCode: 400, message })
     })
   })
 

@@ -256,16 +256,16 @@ environment:
   - LOGS_NOTIFIER_TIMEZONE=Europe/Paris # optional, UTC by default
 ```
 
-The notifications are enabled once both `TELEGRAM_*` variables are set. At each run of the schedule, Echo sends one message listing the logs of the watched levels written since the previous run, so each log is sent once:
+The notifications are enabled once both `TELEGRAM_*` variables are set: setting only one of them stops the server. At each run of the schedule, Echo sends one message listing the logs of the watched levels written since the previous run, so each log is sent once:
 
 ```
-Logs from device Echo:
+Logs from server Echo:
 
 
 [12] [2026-09-19 16:41:09 UTC+2] [ERROR] - nightly.log > Backup failed: disk full
 ```
 
-- The first run sends nothing: it only records its date, in `/app/data/last_logs_check.json`, so the logs written before it are never sent.
+- The first run sends every log of the watched levels, then records its date, in `/app/data/last_logs_check.json`: the next runs start from there.
 - A message holds 4096 characters at most, the limit of Telegram. The logs that do not fit are counted in its last line: `3 other logs to see inside the app`.
 - When a message cannot be sent, the same logs are sent again by the next run.
 - With the [self reports](#self-reports) enabled and `WARNING` watched, a line Echo cannot read is sent at every run until its file is fixed, since it is reported again each time the logs are read.

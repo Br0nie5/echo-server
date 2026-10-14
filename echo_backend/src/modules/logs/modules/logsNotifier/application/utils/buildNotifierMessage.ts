@@ -57,7 +57,7 @@ export const buildNotifierMessage = ({
   timezone
 }: NotifierMessageContent): string => {
   const lines = watchedLogs.map((log) => formatLogLine(log, timezone))
-  const header = `Logs from device ${serverName}:\n\n\n`
+  const header = `Logs from server ${serverName}:\n\n\n`
 
   const buildMessageListingLogs = (listedLogsCount: number): string => {
     const otherLogsCount = lines.length - listedLogsCount
@@ -70,7 +70,7 @@ export const buildNotifierMessage = ({
   }
 
   let message =
-    `${lines.length} ${pluralizeLog(lines.length)} from device ${serverName} ` +
+    `${lines.length} ${pluralizeLog(lines.length)} from server ${serverName} ` +
     'to see inside the app'
 
   if (message.length > messageSizeLimit) {

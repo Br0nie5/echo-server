@@ -206,14 +206,38 @@ describe('logsNotifier', () => {
     )
   })
 
-  test('Should stop checking the logs once the server is closed', async () => {
+  test('Should let the check going on end when the server closes, then stop checking the logs', async () => {
+    let answerTelegram: (response: Response) => void = () => undefined
+    fetchMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        answerTelegram = resolve
+      })
+    )
     const { server, fileSystem } = await buildServerWithLogsNotifier({
       [logFilePath]: logFileContent
     })
 
-    await server.close()
+    await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
+    let isServerClosed = false
+    const closing = server.close().then(() => {
+      isServerClosed = true
+    })
+    await vi.advanceTimersByTimeAsync(1000)
+
+    expect(isServerClosed).toBe(false)
+
+    answerTelegram(new Response('{}', { status: 200 }))
+    await closing
+
+    expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
+      toLastCheckFileContent(FIRST_CHECK)
+    )
+
     await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
 
-    expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBeUndefined()
+    expect(fetchMock).toHaveBeenCalledOnce()
+    expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
+      toLastCheckFileContent(FIRST_CHECK)
+    )
   })
 })

@@ -1,3 +1,4 @@
+import type { Dirent } from 'fs'
 import nodeFs from 'fs/promises'
 import path from 'path'
 
@@ -38,6 +39,10 @@ export interface FilesService {
   /**
    * The paths of the files of `directoryPath`, at any depth, that `isFileIncluded` returns `true`
    * for.
+   *
+   * A symbolic link is followed: a link to a file is given as a file, and the files of a link to a
+   * directory are given below the link, unless that directory is one the link is already in. A
+   * link that points to nothing, or to what cannot be reached, is left out.
    *
    * Throws when the directory, or one of the directories it holds, cannot be read.
    *
@@ -111,7 +116,7 @@ export interface FilesService {
 /** The subset of `fs/promises` used, so it can be replaced in tests. */
 export type FileSystem = Pick<
   typeof nodeFs,
-  'readdir' | 'readFile' | 'mkdir' | 'writeFile' | 'rename' | 'rm' | 'chmod'
+  'readdir' | 'readFile' | 'mkdir' | 'writeFile' | 'rename' | 'rm' | 'chmod' | 'stat' | 'realpath'
 >
 
 /** How long a write waits for the previous write of the same file by default, in milliseconds. */
@@ -143,18 +148,63 @@ export const createFilesService = (
    */
   const lastWritePromiseByFilePath = new Map<string, Promise<void>>()
 
-  const getAllFilesPaths = async (directoryPath: string): Promise<string[]> => {
+  /**
+   * What the entry `entry` of the directory whose real path is `realDirectoryPath` is, a symbolic
+   * link being what it points to, with its real path: `undefined` for a link that points to
+   * nothing or to what cannot be reached.
+   */
+  const describeEntry = async (
+    entry: Dirent,
+    entryPath: string,
+    realDirectoryPath: string
+  ): Promise<{ isDirectory: boolean; isFile: boolean; realPath: string } | undefined> => {
+    if (!entry.isSymbolicLink()) {
+      return {
+        isDirectory: entry.isDirectory(),
+        isFile: entry.isFile(),
+        realPath: path.join(realDirectoryPath, entry.name)
+      }
+    }
+
+    try {
+      const [target, realPath] = await Promise.all([
+        fileSystem.stat(entryPath),
+        fileSystem.realpath(entryPath)
+      ])
+
+      return { isDirectory: target.isDirectory(), isFile: target.isFile(), realPath }
+    } catch {
+      return undefined
+    }
+  }
+
+  /**
+   * The paths of the files of `directoryPath`, at any depth, `realDirectoryPaths` being the real
+   * paths of the directories it is in, its own last.
+   */
+  const getAllFilesPaths = async (
+    directoryPath: string,
+    realDirectoryPaths: string[]
+  ): Promise<string[]> => {
     const entries = await fileSystem.readdir(directoryPath, { withFileTypes: true })
 
     const filesPathsByEntry = await Promise.all(
       entries.map(async (entry) => {
         const entryPath = path.join(directoryPath, entry.name)
+        const describedEntry = await describeEntry(
+          entry,
+          entryPath,
+          realDirectoryPaths[realDirectoryPaths.length - 1]
+        )
 
-        if (entry.isDirectory()) {
-          return getAllFilesPaths(entryPath)
+        if (describedEntry?.isDirectory) {
+          // A link to a directory being listed would list it again, endlessly.
+          return realDirectoryPaths.includes(describedEntry.realPath)
+            ? []
+            : getAllFilesPaths(entryPath, [...realDirectoryPaths, describedEntry.realPath])
         }
 
-        return entry.isFile() ? [entryPath] : []
+        return describedEntry?.isFile ? [entryPath] : []
       })
     )
 
@@ -260,7 +310,9 @@ export const createFilesService = (
     getFileLines,
 
     getFilesPaths: async (directoryPath, isFileIncluded): Promise<string[]> =>
-      (await getAllFilesPaths(directoryPath)).filter(isFileIncluded),
+      (await getAllFilesPaths(directoryPath, [await fileSystem.realpath(directoryPath)])).filter(
+        isFileIncluded
+      ),
 
     getRelativeFilePath: (filePath, rootDirPath = path.sep): string | undefined => {
       const relativeFilePath = path.relative(rootDirPath, filePath)

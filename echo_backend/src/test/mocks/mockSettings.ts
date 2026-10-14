@@ -15,7 +15,7 @@ import { getMockAuthConfig, getMockLogsNotifierConfig } from './mockConfigs.js'
  * with `overrides` on top of their defaults.
  */
 export const getMockServerSettings = (overrides: Partial<ServerSettings> = {}): ServerSettings => ({
-  serverName: 'test-device',
+  serverName: 'test-server',
   basePath: '',
   apiRoutePrefix: '/api',
   appRoutePrefix: '/app',

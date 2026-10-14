@@ -20,30 +20,41 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
 ) => {
   fastify.log.info('Registering logs notifier')
 
+  let runningCheck: Promise<void> | undefined
+
+  const check = async (): Promise<void> => {
+    try {
+      await checkWatchedLogsAndNotify({
+        logsNotifierConfig,
+        unNotifiedLogsRepository,
+        notificationsService
+      })
+    } catch (error) {
+      fastify.log.error({ err: error }, 'Cron job failed')
+    }
+  }
+
   const task = cron.schedule(
     logsNotifierConfig.schedule,
     async () => {
-      try {
-        await checkWatchedLogsAndNotify({
-          logsNotifierConfig,
-          unNotifiedLogsRepository,
-          notificationsService
-        })
-      } catch (error) {
-        fastify.log.error({ err: error }, 'Cron job failed')
-      }
+      runningCheck = check()
+      await runningCheck
     },
     { noOverlap: true, timezone: logsNotifierConfig.timezone }
   )
 
   fastify.addHook('onClose', async () => {
     await task.stop()
+    // Stopping the schedule does not stop a check going on: cut once the logs are notified, it
+    // would not mark them as notified, and the next start would notify them again.
+    await runningCheck
   })
 }
 
 /**
  * Fastify plugin running `checkWatchedLogsAndNotify` on the `schedule` of `logsNotifierConfig`,
- * read in its `timezone`, and stopping when the server closes.
+ * read in its `timezone`, and stopping when the server closes, the server waiting for the check
+ * going on, if any, to end.
  *
  * A failing run is logged, not thrown, so it does not stop the schedule. A run that is due while
  * the previous one is still going is skipped: two runs at once would read the same unnotified logs

@@ -21,6 +21,7 @@ interface InMemoryEntry {
   name: string
   isDirectory: () => boolean
   isFile: () => boolean
+  isSymbolicLink: () => boolean
 }
 
 /** The error the file system of Node.js throws for a path that does not exist. */
@@ -35,7 +36,8 @@ const createDoesNotExistError = (missingPath: string): NodeJS.ErrnoException =>
  * It starts with `files`, each path given its content, and with the empty `directories`. It
  * behaves like the one of Node.js for what the files service uses: a file or a directory that does
  * not exist is an `ENOENT` error, a file is only written in a directory that exists, the `a` flag
- * of a write appends to the file, and the `mode` of a write is given to the file it creates.
+ * of a write appends to the file, and the `mode` of a write is given to the file it creates. It
+ * holds no symbolic link.
  *
  * ```ts
  * const inMemoryFileSystem = createInMemoryFileSystem({
@@ -100,12 +102,14 @@ export const createInMemoryFileSystem = ({
         ...[...directories].filter(isDirectChild).map((entryPath) => ({
           name: path.basename(entryPath),
           isDirectory: (): boolean => true,
-          isFile: (): boolean => false
+          isFile: (): boolean => false,
+          isSymbolicLink: (): boolean => false
         })),
         ...[...files.keys()].filter(isDirectChild).map((entryPath) => ({
           name: path.basename(entryPath),
           isDirectory: (): boolean => false,
-          isFile: (): boolean => true
+          isFile: (): boolean => true,
+          isSymbolicLink: (): boolean => false
         }))
       ]
     },
@@ -146,6 +150,16 @@ export const createInMemoryFileSystem = ({
 
     rm: async (filePath: string): Promise<void> => {
       files.delete(path.resolve('/', filePath))
+    },
+
+    realpath: async (entryPath: string): Promise<string> => {
+      const resolvedPath = path.resolve('/', entryPath)
+
+      if (!directories.has(resolvedPath)) {
+        getExistingFile(entryPath)
+      }
+
+      return resolvedPath
     },
 
     chmod: async (filePath: string, mode: number): Promise<void> => {

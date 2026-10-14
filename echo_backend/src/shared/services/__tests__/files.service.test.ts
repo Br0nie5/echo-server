@@ -9,10 +9,11 @@ import { createInMemoryFileSystem } from '../../../test/mocks/inMemoryFileSystem
 import { FileDoesNotExistError } from '../fileDoesNotExistError.js'
 import { createFilesService, type FileSystem } from '../files.service.js'
 
-const entry = (name: string, type: 'file' | 'directory' | 'other'): object => ({
+const entry = (name: string, type: 'file' | 'directory' | 'link' | 'other'): object => ({
   name,
   isFile: (): boolean => type === 'file',
-  isDirectory: (): boolean => type === 'directory'
+  isDirectory: (): boolean => type === 'directory',
+  isSymbolicLink: (): boolean => type === 'link'
 })
 
 /** An error of the file system, with its `code`, as Node.js throws them. */
@@ -21,12 +22,18 @@ const fileSystemError = (code: string): NodeJS.ErrnoException =>
 
 const buildFileSystem = ({
   directories = {},
+  links = {},
   files = {},
   unreachable = [],
   unreadable = [],
   overrides = {}
 }: {
   directories?: Record<string, object[]>
+  /**
+   * The symbolic links that point to something, each path given what it points to: following any
+   * other one is an `ENOENT` error.
+   */
+  links?: Record<string, { type: 'file' | 'directory'; realPath: string }>
   /** The files that exist, each path given its content: reading any other one is an `ENOENT` error. */
   files?: Record<string, string>
   /** Files whose path goes through something that is not a directory. */
@@ -36,6 +43,16 @@ const buildFileSystem = ({
 }): FileSystem =>
   ({
     readdir: vi.fn(async (directory: string) => directories[directory]),
+    stat: vi.fn(async (linkPath: string) => {
+      if (!(linkPath in links)) {
+        throw fileSystemError('ENOENT')
+      }
+      return {
+        isFile: (): boolean => links[linkPath].type === 'file',
+        isDirectory: (): boolean => links[linkPath].type === 'directory'
+      }
+    }),
+    realpath: vi.fn(async (entryPath: string) => links[entryPath]?.realPath ?? entryPath),
     readFile: vi.fn(async (filePath: string) => {
       if (unreachable.includes(filePath)) {
         throw fileSystemError('ENOTDIR')
@@ -255,6 +272,58 @@ describe('FilesService', () => {
       )
 
       expect(await filesService.getFilesPaths('/logs', () => true)).toEqual([])
+    })
+
+    it('Should give a linked file as a file, and the files of a linked directory below the link', async () => {
+      const filesService = createFilesService(
+        buildFileSystem({
+          directories: {
+            '/logs': [entry('ping.jsonl', 'link'), entry('shop', 'link')],
+            '/logs/shop': [entry('open_shop.jsonl', 'file')]
+          },
+          links: {
+            '/logs/ping.jsonl': { type: 'file', realPath: '/mnt/ping.jsonl' },
+            '/logs/shop': { type: 'directory', realPath: '/mnt/shop' }
+          }
+        })
+      )
+
+      expect(await filesService.getFilesPaths('/logs', () => true)).toEqual([
+        '/logs/ping.jsonl',
+        '/logs/shop/open_shop.jsonl'
+      ])
+    })
+
+    it('Should leave out a link that points to nothing', async () => {
+      const filesService = createFilesService(
+        buildFileSystem({ directories: { '/logs': [entry('removed.jsonl', 'link')] } })
+      )
+
+      expect(await filesService.getFilesPaths('/logs', () => true)).toEqual([])
+    })
+
+    it('Should not list again a directory that a link inside it points to, whatever its path', async () => {
+      const filesService = createFilesService(
+        buildFileSystem({
+          directories: {
+            '/logs': [entry('shop', 'directory')],
+            [path.join('/logs', 'shop')]: [
+              entry('open_shop.jsonl', 'file'),
+              entry('all_logs', 'link'),
+              entry('this_shop', 'link')
+            ]
+          },
+          links: {
+            '/logs': { type: 'directory', realPath: '/mnt/logs' },
+            '/logs/shop/all_logs': { type: 'directory', realPath: '/mnt/logs' },
+            '/logs/shop/this_shop': { type: 'directory', realPath: '/mnt/logs/shop' }
+          }
+        })
+      )
+
+      expect(await filesService.getFilesPaths('/logs', () => true)).toEqual([
+        '/logs/shop/open_shop.jsonl'
+      ])
     })
 
     it('Should throw the error of the file system when the directory cannot be read', async () => {

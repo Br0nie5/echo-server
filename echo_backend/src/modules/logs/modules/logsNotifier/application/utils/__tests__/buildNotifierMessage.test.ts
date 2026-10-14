@@ -9,7 +9,7 @@ const buildMessage = (
   watchedLogs: Log[],
   { messageSizeLimit = MESSAGE_SIZE_LIMIT, timezone = 'UTC' } = {}
 ): string =>
-  buildNotifierMessage({ messageSizeLimit, watchedLogs, serverName: 'my-device', timezone })
+  buildNotifierMessage({ messageSizeLimit, watchedLogs, serverName: 'my-server', timezone })
 
 const mockLog = (overrides: Partial<Log> = {}): Log => ({
   id: 'log-id',
@@ -51,7 +51,7 @@ describe('buildNotifierMessage', () => {
     const message = buildMessage([smallLog, hugeLog, smallLog])
 
     expect(message).toBe(
-      'Logs from device my-device:\n\n\n' +
+      'Logs from server my-server:\n\n\n' +
         '[1] [2026-01-01 10:00:00 UTC] [ERROR] - worker > short' +
         '\n\n\n2 other logs to see inside the app'
     )
@@ -68,8 +68,8 @@ describe('buildNotifierMessage', () => {
   })
 
   it.each([
-    { logsCount: 1, message: '1 log from device my-device to see inside the app' },
-    { logsCount: 2, message: '2 logs from device my-device to see inside the app' }
+    { logsCount: 1, message: '1 log from server my-server to see inside the app' },
+    { logsCount: 2, message: '2 logs from server my-server to see inside the app' }
   ])(
     'Should only count the logs when not even the first one fits ($logsCount)',
     ({ logsCount, message }) => {
@@ -82,7 +82,7 @@ describe('buildNotifierMessage', () => {
   it('Should never build a message longer than the size limit', () => {
     const logs = [mockLog({ jobId: 1 }), mockLog({ jobId: 2 }), mockLog({ jobId: 3 })]
 
-    const shortestMessage = '3 logs from device my-device to see inside the app'
+    const shortestMessage = '3 logs from server my-server to see inside the app'
 
     for (
       let messageSizeLimit = shortestMessage.length;

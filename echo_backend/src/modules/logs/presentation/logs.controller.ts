@@ -1,16 +1,19 @@
-import { parseLogSearchInput, type EchoError, type GetLogsParams, type Log } from '@echo/utilities'
+import { parseLogSearchInput, type EchoError, type Log } from '@echo/utilities'
 import type { FastifyRequest, FastifyReply } from 'fastify'
 
 import { getFilteredLogs } from '../application/getFilteredLogs.js'
 import type { LogsRepository } from '../domain/logs.repository.js'
 
-import { safeParseGetLogsParams } from './utils/safeParseGetLogsParams.js'
+import type { ParsedGetLogsParams } from './utils/safeParseGetLogsParams.js'
 
 /** Request handlers of the logs routes. */
 export interface LogsController {
-  /** Validates the query (400 on failure), then answers with the matching logs, newest first. */
+  /**
+   * Answers the logs matching the query, newest first, the query being validated and parsed by
+   * the route.
+   */
   getLogs: (
-    request: FastifyRequest<{ Querystring: GetLogsParams }>,
+    request: FastifyRequest<{ Querystring: ParsedGetLogsParams }>,
     reply: FastifyReply<{ Reply: Log[] | EchoError }>
   ) => Promise<void>
 }
@@ -18,28 +21,16 @@ export interface LogsController {
 /** Builds the logs handlers, which read the logs from `logsRepository`. */
 export const createLogsController = (logsRepository: LogsRepository): LogsController => ({
   getLogs: async (
-    request: FastifyRequest<{ Querystring: GetLogsParams }>,
+    request: FastifyRequest<{ Querystring: ParsedGetLogsParams }>,
     reply: FastifyReply<{ Reply: Log[] | EchoError }>
   ): Promise<void> => {
-    const parsedParams = safeParseGetLogsParams(request.query)
-
-    if (!parsedParams.success) {
-      const error: EchoError = {
-        statusCode: 400,
-        message: parsedParams.error.issues[0].message
-      }
-      return reply.status(error.statusCode).send(error)
-    }
-
-    const { fromDate, toDate, logLevels, logSearch } = parsedParams.data
-
-    const logSearchFilters = parseLogSearchInput(logSearch ?? '')
+    const { fromDate, toDate, logLevels, logSearch } = request.query
 
     const logs = await getFilteredLogs(logsRepository, {
       fromDate,
       toDate,
       levels: logLevels,
-      searchFilters: logSearchFilters
+      searchFilters: parseLogSearchInput(logSearch ?? '')
     })
     return reply.status(200).send(logs)
   }

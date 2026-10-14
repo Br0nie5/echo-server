@@ -30,24 +30,30 @@ const isAddressOrAddressRange = (entry: string): boolean => {
 /**
  * Parses `TRUSTED_PROXIES`, the reverse proxies whose `X-Forwarded-*` headers the server believes.
  *
- * It is `undefined` when `raw` is missing or empty: whatever sends the request is then trusted, so
- * the server works behind any reverse proxy without being told about it. Anything else is a list
- * separated by semicolons, given back as an array, the spaces around its entries left out. Each
- * entry is an IP address, a range of them in CIDR notation, or one of `loopback`, `linklocal` and
- * `uniquelocal`: it throws on any other one, a host name included, which is never resolved.
+ * `raw` is a list separated by semicolons, given back as an array, the spaces around its entries
+ * and its empty entries left out. Each entry is an IP address, a range of them in CIDR notation,
+ * or one of `loopback`, `linklocal` and `uniquelocal`: it throws on any other one, a host name
+ * included, which is never resolved.
+ *
+ * It is `undefined` when `raw` is missing or holds no entry: whatever sends the request is then
+ * trusted, so the server works behind any reverse proxy without being told about it.
  *
  * ```ts
- * parseTrustedProxies('10.0.0.1; 172.16.0.0/12') // ['10.0.0.1', '172.16.0.0/12']
- * parseTrustedProxies('') // undefined
+ * parseTrustedProxies('10.0.0.1; 172.16.0.0/12;') // ['10.0.0.1', '172.16.0.0/12']
+ * parseTrustedProxies(' ') // undefined
  * parseTrustedProxies(undefined) // undefined
  * ```
  */
 export const parseTrustedProxies = (raw: string | undefined): string[] | undefined => {
-  if (raw === undefined || raw === '') {
+  const entries = (raw ?? '')
+    .split(ENTRIES_SEPARATOR)
+    .map((entry) => entry.trim())
+    .filter((entry) => entry !== '')
+
+  if (entries.length === 0) {
     return undefined
   }
 
-  const entries = raw.split(ENTRIES_SEPARATOR).map((entry) => entry.trim())
   const invalidEntry = entries.find(
     (entry) => !ADDRESS_RANGE_NAMES.includes(entry) && !isAddressOrAddressRange(entry)
   )

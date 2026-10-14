@@ -23,6 +23,7 @@ import { parseDaysNumber } from './utils/parseDaysNumber.js'
 import { parseHttpPort } from './utils/parseHttpPort.js'
 import { parseLogsNotifierSettings } from './utils/parseLogsNotifierSettings.js'
 import { parseNotificationSettings } from './utils/parseNotificationSettings.js'
+import { parseSelfReportsRootDirPath } from './utils/parseSelfReportsRootDirPath.js'
 import { parseTlsSettings } from './utils/parseTlsSettings.js'
 import { parseTrustedProxies } from './utils/parseTrustedProxies.js'
 
@@ -80,13 +81,14 @@ const TELEGRAM_REQUEST_TIMEOUT_MILLISECONDS = 10 * 1000
  * `LOGS_DIR_PATH`, only when `INCLUDE_SELF_REPORTS_IN_LOGS` is `true`. They are stored only when
  * something uses them, so they are left out unless it is: `SELF_REPORTS_RETENTION_DAYS` and
  * `SELF_REPORTS_DIR_PATH` are then required, and they are stored in
- * `<SELF_REPORTS_DIR_PATH>/<SERVER_NAME>`. The documentation of the API is served only when
- * `HAS_DOCUMENTATION_ROUTE` is `true`.
+ * `<SELF_REPORTS_DIR_PATH>/<SERVER_NAME>`, which cannot be in `LOGS_DIR_PATH`. The documentation
+ * of the API is served only when `HAS_DOCUMENTATION_ROUTE` is `true`.
  *
- * The notifications have no switch: they are left out, hence disabled, unless `TELEGRAM_CHAT_ID`
- * and `TELEGRAM_BOT_TOKEN` are both set. The cron notifying the watched logs and the self reports
- * of the notifications are left out with them, since there would be nothing to notify through,
- * and the three `LOGS_NOTIFIER_*` variables of the cron are required only when they are set.
+ * The notifications have no switch: they are left out, hence disabled, when neither
+ * `TELEGRAM_CHAT_ID` nor `TELEGRAM_BOT_TOKEN` is set, and setting only one of them throws. The
+ * cron notifying the watched logs and the self reports of the notifications are left out with
+ * them, since there would be nothing to notify through, and the three `LOGS_NOTIFIER_*` variables
+ * of the cron are required only when they are set.
  *
  * It is meant to be called once, when the server starts, the settings then being handed to what
  * builds it:
@@ -123,7 +125,10 @@ export const loadSettings = async (
   const areSelfReportsEnabled = areSelfReportsIncludedInLogs
 
   const selfReportsRootDirPath =
-    areSelfReportsEnabled && requireEnv(processEnv, 'SELF_REPORTS_DIR_PATH')
+    areSelfReportsEnabled &&
+    parseRequiredEnv(processEnv, 'SELF_REPORTS_DIR_PATH', (raw) =>
+      parseSelfReportsRootDirPath(raw, { serverName: config.serverName, logsDirPath })
+    )
   const sharedSelfReportsSettings = selfReportsRootDirPath
     ? {
         retentionDays: parseRequiredEnv(processEnv, 'SELF_REPORTS_RETENTION_DAYS', parseDaysNumber),

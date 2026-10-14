@@ -110,7 +110,8 @@ const filterOutStoredProblems = (
  * The lines of the file that hold no self report are not read, so they are gone once it is written
  * again.
  *
- * Reading gives the self reports of the file, in the order of its lines, each with its session:
+ * Reading gives the self reports of the file that are not older than `retentionDays`, even when
+ * the file still holds older ones, in the order of its lines, each with its session:
  * the session id of its line, and what the file gives it. That is its location, the path of the
  * file, its location name, the name of the file without its extension, and its group name, made of
  * the directory at `groupRootDirPath` and of every directory below it down to the file, each in
@@ -143,16 +144,14 @@ export const createSelfReportFilesRepository = async ({
     )
   }
 
-  const convertLinesToSelfReports = (lines: string[]): Array<SelfReport & SelfReportsSession> =>
-    lines
-      .map((line) => convertSelfReportLineToSelfReport(line, lineLocation))
-      .filter((selfReport) => selfReport !== undefined)
-
   const isKept = ({ date }: SelfReport): boolean =>
     date.getTime() >= Date.now() - retentionDays * MILLISECONDS_PER_DAY
 
   const getKeptSelfReports = (lines: string[]): Array<SelfReport & SelfReportsSession> =>
-    convertLinesToSelfReports(lines).filter(isKept)
+    lines
+      .map((line) => convertSelfReportLineToSelfReport(line, lineLocation))
+      .filter((selfReport) => selfReport !== undefined)
+      .filter(isKept)
 
   let sessionId: number
 
@@ -200,9 +199,7 @@ export const createSelfReportFilesRepository = async ({
 
     getSelfReports: async (): Promise<Array<SelfReport & SelfReportsSession>> => {
       try {
-        return convertLinesToSelfReports(
-          await selfReportsFilesApi.getSelfReportLines(selfReportsFilePath)
-        )
+        return getKeptSelfReports(await selfReportsFilesApi.getSelfReportLines(selfReportsFilePath))
       } catch (error) {
         logger.error({ err: error, selfReportsFilePath }, 'Failed to read self reports')
 

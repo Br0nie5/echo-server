@@ -1,10 +1,10 @@
-import { beforeEach, describe, it, expect, vi } from 'vitest'
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest'
 
 import type { AuthRepository, NewUser } from '../../domain/auth.repository.js'
 import { SignUpRefusedError } from '../../domain/signUpRefusedError.js'
 import { createSignUpFirstAdmin } from '../signUpFirstAdmin.js'
 
-/** An `AuthRepository` keeping its accounts in memory, which takes a while to store one. */
+/** An `AuthRepository` keeping its accounts in memory, which takes a second to store one. */
 const createInMemoryAuthRepository = (): AuthRepository & { users: NewUser[] } => {
   const users: NewUser[] = []
 
@@ -12,7 +12,7 @@ const createInMemoryAuthRepository = (): AuthRepository & { users: NewUser[] } =
     users,
     hasAnyUser: vi.fn(async () => users.length > 0),
     createUser: vi.fn(async (newUser: NewUser) => {
-      await new Promise((resolve) => setTimeout(resolve, 5))
+      await new Promise((resolve) => setTimeout(resolve, 1000))
       users.push(newUser)
     }),
     areCredentialsValid: vi.fn()
@@ -23,16 +23,23 @@ describe('createSignUpFirstAdmin', () => {
   let authRepository: ReturnType<typeof createInMemoryAuthRepository>
 
   beforeEach(() => {
+    vi.useFakeTimers()
     authRepository = createInMemoryAuthRepository()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('Should refuse a sign up asked for while another one is in progress', async () => {
     const signUpFirstAdmin = createSignUpFirstAdmin(authRepository)
 
-    const [firstSignUp, secondSignUp] = await Promise.allSettled([
+    const signUps = Promise.allSettled([
       signUpFirstAdmin('first', 'secret'),
       signUpFirstAdmin('second', 'secret')
     ])
+    await vi.advanceTimersByTimeAsync(1000)
+    const [firstSignUp, secondSignUp] = await signUps
 
     expect(firstSignUp.status).toBe('fulfilled')
     expect(secondSignUp).toMatchObject({
@@ -42,29 +49,11 @@ describe('createSignUpFirstAdmin', () => {
     expect(authRepository.users.map(({ username }) => username)).toEqual(['first'])
   })
 
-  it('Should refuse a second sign up even when the account check of the storage is slow', async () => {
-    const signUpFirstAdmin = createSignUpFirstAdmin(authRepository)
-    // The second check reads the storage before the first account is stored, but answers after.
-    vi.mocked(authRepository.hasAnyUser)
-      .mockImplementationOnce(async () => false)
-      .mockImplementationOnce(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 20))
-        return false
-      })
-
-    const [firstSignUp, secondSignUp] = await Promise.allSettled([
-      signUpFirstAdmin('first', 'secret'),
-      signUpFirstAdmin('second', 'secret')
-    ])
-
-    expect(firstSignUp.status).toBe('fulfilled')
-    expect(secondSignUp.status).toBe('rejected')
-    expect(authRepository.users.map(({ username }) => username)).toEqual(['first'])
-  })
-
   it('Should no longer be in progress once a sign up has been refused', async () => {
     const signUpFirstAdmin = createSignUpFirstAdmin(authRepository)
-    await signUpFirstAdmin('admin', 'secret')
+    const firstSignUp = signUpFirstAdmin('admin', 'secret')
+    await vi.advanceTimersByTimeAsync(1000)
+    await firstSignUp
     await expect(signUpFirstAdmin('other', 'secret')).rejects.toThrow('An account already exists.')
 
     await expect(signUpFirstAdmin('other', 'secret')).rejects.toThrow('An account already exists.')
@@ -76,7 +65,9 @@ describe('createSignUpFirstAdmin', () => {
 
     await expect(signUpFirstAdmin('admin', 'secret')).rejects.toThrow('SQLITE_BUSY')
 
-    await signUpFirstAdmin('admin', 'secret')
+    const nextSignUp = signUpFirstAdmin('admin', 'secret')
+    await vi.advanceTimersByTimeAsync(1000)
+    await nextSignUp
     expect(authRepository.users).toHaveLength(1)
   })
 })

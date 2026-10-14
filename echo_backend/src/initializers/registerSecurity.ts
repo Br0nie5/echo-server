@@ -9,7 +9,7 @@ import type { EchoServer } from './types/echoServer.js'
 import { isOriginAllowed } from './utils/isOriginAllowed.js'
 
 /** Random secret regenerated at each start, so the sessions do not survive a restart. */
-const DYNAMIC_JWT_SECRET = crypto.randomBytes(256).toString('hex')
+const JWT_SECRET = crypto.randomBytes(256).toString('hex')
 
 /** The error a request sent from another origin is answered with: a 403 `EchoError`. */
 const createForbiddenOriginError = (message: string): Error =>
@@ -33,7 +33,7 @@ export const registerSecurity = async (
     await server.register(fastifyCookie)
 
     await server.register(fastifyJwt, {
-      secret: DYNAMIC_JWT_SECRET,
+      secret: JWT_SECRET,
       // A token outlives neither its cookie nor the server: copied out of the cookie, it is no
       // longer accepted once the session is over.
       sign: { expiresIn: `${authSettings.config.sessionDurationSeconds}s` },

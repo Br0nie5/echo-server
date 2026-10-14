@@ -17,6 +17,6 @@ export const getMockLogsNotifierConfig = (
   schedule: '*/30 * * * *',
   watchedLogsLevels: ['ERROR', 'WARNING'],
   timezone: 'UTC',
-  serverName: 'test-device',
+  serverName: 'test-server',
   ...overrides
 })

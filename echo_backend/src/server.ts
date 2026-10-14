@@ -140,6 +140,10 @@ export const buildServer = async (
  * The files service both are given is built here, once. A failure is logged before exiting: by the
  * logger of the server once it is built, before that to the error output of the process, saying
  * whether the settings could not be loaded or the server could not be built.
+ *
+ * Once listening, the server is closed when the process is asked to stop (`SIGTERM`, `SIGINT`): it
+ * answers the requests it received and lets a check of the logs notifier end, then the process
+ * exits.
  */
 export const startServer = async (): Promise<void> => {
   const filesService = createFilesService()
@@ -155,6 +159,16 @@ export const startServer = async (): Promise<void> => {
     const { basePath, apiRoutePrefix, appRoutePrefix } = settings.server
     server.log.info(`Api is served under ${basePath}${apiRoutePrefix}`)
     server.log.info(`App is served under ${basePath}${appRoutePrefix}`)
+
+    const listeningServer = server
+    const closeServer = async (signal: NodeJS.Signals): Promise<void> => {
+      listeningServer.log.info(`${signal} received, closing the server`)
+      await listeningServer.close()
+      process.exit(0)
+    }
+
+    process.once('SIGTERM', closeServer)
+    process.once('SIGINT', closeServer)
   } catch (error) {
     if (!settings) {
       console.error('The settings could not be loaded:', error)

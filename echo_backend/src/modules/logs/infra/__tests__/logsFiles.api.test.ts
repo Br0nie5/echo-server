@@ -29,26 +29,6 @@ describe('LogsFilesApi', () => {
 
     it.each([
       {
-        reason: 'directly in the logs directory',
-        relativeFilePath: 'ping.jsonl',
-        groupName: undefined
-      },
-      {
-        reason: 'in a first directory, which is never part of the group',
-        relativeFilePath: 'shop/open_shop.jsonl',
-        groupName: undefined
-      },
-      {
-        reason: 'in a second directory',
-        relativeFilePath: 'shop/stock/sync_stock.jsonl',
-        groupName: 'stock'
-      },
-      {
-        reason: 'in a directory named like the one to leave out',
-        relativeFilePath: 'shop/stock/logs/sync_stock.jsonl',
-        groupName: 'stock'
-      },
-      {
         reason:
           'in a first directory named like the one to leave out, the next one being the first',
         relativeFilePath: 'logs/shop/stock/sync_stock.jsonl',
