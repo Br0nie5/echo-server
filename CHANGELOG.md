@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-10-26
+
+### Changed
+
+- The image is built on Node.js 24.22.1, instead of 24.21.0.
+- The dependencies are updated to their latest compatible versions.
+
+### Security
+
+- The dependencies with known vulnerabilities are updated, among them `fast-uri`, which Fastify validates the requests with, and `ip-address`, which the rate limit of the login and the sign-up reads the addresses with.
+
 ## [2.0.0] - 2026-10-14
 
 ### Added
@@ -121,7 +132,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[Unreleased]: https://github.com/br0nie5/echo-server/compare/2.0.0...HEAD
+[Unreleased]: https://github.com/br0nie5/echo-server/compare/2.0.1...HEAD
+[2.0.1]: https://github.com/br0nie5/echo-server/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/br0nie5/echo-server/compare/1.2.0...2.0.0
 [1.2.0]: https://github.com/br0nie5/echo-server/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/br0nie5/echo-server/compare/1.0.0...1.1.0
