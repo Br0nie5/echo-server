@@ -1,5 +1,5 @@
 # The version of .tool-versions, which the CI tests with: change both together.
-FROM node:24.22.1-slim AS deps
+FROM node:26.12.1-slim AS deps
 WORKDIR /app
 
 # The native dependencies come with binaries built for linux-x64 and linux-arm64 (glibc):
@@ -17,7 +17,7 @@ COPY echo_backend/ ./echo_backend/
 
 RUN npm ci --omit=dev --workspace=echo_backend
 
-FROM node:24.22.1-slim
+FROM node:26.12.1-slim
 
 LABEL org.opencontainers.image.source="https://github.com/Br0nie5/echo-server"
 
