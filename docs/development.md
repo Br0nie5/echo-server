@@ -140,7 +140,7 @@ npm run start:docker                      # both, then one of the examples with 
 npm run start:docker -- proxy-https       # the same, naming the example
 ```
 
-**The image** ([Dockerfile](../Dockerfile)) is built on `node:24.21.0-slim`, the version of `.tool-versions`, which the CI tests with (change both together), from the workspaces already built: a first stage installs the production dependencies of the backend, with the binaries their native dependencies come with (a C++ toolchain is there for `bcrypt` to compile itself when none fits), and the second one copies the result. It runs as the unprivileged `node` user (uid `1000`), creates `/watched_logs`, `/self_reports` and `/app/data`, and starts through the entrypoint.
+**The image** ([Dockerfile](../Dockerfile)) is built on `node:24.22.1-slim`, the version of `.tool-versions`, which the CI tests with (change both together), from the workspaces already built: a first stage installs the production dependencies of the backend, with the binaries their native dependencies come with (a C++ toolchain is there for `bcrypt` to compile itself when none fits), and the second one copies the result. It runs as the unprivileged `node` user (uid `1000`), creates `/watched_logs`, `/self_reports` and `/app/data`, and starts through the entrypoint.
 
 **The entrypoint** ([docker-entrypoint.sh](../docker-entrypoint.sh)) forces `NODE_ENV` to `production`, refuses a `LOGS_DIR_PATH` or a `SELF_REPORTS_DIR_PATH` that is not the directory the image creates, gives every other variable its default, and writes `env.production.json`, the variables of the frontend, into its build.
 
