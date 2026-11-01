@@ -69,7 +69,11 @@ Target one workspace with `--workspace=echo_backend` (or `echo_frontend`, `echo_
 
 The `overrides` of the root `package.json` force `glob` and `minimatch` to their patched versions, as the packages depending on them still ask for older ones. `eslint-plugin-import` and `eslint-plugin-react` are among them, and they expect the `minimatch` 3 API, where the package is a function: the options of their rules that take a glob throw with `minimatch` 11, such as `pathGroups` of `import/order`, the `allow` option of `import/no-unassigned-import` or `ignore` of `react/jsx-pascal-case`. Do not use these options, and remove the overrides once these packages ask for a patched version.
 
-`eslint-plugin-react` has an override of its own: `npm update` rebuilds this package, which only a workspace declares, without the overrides of the root, and would nest `minimatch` 3 under it.
+`eslint-plugin-react` has a `minimatch` override of its own: `npm update` rebuilds this package, which only a workspace declares, without the overrides of the root, and would nest `minimatch` 3 under it.
+
+ESLint 10 is ahead of `eslint-plugin-import` and `eslint-plugin-react`, which do not support it yet. An override makes each accept the `eslint` of the repository, and `fixupPluginRules` of `@eslint/compat` puts back the functions their rules call. Without it, `eslint-plugin-react` stops the lint at once, and `import/order` crashes only on a file that breaks the rule. Remove both once these plugins support ESLint 10.
+
+TypeScript stays on 6, as `typescript-eslint` refuses to run on TypeScript 7.
 
 ## Testing
 

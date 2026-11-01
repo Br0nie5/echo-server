@@ -1,5 +1,6 @@
 import path from 'path'
 
+import { fixupPluginRules } from '@eslint/compat'
 import js from '@eslint/js'
 import { defineConfig, globalIgnores } from 'eslint/config'
 import importPlugin from 'eslint-plugin-import'
@@ -84,7 +85,9 @@ export const createEslintConfig = ({
         }
       },
       plugins: {
-        import: importPlugin
+        // Its rules call functions ESLint 10 removed, and `import/order` crashes without this on a
+        // file that breaks it, while a clean repository still passes.
+        import: fixupPluginRules(importPlugin)
       },
       rules: {
         // TypeScript
