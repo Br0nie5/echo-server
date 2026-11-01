@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-11-01
+
 ### Changed
 
 - The image is built on Node.js 26.13.0, instead of 24.22.1.
@@ -141,7 +143,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[Unreleased]: https://github.com/br0nie5/echo-server/compare/2.0.1...HEAD
+[Unreleased]: https://github.com/br0nie5/echo-server/compare/2.0.2...HEAD
+[2.0.2]: https://github.com/br0nie5/echo-server/compare/2.0.1...2.0.2
 [2.0.1]: https://github.com/br0nie5/echo-server/compare/2.0.0...2.0.1
 [2.0.0]: https://github.com/br0nie5/echo-server/compare/1.2.0...2.0.0
 [1.2.0]: https://github.com/br0nie5/echo-server/compare/1.1.0...1.2.0
