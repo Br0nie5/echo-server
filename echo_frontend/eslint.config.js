@@ -1,3 +1,4 @@
+import { fixupPluginRules } from '@eslint/compat'
 import { defineConfig } from 'eslint/config'
 import reactPlugin from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
@@ -29,7 +30,8 @@ export default defineConfig([
       }
     },
     plugins: {
-      react: reactPlugin
+      // Its rules call functions ESLint 10 removed, such as `context.getFilename`.
+      react: fixupPluginRules(reactPlugin)
     },
     rules: {
       // React

@@ -10,7 +10,7 @@
 
 ## Prerequisites
 
-- Node.js 24, at the version pinned in [.tool-versions](../.tool-versions) (read by asdf and mise), with the npm it comes with
+- Node.js 26, at the version pinned in [.tool-versions](../.tool-versions) (read by asdf and mise), with the npm it comes with
 - Docker, only to build and run the image
 - A C++ toolchain and Python, only if `bcrypt` has no prebuilt binary for your platform (`better-sqlite3` comes with binaries for macOS, Linux and Windows, on x64 and arm64)
 
@@ -45,27 +45,36 @@ The backend and the frontend import `echo_utilities` from its build, `echo_utili
 
 Run from the root.
 
-| Command                              | Purpose                                                                                                                                                                                              |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`                        | The utilities (watched), the backend and the frontend together.                                                                                                                                      |
-| `npm run build`                      | Builds the three workspaces, the utilities first, then type-checks the files at the root. It starts with `npm install`, see below.                                                                   |
-| `npm start`                          | Builds, then runs the backend in production mode, serving the built frontend, with `echo_backend/.env.production`: over HTTPS, at `https://localhost:4000/app`, with the certificate of `certs/`.    |
-| `npm run types:check`                | TypeScript on every file of each workspace, the tests included, which the build of the backend leaves out, then on the files at the root.                                                            |
-| `npm run lint`                       | ESLint, fixing what it can, in every workspace then on the files at the root.                                                                                                                        |
-| `npm run format`                     | Prettier, in every workspace then on the files at the root, `docs/` and `examples/`.                                                                                                                 |
-| `npm run test:coverage`              | Vitest in every workspace, with a 100% coverage threshold.                                                                                                                                           |
-| `npm run open:coverage`              | Serves the coverage report of each workspace over HTTP, until stopped: utilities on port 9001, the backend on 9002, the frontend on 9003. From the dev container, open the port the editor forwards. |
-| `npm run arch:check`                 | The architecture rules, see [Enforcing the architecture](architecture.md#enforcing-the-architecture).                                                                                                |
-| `npm run dead-code:check`            | Unused files, exports and dependencies, with [Knip](https://knip.dev) ([knip.json](../knip.json)).                                                                                                   |
-| `npm run vulnerabilities:scan`       | `npm audit`.                                                                                                                                                                                         |
-| `npm run start:docker`               | Builds the workspaces and the image, then runs the deployment of [examples/](../examples/) you pick with it.                                                                                         |
-| `npm run dns:enable` / `dns:disable` | Makes the hosts of the examples (`testing.cc`, `local.testing.cc`) resolve to this machine, in `/etc/hosts`, or stops doing so. Asks for the sudo password.                                          |
-| `npm run certs:generate`             | Creates the self-signed certificate of the examples again, in `certs/`.                                                                                                                              |
-| `npm run deploy:server -- <tag>`     | Builds the image for `amd64` and `arm64` and pushes it to `ghcr.io`, see [releases](#continuous-integration-and-releases).                                                                           |
+| Command                               | Purpose                                                                                                                                                                                              |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`                         | The utilities (watched), the backend and the frontend together.                                                                                                                                      |
+| `npm run build`                       | Builds the three workspaces, the utilities first, then type-checks the files at the root. It starts with `npm install`, see below.                                                                   |
+| `npm start`                           | Builds, then runs the backend in production mode, serving the built frontend, with `echo_backend/.env.production`: over HTTPS, at `https://localhost:4000/app`, with the certificate of `certs/`.    |
+| `npm run types:check`                 | TypeScript on every file of each workspace, the tests included, which the build of the backend leaves out, then on the files at the root.                                                            |
+| `npm run lint`                        | ESLint, fixing what it can, in every workspace then on the files at the root.                                                                                                                        |
+| `npm run format`                      | Prettier, in every workspace then on the files at the root, `docs/` and `examples/`.                                                                                                                 |
+| `npm run test:coverage`               | Vitest in every workspace, with a 100% coverage threshold.                                                                                                                                           |
+| `npm run open:coverage`               | Serves the coverage report of each workspace over HTTP, until stopped: utilities on port 9001, the backend on 9002, the frontend on 9003. From the dev container, open the port the editor forwards. |
+| `npm run arch:check`                  | The architecture rules, see [Enforcing the architecture](architecture.md#enforcing-the-architecture).                                                                                                |
+| `npm run dead-code:check`             | Unused files, exports and dependencies, with [Knip](https://knip.dev) ([knip.json](../knip.json)).                                                                                                   |
+| `npm run vulnerabilities:scan`        | `npm audit`.                                                                                                                                                                                         |
+| `npm run start:docker`                | Builds the workspaces and the image, then runs the deployment of [examples/](../examples/) you pick with it.                                                                                         |
+| `npm run dns:enable` / `dns:disable`  | Makes the hosts of the examples (`testing.cc`, `local.testing.cc`) resolve to this machine, in `/etc/hosts`, or stops doing so. Asks for the sudo password.                                          |
+| `npm run certs:generate`              | Creates the self-signed certificate of the examples again, in `certs/`.                                                                                                                              |
+| `npm run test-logs:shift [-- <date>]` | Moves every date of `test_logs/` by the same amount, the newest log landing on the current time, or on the ISO date given. It overwrites the files, which git does not hold.                         |
+| `npm run deploy:server -- <tag>`      | Builds the image for `amd64` and `arm64` and pushes it to `ghcr.io`, see [releases](#continuous-integration-and-releases).                                                                           |
 
 Target one workspace with `--workspace=echo_backend` (or `echo_frontend`, `echo_utilities`): `npm run lint --workspace=echo_frontend`.
 
 `npm run build` runs `npm install` first, except in CI (when `CI` is set), where `npm ci` just installed the lockfile: when `node_modules` is shared between two platforms, macOS and a Linux container for instance, it brings back the packages built for the one running the build.
+
+The `overrides` of the root `package.json` force `glob` and `minimatch` to their patched versions, as the packages depending on them still ask for older ones. `eslint-plugin-import` and `eslint-plugin-react` are among them, and they expect the `minimatch` 3 API, where the package is a function: the options of their rules that take a glob throw with `minimatch` 11, such as `pathGroups` of `import/order`, the `allow` option of `import/no-unassigned-import` or `ignore` of `react/jsx-pascal-case`. Do not use these options, and remove the overrides once these packages ask for a patched version.
+
+`eslint-plugin-react` has a `minimatch` override of its own: `npm update` rebuilds this package, which only a workspace declares, without the overrides of the root, and would nest `minimatch` 3 under it.
+
+ESLint 10 is ahead of `eslint-plugin-import` and `eslint-plugin-react`, which do not support it yet. An override makes each accept the `eslint` of the repository, and `fixupPluginRules` of `@eslint/compat` puts back the functions their rules call. Without it, `eslint-plugin-react` stops the lint at once, and `import/order` crashes only on a file that breaks the rule. Remove both once these plugins support ESLint 10.
+
+TypeScript stays on 6, as `typescript-eslint` refuses to run on TypeScript 7.
 
 ## Testing
 
@@ -140,7 +149,7 @@ npm run start:docker                      # both, then one of the examples with 
 npm run start:docker -- proxy-https       # the same, naming the example
 ```
 
-**The image** ([Dockerfile](../Dockerfile)) is built on `node:24.22.1-slim`, the version of `.tool-versions`, which the CI tests with (change both together), from the workspaces already built: a first stage installs the production dependencies of the backend, with the binaries their native dependencies come with (a C++ toolchain is there for `bcrypt` to compile itself when none fits), and the second one copies the result. It runs as the unprivileged `node` user (uid `1000`), creates `/watched_logs`, `/self_reports` and `/app/data`, and starts through the entrypoint.
+**The image** ([Dockerfile](../Dockerfile)) is built on `node:26.13.0-slim`, the version of `.tool-versions`, which the CI tests with (change both together), from the workspaces already built: a first stage installs the production dependencies of the backend, with the binaries their native dependencies come with (a C++ toolchain is there for `bcrypt` to compile itself when none fits), and the second one copies the result. It runs as the unprivileged `node` user (uid `1000`), creates `/watched_logs`, `/self_reports` and `/app/data`, and starts through the entrypoint.
 
 **The entrypoint** ([docker-entrypoint.sh](../docker-entrypoint.sh)) forces `NODE_ENV` to `production`, refuses a `LOGS_DIR_PATH` or a `SELF_REPORTS_DIR_PATH` that is not the directory the image creates, gives every other variable its default, and writes `env.production.json`, the variables of the frontend, into its build.
 
