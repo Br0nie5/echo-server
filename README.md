@@ -313,7 +313,7 @@ The health check of the container always targets `localhost` inside the containe
 
 ## Running from the sources
 
-Requirements: Node.js 24 (the version is pinned in [.tool-versions](.tool-versions)) and, for the image, Docker.
+Requirements: Node.js 26 (the version is pinned in [.tool-versions](.tool-versions)) and, for the image, Docker.
 
 ```bash
 git clone https://github.com/Br0nie5/echo-server.git

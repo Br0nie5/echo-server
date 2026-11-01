@@ -10,7 +10,7 @@
 
 ## Prerequisites
 
-- Node.js 24, at the version pinned in [.tool-versions](../.tool-versions) (read by asdf and mise), with the npm it comes with
+- Node.js 26, at the version pinned in [.tool-versions](../.tool-versions) (read by asdf and mise), with the npm it comes with
 - Docker, only to build and run the image
 - A C++ toolchain and Python, only if `bcrypt` has no prebuilt binary for your platform (`better-sqlite3` comes with binaries for macOS, Linux and Windows, on x64 and arm64)
 
@@ -68,6 +68,8 @@ Target one workspace with `--workspace=echo_backend` (or `echo_frontend`, `echo_
 `npm run build` runs `npm install` first, except in CI (when `CI` is set), where `npm ci` just installed the lockfile: when `node_modules` is shared between two platforms, macOS and a Linux container for instance, it brings back the packages built for the one running the build.
 
 The `overrides` of the root `package.json` force `glob` and `minimatch` to their patched versions, as the packages depending on them still ask for older ones. `eslint-plugin-import` and `eslint-plugin-react` are among them, and they expect the `minimatch` 3 API, where the package is a function: the options of their rules that take a glob throw with `minimatch` 11, such as `pathGroups` of `import/order`, the `allow` option of `import/no-unassigned-import` or `ignore` of `react/jsx-pascal-case`. Do not use these options, and remove the overrides once these packages ask for a patched version.
+
+`eslint-plugin-react` has an override of its own: `npm update` rebuilds this package, which only a workspace declares, without the overrides of the root, and would nest `minimatch` 3 under it.
 
 ## Testing
 
@@ -142,7 +144,7 @@ npm run start:docker                      # both, then one of the examples with 
 npm run start:docker -- proxy-https       # the same, naming the example
 ```
 
-**The image** ([Dockerfile](../Dockerfile)) is built on `node:24.22.1-slim`, the version of `.tool-versions`, which the CI tests with (change both together), from the workspaces already built: a first stage installs the production dependencies of the backend, with the binaries their native dependencies come with (a C++ toolchain is there for `bcrypt` to compile itself when none fits), and the second one copies the result. It runs as the unprivileged `node` user (uid `1000`), creates `/watched_logs`, `/self_reports` and `/app/data`, and starts through the entrypoint.
+**The image** ([Dockerfile](../Dockerfile)) is built on `node:26.13.0-slim`, the version of `.tool-versions`, which the CI tests with (change both together), from the workspaces already built: a first stage installs the production dependencies of the backend, with the binaries their native dependencies come with (a C++ toolchain is there for `bcrypt` to compile itself when none fits), and the second one copies the result. It runs as the unprivileged `node` user (uid `1000`), creates `/watched_logs`, `/self_reports` and `/app/data`, and starts through the entrypoint.
 
 **The entrypoint** ([docker-entrypoint.sh](../docker-entrypoint.sh)) forces `NODE_ENV` to `production`, refuses a `LOGS_DIR_PATH` or a `SELF_REPORTS_DIR_PATH` that is not the directory the image creates, gives every other variable its default, and writes `env.production.json`, the variables of the frontend, into its build.
 

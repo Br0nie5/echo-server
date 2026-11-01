@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The image is built on Node.js 26.13.0, instead of 24.22.1.
+- The dependencies are updated to their latest compatible versions.
+
+### Security
+
+- `glob` and `minimatch` are forced to their patched versions.
+
 ## [2.0.1] - 2026-10-26
 
 ### Changed
