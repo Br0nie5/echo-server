@@ -48,6 +48,10 @@
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.0"
   },
+  "overrides": {
+    "glob": "^14.0.2",
+    "minimatch": "^11.0.1"
+  },
   "allowScripts": {
     "bcrypt@6.0.0": true,
     "esbuild@0.28.2": true,

@@ -67,6 +67,8 @@ Target one workspace with `--workspace=echo_backend` (or `echo_frontend`, `echo_
 
 `npm run build` runs `npm install` first, except in CI (when `CI` is set), where `npm ci` just installed the lockfile: when `node_modules` is shared between two platforms, macOS and a Linux container for instance, it brings back the packages built for the one running the build.
 
+The `overrides` of the root `package.json` force `glob` and `minimatch` to their patched versions, as the packages depending on them still ask for older ones. `eslint-plugin-import` and `eslint-plugin-react` are among them, and they expect the `minimatch` 3 API, where the package is a function: the options of their rules that take a glob throw with `minimatch` 11, such as `pathGroups` of `import/order`, the `allow` option of `import/no-unassigned-import` or `ignore` of `react/jsx-pascal-case`. Do not use these options, and remove the overrides once these packages ask for a patched version.
+
 ## Testing
 
 Vitest runs in the three workspaces, with a **100% coverage threshold**. The tests live in `__tests__` folders next to the code they test. Only the entry points and the helpers of the tests are left out of the coverage (see each `vitest.config.ts`, and `vite.config.ts` for the frontend).
