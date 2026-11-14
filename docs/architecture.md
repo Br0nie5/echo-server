@@ -160,14 +160,14 @@ The logs are only read from `LOGS_DIR_PATH`. The self reports are not stored amo
 | `domain/`       | `UnNotifiedLogsRepository`, the contract giving the logs that were not notified yet, with the way to mark them as notified.                                                                                                          |
 | `application/`  | `checkWatchedLogsAndNotify`, one check: it keeps the unnotified logs of a watched level, notifies them and marks them as notified. `utils/buildNotifierMessage.ts` writes the message, never longer than the size limit it is given. |
 | `infra/`        | `unNotifiedLogsCheckDate.repository.ts` implements the contract on top of the `LogsRepository` of `logs` and of the date of the last check, which `CheckDateApi` reads from and writes to the last-check file.                       |
-| `presentation/` | `logs.notifier.ts`, the Fastify plugin running the check on the schedule of the config. A cron is the entry point of the submodule, the way a route is the one of `logs`.                                                            |
+| `presentation/` | `logs.notifier.ts`, the Fastify plugin running the check once the server is ready, then on the schedule of the config. A cron is the entry point of the submodule, the way a route is the one of `logs`.                             |
 
 The use case knows nothing of how the notified logs are remembered: that it is a date is a choice of the implementation.
 
 - The repository gives the logs from the date of the previous check to the one of its read, the latter left out. A log is therefore in the period of one check only, and is notified once, even when it is written while the logs are being read.
 - While no check date is saved, at the very first check or when the last-check file cannot be read, the repository gives every log: the first check notifies every watched log there is.
 - The date is saved when the use case marks the logs as notified, which it does not do when the notification fails: the next check sends the same logs again.
-- A run that is due while the previous one is still going is skipped.
+- A check that is due while another one is still going, the one made when the server is ready included, is skipped.
 - When the self reports are included in the logs, they are notified like any other log when their level is watched. A line that holds no valid log is reported each time the logs are read, but stored once, with the date it was first read at, for as long as its self report is kept: it is notified once too. A notification that could not be sent is stored each time it happens.
 - When the size limit of the channel is too small for any message, writing the message throws: the notification fails like one that could not be sent.
 

@@ -167,7 +167,7 @@ Every variable has a default in the container, so none is required there. A valu
 | `SELF_REPORTS_RETENTION_DAYS`       | `10`            | How many days a self report is kept. A strictly positive integer. Only read when the self reports are enabled.                                                                                                               |
 | `TELEGRAM_CHAT_ID`                  | _(empty)_       | Telegram chat the notifications are sent to. See [Telegram notifications](#telegram-notifications).                                                                                                                          |
 | `TELEGRAM_BOT_TOKEN`                | _(empty)_       | Token of the Telegram bot sending them, as BotFather gives it (`123456:ABC-DEF…`), without `https://api.telegram.org/bot` in front. A secret.                                                                                |
-| `LOGS_NOTIFIER_SCHEDULE`            | `*/30 * * * *`  | Cron expression saying when the logs are checked for Telegram.                                                                                                                                                               |
+| `LOGS_NOTIFIER_SCHEDULE`            | `*/30 * * * *`  | Cron expression saying when the logs are checked for Telegram, after Echo starts.                                                                                                                                            |
 | `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` | `ERROR,WARNING` | Levels that are notified, separated by commas, among `SUCCESS`, `INFO`, `WARNING` and `ERROR`: any other one stops the server.                                                                                               |
 | `LOGS_NOTIFIER_TIMEZONE`            | `UTC`           | Time zone the schedule is read in and the dates of the Telegram messages are shown in: a fixed offset (`UTC+2`, `GMT+2`) or an IANA zone (`Europe/Paris`), which follows daylight saving.                                    |
 | `TLS_CERT_PATH`                     | _(empty)_       | Path, in the container, of a PEM certificate. Set with `TLS_KEY_PATH` to make Echo serve HTTPS itself. See [HTTPS](#https).                                                                                                  |
@@ -260,7 +260,7 @@ environment:
   - LOGS_NOTIFIER_TIMEZONE=Europe/Paris # optional, UTC by default
 ```
 
-The notifications are enabled once both `TELEGRAM_*` variables are set: setting only one of them stops the server. At each run of the schedule, Echo sends one message listing the logs of the watched levels written since the previous run, so each log is sent once:
+The notifications are enabled once both `TELEGRAM_*` variables are set: setting only one of them stops the server. When it starts, then at each run of the schedule, Echo sends one message listing the logs of the watched levels written since the previous check, so each log is sent once:
 
 ```
 Logs from server Echo:

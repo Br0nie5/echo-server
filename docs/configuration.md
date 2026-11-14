@@ -67,7 +67,7 @@ Read by [loadSettings.ts](../echo_backend/src/initializers/settings/loadSettings
 | ----------------------------------- | :------: | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `TELEGRAM_CHAT_ID`                  |    no    | _(empty)_       | Telegram chat the messages are sent to.                                                                                                                    |
 | `TELEGRAM_BOT_TOKEN`                |    no    | _(empty)_       | Token of the bot sending them, as BotFather gives it (`123456:ABC-DEF…`), without `https://api.telegram.org/bot` in front. A secret.                       |
-| `LOGS_NOTIFIER_SCHEDULE`            |  yes\*   | `*/30 * * * *`  | Cron expression ([node-cron](https://github.com/node-cron/node-cron) syntax) saying when the logs are checked.                                             |
+| `LOGS_NOTIFIER_SCHEDULE`            |  yes\*   | `*/30 * * * *`  | Cron expression ([node-cron](https://github.com/node-cron/node-cron) syntax) saying when the logs are checked, after startup.                              |
 | `LOGS_NOTIFIER_WATCHED_LOGS_LEVELS` |  yes\*   | `ERROR,WARNING` | Levels that are notified, separated by commas, among `SUCCESS`, `INFO`, `WARNING` and `ERROR`. The server does not start when an entry is not one of them. |
 | `LOGS_NOTIFIER_TIMEZONE`            |  yes\*   | `UTC`           | Time zone the schedule is read in and the dates of the messages are shown in: a fixed offset (`UTC+2`, or `GMT+2`) or an IANA zone (`Europe/Paris`).       |
 
