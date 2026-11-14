@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The logs notifier checks the watched logs when the server starts, then on its schedule.
+
 ### Changed
 
 - The image is built on Node.js 26.13.1, instead of 26.13.0.

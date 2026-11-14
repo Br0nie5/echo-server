@@ -114,7 +114,7 @@ The tests live in a `__tests__` directory next to the code they test. They reach
   const response = await server.inject({ method: 'GET', url: '/api/logs', query: { fromDate } })
   ```
 
-  Only the outside is replaced: the file system by one kept in memory (`createInMemoryFileSystem`), which the real `FilesService` runs on, the users database by an in-memory SQLite one, and `fetch`, stubbed, for the notifications. A test fills the files, sends requests with `server.inject` and reads the files back. The cron is only registered when a test configures it, and is run by moving the fake clock.
+  Only the outside is replaced: the file system by one kept in memory (`createInMemoryFileSystem`), which the real `FilesService` runs on, the users database by an in-memory SQLite one, and `fetch`, stubbed, for the notifications. A test fills the files, sends requests with `server.inject` and reads the files back. The cron is only registered when a test configures it, and is run by making the server ready, which runs its first check, then by moving the fake clock.
 
 - **The server itself** (`src/__tests__/server.test.ts`) has unit tests of what is its own: the paths it serves, the documentation, the web app, CORS, the proxies, TLS and how it starts. The routes and the cron are mocked there, so a change in a module never changes that file. The initializers have no test of their own.
 - **What is shared** has unit tests, covering every case: `shared/`, and the `utils/` of the initializers and of the settings, each file at 100% by its own test file.

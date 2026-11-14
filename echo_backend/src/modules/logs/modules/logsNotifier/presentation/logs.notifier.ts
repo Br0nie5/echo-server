@@ -30,18 +30,24 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
         notificationsService
       })
     } catch (error) {
-      fastify.log.error({ err: error }, 'Cron job failed')
+      fastify.log.error({ err: error }, 'The watched logs could not be checked')
     }
   }
 
-  const task = cron.schedule(
-    logsNotifierConfig.schedule,
-    async () => {
-      runningCheck = check()
-      await runningCheck
-    },
-    { noOverlap: true, timezone: logsNotifierConfig.timezone }
-  )
+  const startCheck = (): Promise<void> => {
+    runningCheck ??= check().finally(() => {
+      runningCheck = undefined
+    })
+    return runningCheck
+  }
+
+  const task = cron.schedule(logsNotifierConfig.schedule, startCheck, {
+    timezone: logsNotifierConfig.timezone
+  })
+
+  fastify.addHook('onReady', async () => {
+    void startCheck()
+  })
 
   fastify.addHook('onClose', async () => {
     await task.stop()
@@ -52,13 +58,14 @@ const scheduleLogsNotifier: FastifyPluginAsync<LogsNotifierPluginOptions> = asyn
 }
 
 /**
- * Fastify plugin running `checkWatchedLogsAndNotify` on the `schedule` of `logsNotifierConfig`,
- * read in its `timezone`, and stopping when the server closes, the server waiting for the check
- * going on, if any, to end.
+ * Fastify plugin running `checkWatchedLogsAndNotify` once the server is ready, then on the
+ * `schedule` of `logsNotifierConfig`, read in its `timezone`, and stopping when the server closes,
+ * the server waiting for the check going on, if any, to end.
  *
- * A failing run is logged, not thrown, so it does not stop the schedule. A run that is due while
- * the previous one is still going is skipped: two runs at once would read the same unnotified logs
- * and notify them twice, while the next run notifies what the skipped one would have.
+ * The server does not wait for the first check to be ready. A failing check is logged, not thrown,
+ * so it stops neither the server nor the schedule. A check that is due while another one is still
+ * going is skipped: two checks at once would read the same unnotified logs and notify them twice,
+ * while the next check notifies what the skipped one would have.
  *
  * ```ts
  * await server.register(logsNotifier, { logsNotifierConfig, unNotifiedLogsRepository, ... })

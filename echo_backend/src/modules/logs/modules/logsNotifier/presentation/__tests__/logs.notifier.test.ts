@@ -11,11 +11,13 @@ import {
 } from '../../../../../../test/mocks/mockSettings.js'
 import { toJsonLinesFileContent } from '../../../../../../test/utils/toJsonLinesFileContent.js'
 
-/** The instant the server starts at: the cron checks the logs at each minute after it. */
+/**
+ * The instant the server starts at, when it checks the logs a first time: the cron then checks them
+ * at each minute after it.
+ */
 const SERVER_START = new Date('2026-04-28T10:00:30.000Z')
 const PREVIOUS_CHECK = new Date('2026-04-28T09:30:00.000Z')
-const FIRST_CHECK = new Date('2026-04-28T10:01:00.000Z')
-const SECOND_CHECK = new Date('2026-04-28T10:02:00.000Z')
+const FIRST_SCHEDULED_CHECK = new Date('2026-04-28T10:01:00.000Z')
 
 const ONE_MINUTE_MILLISECONDS = 60 * 1000
 
@@ -53,11 +55,12 @@ const logFileContent = toJsonLinesFileContent([
 
 const fetchMock = vi.fn<typeof fetch>()
 
-const buildServerWithLogsNotifier = (
+/** Builds the server with the logs notifier, and makes it ready, as starting it does. */
+const buildServerWithLogsNotifier = async (
   files: Record<string, string>,
   settings: Partial<Settings> = {}
-): Promise<TestServer> =>
-  buildTestServer({
+): Promise<TestServer> => {
+  const testServer = await buildTestServer({
     settings: {
       logs: getMockLogsSettings({ logsNotifier: logsNotifierSettings }),
       notification: notificationSettings,
@@ -65,6 +68,9 @@ const buildServerWithLogsNotifier = (
     },
     files
   })
+  await testServer.server.ready()
+  return testServer
+}
 
 const getSentMessages = (): string[] =>
   fetchMock.mock.calls.map(
@@ -84,18 +90,19 @@ afterEach(() => {
 })
 
 describe('logsNotifier', () => {
-  test('Should notify every watched log at its first check, and save its date', async () => {
+  test('Should notify every watched log when the server starts, and save its date', async () => {
     const { fileSystem } = await buildServerWithLogsNotifier({ [logFilePath]: logFileContent })
 
-    await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
+    await vi.waitFor(() => {
+      expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
+        toLastCheckFileContent(SERVER_START)
+      )
+    })
 
     const oldestWatchedLogMessage = 'Invoices not sent.'
     const [sentMessage] = getSentMessages()
 
     expect(sentMessage).toContain(oldestWatchedLogMessage)
-    expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
-      toLastCheckFileContent(FIRST_CHECK)
-    )
   })
 
   test('Should notify the watched logs logged since the previous check, once', async () => {
@@ -104,7 +111,11 @@ describe('logsNotifier', () => {
       [logsNotifierSettings.lastLogsCheckFilePath]: toLastCheckFileContent(PREVIOUS_CHECK)
     })
 
-    await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
+    await vi.waitFor(() => {
+      expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
+        toLastCheckFileContent(SERVER_START)
+      )
+    })
 
     expect(fetchMock).toHaveBeenCalledExactlyOnceWith(telegramUrl, {
       method: 'POST',
@@ -113,15 +124,12 @@ describe('logsNotifier', () => {
       signal: expect.any(AbortSignal)
     })
     expect(getSentMessages()).toMatchSnapshot()
-    expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
-      toLastCheckFileContent(FIRST_CHECK)
-    )
 
     await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
 
     expect(fetchMock).toHaveBeenCalledOnce()
     expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
-      toLastCheckFileContent(SECOND_CHECK)
+      toLastCheckFileContent(FIRST_SCHEDULED_CHECK)
     )
   })
 
@@ -132,9 +140,10 @@ describe('logsNotifier', () => {
       [logsNotifierSettings.lastLogsCheckFilePath]: toLastCheckFileContent(PREVIOUS_CHECK)
     })
 
-    await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
+    await vi.waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledOnce()
+    })
 
-    expect(fetchMock).toHaveBeenCalledOnce()
     expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
       toLastCheckFileContent(PREVIOUS_CHECK)
     )
@@ -144,15 +153,15 @@ describe('logsNotifier', () => {
     const [firstMessage, secondMessage] = getSentMessages()
     expect(secondMessage).toBe(firstMessage)
     expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
-      toLastCheckFileContent(SECOND_CHECK)
+      toLastCheckFileContent(FIRST_SCHEDULED_CHECK)
     )
   })
 
   test('Should read its schedule in the timezone of its config', async () => {
     const noonInTimezoneSchedule = '1 12 * * *'
 
-    await buildServerWithLogsNotifier(
-      { [logFilePath]: logFileContent },
+    const { fileSystem } = await buildServerWithLogsNotifier(
+      {},
       {
         logs: getMockLogsSettings({
           logsNotifier: getMockLogsNotifierSettings({
@@ -165,9 +174,25 @@ describe('logsNotifier', () => {
       }
     )
 
+    await vi.waitFor(() => {
+      expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
+        toLastCheckFileContent(SERVER_START)
+      )
+    })
+    fileSystem.setFile(
+      logFilePath,
+      toJsonLinesFileContent([
+        {
+          jobId: 13,
+          timestamp: '2026-04-28T10:00:45.000Z',
+          level: 'ERROR',
+          message: 'Invoice 42 not sent.'
+        }
+      ])
+    )
     await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
 
-    expect(getSentMessages()).toEqual([expect.stringContaining('2026-04-28 11:42:01 UTC+2')])
+    expect(getSentMessages()).toEqual([expect.stringContaining('2026-04-28 12:00:45 UTC+2')])
   })
 
   test('Should save a self report for each notification that is too long for the channel', async () => {
@@ -185,7 +210,7 @@ describe('logsNotifier', () => {
       }
     )
 
-    await vi.advanceTimersByTimeAsync(2 * ONE_MINUTE_MILLISECONDS)
+    await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
 
     const notSentSelfReport = {
       level: 'ERROR',
@@ -197,8 +222,8 @@ describe('logsNotifier', () => {
     expect(fetchMock).not.toHaveBeenCalled()
     expect(fileSystem.getFile(selfReportsFilePath)).toBe(
       toJsonLinesFileContent([
-        { sessionId: 1, date: FIRST_CHECK.toISOString(), ...notSentSelfReport },
-        { sessionId: 1, date: SECOND_CHECK.toISOString(), ...notSentSelfReport }
+        { sessionId: 1, date: SERVER_START.toISOString(), ...notSentSelfReport },
+        { sessionId: 1, date: FIRST_SCHEDULED_CHECK.toISOString(), ...notSentSelfReport }
       ])
     )
     expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
@@ -206,7 +231,7 @@ describe('logsNotifier', () => {
     )
   })
 
-  test('Should let the check going on end when the server closes, then stop checking the logs', async () => {
+  test('Should let the check end when the server closes', async () => {
     let answerTelegram: (response: Response) => void = () => undefined
     fetchMock.mockReturnValueOnce(
       new Promise((resolve) => {
@@ -218,6 +243,9 @@ describe('logsNotifier', () => {
     })
 
     await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
+
+    expect(fetchMock).toHaveBeenCalledOnce()
+
     let isServerClosed = false
     const closing = server.close().then(() => {
       isServerClosed = true
@@ -230,14 +258,14 @@ describe('logsNotifier', () => {
     await closing
 
     expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
-      toLastCheckFileContent(FIRST_CHECK)
+      toLastCheckFileContent(SERVER_START)
     )
 
     await vi.advanceTimersByTimeAsync(ONE_MINUTE_MILLISECONDS)
 
     expect(fetchMock).toHaveBeenCalledOnce()
     expect(fileSystem.getFile(logsNotifierSettings.lastLogsCheckFilePath)).toBe(
-      toLastCheckFileContent(FIRST_CHECK)
+      toLastCheckFileContent(SERVER_START)
     )
   })
 })
