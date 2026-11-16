@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-11-16
+
+### Fixed
+
+- The logs notifier no longer notifies every log again after a server starts with its clock behind (a machine without a hardware clock, right after it boots): a check whose date is before the last check now keeps the date of the last check, instead of saving its own.
+
 ## [2.1.0] - 2026-11-14
 
 ### Added
@@ -154,7 +160,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[Unreleased]: https://github.com/br0nie5/echo-server/compare/2.1.0...HEAD
+[Unreleased]: https://github.com/br0nie5/echo-server/compare/2.1.1...HEAD
+[2.1.1]: https://github.com/br0nie5/echo-server/compare/2.1.0...2.1.1
 [2.1.0]: https://github.com/br0nie5/echo-server/compare/2.0.2...2.1.0
 [2.0.2]: https://github.com/br0nie5/echo-server/compare/2.0.1...2.0.2
 [2.0.1]: https://github.com/br0nie5/echo-server/compare/2.0.0...2.0.1
