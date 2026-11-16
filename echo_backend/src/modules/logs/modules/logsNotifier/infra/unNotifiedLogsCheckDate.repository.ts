@@ -17,7 +17,8 @@ import {
  * A read is a check: it gives the logs of `logsRepository` logged from the date of the last check
  * to its own, the latter left out. A log is in the period of one check only, so it is given once,
  * even when it is written while the logs are being read. `markAsNotified` saves the date of its
- * check as the last one.
+ * check as the last one, unless that date is before the last check: the clock of the machine was
+ * then behind, and the read gave no log, so the last check stays as it was.
  *
  * A file that is missing, unreadable or that holds no valid date gives no last check date, the
  * same as when the logs were never checked: the read gives every log logged before its own date.
@@ -50,8 +51,16 @@ export const createUnNotifiedLogsCheckDateRepository = (
       const lastCheckDate = await getLastCheckDate()
       const checkDate = new Date()
 
-      const markAsNotified = (): Promise<void> =>
-        checkDateApi.saveRawLastCheckDate(convertLastCheckDateToRawLastCheckDate(checkDate))
+      const isClockBehindLastCheck =
+        lastCheckDate !== undefined && checkDate.getTime() < lastCheckDate.getTime()
+
+      const markAsNotified = async (): Promise<void> => {
+        if (isClockBehindLastCheck) {
+          return
+        }
+
+        await checkDateApi.saveRawLastCheckDate(convertLastCheckDateToRawLastCheckDate(checkDate))
+      }
 
       const logs = await logsRepository.getAllLogs()
 
